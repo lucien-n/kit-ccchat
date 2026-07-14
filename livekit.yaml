@@ -1,0 +1,37 @@
+# LiveKit SFU configuration. Powers voice channels.
+# IMPORTANT: change the key/secret below before exposing this to the internet,
+# and set the SAME values in docker-compose.yml (LIVEKIT_API_KEY / SECRET).
+
+port: 7880 # signaling (WebSocket) — the client connects here
+
+rtc:
+  # Media ports. UDP is preferred (lowest latency); TCP is the fallback for
+  # restrictive networks. Both are published in docker-compose.yml.
+  udp_port: 7882
+  tcp_port: 7881
+  # The address LiveKit tells browsers to reach it at. We set it explicitly via
+  # --node-ip in docker-compose (LIVEKIT_NODE_IP) rather than STUN auto-detect,
+  # which picks the public IP that a same-LAN client can't reach.
+  #   - local / same machine : 127.0.0.1  (the default)
+  #   - friends over the LAN : your host's LAN IP (e.g. 192.168.1.50)
+  #   - friends over internet: your server's public IP
+  use_external_ip: false
+
+# API keys: <key>: <secret>. Secret must be at least 32 characters.
+keys:
+  devkey: devsecret_change_me_min_32_chars_long
+
+# ⚠️ LOCAL TESTING ON WINDOWS / macOS:
+# Docker Desktop's network layer cannot pass WebRTC UDP media (STUN succeeds but
+# the DTLS handshake times out — a documented Docker Desktop limitation). Voice
+# therefore does NOT work when LiveKit runs in Docker Desktop. It works fine when
+# this stack runs on a real Linux host (VPS, Linux server, Raspberry Pi).
+# To test voice locally on Windows/macOS, run LiveKit natively instead of in
+# Docker (see README → "Testing voice locally"). Text chat is unaffected.
+
+# Built-in TURN relays media for users behind strict NATs. Enable + point at a
+# domain with TLS for the most reliable connectivity in production.
+# turn:
+#   enabled: true
+#   domain: voice.example.com
+#   tls_port: 5349

@@ -1,0 +1,11 @@
+node_modules/
+dist/
+build/
+.svelte-kit/
+data/
+*.sqlite
+*.sqlite-*
+*.db
+.env
+.env.local
+.DS_Store

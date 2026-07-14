@@ -1,0 +1,42 @@
+services:
+  ccchat:
+    build: .
+    container_name: ccchat
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    environment:
+      # Change these before first boot. If OWNER_PASSWORD is empty a random one
+      # is generated and printed to the logs the first time it starts.
+      COMMUNITY_NAME: 'My Community'
+      OWNER_USERNAME: 'owner'
+      OWNER_PASSWORD: ''
+      DATA_DIR: /app/data
+      # Voice: these must match livekit.yaml. LIVEKIT_URL is what the *browser*
+      # connects to — set it to your public host in production, e.g.
+      # ws://voice.example.com:7880 (or wss:// behind TLS).
+      LIVEKIT_URL: 'ws://localhost:7880'
+      LIVEKIT_API_KEY: 'devkey'
+      LIVEKIT_API_SECRET: 'devsecret_change_me_min_32_chars_long'
+    volumes:
+      # Your entire community (accounts, channels, messages) lives in this one
+      # folder on your machine. Back it up and you've backed up everything.
+      - ./data:/app/data
+    depends_on:
+      - livekit
+
+  # Self-hosted SFU that powers voice channels (scales to 20+ per room).
+  livekit:
+    image: livekit/livekit-server:latest
+    container_name: ccchat-livekit
+    restart: unless-stopped
+    # --node-ip is the address browsers are told to send audio to. Default works
+    # for same-machine testing; set LIVEKIT_NODE_IP to your LAN/public IP so
+    # friends on other devices can connect. Must match how they reach the app.
+    command: --config /etc/livekit.yaml --node-ip ${LIVEKIT_NODE_IP:-127.0.0.1}
+    ports:
+      - '7880:7880' # signaling (WebSocket)
+      - '7881:7881' # RTC over TCP (fallback)
+      - '7882:7882/udp' # RTC media (UDP) — forward this on your firewall
+    volumes:
+      - ./livekit.yaml:/etc/livekit.yaml
