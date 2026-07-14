@@ -1,6 +1,6 @@
 <script lang="ts">
   import { chat } from '$lib/chat.svelte';
-  import { api, type PublicUser } from '$lib/api';
+  import { api, avatarUrl, type PublicUser } from '$lib/api';
   import { cn } from '$lib/utils';
   import * as Sheet from '$lib/components/ui/sheet';
   import * as Avatar from '$lib/components/ui/avatar';
@@ -64,7 +64,9 @@
                 chat.online.has(m.id) && 'bg-green-500',
               )}
             ></span>
+            {@const av = avatarUrl(m.id, m.avatarVersion)}
             <Avatar.Root class="size-7">
+              {#if av}<Avatar.Image src={av} alt="" />{/if}
               <Avatar.Fallback class="bg-primary text-primary-foreground text-xs">
                 {initial(m.displayName)}
               </Avatar.Fallback>

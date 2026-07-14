@@ -84,6 +84,7 @@
 
   const canDelete = (authorId: string | undefined) => chat.isAdmin || authorId === chat.user?.id;
   const initial = (name: string | undefined) => (name ?? '?')[0]?.toUpperCase() ?? '?';
+  const myAvatar = $derived(chat.user ? avatarUrl(chat.user.id, chat.user.avatarVersion) : null);
 </script>
 
 <div class="grid h-dvh grid-cols-[64px_1fr] sm:grid-cols-[248px_1fr]">
@@ -180,17 +181,24 @@
       <VoiceBar />
     {/if}
 
-    <div class="flex items-center gap-2 border-t p-2">
-      <Avatar.Root class="size-8">
-        <Avatar.Fallback class="bg-primary text-primary-foreground text-xs">
-          {initial(chat.user?.displayName)}
-        </Avatar.Fallback>
-      </Avatar.Root>
-      <div class="hidden min-w-0 flex-1 sm:block">
-        <div class="truncate text-sm font-medium">{chat.user?.displayName}</div>
-        <div class="text-muted-foreground text-xs">{chat.user?.role}</div>
-      </div>
-      <Button variant="ghost" size="icon" title="Log out" onclick={() => chat.logout()}>
+    <div class="flex items-center gap-1 border-t p-2">
+      <button
+        class="hover:bg-sidebar-accent flex min-w-0 flex-1 items-center gap-2 rounded p-1"
+        title="Settings"
+        onclick={() => (showSettings = true)}
+      >
+        <Avatar.Root class="size-8 shrink-0">
+          {#if myAvatar}<Avatar.Image src={myAvatar} alt="" />{/if}
+          <Avatar.Fallback class="bg-primary text-primary-foreground text-xs">
+            {initial(chat.user?.displayName)}
+          </Avatar.Fallback>
+        </Avatar.Root>
+        <div class="hidden min-w-0 flex-1 text-left sm:block">
+          <div class="truncate text-sm font-medium">{chat.user?.displayName}</div>
+          <div class="text-muted-foreground text-xs">{chat.user?.role}</div>
+        </div>
+      </button>
+      <Button variant="ghost" size="icon" class="shrink-0" title="Log out" onclick={() => chat.logout()}>
         <LogOut class="size-4" />
       </Button>
     </div>
@@ -242,8 +250,10 @@
 
     <div bind:this={scroller} class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-4">
       {#each chat.messages as m (m.id)}
+        {@const av = m.author ? avatarUrl(m.author.id, m.author.avatarVersion) : null}
         <div class="group hover:bg-muted/40 relative flex gap-3 rounded-md px-2 py-1">
           <Avatar.Root class="mt-0.5 size-9">
+            {#if av}<Avatar.Image src={av} alt="" />{/if}
             <Avatar.Fallback class="bg-primary text-primary-foreground text-sm">
               {initial(m.author?.displayName)}
             </Avatar.Fallback>
@@ -284,4 +294,5 @@
   </main>
 
   <Members bind:open={showMembers} />
+  <Settings bind:open={showSettings} />
 </div>
