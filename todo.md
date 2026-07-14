@@ -1,0 +1,1 @@
+- [ ] cleanup env vars between .env and docker file
