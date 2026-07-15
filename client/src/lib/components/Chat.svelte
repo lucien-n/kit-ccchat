@@ -1,30 +1,29 @@
 <script lang="ts">
-  import { chat } from '$lib/chat.svelte';
-  import { voice } from '$lib/voice.svelte';
   import { api, avatarUrl } from '$lib/api';
-  import { setBaseTitle, setTitleBadge } from '$lib/notify';
-  import { cn } from '$lib/utils';
+  import { chat } from '$lib/chat.svelte';
+  import * as Alert from '$lib/components/ui/alert';
+  import * as Avatar from '$lib/components/ui/avatar';
+  import { Badge } from '$lib/components/ui/badge';
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
-  import { Badge } from '$lib/components/ui/badge';
-  import * as Avatar from '$lib/components/ui/avatar';
-  import * as Alert from '$lib/components/ui/alert';
+  import { setBaseTitle, setTitleBadge } from '$lib/notify';
+  import { cn } from '$lib/utils';
+  import { voice } from '$lib/voice.svelte';
   import {
-    Hash,
-    Volume2,
     Bell,
     BellOff,
+    Hash,
     LogOut,
     Plus,
-    Trash2,
     Send,
-    Users,
-    Settings as SettingsIcon,
+    Trash2,
     TriangleAlert,
+    Users,
+    Volume2
   } from '@lucide/svelte';
   import Members from './Members.svelte';
-  import VoiceBar from './VoiceBar.svelte';
   import Settings from './Settings.svelte';
+  import VoiceBar from './VoiceBar.svelte';
 
   let draft = $state('');
   let showMembers = $state(false);

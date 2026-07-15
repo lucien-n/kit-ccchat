@@ -45,7 +45,7 @@
     {...restProps}
   />
 {:else}
-  <div class="relative">
+  <div class="relative flex-1">
     <input
       bind:this={ref}
       data-slot={dataSlot}

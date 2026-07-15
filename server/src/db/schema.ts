@@ -75,6 +75,15 @@ export const channelReads = sqliteTable(
   (t) => ({ pk: primaryKey({ columns: [t.userId, t.channelId] }) }),
 );
 
+/** Instance configuration that the owner can change at runtime (community name,
+ *  and anything we add later). Living in the DB rather than the environment is
+ *  what lets a self-hoster set it from the setup wizard instead of editing a
+ *  file and restarting the container. */
+export const settings = sqliteTable('settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+});
+
 export type User = typeof users.$inferSelect;
 export type Channel = typeof channels.$inferSelect;
 export type Message = typeof messages.$inferSelect;

@@ -17,6 +17,9 @@ class ChatStore {
   token = $state<string | null>(null);
   user = $state<PublicUser | null>(null);
   serverName = $state('ccchat');
+  /** True on a brand-new instance with no accounts: show the setup wizard
+   *  instead of a login form, so the first visitor claims it as owner. */
+  needsSetup = $state(false);
 
   channels = $state<Channel[]>([]);
   currentChannelId = $state<string | null>(null);
@@ -66,10 +69,14 @@ class ChatStore {
     window.addEventListener('pointerdown', () => unlockAudio(), { once: true });
 
     try {
-      this.serverName = (await api.info()).name;
+      const info = await api.info();
+      this.serverName = info.name;
+      this.needsSetup = info.needsSetup;
     } catch {
       /* server may be unreachable; login screen will surface it */
     }
+    if (this.needsSetup) return; // nothing to restore — there are no accounts yet
+
     const saved = localStorage.getItem('token');
     if (!saved) return;
     try {
@@ -85,6 +92,18 @@ class ChatStore {
     const { token, user } = await api.login({ username, password });
     this.setSession(token, user);
     await this.afterLogin();
+  }
+
+  /** Claim a fresh instance: name it and become its owner. Returns the invite
+   *  code to share with friends. */
+  async setup(input: { communityName: string; username: string; password: string }) {
+    const { token, user, inviteCode, communityName } = await api.setup(input);
+    this.serverName = communityName;
+    this.setSession(token, user);
+    await this.afterLogin();
+    // `needsSetup` stays true so the wizard can show the invite code; it clears
+    // it when the owner dismisses that screen.
+    return inviteCode;
   }
 
   async register(inviteCode: string, username: string, password: string, displayName?: string) {
@@ -194,6 +213,9 @@ class ChatStore {
         break;
       case 'voice.presence':
         this.voicePresence = event.presence ?? {};
+        break;
+      case 'community.renamed':
+        this.serverName = event.name;
         break;
     }
   }

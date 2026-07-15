@@ -4,12 +4,15 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { existsSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
-import { CLIENT_DIR, COMMUNITY_NAME, IS_PROD, PORT } from './env.js';
+import { CLIENT_DIR, IS_PROD, PORT } from './env.js';
 import { migrate } from './db/index.js';
-import { bootstrap } from './bootstrap.js';
+import { bootstrap, needsSetup } from './bootstrap.js';
+import { communityName } from './settings.js';
 import { attachWebSocket } from './ws.js';
 import type { Env } from './auth.js';
 
+import setupRoutes from './routes/setup.js';
+import settingsRoutes from './routes/settings.js';
 import authRoutes from './routes/auth.js';
 import inviteRoutes from './routes/invites.js';
 import channelRoutes from './routes/channels.js';
@@ -27,9 +30,12 @@ const app = new Hono<Env>();
 // permissive CORS policy lets the mobile app and dev client talk to the API.
 app.use('/api/*', cors());
 
-// Public metadata for the login screen (community name).
-app.get('/api/info', (c) => c.json({ name: COMMUNITY_NAME }));
+// Public metadata for the login screen. `needsSetup` tells a fresh instance to
+// show the setup wizard instead of a login form.
+app.get('/api/info', (c) => c.json({ name: communityName(), needsSetup: needsSetup() }));
 
+app.route('/api/setup', setupRoutes);
+app.route('/api/settings', settingsRoutes);
 app.route('/api/auth', authRoutes);
 app.route('/api/invites', inviteRoutes);
 app.route('/api/channels', channelRoutes);

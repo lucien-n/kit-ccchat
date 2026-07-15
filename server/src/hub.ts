@@ -13,6 +13,7 @@ export type ServerEvent =
   | { type: 'message.deleted'; id: string; channelId: string }
   | { type: 'presence'; online: string[] }
   | { type: 'voice.presence'; presence: Record<string, VoiceMember[]> }
+  | { type: 'community.renamed'; name: string }
   | { type: 'error'; message: string };
 
 interface Client {

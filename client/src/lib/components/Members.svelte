@@ -56,6 +56,7 @@
 
     <div class="flex-1 space-y-1 overflow-y-auto px-2 pb-4">
       {#each members as m (m.id)}
+        {@const av = avatarUrl(m.id, m.avatarVersion)}
         <div class="hover:bg-muted/50 rounded-md p-2">
           <div class="flex items-center gap-2">
             <span
@@ -64,7 +65,6 @@
                 chat.online.has(m.id) && 'bg-green-500',
               )}
             ></span>
-            {@const av = avatarUrl(m.id, m.avatarVersion)}
             <Avatar.Root class="size-7">
               {#if av}<Avatar.Image src={av} alt="" />{/if}
               <Avatar.Fallback class="bg-primary text-primary-foreground text-xs">

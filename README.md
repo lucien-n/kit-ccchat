@@ -47,10 +47,10 @@ design is what scales past the ~5-user ceiling of a peer-to-peer mesh.
 - **Passwords** are hashed with Node's built-in scrypt (no native crypto deps).
 - **Auth** is an opaque bearer token — works the same for web and mobile.
 
-Message storage is **plaintext at rest on your machine** (TLS protects it in
-transit — put the server behind a reverse proxy or tunnel for HTTPS). This is the
-right trade-off when you trust whoever runs the box; see *Roadmap* for optional
-end-to-end encryption.
+Message storage is **plaintext at rest on your machine**; TLS protects it in
+transit (Caddy terminates HTTPS with an automatic Let's Encrypt certificate).
+This is the right trade-off when you trust whoever runs the box — see *Roadmap*
+for optional end-to-end encryption.
 
 ## Quick start (development)
 
@@ -61,11 +61,14 @@ npm install          # installs both workspaces
 npm run dev          # server on :8080, client (Vite) on :5173
 ```
 
-Open http://localhost:5173. On first boot the server prints the **owner login**
-and an **invite code** to the terminal — use the invite code on the client's
-Register screen to create accounts.
+Open http://localhost:5173. The first load shows the **setup wizard**: name your
+community and create the owner account. You get an invite code — use it on the
+Register screen to create more accounts. Delete `server/data/` to start over.
 
 Run the pieces separately if you prefer: `npm run dev:server` / `npm run dev:client`.
+
+The server hot-reloads (`tsx watch`) and the client has HMR, so **nothing needs
+rebuilding while you work**. Docker is only for deployment.
 
 ### Testing voice locally
 
@@ -86,12 +89,16 @@ Docker) so it binds directly to your network:
 #              https://github.com/livekit/livekit/releases)
 #    macOS   : brew install livekit
 
-# 2. Run it with this repo's config (uses the same devkey/secret as the app)
-livekit-server --config livekit.yaml --node-ip 127.0.0.1
+# 2. Run it with this repo's config, bound to your machine
+LIVEKIT_KEYS="ccchat: devsecret_change_me_min_32_chars_long" \
+  livekit-server --config livekit.yaml --node-ip 127.0.0.1
 
 # 3. In another terminal, run the app pointed at it
 npm run dev
 ```
+
+Vite proxies `/livekit` to it, mirroring what Caddy does in production, so dev
+exercises the same code path.
 
 Then open the app in **two** browser profiles, log in as two users, join the same
 voice channel, and allow microphone access. (Voice needs a second real
@@ -100,17 +107,74 @@ participant + a mic to fully exercise — everything else works solo.)
 For deployment, `docker compose up` on a **Linux** host runs everything including
 voice with no extra steps.
 
-## Self-hosting (Docker)
+## Self-hosting
+
+On any Linux box — a VPS, a Raspberry Pi, an old laptop, a £30 thin client:
 
 ```bash
-# edit docker-compose.yml (COMMUNITY_NAME, OWNER_PASSWORD) first
-docker compose up -d --build
-docker compose logs -f          # grab the invite code printed on first boot
+curl -fsSL https://raw.githubusercontent.com/OWNER/ccchat/main/install.sh | sh
 ```
 
-The app is now on `http://<your-host>:8080`. To let friends reach a home machine
-without exposing your IP or opening ports, front it with a **Cloudflare Tunnel**
-or **Tailscale** — that also gives you HTTPS.
+On Windows (Docker Desktop), in PowerShell:
+
+```powershell
+irm https://raw.githubusercontent.com/OWNER/ccchat/main/install.ps1 | iex
+```
+
+Either way it asks for **one** thing — your domain — then generates the secrets,
+pulls the image and starts everything. Open the site and you'll be asked to name
+your community and create your account; you get an invite code to share. **There
+is no config file to edit.** Re-run the same command to upgrade.
+
+> On Windows, Docker Desktop can't pass WebRTC UDP, so **voice won't connect**
+> there — text chat is fine. For working voice, host on a Linux box (the Wyse is
+> perfect) or run LiveKit natively; see *Testing voice locally*.
+
+You need:
+
+- **A domain pointing at the machine.** A free dynamic-DNS name (DuckDNS and
+  friends) is fine. This isn't optional vanity: browsers refuse microphone access
+  outside a secure context, so **voice requires HTTPS**, and HTTPS requires a
+  name. Caddy gets the certificate from Let's Encrypt for you and renews it.
+- **Three ports forwarded**: `80/tcp` and `443/tcp` for the app (80 is used to
+  issue the certificate), and **`7882/udp` for voice media**. That last one is the
+  one people forget — without it, calls fail to connect. WebRTC audio goes
+  straight to the host; only signaling passes through the proxy.
+
+Everything lives in `data/` — one SQLite file. Back up that folder and you've
+backed up your entire community.
+
+### Why there's nothing to configure
+
+The usual pain of self-hosting a voice app is telling the browser where to find
+the SFU: get it wrong and calls silently fail. Here Caddy puts LiveKit on the
+**same origin** as the app (`/livekit`), so the server derives that URL from the
+request the browser just made. However you reach ccchat, voice follows.
+
+The community name, the owner account and the invite code are created **in the
+browser** on first visit and stored in the database — so none of them are
+environment variables, and the owner can change them later from Settings.
+
+> The setup wizard is open to whoever loads the page first, and closes forever
+> once an account exists. Claim your instance as soon as it's up.
+
+`.env.example` documents the escape hatches (pinning an image version, seeding the
+owner from the environment for scripted installs). You can ignore it.
+
+### Doing it by hand
+
+```bash
+git clone https://github.com/OWNER/ccchat && cd ccchat
+cp .env.example .env         # set CCCHAT_DOMAIN + LIVEKIT_API_SECRET
+docker compose up -d
+```
+
+To build the image locally instead of pulling it (don't do this on the low-power
+box you're hosting on — compiling the client will crawl):
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+```
 
 ## Project layout
 
@@ -118,14 +182,16 @@ or **Tailscale** — that also gives you HTTPS.
 server/
   src/
     index.ts        HTTP + WebSocket bootstrap, static hosting
-    env.ts          all configuration (env vars)
+    env.ts          deployment-level config (ports, secrets)
+    settings.ts     runtime config in the DB (community name) — owner-editable
     db/             Drizzle schema + SQLite connection/migration
     auth.ts         scrypt hashing, tokens, role guards
     hub.ts          in-memory realtime fan-out
     ws.ts           WebSocket auth + message handling
-    bootstrap.ts    first-boot owner/channels/invite seeding
+    bootstrap.ts    claiming a fresh instance: owner/channels/invite seeding
     views.ts        API serialization helpers
-    routes/         auth · invites · channels · messages · moderation · voice
+    routes/         setup · settings · auth · invites · channels · messages ·
+                    moderation · voice · users
 client/
   src/
     app.css         Tailwind v4 + shadcn-svelte theme tokens (light/dark)
@@ -136,11 +202,15 @@ client/
       voice.svelte.ts  LiveKit voice session state (runes)
       notify.ts        notification sound + tab-title badge
       utils.ts         cn() class helper (shadcn)
-      components/      Login · Chat · Members · VoiceBar
+      components/      Setup · Login · Chat · Members · VoiceBar · Settings
       components/ui/   shadcn-svelte primitives (button, card, sheet, …)
   components.json   shadcn-svelte config (style: rhea, icons: lucide)
+install.sh          one-command install for self-hosters (Linux/macOS)
+install.ps1         the same, for Windows (Docker Desktop)
+Caddyfile           TLS + puts the app and LiveKit on one origin
 livekit.yaml        SFU config (voice)
-docker-compose.yml  app + livekit services
+docker-compose.yml  caddy + app + livekit
+Dockerfile          multi-stage build; CI publishes it to ghcr.io
 ```
 
 The UI is built with **Tailwind CSS v4** and **[shadcn-svelte](https://shadcn-svelte.com)**

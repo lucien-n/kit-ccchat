@@ -1,0 +1,22 @@
+# Caddy is the only thing exposed to the internet. It terminates TLS (fetching
+# and renewing a Let's Encrypt certificate automatically — no certbot, no cron)
+# and puts the app and the voice server on ONE origin.
+#
+# That last part is the trick that makes ccchat configuration-free: the browser
+# reaches LiveKit at wss://<your-domain>/livekit, so the backend can derive that
+# URL from the incoming request instead of making you configure it.
+
+{$CCCHAT_DOMAIN} {
+	# Voice (LiveKit signaling). handle_path strips the prefix, so /livekit/rtc
+	# arrives at LiveKit as /rtc. WebSocket upgrades pass through automatically.
+	handle_path /livekit/* {
+		reverse_proxy livekit:7880
+	}
+
+	# Everything else: the app (REST API, /ws, and the built SPA).
+	handle {
+		reverse_proxy ccchat:8080
+	}
+
+	encode zstd gzip
+}

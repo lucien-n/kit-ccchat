@@ -4,14 +4,32 @@ import { AccessToken } from 'livekit-server-sdk';
 import { db } from '../db/index.js';
 import { channels } from '../db/schema.js';
 import { requireAuth, type Env } from '../auth.js';
-import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_URL } from '../env.js';
+import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_PATH, LIVEKIT_URL } from '../env.js';
+import type { Context } from 'hono';
 
 const app = new Hono<Env>();
 
 app.use('*', requireAuth);
 
+/** The LiveKit endpoint to hand to *this* browser. Derived from the request it
+ *  just made, so however the user reaches the app — LAN IP, domain, whatever —
+ *  they reach LiveKit the same way, through the proxy that fronted us. Nothing
+ *  to configure and nothing to get wrong.
+ *
+ *  The proxy sets X-Forwarded-Proto; falling back to the raw Host header keeps
+ *  `npm run dev` (no proxy) working. */
+function livekitUrl(c: Context): string {
+  if (LIVEKIT_URL) return LIVEKIT_URL; // explicit override wins
+
+  const forwarded = c.req.header('x-forwarded-proto')?.split(',')[0]?.trim();
+  const host = c.req.header('x-forwarded-host') ?? c.req.header('host') ?? 'localhost';
+  const secure = forwarded ? forwarded === 'https' : new URL(c.req.url).protocol === 'https:';
+
+  return `${secure ? 'wss' : 'ws'}://${host}${LIVEKIT_PATH}`;
+}
+
 /** Where the client should connect its LiveKit session. */
-app.get('/config', (c) => c.json({ url: LIVEKIT_URL }));
+app.get('/config', (c) => c.json({ url: livekitUrl(c) }));
 
 /** Mint a short-lived LiveKit access token for a voice channel. The LiveKit
  *  "room" is simply the channel id, so joining a channel = joining its room.
@@ -41,7 +59,7 @@ app.post('/token', async (c) => {
   });
 
   const token = await at.toJwt();
-  return c.json({ token, url: LIVEKIT_URL, room: channelId, canPublish });
+  return c.json({ token, url: livekitUrl(c), room: channelId, canPublish });
 });
 
 export default app;

@@ -1,42 +1,62 @@
+name: ccchat
+
 services:
-  ccchat:
-    build: .
-    container_name: ccchat
+  # ── The only thing exposed to the internet ─────────────────────────────────
+  # Terminates TLS with an automatic Let's Encrypt certificate, and serves both
+  # the app and the voice signaling from one origin. See ./Caddyfile.
+  caddy:
+    image: caddy:2-alpine
+    container_name: ccchat-caddy
     restart: unless-stopped
     ports:
-      - '8080:8080'
+      - '80:80' # required for the Let's Encrypt HTTP challenge
+      - '443:443'
+      - '443:443/udp' # HTTP/3
     environment:
-      # Change these before first boot. If OWNER_PASSWORD is empty a random one
-      # is generated and printed to the logs the first time it starts.
-      COMMUNITY_NAME: 'My Community'
-      OWNER_USERNAME: 'owner'
-      OWNER_PASSWORD: ''
-      DATA_DIR: /app/data
-      # Voice: these must match livekit.yaml. LIVEKIT_URL is what the *browser*
-      # connects to — set it to your public host in production, e.g.
-      # ws://voice.example.com:7880 (or wss:// behind TLS).
-      LIVEKIT_URL: 'ws://localhost:7880'
-      LIVEKIT_API_KEY: 'devkey'
-      LIVEKIT_API_SECRET: 'devsecret_change_me_min_32_chars_long'
+      CCCHAT_DOMAIN: ${CCCHAT_DOMAIN:?set CCCHAT_DOMAIN in .env (e.g. chat.example.com)}
     volumes:
-      # Your entire community (accounts, channels, messages) lives in this one
-      # folder on your machine. Back it up and you've backed up everything.
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data # certificates live here — do not delete
+      - caddy_config:/config
+    depends_on:
+      - ccchat
+      - livekit
+
+  # ── The app: REST API, WebSocket, and the built client ─────────────────────
+  # Not published to the host: it is only reachable through Caddy.
+  ccchat:
+    image: ${CCCHAT_IMAGE:-ghcr.io/OWNER/ccchat:latest} # TODO(repo): set OWNER
+    container_name: ccchat
+    restart: unless-stopped
+    environment:
+      DATA_DIR: /app/data
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-ccchat}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?run ./install.sh, or set LIVEKIT_API_SECRET in .env}
+      # The community name and the owner account are created in the browser on
+      # first visit, so there is nothing to configure here.
+    volumes:
+      # Your entire community (accounts, channels, messages) is this one folder.
+      # Back it up and you have backed up everything.
       - ./data:/app/data
     depends_on:
       - livekit
 
-  # Self-hosted SFU that powers voice channels (scales to 20+ per room).
+  # ── Voice ──────────────────────────────────────────────────────────────────
+  # Signaling goes through Caddy (/livekit). Media does NOT — WebRTC audio is
+  # UDP straight to the host, so 7882/udp must be open on your firewall/router.
   livekit:
     image: livekit/livekit-server:latest
     container_name: ccchat-livekit
     restart: unless-stopped
-    # --node-ip is the address browsers are told to send audio to. Default works
-    # for same-machine testing; set LIVEKIT_NODE_IP to your LAN/public IP so
-    # friends on other devices can connect. Must match how they reach the app.
-    command: --config /etc/livekit.yaml --node-ip ${LIVEKIT_NODE_IP:-127.0.0.1}
+    command: --config /etc/livekit.yaml
+    environment:
+      LIVEKIT_KEYS: '${LIVEKIT_API_KEY:-ccchat}: ${LIVEKIT_API_SECRET:?run ./install.sh, or set LIVEKIT_API_SECRET in .env}'
     ports:
-      - '7880:7880' # signaling (WebSocket)
-      - '7881:7881' # RTC over TCP (fallback)
-      - '7882:7882/udp' # RTC media (UDP) — forward this on your firewall
+      - '7882:7882/udp' # media (UDP) — the one port you must forward
+      - '7881:7881' # media over TCP, fallback for restrictive networks
     volumes:
-      - ./livekit.yaml:/etc/livekit.yaml
+      - ./livekit.yaml:/etc/livekit.yaml:ro
+
+volumes:
+  caddy_data:
+  caddy_config:

@@ -70,6 +70,11 @@ export function migrate() {
       last_read_at INTEGER NOT NULL,
       PRIMARY KEY (user_id, channel_id)
     );
+
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL
+    );
   `);
 
   // Additive column migrations for databases created before the column existed.

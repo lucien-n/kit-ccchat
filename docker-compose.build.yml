@@ -1,0 +1,12 @@
+# Build the image from source instead of pulling it from the registry.
+# Only for working ON ccchat — hosting it needs no build step.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.build.yml up -d --build
+#
+# Compiling the SvelteKit client is heavy; don't do this on the low-power box you
+# actually host on (a Wyse 3040 or a Pi will crawl). Build on your dev machine,
+# or just let CI publish the image.
+services:
+  ccchat:
+    build: .
+    image: ccchat:local

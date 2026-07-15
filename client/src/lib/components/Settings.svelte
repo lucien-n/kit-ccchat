@@ -18,20 +18,41 @@
   let displayName = $state(chat.user?.displayName ?? '');
   let currentPassword = $state('');
   let newPassword = $state('');
+  let communityName = $state(chat.serverName);
   let profileMsg = $state('');
   let passwordMsg = $state('');
   let avatarMsg = $state('');
+  let communityMsg = $state('');
   let busy = $state(false);
   let fileInput: HTMLInputElement | null = $state(null);
+
+  // The community name is stored server-side, so only the owner can change it.
+  const isOwner = $derived(chat.user?.role === 'owner');
 
   // Reset transient state whenever the dialog opens.
   $effect(() => {
     if (open) {
       displayName = chat.user?.displayName ?? '';
+      communityName = chat.serverName;
       currentPassword = newPassword = '';
-      profileMsg = passwordMsg = avatarMsg = '';
+      profileMsg = passwordMsg = avatarMsg = communityMsg = '';
     }
   });
+
+  async function saveCommunity(e: Event) {
+    e.preventDefault();
+    if (!chat.token) return;
+    busy = true;
+    communityMsg = '';
+    try {
+      await api.renameCommunity(chat.token, communityName.trim());
+      communityMsg = 'Saved.'; // the server broadcasts the new name to everyone
+    } catch (err: any) {
+      communityMsg = err?.message ?? 'failed to save';
+    } finally {
+      busy = false;
+    }
+  }
 
   const initial = (chat.user?.displayName ?? '?')[0]?.toUpperCase() ?? '?';
   const avatar = $derived(avatarUrl(chat.user?.id ?? '', chat.user?.avatarVersion));
@@ -103,9 +124,12 @@
     </Dialog.Header>
 
     <Tabs.Root value="profile" class="w-full">
-      <Tabs.List class="grid w-full grid-cols-2">
+      <Tabs.List class={cn('grid w-full', isOwner ? 'grid-cols-3' : 'grid-cols-2')}>
         <Tabs.Trigger value="profile">Profile</Tabs.Trigger>
         <Tabs.Trigger value="appearance">Appearance</Tabs.Trigger>
+        {#if isOwner}
+          <Tabs.Trigger value="community">Community</Tabs.Trigger>
+        {/if}
       </Tabs.List>
 
       <!-- Profile -->
@@ -182,6 +206,23 @@
           />
         </div>
       </Tabs.Content>
+
+      <!-- Community (owner only) -->
+      {#if isOwner}
+        <Tabs.Content value="community" class="space-y-6 pt-4">
+          <form class="space-y-2" onsubmit={saveCommunity}>
+            <Label for="cn">Community name</Label>
+            <div class="flex gap-2">
+              <Input id="cn" bind:value={communityName} maxlength={60} class="flex-1" />
+              <Button type="submit" disabled={busy || !communityName.trim()}>Save</Button>
+            </div>
+            <p class="text-muted-foreground text-xs">
+              Shown on the login screen and in the header. Everyone sees the change immediately.
+            </p>
+            {#if communityMsg}<p class="text-muted-foreground text-xs">{communityMsg}</p>{/if}
+          </form>
+        </Tabs.Content>
+      {/if}
     </Tabs.Root>
   </Dialog.Content>
 </Dialog.Root>

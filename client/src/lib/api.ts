@@ -69,7 +69,26 @@ async function request<T>(
 }
 
 export const api = {
-  info: () => request<{ name: string }>('/api/info'),
+  info: () => request<{ name: string; needsSetup: boolean }>('/api/info'),
+
+  /** Claim a brand-new instance. Only works while it has no accounts. */
+  setup: (body: {
+    communityName: string;
+    username: string;
+    displayName?: string;
+    password: string;
+  }) =>
+    request<{ token: string; user: PublicUser; inviteCode: string; communityName: string }>(
+      '/api/setup',
+      { method: 'POST', body },
+    ),
+
+  renameCommunity: (token: string, communityName: string) =>
+    request<{ communityName: string }>('/api/settings', {
+      method: 'PATCH',
+      body: { communityName },
+      token,
+    }),
 
   register: (body: { inviteCode: string; username: string; displayName?: string; password: string }) =>
     request<{ token: string; user: PublicUser }>('/api/auth/register', { method: 'POST', body }),

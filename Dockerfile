@@ -1,28 +1,46 @@
-# Single image that builds the SvelteKit client and runs the backend, which then
-# serves both the API/WebSocket and the built static client on one port.
-FROM node:22-slim
+# Multi-stage: the client toolchain (Vite, Svelte, Tailwind) is only needed to
+# produce static files, so it never reaches the runtime image. That keeps the
+# thing people actually pull small — which matters on the low-power boxes this
+# is meant to be self-hosted on.
 
-# Build tools are a fallback in case better-sqlite3 has no prebuilt binary for
-# this platform; usually the prebuild is downloaded and these go unused.
+# ── build ────────────────────────────────────────────────────────────────────
+FROM node:22-slim AS build
+
+# Fallback toolchain in case better-sqlite3 has no prebuilt binary for this
+# platform (notably linux/arm64); usually the prebuild is downloaded instead.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends python3 make g++ \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
-# Install dependencies for both workspaces first (better layer caching).
+# Dependencies first, so editing source doesn't invalidate the install layer.
 COPY package.json package-lock.json* ./
 COPY server/package.json ./server/
 COPY client/package.json ./client/
 RUN npm install
 
-# Copy sources and build the client.
 COPY . .
 RUN npm run build
+
+# Re-install without dev dependencies for the runtime image. The server runs
+# TypeScript directly via tsx, so its sources are copied as-is (no dist step).
+RUN npm prune --omit=dev
+
+# ── runtime ──────────────────────────────────────────────────────────────────
+FROM node:22-slim AS runtime
+
+WORKDIR /app
+
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/server ./server
+COPY --from=build /app/client/build ./client/build
 
 ENV NODE_ENV=production
 ENV PORT=8080
 ENV DATA_DIR=/app/data
+ENV CLIENT_DIR=/app/client/build
 EXPOSE 8080
 
 CMD ["npm", "start"]
