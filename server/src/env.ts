@@ -52,7 +52,20 @@ export const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
 export const LIVEKIT_URL = process.env.LIVEKIT_URL ?? '';
 export const LIVEKIT_PATH = process.env.LIVEKIT_PATH ?? '/livekit';
 export const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY ?? 'ccchat';
-export const LIVEKIT_API_SECRET =
-  process.env.LIVEKIT_API_SECRET ?? 'devsecret_change_me_min_32_chars_long';
+
+// A weak, well-known fallback so `npm run dev` works with zero setup. It must
+// never reach production: anyone could read it here and mint voice tokens. The
+// installer generates a real one; the guard below refuses to start without it.
+const DEV_LIVEKIT_SECRET = 'dev-only-insecure-secret-set-LIVEKIT_API_SECRET';
+// `||`, not `??`: an empty LIVEKIT_API_SECRET='' is as insecure as an unset one,
+// so it must also fall back to the dev default and be caught by the guard below.
+export const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET || DEV_LIVEKIT_SECRET;
+
+if (process.env.NODE_ENV === 'production' && LIVEKIT_API_SECRET === DEV_LIVEKIT_SECRET) {
+  throw new Error(
+    'LIVEKIT_API_SECRET is unset in production. Set it to a strong random value ' +
+      '(the installer does this for you: openssl rand -hex 32).',
+  );
+}
 
 export const IS_PROD = process.env.NODE_ENV === 'production';

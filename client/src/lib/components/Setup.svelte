@@ -84,7 +84,7 @@
         <Card.Content class="space-y-4">
           <div class="space-y-2">
             <Label for="community">Community name</Label>
-            <Input id="community" bind:value={communityName} placeholder="e.g. Babord" autocomplete="off" />
+            <Input id="community" bind:value={communityName} placeholder="e.g. The Group Chat" autocomplete="off" />
           </div>
 
           <div class="space-y-2">

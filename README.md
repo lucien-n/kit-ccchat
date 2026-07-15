@@ -89,8 +89,9 @@ Docker) so it binds directly to your network:
 #              https://github.com/livekit/livekit/releases)
 #    macOS   : brew install livekit
 
-# 2. Run it with this repo's config, bound to your machine
-LIVEKIT_KEYS="ccchat: devsecret_change_me_min_32_chars_long" \
+# 2. Run it with this repo's config, bound to your machine. The key/secret here
+#    just need to match what the dev server uses — anything works locally.
+LIVEKIT_KEYS="ccchat: dev-only-insecure-secret-set-LIVEKIT_API_SECRET" \
   livekit-server --config livekit.yaml --node-ip 127.0.0.1
 
 # 3. In another terminal, run the app pointed at it

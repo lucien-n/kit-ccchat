@@ -30,7 +30,7 @@ param(
 
 $ErrorActionPreference = 'Stop'
 
-$Repo   = if ($env:CCCHAT_REPO)   { $env:CCCHAT_REPO }   else { 'OWNER/ccchat' } # TODO(repo): set owner/name
+$Repo   = if ($env:CCCHAT_REPO)   { $env:CCCHAT_REPO }   else { 'lucien-n/kit-ccchat' }
 $Branch = if ($env:CCCHAT_BRANCH) { $env:CCCHAT_BRANCH } else { 'main' }
 $Raw    = "https://raw.githubusercontent.com/$Repo/$Branch"
 
