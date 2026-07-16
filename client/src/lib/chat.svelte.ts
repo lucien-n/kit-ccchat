@@ -11,8 +11,6 @@ function wsUrl(token: string): string {
   return u.toString();
 }
 
-/** Single reactive app store (Svelte 5 runes). One instance is exported and
- *  shared across every component. */
 class ChatStore {
   token = $state<string | null>(null);
   user = $state<PublicUser | null>(null);
@@ -27,11 +25,8 @@ class ChatStore {
   online = $state<Set<string>>(new Set());
   status = $state<Status>('disconnected');
 
-  /** Per-channel unread counts (channelId -> count). Deeply reactive. */
   unread = $state<Record<string, number>>({});
-  /** Who is connected to each voice channel (channelId -> members). */
   voicePresence = $state<Record<string, VoiceMember[]>>({});
-  /** Whether the notification sound plays. Persisted to localStorage. */
   soundEnabled = $state(true);
 
   private ws: WebSocket | null = null;
@@ -50,7 +45,6 @@ class ChatStore {
     return Object.values(this.unread).reduce((a, b) => a + b, 0);
   }
 
-  /** Clear the unread count for the channel currently in view (persisted). */
   markCurrentRead() {
     if (this.currentChannelId) void this.markRead(this.currentChannelId);
   }
@@ -60,10 +54,8 @@ class ChatStore {
     localStorage.setItem('soundEnabled', this.soundEnabled ? '1' : '0');
   }
 
-  /** Restore a saved session on app start, if any. */
   async init() {
     this.soundEnabled = localStorage.getItem('soundEnabled') !== '0';
-    // Clear the current channel's badge when the user returns to the tab.
     window.addEventListener('focus', () => this.markCurrentRead());
     // Satisfy the browser autoplay policy so the first ping can play.
     window.addEventListener('pointerdown', () => unlockAudio(), { once: true });
@@ -131,7 +123,6 @@ class ChatStore {
     this.channels = (await api.channels(this.token)).channels;
   }
 
-  /** Load persisted unread counts from the server. */
   async loadUnreads() {
     if (!this.token) return;
     try {
@@ -141,7 +132,6 @@ class ChatStore {
     }
   }
 
-  /** Clear a channel's badge and persist the read marker on the server. */
   async markRead(channelId: string) {
     this.unread[channelId] = 0;
     if (this.token) await api.markRead(this.token, channelId).catch(() => {});
@@ -220,8 +210,6 @@ class ChatStore {
     }
   }
 
-  /** Tell the server which voice channel we joined (or left, with null) so it can
-   *  broadcast voice presence to everyone. */
   setVoiceChannel(channelId: string | null) {
     if (!this.ws || this.status !== 'connected') return;
     this.ws.send(
@@ -229,7 +217,6 @@ class ChatStore {
     );
   }
 
-  /** Patch the logged-in user locally (after a profile/avatar change). */
   patchUser(patch: Partial<PublicUser>) {
     if (this.user) this.user = { ...this.user, ...patch };
   }

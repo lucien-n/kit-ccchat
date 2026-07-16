@@ -77,7 +77,6 @@ export function migrate() {
     );
   `);
 
-  // Additive column migrations for databases created before the column existed.
   addColumn('users', 'avatar_version', 'INTEGER');
 }
 

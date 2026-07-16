@@ -21,7 +21,6 @@ export function verifyPassword(password: string, stored: string): boolean {
   return key.length === check.length && timingSafeEqual(key, check);
 }
 
-/** A URL-safe random token for invite codes and session tokens. */
 export function randomToken(bytes = 24): string {
   return randomBytes(bytes).toString('base64url');
 }
@@ -43,7 +42,6 @@ export function destroySession(token: string): void {
   db.delete(sessions).where(eq(sessions.token, token)).run();
 }
 
-/** Resolve a bearer token to a live, non-banned user, or null. */
 export function userForToken(token: string | undefined): User | null {
   if (!token) return null;
   const session = db.select().from(sessions).where(eq(sessions.token, token)).get();

@@ -10,8 +10,7 @@ const app = new Hono<Env>();
 // check. Node is single-threaded, so a plain flag is enough.
 let claiming = false;
 
-/** Claim a fresh instance: name the community and create the owner account.
- *  Open only while the database has no users — the moment an owner exists this
+/** Open only while the database has no users — the moment an owner exists this
  *  returns 409 forever. That is the whole security model, so a public instance
  *  must be set up promptly after first boot. */
 app.post('/', async (c) => {

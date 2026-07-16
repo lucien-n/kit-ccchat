@@ -31,7 +31,7 @@ app.get('/:channelId', (c) => {
     .limit(limit)
     .all();
 
-  // Return chronological (oldest-first) for easy appending in the client.
+  // Queried newest-first so `limit` takes the latest; the client wants oldest-first.
   return c.json({ messages: rows.reverse().map(toMessageView) });
 });
 

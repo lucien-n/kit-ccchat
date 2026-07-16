@@ -36,7 +36,6 @@ app.get('/:id/avatar', (c) => {
   return c.body(buf);
 });
 
-/** Upload/replace the current user's avatar. Body: { image: dataURL }. */
 app.post('/me/avatar', requireAuth, async (c) => {
   const user = c.get('user');
   const body = await c.req.json().catch(() => null);
@@ -52,7 +51,6 @@ app.post('/me/avatar', requireAuth, async (c) => {
   return c.json({ avatarVersion });
 });
 
-/** Remove the current user's avatar. */
 app.delete('/me/avatar', requireAuth, (c) => {
   const user = c.get('user');
   const path = join(AVATAR_DIR, user.id);
@@ -61,7 +59,6 @@ app.delete('/me/avatar', requireAuth, (c) => {
   return c.json({ ok: true });
 });
 
-/** Change display name. Body: { displayName }. */
 app.patch('/me', requireAuth, async (c) => {
   const user = c.get('user');
   const body = await c.req.json().catch(() => null);
@@ -73,7 +70,6 @@ app.patch('/me', requireAuth, async (c) => {
   return c.json({ user: toPublicUser({ ...user, displayName }) });
 });
 
-/** Change password. Requires the current password. */
 app.post('/me/password', requireAuth, async (c) => {
   const user = c.get('user');
   const body = await c.req.json().catch(() => null);

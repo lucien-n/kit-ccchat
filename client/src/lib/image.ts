@@ -12,7 +12,6 @@ export function resizeImage(file: File, size = 256): Promise<string> {
       const ctx = canvas.getContext('2d');
       if (!ctx) return reject(new Error('canvas unavailable'));
 
-      // Cover: crop the largest centered square, then scale into the canvas.
       const side = Math.min(img.width, img.height);
       const sx = (img.width - side) / 2;
       const sy = (img.height - side) / 2;

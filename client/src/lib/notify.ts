@@ -39,7 +39,6 @@ function playSequence(notes: Array<[number, number]>) {
   }
 }
 
-/** New-message chime. */
 export const playPing = () => playSequence([[880, 0.18], [1174.7, 0.18]]);
 
 /** Voice cues: rising = joined, falling = left, and short blips for mic state. */

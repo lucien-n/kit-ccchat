@@ -17,7 +17,6 @@ const app = new Hono<Env>();
 
 const publicUser = toPublicUser;
 
-/** Redeem an invite code and create an account. No email required. */
 app.post('/register', async (c) => {
   const body = await c.req.json().catch(() => null);
   const inviteCode = String(body?.inviteCode ?? '').trim();
@@ -49,11 +48,15 @@ app.post('/register', async (c) => {
     createdAt: Date.now(),
     banned: 0,
   };
-  db.insert(users).values(user).run();
-  db.update(invites)
-    .set({ uses: sql`${invites.uses} + 1` })
-    .where(eq(invites.code, inviteCode))
-    .run();
+  // One transaction: an account must never come into existence without its
+  // invite being counted, or a single-use link would let a second person in.
+  db.transaction((tx) => {
+    tx.insert(users).values(user).run();
+    tx.update(invites)
+      .set({ uses: sql`${invites.uses} + 1` })
+      .where(eq(invites.code, inviteCode))
+      .run();
+  });
 
   const token = createSession(user.id);
   return c.json({ token, user: publicUser(user) });

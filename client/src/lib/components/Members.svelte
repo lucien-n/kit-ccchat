@@ -55,7 +55,6 @@
     m.mutedUntil != null && m.mutedUntil > Date.now();
   const initial = (name: string) => name[0]?.toUpperCase() ?? "?";
 
-  // Refresh the roster each time the panel opens.
   $effect(() => {
     if (open) load();
   });

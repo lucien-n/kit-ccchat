@@ -1,6 +1,5 @@
 import type { WebSocket } from 'ws';
 
-/** A user currently connected to a voice channel. */
 export interface VoiceMember {
   id: string;
   name: string;
@@ -31,19 +30,16 @@ class Hub {
   add(client: Client) {
     this.clients.add(client);
     this.broadcastPresence();
-    // Bring the new client up to date on who's in each voice channel.
     this.send(client, this.voiceEvent());
   }
 
   remove(client: Client) {
     this.clients.delete(client);
-    // If that was the user's last connection, drop them from voice too.
     const stillConnected = [...this.clients].some((c) => c.userId === client.userId);
     if (!stillConnected) this.voiceLeaveAll(client.userId);
     this.broadcastPresence();
   }
 
-  /** Send an event to every connected client. */
   broadcast(event: ServerEvent) {
     const data = JSON.stringify(event);
     for (const c of this.clients) {

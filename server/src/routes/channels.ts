@@ -8,7 +8,6 @@ const app = new Hono<Env>();
 
 app.use('*', requireAuth);
 
-/** Any member can see the channel list. */
 app.get('/', (c) => {
   const list = db
     .select()
@@ -51,7 +50,6 @@ app.get('/unreads', (c) => {
   return c.json({ unreads });
 });
 
-/** Mark a channel read up to now (upsert the read marker). */
 app.post('/:id/read', (c) => {
   const channelId = c.req.param('id');
   const now = Date.now();
@@ -65,7 +63,6 @@ app.post('/:id/read', (c) => {
   return c.json({ ok: true });
 });
 
-/** Admins create channels. Body: { name, type: 'text' | 'voice' } */
 app.post('/', requireRole('admin'), async (c) => {
   const body = await c.req.json().catch(() => null);
   const name = String(body?.name ?? '').trim();

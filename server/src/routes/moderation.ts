@@ -17,7 +17,6 @@ function loadTarget(c: any): { target?: User; error?: string; status?: number } 
   const target = db.select().from(users).where(eq(users.id, targetId)).get();
   if (!target) return { error: 'user not found', status: 404 };
   if (target.id === actor.id) return { error: 'you cannot moderate yourself', status: 400 };
-  // Owner outranks everyone; otherwise you must strictly outrank the target.
   const actorRank = actor.role === 'owner' ? 2 : actor.role === 'admin' ? 1 : 0;
   const targetRank = target.role === 'owner' ? 2 : target.role === 'admin' ? 1 : 0;
   if (targetRank >= actorRank) return { error: 'target outranks you', status: 403 };
@@ -25,7 +24,7 @@ function loadTarget(c: any): { target?: User; error?: string; status?: number } 
 }
 
 /** Kick = end all active sessions. With invite-only signup this forces them to
- *  redeem a fresh invite to return (your "kick == soft ban" idea). */
+ *  redeem a fresh invite to return. */
 app.post('/:id/kick', (c) => {
   const { target, error, status } = loadTarget(c);
   if (error) return c.json({ error }, status as any);
@@ -33,7 +32,6 @@ app.post('/:id/kick', (c) => {
   return c.json({ ok: true });
 });
 
-/** Ban = mark banned and drop sessions. They can't log in or connect. */
 app.post('/:id/ban', (c) => {
   const { target, error, status } = loadTarget(c);
   if (error) return c.json({ error }, status as any);
@@ -69,7 +67,6 @@ app.post('/:id/unmute', (c) => {
   return c.json({ ok: true });
 });
 
-/** Member roster (admins see roles/ban/mute state to moderate). */
 app.get('/members', (c) => {
   const members = db
     .select({

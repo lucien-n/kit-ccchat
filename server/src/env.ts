@@ -26,7 +26,6 @@ export const DATA_DIR = resolve(process.env.DATA_DIR ?? './data');
 /** Built SPA served in production. In dev the client runs on Vite instead. */
 export const CLIENT_DIR = resolve(process.env.CLIENT_DIR ?? '../client/build');
 
-/** Display name of this community (shown in the client header). */
 export const COMMUNITY_NAME = process.env.COMMUNITY_NAME ?? 'My Community';
 
 /** First-boot owner account. If no password is given, a random one is generated
@@ -39,7 +38,6 @@ export const OWNER_PASSWORD = process.env.OWNER_PASSWORD ?? '';
  *  useful when you've lost it. Unset it again afterwards. */
 export const RESET_OWNER_PASSWORD = process.env.RESET_OWNER_PASSWORD === '1';
 
-/** Session lifetime. */
 export const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30; // 30 days
 
 // ── Voice (LiveKit SFU) ──────────────────────────────────────────────────────

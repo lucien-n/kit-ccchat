@@ -22,6 +22,20 @@ export interface Channel {
   position: number;
 }
 
+export interface Invite {
+  code: string;
+  createdAt: number;
+  createdBy: string;
+  /** 0 = unlimited. */
+  maxUses: number;
+  uses: number;
+  expiresAt: number | null;
+  revoked: boolean;
+  /** Server-computed: still redeemable? Don't re-derive this on the client. */
+  active: boolean;
+  status: 'active' | 'revoked' | 'expired' | 'used up';
+}
+
 export interface MessageView {
   id: string;
   channelId: string;
@@ -42,8 +56,7 @@ export function apiBase(): string {
   return '';
 }
 
-/** URL for a user's avatar image. Returns null when they have none, so callers
- *  can fall back to initials. `version` doubles as a cache-buster. */
+/** `version` doubles as a cache-buster. */
 export function avatarUrl(id: string, version: number | null | undefined): string | null {
   if (version == null) return null;
   return `${apiBase()}/api/users/${id}/avatar?v=${version}`;
@@ -121,7 +134,15 @@ export const api = {
     request<{ ok: true }>(`/api/messages/${id}`, { method: 'DELETE', token }),
 
   createInvite: (token: string, body: { maxUses?: number; expiresInHours?: number } = {}) =>
-    request<{ invite: { code: string } }>('/api/invites', { method: 'POST', body, token }),
+    request<{ invite: Invite }>('/api/invites', { method: 'POST', body, token }),
+
+  invites: (token: string) => request<{ invites: Invite[] }>('/api/invites', { token }),
+
+  revokeInvite: (token: string, code: string) =>
+    request<{ invite: Invite }>(`/api/invites/${encodeURIComponent(code)}/revoke`, {
+      method: 'POST',
+      token,
+    }),
 
   members: (token: string) =>
     request<{ members: Array<PublicUser & { banned: number; mutedUntil: number | null }> }>(

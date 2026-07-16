@@ -18,7 +18,6 @@
 {#if !ready}
   <div class="grid min-h-dvh place-items-center text-muted-foreground">Connecting…</div>
 {:else if chat.needsSetup}
-  <!-- Fresh instance, or the owner is still looking at their invite code. -->
   <Setup />
 {:else if !chat.user}
   <Login />

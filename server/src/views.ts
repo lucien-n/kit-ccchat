@@ -27,7 +27,6 @@ export function toPublicUser(u: {
   };
 }
 
-/** Shape sent to clients for a single message (author denormalized in). */
 export interface MessageView {
   id: string;
   channelId: string;

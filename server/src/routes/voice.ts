@@ -11,13 +11,10 @@ const app = new Hono<Env>();
 
 app.use('*', requireAuth);
 
-/** The LiveKit endpoint to hand to *this* browser. Derived from the request it
- *  just made, so however the user reaches the app — LAN IP, domain, whatever —
- *  they reach LiveKit the same way, through the proxy that fronted us. Nothing
- *  to configure and nothing to get wrong.
- *
- *  The proxy sets X-Forwarded-Proto; falling back to the raw Host header keeps
- *  `npm run dev` (no proxy) working. */
+/** Derived from the request, so however the user reaches the app they reach
+ *  LiveKit the same way, through the proxy that fronted us — nothing to
+ *  configure. The proxy sets X-Forwarded-Proto; falling back to the raw Host
+ *  header keeps `npm run dev` (no proxy) working. */
 function livekitUrl(c: Context): string {
   if (LIVEKIT_URL) return LIVEKIT_URL; // explicit override wins
 
@@ -28,7 +25,6 @@ function livekitUrl(c: Context): string {
   return `${secure ? 'wss' : 'ws'}://${host}${LIVEKIT_PATH}`;
 }
 
-/** Where the client should connect its LiveKit session. */
 app.get('/config', (c) => c.json({ url: livekitUrl(c) }));
 
 /** Mint a short-lived LiveKit access token for a voice channel. The LiveKit

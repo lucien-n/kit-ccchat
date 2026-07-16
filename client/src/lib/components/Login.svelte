@@ -1,41 +1,42 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { chat } from '$lib/chat.svelte';
-  import { clearInviteFromUrl, readInviteFromUrl } from '$lib/invite';
-  import { Button } from '$lib/components/ui/button';
-  import { Input } from '$lib/components/ui/input';
-  import { Label } from '$lib/components/ui/label';
-  import * as Card from '$lib/components/ui/card';
-  import * as Alert from '$lib/components/ui/alert';
-  import { TriangleAlert } from '@lucide/svelte';
+  import { chat } from "$lib/chat.svelte";
+  import * as Alert from "$lib/components/ui/alert";
+  import { Button } from "$lib/components/ui/button";
+  import * as Card from "$lib/components/ui/card";
+  import { Input } from "$lib/components/ui/input";
+  import { Label } from "$lib/components/ui/label";
+  import { clearInviteFromUrl, readInviteFromUrl } from "$lib/invite";
+  import { TriangleAlert } from "@lucide/svelte";
+  import { onMount } from "svelte";
 
-  // An invite link lands here as ?invite=<code>. Read it once as we initialise:
-  // its presence means "this person was invited", so open on Register with the
-  // code filled in. The field owns the value afterwards, and we drop it from the
-  // address bar on mount so it isn't left lying in history.
   const linkedInvite = readInviteFromUrl();
   onMount(clearInviteFromUrl);
 
-  let mode = $state<'login' | 'register'>(linkedInvite ? 'register' : 'login');
+  let mode = $state<"login" | "register">(linkedInvite ? "register" : "login");
   let inviteCode = $state(linkedInvite);
-  let username = $state('');
-  let displayName = $state('');
-  let password = $state('');
-  let error = $state('');
+  let username = $state("");
+  let displayName = $state("");
+  let password = $state("");
+  let error = $state("");
   let busy = $state(false);
 
   async function submit(e: Event) {
     e.preventDefault();
-    error = '';
+    error = "";
     busy = true;
     try {
-      if (mode === 'login') {
+      if (mode === "login") {
         await chat.login(username, password);
       } else {
-        await chat.register(inviteCode.trim(), username, password, displayName || undefined);
+        await chat.register(
+          inviteCode.trim(),
+          username,
+          password,
+          displayName || undefined,
+        );
       }
     } catch (err: any) {
-      error = err?.message ?? 'something went wrong';
+      error = err?.message ?? "something went wrong";
     } finally {
       busy = false;
     }
@@ -47,7 +48,7 @@
     <Card.Header class="text-center">
       <Card.Title class="text-2xl">{chat.serverName}</Card.Title>
       <Card.Description>
-        {#if mode === 'login'}
+        {#if mode === "login"}
           Welcome back.
         {:else if linkedInvite}
           You've been invited. Pick a username and password to join.
@@ -59,22 +60,40 @@
 
     <form onsubmit={submit}>
       <Card.Content class="space-y-4">
-        {#if mode === 'register'}
+        {#if mode === "register"}
           <div class="space-y-2">
             <Label for="invite">Invite code</Label>
-            <Input id="invite" bind:value={inviteCode} placeholder="paste your invite code" autocomplete="off" />
+            <Input
+              id="invite"
+              bind:value={inviteCode}
+              placeholder="paste your invite code"
+              autocomplete="off"
+            />
           </div>
         {/if}
 
         <div class="space-y-2">
           <Label for="username">Username</Label>
-          <Input id="username" bind:value={username} placeholder="lowercase, 2–24 chars" autocomplete="username" />
+          <Input
+            id="username"
+            bind:value={username}
+            placeholder="lowercase, 2–24 chars"
+            autocomplete="username"
+          />
         </div>
 
-        {#if mode === 'register'}
+        {#if mode === "register"}
           <div class="space-y-2">
-            <Label for="display">Display name <span class="text-muted-foreground font-normal">(optional)</span></Label>
-            <Input id="display" bind:value={displayName} placeholder="how others see you" />
+            <Label for="display"
+              >Display name <span class="text-muted-foreground font-normal"
+                >(optional)</span
+              ></Label
+            >
+            <Input
+              id="display"
+              bind:value={displayName}
+              placeholder="how others see you"
+            />
           </div>
         {/if}
 
@@ -85,7 +104,9 @@
             type="password"
             bind:value={password}
             placeholder="at least 8 characters"
-            autocomplete={mode === 'login' ? 'current-password' : 'new-password'}
+            autocomplete={mode === "login"
+              ? "current-password"
+              : "new-password"}
           />
         </div>
 
@@ -99,18 +120,24 @@
 
       <Card.Footer class="mt-6 flex-col gap-3">
         <Button type="submit" class="w-full" disabled={busy}>
-          {busy ? 'Please wait…' : mode === 'login' ? 'Log in' : 'Create account'}
+          {busy
+            ? "Please wait…"
+            : mode === "login"
+              ? "Log in"
+              : "Create account"}
         </Button>
         <Button
           type="button"
           variant="link"
           class="text-muted-foreground"
           onclick={() => {
-            mode = mode === 'login' ? 'register' : 'login';
-            error = '';
+            mode = mode === "login" ? "register" : "login";
+            error = "";
           }}
         >
-          {mode === 'login' ? 'Have an invite code? Register' : 'Already have an account? Log in'}
+          {mode === "login"
+            ? "Have an invite code? Register"
+            : "Already have an account? Log in"}
         </Button>
       </Card.Footer>
     </form>

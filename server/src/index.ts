@@ -30,8 +30,6 @@ const app = new Hono<Env>();
 // permissive CORS policy lets the mobile app and dev client talk to the API.
 app.use('/api/*', cors());
 
-// Public metadata for the login screen. `needsSetup` tells a fresh instance to
-// show the setup wizard instead of a login form.
 app.get('/api/info', (c) => c.json({ name: communityName(), needsSetup: needsSetup() }));
 
 app.route('/api/setup', setupRoutes);
