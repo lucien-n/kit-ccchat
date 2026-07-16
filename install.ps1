@@ -6,7 +6,7 @@
 .DESCRIPTION
   Sets up a community in one command:
 
-    irm https://raw.githubusercontent.com/OWNER/ccchat/main/install.ps1 | iex
+    irm https://raw.githubusercontent.com/lucien-n/kit-ccchat/main/install.ps1 | iex
 
   It asks for one thing (your domain), generates the secrets nobody should have
   to invent, and starts the stack. The community name, your owner account and

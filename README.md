@@ -113,13 +113,13 @@ voice with no extra steps.
 On any Linux box — a VPS, a Raspberry Pi, an old laptop, a £30 thin client:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/OWNER/ccchat/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/lucien-n/kit-ccchat/main/install.sh | sh
 ```
 
 On Windows (Docker Desktop), in PowerShell:
 
 ```powershell
-irm https://raw.githubusercontent.com/OWNER/ccchat/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/lucien-n/kit-ccchat/main/install.ps1 | iex
 ```
 
 Either way it asks for **one** thing — your domain — then generates the secrets,
@@ -165,7 +165,7 @@ owner from the environment for scripted installs). You can ignore it.
 ### Doing it by hand
 
 ```bash
-git clone https://github.com/OWNER/ccchat && cd ccchat
+git clone https://github.com/lucien-n/kit-ccchat && cd ccchat
 cp .env.example .env         # set CCCHAT_DOMAIN + LIVEKIT_API_SECRET
 docker compose up -d
 ```

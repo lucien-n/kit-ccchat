@@ -25,7 +25,7 @@ services:
   # ── The app: REST API, WebSocket, and the built client ─────────────────────
   # Not published to the host: it is only reachable through Caddy.
   ccchat:
-    image: ${CCCHAT_IMAGE:-ghcr.io/OWNER/ccchat:latest} # TODO(repo): set OWNER
+    image: ${CCCHAT_IMAGE:-ghcr.io/lucien-n/kit-ccchat:latest}
     container_name: ccchat
     restart: unless-stopped
     environment:

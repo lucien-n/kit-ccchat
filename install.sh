@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 # ccchat installer. Sets up a community in one command:
 #
-#   curl -fsSL https://raw.githubusercontent.com/OWNER/ccchat/main/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/lucien-n/kit-ccchat/main/install.sh | sh
 #
 # It asks for one thing (your domain), generates the secrets nobody should ever
 # have to invent themselves, and starts the stack. Everything else — the
@@ -11,7 +11,7 @@
 
 set -eu
 
-REPO="${CCCHAT_REPO:-OWNER/ccchat}" # TODO(repo): set to your GitHub owner/name
+REPO="${CCCHAT_REPO:-lucien-n/kit-ccchat}"
 BRANCH="${CCCHAT_BRANCH:-main}"
 RAW="https://raw.githubusercontent.com/${REPO}/${BRANCH}"
 DIR="${CCCHAT_DIR:-$HOME/ccchat}"
