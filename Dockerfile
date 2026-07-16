@@ -16,6 +16,7 @@ WORKDIR /app
 
 # Dependencies first, so editing source doesn't invalidate the install layer.
 COPY package.json package-lock.json* ./
+COPY shared/package.json ./shared/
 COPY server/package.json ./server/
 COPY client/package.json ./client/
 RUN npm install
@@ -34,6 +35,9 @@ WORKDIR /app
 
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
+# node_modules/@ccchat/shared is a workspace symlink to ../shared, so the real
+# directory has to come along or every import of it dangles at runtime.
+COPY --from=build /app/shared ./shared
 COPY --from=build /app/server ./server
 COPY --from=build /app/client/build ./client/build
 

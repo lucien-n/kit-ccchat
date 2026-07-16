@@ -8,9 +8,9 @@ let ctx: AudioContext | null = null;
 export function unlockAudio() {
   try {
     ctx ??= new AudioContext();
-    if (ctx.state === 'suspended') void ctx.resume();
+    if (ctx.state === "suspended") void ctx.resume();
   } catch {
-    /* AudioContext unavailable — cues simply no-op */
+    /* AudioContext unavailable - cues simply no-op */
   }
 }
 
@@ -18,14 +18,14 @@ export function unlockAudio() {
 function playSequence(notes: Array<[number, number]>) {
   try {
     ctx ??= new AudioContext();
-    if (ctx.state === 'suspended') void ctx.resume();
+    if (ctx.state === "suspended") void ctx.resume();
     let t = ctx.currentTime;
     for (const [freq, dur] of notes) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.connect(gain);
       gain.connect(ctx.destination);
-      osc.type = 'sine';
+      osc.type = "sine";
       osc.frequency.value = freq;
       gain.gain.setValueAtTime(0.0001, t);
       gain.gain.exponentialRampToValueAtTime(0.14, t + 0.01);
@@ -35,19 +35,33 @@ function playSequence(notes: Array<[number, number]>) {
       t += dur;
     }
   } catch {
-    /* ignore — audio is a nicety, never fatal */
+    /* ignore - audio is a nicety, never fatal */
   }
 }
 
-export const playPing = () => playSequence([[880, 0.18], [1174.7, 0.18]]);
+export const playPing = () =>
+  playSequence([
+    [880, 0.18],
+    [1174.7, 0.18],
+  ]);
 
 /** Voice cues: rising = joined, falling = left, and short blips for mic state. */
-export const playVoiceJoin = () => playSequence([[523.25, 0.1], [659.25, 0.1], [783.99, 0.14]]);
-export const playVoiceLeave = () => playSequence([[783.99, 0.1], [659.25, 0.1], [523.25, 0.14]]);
+export const playVoiceJoin = () =>
+  playSequence([
+    [523.25, 0.1],
+    [659.25, 0.1],
+    [783.99, 0.14],
+  ]);
+export const playVoiceLeave = () =>
+  playSequence([
+    [783.99, 0.1],
+    [659.25, 0.1],
+    [523.25, 0.14],
+  ]);
 export const playUnmute = () => playSequence([[660, 0.09]]);
 export const playMute = () => playSequence([[440, 0.09]]);
 
-let baseTitle = 'ccchat';
+let baseTitle = "ccchat";
 export function setBaseTitle(title: string) {
   baseTitle = title;
   document.title = baseTitle;
@@ -55,6 +69,6 @@ export function setBaseTitle(title: string) {
 
 /** Prefix the tab title with an unread count, e.g. "(3) My Community". */
 export function setTitleBadge(count: number) {
-  if (typeof document === 'undefined') return;
+  if (typeof document === "undefined") return;
   document.title = count > 0 ? `(${count}) ${baseTitle}` : baseTitle;
 }

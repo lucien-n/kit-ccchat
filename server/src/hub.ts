@@ -1,19 +1,7 @@
-import type { WebSocket } from 'ws';
+import type { WebSocket } from "ws";
+import type { ServerEvent, VoiceMember } from "@ccchat/shared";
 
-export interface VoiceMember {
-  id: string;
-  name: string;
-  avatarVersion: number | null;
-}
-
-/** Events the server pushes down to clients over the WebSocket. */
-export type ServerEvent =
-  | { type: 'message.new'; message: unknown }
-  | { type: 'message.deleted'; id: string; channelId: string }
-  | { type: 'presence'; online: string[] }
-  | { type: 'voice.presence'; presence: Record<string, VoiceMember[]> }
-  | { type: 'community.renamed'; name: string }
-  | { type: 'error'; message: string };
+export type { ServerEvent, VoiceMember };
 
 interface Client {
   ws: WebSocket;
@@ -56,7 +44,7 @@ class Hub {
   // ── voice presence ─────────────────────────────────────────────────────────
 
   voiceJoin(channelId: string, member: VoiceMember) {
-    // A user is only ever in one voice channel — clear any prior one first.
+    // A user is only ever in one voice channel - clear any prior one first.
     this.removeFromVoice(member.id);
     let members = this.voice.get(channelId);
     if (!members) {
@@ -84,13 +72,14 @@ class Hub {
 
   private voiceEvent(): ServerEvent {
     const presence: Record<string, VoiceMember[]> = {};
-    for (const [channelId, members] of this.voice) presence[channelId] = [...members.values()];
-    return { type: 'voice.presence', presence };
+    for (const [channelId, members] of this.voice)
+      presence[channelId] = [...members.values()];
+    return { type: "voice.presence", presence };
   }
 
   private broadcastPresence() {
     const online = [...new Set([...this.clients].map((c) => c.userId))];
-    this.broadcast({ type: 'presence', online });
+    this.broadcast({ type: "presence", online });
   }
 }
 

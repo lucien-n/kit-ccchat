@@ -1,124 +1,18 @@
 <script lang="ts">
-  import { api, avatarUrl } from "$lib/api";
-  import { appearance, type ThemeMode } from "$lib/appearance.svelte";
-  import { chat } from "$lib/chat.svelte";
-  import * as Avatar from "$lib/components/ui/avatar";
-  import { Button } from "$lib/components/ui/button";
+  import { session } from "$lib/stores/session.svelte";
   import * as Dialog from "$lib/components/ui/dialog";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
-  import { Switch } from "$lib/components/ui/switch";
   import * as Tabs from "$lib/components/ui/tabs";
-  import { resizeImage } from "$lib/image";
   import { cn } from "$lib/utils";
-  import { Monitor, Moon, Sun, Trash2, Upload } from "@lucide/svelte";
+  import AppearanceTab from "./settings/AppearanceTab.svelte";
+  import CommunityTab from "./settings/CommunityTab.svelte";
+  import ProfileTab from "./settings/ProfileTab.svelte";
 
   let { open = $bindable(false) }: { open?: boolean } = $props();
 
-  let displayName = $state(chat.user?.displayName ?? "");
-  let currentPassword = $state("");
-  let newPassword = $state("");
-  let communityName = $state(chat.serverName);
-  let profileMsg = $state("");
-  let passwordMsg = $state("");
-  let avatarMsg = $state("");
-  let communityMsg = $state("");
-  let busy = $state(false);
-  let fileInput: HTMLInputElement | null = $state(null);
-
-  const isOwner = $derived(chat.user?.role === "owner");
-
-  $effect(() => {
-    if (open) {
-      displayName = chat.user?.displayName ?? "";
-      communityName = chat.serverName;
-      currentPassword = newPassword = "";
-      profileMsg = passwordMsg = avatarMsg = communityMsg = "";
-    }
-  });
-
-  async function saveCommunity(e: Event) {
-    e.preventDefault();
-    if (!chat.token) return;
-    busy = true;
-    communityMsg = "";
-    try {
-      await api.renameCommunity(chat.token, communityName.trim());
-      communityMsg = "Saved.";
-    } catch (err: any) {
-      communityMsg = err?.message ?? "failed to save";
-    } finally {
-      busy = false;
-    }
-  }
-
-  const initial = (chat.user?.displayName ?? "?")[0]?.toUpperCase() ?? "?";
-  const avatar = $derived(
-    avatarUrl(chat.user?.id ?? "", chat.user?.avatarVersion),
-  );
-
-  async function saveName(e: Event) {
-    e.preventDefault();
-    if (!chat.token) return;
-    busy = true;
-    profileMsg = "";
-    try {
-      const { user } = await api.updateProfile(chat.token, {
-        displayName: displayName.trim(),
-      });
-      chat.patchUser({ displayName: user.displayName });
-      profileMsg = "Saved.";
-    } catch (err: any) {
-      profileMsg = err?.message ?? "failed to save";
-    } finally {
-      busy = false;
-    }
-  }
-
-  async function savePassword(e: Event) {
-    e.preventDefault();
-    if (!chat.token) return;
-    busy = true;
-    passwordMsg = "";
-    try {
-      await api.changePassword(chat.token, { currentPassword, newPassword });
-      passwordMsg = "Password changed.";
-      currentPassword = newPassword = "";
-    } catch (err: any) {
-      passwordMsg = err?.message ?? "failed to change password";
-    } finally {
-      busy = false;
-    }
-  }
-
-  async function onAvatarFile(e: Event) {
-    const file = (e.currentTarget as HTMLInputElement).files?.[0];
-    if (!file || !chat.token) return;
-    avatarMsg = "";
-    try {
-      const dataUrl = await resizeImage(file, 256);
-      const { avatarVersion } = await api.uploadAvatar(chat.token, dataUrl);
-      chat.patchUser({ avatarVersion });
-    } catch (err: any) {
-      avatarMsg = err?.message ?? "upload failed";
-    } finally {
-      if (fileInput) fileInput.value = "";
-    }
-  }
-
-  async function removeAvatar() {
-    if (!chat.token) return;
-    await api.removeAvatar(chat.token).catch(() => {});
-    chat.patchUser({ avatarVersion: null });
-  }
-
-  const modes: { value: ThemeMode; label: string; icon: typeof Sun }[] = [
-    { value: "light", label: "Light", icon: Sun },
-    { value: "dark", label: "Dark", icon: Moon },
-    { value: "system", label: "System", icon: Monitor },
-  ];
+  const isOwner = $derived(session.user?.role === "owner");
 </script>
 
+<!-- Dialog.Content only renders while open, so each tab mounts fresh. -->
 <Dialog.Root bind:open>
   <Dialog.Content class="max-w-lg">
     <Dialog.Header>
@@ -126,9 +20,7 @@
     </Dialog.Header>
 
     <Tabs.Root value="profile" class="w-full">
-      <Tabs.List
-        class={cn("grid w-full", isOwner ? "grid-cols-3" : "grid-cols-2")}
-      >
+      <Tabs.List class={cn("grid w-full", isOwner ? "grid-cols-3" : "grid-cols-2")}>
         <Tabs.Trigger value="profile">Profile</Tabs.Trigger>
         <Tabs.Trigger value="appearance">Appearance</Tabs.Trigger>
         {#if isOwner}
@@ -137,142 +29,16 @@
       </Tabs.List>
 
       <Tabs.Content value="profile" class="space-y-6 pt-4">
-        <div class="flex items-center gap-4">
-          <Avatar.Root class="size-20">
-            {#if avatar}<Avatar.Image src={avatar} alt="avatar" />{/if}
-            <Avatar.Fallback class="bg-primary text-primary-foreground text-xl"
-              >{initial}</Avatar.Fallback
-            >
-          </Avatar.Root>
-          <div class="space-y-2">
-            <div class="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onclick={() => fileInput?.click()}
-              >
-                <Upload class="size-4" /> Upload
-              </Button>
-              {#if chat.user?.avatarVersion}
-                <Button variant="ghost" size="sm" onclick={removeAvatar}>
-                  <Trash2 class="size-4" /> Remove
-                </Button>
-              {/if}
-            </div>
-            <p class="text-muted-foreground text-xs">
-              JPG, PNG, GIF or WebP. Square looks best.
-            </p>
-            {#if avatarMsg}<p class="text-destructive text-xs">
-                {avatarMsg}
-              </p>{/if}
-          </div>
-          <input
-            bind:this={fileInput}
-            type="file"
-            accept="image/*"
-            class="hidden"
-            onchange={onAvatarFile}
-          />
-        </div>
-
-        <form class="space-y-2" onsubmit={saveName}>
-          <Label for="dn">Display name</Label>
-          <div class="flex gap-2">
-            <Input
-              id="dn"
-              bind:value={displayName}
-              maxlength={32}
-              class="flex-1"
-            />
-            <Button type="submit" disabled={busy}>Save</Button>
-          </div>
-          {#if profileMsg}<p class="text-muted-foreground text-xs">
-              {profileMsg}
-            </p>{/if}
-        </form>
-
-        <form class="space-y-2" onsubmit={savePassword}>
-          <Label>Change password</Label>
-          <Input
-            type="password"
-            placeholder="current password"
-            bind:value={currentPassword}
-            autocomplete="current-password"
-          />
-          <Input
-            type="password"
-            placeholder="new password (min 8)"
-            bind:value={newPassword}
-            autocomplete="new-password"
-          />
-          <Button
-            type="submit"
-            variant="secondary"
-            disabled={busy || !currentPassword || !newPassword}
-          >
-            Update password
-          </Button>
-          {#if passwordMsg}<p class="text-muted-foreground text-xs">
-              {passwordMsg}
-            </p>{/if}
-        </form>
+        <ProfileTab />
       </Tabs.Content>
 
       <Tabs.Content value="appearance" class="space-y-6 pt-4">
-        <div class="space-y-2">
-          <Label>Theme</Label>
-          <div class="grid grid-cols-3 gap-2">
-            {#each modes as m (m.value)}
-              {@const Icon = m.icon}
-              <Button
-                variant={appearance.mode === m.value ? "default" : "outline"}
-                class="flex-col gap-1 h-auto py-3"
-                onclick={() => appearance.setMode(m.value)}
-              >
-                <Icon class="size-5" />
-                <span class="text-xs">{m.label}</span>
-              </Button>
-            {/each}
-          </div>
-        </div>
-
-        <div class="flex items-center justify-between">
-          <div>
-            <Label>Reduced motion</Label>
-            <p class="text-muted-foreground text-xs">
-              Minimize animations and transitions.
-            </p>
-          </div>
-          <Switch
-            checked={appearance.reducedMotion}
-            onCheckedChange={(v) => appearance.setReducedMotion(v)}
-          />
-        </div>
+        <AppearanceTab />
       </Tabs.Content>
 
       {#if isOwner}
         <Tabs.Content value="community" class="space-y-6 pt-4">
-          <form class="space-y-2" onsubmit={saveCommunity}>
-            <Label for="cn">Community name</Label>
-            <div class="flex gap-2">
-              <Input
-                id="cn"
-                bind:value={communityName}
-                maxlength={60}
-                class="flex-1"
-              />
-              <Button type="submit" disabled={busy || !communityName.trim()}
-                >Save</Button
-              >
-            </div>
-            <p class="text-muted-foreground text-xs">
-              Shown on the login screen and in the header. Everyone sees the
-              change immediately.
-            </p>
-            {#if communityMsg}<p class="text-muted-foreground text-xs">
-                {communityMsg}
-              </p>{/if}
-          </form>
+          <CommunityTab />
         </Tabs.Content>
       {/if}
     </Tabs.Root>

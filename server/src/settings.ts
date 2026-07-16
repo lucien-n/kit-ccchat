@@ -1,7 +1,7 @@
-import { eq } from 'drizzle-orm';
-import { db } from './db/index.js';
-import { settings } from './db/schema.js';
-import { COMMUNITY_NAME } from './env.js';
+import { eq } from "drizzle-orm";
+import { db } from "./db/index.js";
+import { settings } from "./db/schema.js";
+import { COMMUNITY_NAME } from "./env.js";
 
 /** Runtime settings live in the DB so the owner can change them from the UI.
  *  Environment variables only ever provide the *initial* value. */
@@ -19,5 +19,5 @@ export function setSetting(key: string, value: string) {
 /** Name shown on the login screen and in the client header. Falls back to the
  *  COMMUNITY_NAME env var (for headless installs) and then to a generic default. */
 export function communityName(): string {
-  return getSetting('communityName') ?? COMMUNITY_NAME;
+  return getSetting("communityName") ?? COMMUNITY_NAME;
 }

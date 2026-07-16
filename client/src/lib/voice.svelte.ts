@@ -2,13 +2,14 @@ import {
   Room,
   RoomEvent,
   Track,
+  type Participant,
   type RemoteTrack,
   type RemoteTrackPublication,
-  type Participant,
-} from 'livekit-client';
-import { api } from './api';
-import { chat } from './chat.svelte';
-import { playVoiceJoin, playVoiceLeave, playMute, playUnmute } from './notify';
+} from "livekit-client";
+import { api } from "./api";
+import { apiErrorMessage, errorName } from "./forms";
+import { playMute, playUnmute, playVoiceJoin, playVoiceLeave } from "./notify";
+import { realtime } from "./stores/realtime.svelte";
 
 export interface VoiceParticipant {
   identity: string;
@@ -18,22 +19,22 @@ export interface VoiceParticipant {
   isLocal: boolean;
 }
 
-type Status = 'idle' | 'connecting' | 'connected';
+type Status = "idle" | "connecting" | "connected";
 
 /** Manages the LiveKit voice session. One call at a time (like Discord: you're
  *  in exactly one voice channel), independent of which text channel you're
  *  reading. Uses an SFU so it scales past mesh's ~5-user ceiling to 20+. */
 class VoiceStore {
   channelId = $state<string | null>(null);
-  channelName = $state('');
-  status = $state<Status>('idle');
+  channelName = $state("");
+  status = $state<Status>("idle");
   participants = $state<VoiceParticipant[]>([]);
   micMuted = $state(false);
   canPublish = $state(true);
   /** Hard failure that prevented joining (shown as a banner). */
-  error = $state('');
-  /** Soft notice — connected, but mic couldn't be captured (listen-only). */
-  micError = $state('');
+  error = $state("");
+  /** Soft notice - connected, but mic couldn't be captured (listen-only). */
+  micError = $state("");
 
   private room: Room | null = null;
   private audioEls = new Map<string, HTMLMediaElement>();
@@ -42,20 +43,20 @@ class VoiceStore {
   private leaving = false;
 
   get inCall(): boolean {
-    return this.status !== 'idle';
+    return this.status !== "idle";
   }
 
   async join(channel: { id: string; name: string }, authToken: string) {
     if (this.channelId === channel.id && this.inCall) return;
     if (this.room) await this.leave();
 
-    this.status = 'connecting';
+    this.status = "connecting";
     this.channelId = channel.id;
     this.channelName = channel.name;
-    this.error = '';
-    this.micError = '';
+    this.error = "";
+    this.micError = "";
 
-    let url = '';
+    let url = "";
     try {
       const res = await api.voiceToken(authToken, channel.id);
       url = res.url;
@@ -65,11 +66,11 @@ class VoiceStore {
       this.room = room;
       this.wire(room);
 
-      // If the SFU is unreachable — or its advertised media address isn't
-      // reachable by this browser — this is what fails.
+      // If the SFU is unreachable - or its advertised media address isn't
+      // reachable by this browser - this is what fails.
       await room.connect(url, res.token);
-      this.status = 'connected';
-      chat.setVoiceChannel(channel.id); // broadcast our voice presence
+      this.status = "connected";
+      realtime.send({ type: "voice.join", channelId: channel.id }); // broadcast our presence
       playVoiceJoin();
       this.refresh();
 
@@ -78,15 +79,15 @@ class VoiceStore {
       if (res.canPublish) {
         try {
           await room.localParticipant.setMicrophoneEnabled(true);
-        } catch (e: any) {
-          this.micError = `Microphone unavailable (${e?.name ?? 'error'}) — you're listening only.`;
+        } catch (e) {
+          this.micError = `Microphone unavailable (${errorName(e)}) - you're listening only.`;
         }
       }
       await room.startAudio().catch(() => {});
       this.refresh();
-    } catch (e: any) {
-      console.error('[voice] failed to connect', { url, error: e });
-      this.error = `Couldn't connect to voice${url ? ` (${url})` : ''}: ${e?.message ?? e}`;
+    } catch (e) {
+      console.error("[voice] failed to connect", { url, error: e });
+      this.error = `Couldn't connect to voice${url ? ` (${url})` : ""}: ${apiErrorMessage(e, String(e))}`;
       await this.leave();
     }
   }
@@ -100,32 +101,35 @@ class VoiceStore {
       .on(RoomEvent.TrackMuted, rerender)
       .on(RoomEvent.TrackUnmuted, rerender)
       .on(RoomEvent.LocalTrackPublished, rerender)
-      .on(RoomEvent.TrackSubscribed, (track: RemoteTrack, _pub: RemoteTrackPublication, p: Participant) => {
-        if (track.kind === Track.Kind.Audio) {
-          const el = track.attach();
-          el.style.display = 'none';
-          document.body.appendChild(el);
-          this.audioEls.set(`${p.identity}:${track.sid}`, el);
-        }
-        this.refresh();
-      })
+      .on(
+        RoomEvent.TrackSubscribed,
+        (track: RemoteTrack, _pub: RemoteTrackPublication, p: Participant) => {
+          if (track.kind === Track.Kind.Audio) {
+            const el = track.attach();
+            el.style.display = "none";
+            document.body.appendChild(el);
+            this.audioEls.set(`${p.identity}:${track.sid}`, el);
+          }
+          this.refresh();
+        },
+      )
       .on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack, _pub, p: Participant) => {
         track.detach().forEach((el) => el.remove());
         this.audioEls.delete(`${p.identity}:${track.sid}`);
         this.refresh();
       })
       .on(RoomEvent.Disconnected, () => {
-        const wasConnected = this.status === 'connected';
+        const wasConnected = this.status === "connected";
         // If we didn't ask to leave, the media connection dropped on its own.
         if (!this.leaving && wasConnected) {
           this.error =
-            'Voice disconnected — the media connection dropped. If the server is ' +
-            'in Docker Desktop on Windows/macOS, WebRTC UDP is blocked there; run ' +
-            'it on a Linux host (see README).';
+            "Voice disconnected - the media connection dropped. If the server is " +
+            "in Docker Desktop on Windows/macOS, WebRTC UDP is blocked there; run " +
+            "it on a Linux host (see README).";
         }
         if (wasConnected) {
           playVoiceLeave();
-          chat.setVoiceChannel(null); // clear our voice presence for everyone
+          realtime.send({ type: "voice.leave" }); // clear our presence for everyone
         }
         this.reset();
       });
@@ -142,7 +146,7 @@ class VoiceStore {
     const list: VoiceParticipant[] = [
       {
         identity: lp.identity,
-        name: lp.name || 'me',
+        name: lp.name || "me",
         speaking: speaking.has(lp.identity),
         muted: !lp.isMicrophoneEnabled,
         isLocal: true,
@@ -184,13 +188,13 @@ class VoiceStore {
     for (const el of this.audioEls.values()) el.remove();
     this.audioEls.clear();
     this.room = null;
-    this.status = 'idle';
+    this.status = "idle";
     this.channelId = null;
-    this.channelName = '';
+    this.channelName = "";
     this.participants = [];
     this.micMuted = false;
     this.canPublish = true;
-    this.micError = '';
+    this.micError = "";
     this.leaving = false;
   }
 }

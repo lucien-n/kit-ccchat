@@ -3,17 +3,22 @@
   <head>
     <meta charset="utf-8" />
     <link rel="icon" href="%sveltekit.assets%/favicon.png" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <meta name="theme-color" content="#1e1f22" />
     <title>ccchat</title>
     <script>
       // Apply saved appearance before first paint to avoid a flash.
       try {
-        var m = localStorage.getItem('appearance:mode') || 'dark';
-        var dark = m === 'dark' || (m === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
-        document.documentElement.classList.toggle('dark', dark);
-        if (localStorage.getItem('appearance:reducedMotion') === '1')
-          document.documentElement.classList.add('reduce-motion');
+        var m = localStorage.getItem("appearance:mode") || "dark";
+        var dark =
+          m === "dark" ||
+          (m === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+        document.documentElement.classList.toggle("dark", dark);
+        if (localStorage.getItem("appearance:reducedMotion") === "1")
+          document.documentElement.classList.add("reduce-motion");
       } catch (e) {}
     </script>
     %sveltekit.head%

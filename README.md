@@ -49,7 +49,7 @@ design is what scales past the ~5-user ceiling of a peer-to-peer mesh.
 
 Message storage is **plaintext at rest on your machine**; TLS protects it in
 transit (Caddy terminates HTTPS with an automatic Let's Encrypt certificate).
-This is the right trade-off when you trust whoever runs the box — see *Roadmap*
+This is the right trade-off when you trust whoever runs the box — see _Roadmap_
 for optional end-to-end encryption.
 
 ## Quick start (development)
@@ -129,7 +129,7 @@ is no config file to edit.** Re-run the same command to upgrade.
 
 > On Windows, Docker Desktop can't pass WebRTC UDP, so **voice won't connect**
 > there — text chat is fine. For working voice, host on a Linux box (the Wyse is
-> perfect) or run LiveKit natively; see *Testing voice locally*.
+> perfect) or run LiveKit natively; see _Testing voice locally_.
 
 You need:
 
@@ -229,4 +229,7 @@ Add more primitives with `npx shadcn-svelte@latest add <component> -c client`.
 4. **Optional end-to-end encryption** — a bigger project (per-device keys, no
    server-side search or content moderation). Worth it only if your threat model
    includes the host machine itself being seized.
+
+```
+
 ```

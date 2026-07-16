@@ -1,20 +1,19 @@
-import { Hono } from 'hono';
-import { requireAuth, requireRole, type Env } from '../auth.js';
-import { communityName, setSetting } from '../settings.js';
-import { hub } from '../hub.js';
+import { Hono } from "hono";
+import { renameCommunityBody } from "@ccchat/shared";
+import { requireAuth, requireRole, type Env } from "../auth.js";
+import { communityName, setSetting } from "../settings.js";
+import { hub } from "../hub.js";
+import { validate } from "../validate.js";
 
 const app = new Hono<Env>();
 
-app.use('*', requireAuth);
+app.use("*", requireAuth);
 
-app.patch('/', requireRole('owner'), async (c) => {
-  const body = await c.req.json().catch(() => null);
-  const name = String(body?.communityName ?? '').trim();
-  if (!name) return c.json({ error: 'community name required' }, 400);
-  if (name.length > 60) return c.json({ error: 'community name is too long' }, 400);
+app.patch("/", requireRole("owner"), validate("json", renameCommunityBody), async (c) => {
+  const name = c.req.valid("json").communityName;
 
-  setSetting('communityName', name);
-  hub.broadcast({ type: 'community.renamed', name });
+  setSetting("communityName", name);
+  hub.broadcast({ type: "community.renamed", name });
 
   return c.json({ communityName: communityName() });
 });

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { api, type Invite } from "$lib/api";
-  import { chat } from "$lib/chat.svelte";
+  import { session } from "$lib/stores/session.svelte";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
   import { Label } from "$lib/components/ui/label";
@@ -8,11 +8,12 @@
   import { inviteLink } from "$lib/invite";
   import { cn } from "$lib/utils";
   import { Check, Copy, Link2, Trash2 } from "@lucide/svelte";
+  import { toast } from "svelte-sonner";
+  import { apiErrorMessage } from "$lib/forms";
 
   let { open = $bindable(false) }: { open?: boolean } = $props();
 
   let invites = $state<Invite[]>([]);
-  let error = $state("");
   let busy = $state(false);
   let copied = $state("");
 
@@ -42,41 +43,40 @@
   });
 
   async function load() {
-    if (!chat.token) return;
-    error = "";
+    if (!session.token) return;
     try {
-      invites = (await api.invites(chat.token)).invites;
-    } catch (e: any) {
-      error = e?.message ?? "failed to load invites";
+      invites = (await api.invites(session.token)).invites;
+    } catch (e) {
+      toast.error(apiErrorMessage(e, "failed to load invites"));
     }
   }
 
   async function create(p: (typeof presets)[number]) {
-    if (!chat.token) return;
+    if (!session.token) return;
     busy = true;
-    error = "";
     try {
-      const { invite } = await api.createInvite(chat.token, {
+      const { invite } = await api.createInvite(session.token, {
         maxUses: p.maxUses,
         expiresInHours: p.expiresInHours,
       });
       invites = [invite, ...invites];
       await copy(invite.code);
-    } catch (e: any) {
-      error = e?.message ?? "failed to create invite";
+      toast.success("Invite link copied to your clipboard.");
+    } catch (e) {
+      toast.error(apiErrorMessage(e, "failed to create invite"));
     } finally {
       busy = false;
     }
   }
 
   async function revoke(code: string) {
-    if (!chat.token) return;
-    error = "";
+    if (!session.token) return;
     try {
-      const { invite } = await api.revokeInvite(chat.token, code);
+      const { invite } = await api.revokeInvite(session.token, code);
       invites = invites.map((i) => (i.code === code ? invite : i));
-    } catch (e: any) {
-      error = e?.message ?? "failed to revoke";
+      toast.success("Invite revoked. That link no longer works.");
+    } catch (e) {
+      toast.error(apiErrorMessage(e, "failed to revoke"));
     }
   }
 
@@ -119,9 +119,7 @@
             onclick={() => create(p)}
           >
             <span class="text-sm font-medium">{p.label}</span>
-            <span class="text-muted-foreground text-[10px] leading-tight"
-              >{p.hint}</span
-            >
+            <span class="text-muted-foreground text-[10px] leading-tight">{p.hint}</span>
           </Button>
         {/each}
       </div>
@@ -129,10 +127,6 @@
         The link is copied to your clipboard automatically.
       </p>
     </div>
-
-    {#if error}
-      <p class="text-destructive px-4 py-2 text-sm">{error}</p>
-    {/if}
 
     <div class="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
       {#each invites as i (i.code)}
