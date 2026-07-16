@@ -4,7 +4,7 @@
   import { inviteLink } from '$lib/invite';
   import * as Alert from '$lib/components/ui/alert';
   import * as Avatar from '$lib/components/ui/avatar';
-  import { Badge } from '$lib/components/ui/badge';
+  import * as Sheet from '$lib/components/ui/sheet';
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import { setBaseTitle, setTitleBadge } from '$lib/notify';
@@ -16,27 +16,25 @@
     Check,
     Copy,
     Hash,
-    LogOut,
-    Plus,
+    Menu,
     Send,
     Trash2,
     TriangleAlert,
     Users,
-    Volume2
+    X
   } from '@lucide/svelte';
   import Members from './Members.svelte';
   import Settings from './Settings.svelte';
+  import Sidebar from './Sidebar.svelte';
   import VoiceBar from './VoiceBar.svelte';
 
   let draft = $state('');
   let showMembers = $state(false);
   let showSettings = $state(false);
+  let showNav = $state(false);
   let inviteCode = $state('');
   let inviteCopied = $state(false);
   let scroller: HTMLDivElement | null = $state(null);
-
-  const textChannels = $derived(chat.channels.filter((c) => c.type === 'text'));
-  const voiceChannels = $derived(chat.channels.filter((c) => c.type === 'voice'));
 
   // Auto-scroll to the newest message whenever the list changes.
   $effect(() => {
@@ -58,13 +56,6 @@
     draft = '';
   }
 
-  async function createChannel() {
-    const name = prompt('New channel name?');
-    if (!name || !chat.token) return;
-    await api.createChannel(chat.token, { name, type: 'text' });
-    await chat.loadChannels();
-  }
-
   async function makeInvite() {
     if (!chat.token) return;
     const { invite } = await api.createInvite(chat.token, { maxUses: 0 });
@@ -75,11 +66,6 @@
     await navigator.clipboard.writeText(inviteLink(inviteCode));
     inviteCopied = true;
     setTimeout(() => (inviteCopied = false), 1500);
-  }
-
-  function joinVoice(c: { id: string; name: string }) {
-    if (!chat.token) return;
-    voice.join({ id: c.id, name: c.name }, chat.token);
   }
 
   function fmtTime(ts: number) {
@@ -93,134 +79,52 @@
 
   const canDelete = (authorId: string | undefined) => chat.isAdmin || authorId === chat.user?.id;
   const initial = (name: string | undefined) => (name ?? '?')[0]?.toUpperCase() ?? '?';
-  const myAvatar = $derived(chat.user ? avatarUrl(chat.user.id, chat.user.avatarVersion) : null);
 </script>
 
-<div class="grid h-dvh grid-cols-[64px_1fr] sm:grid-cols-[248px_1fr]">
-  <!-- Channel sidebar -->
-  <aside class="bg-sidebar text-sidebar-foreground flex min-h-0 flex-col border-r">
-    <header class="flex h-12 items-center gap-2 border-b px-4 font-semibold">
-      <span class="hidden truncate sm:inline">{chat.serverName}</span>
-      <span
-        class={cn(
-          'bg-muted-foreground ml-auto size-2 shrink-0 rounded-full',
-          chat.status === 'connected' && 'bg-green-500',
-          chat.status === 'connecting' && 'bg-amber-500',
-        )}
-        title={chat.status}
-      ></span>
-    </header>
-
-    <nav class="min-h-0 flex-1 overflow-y-auto p-2">
-      <div class="flex items-center justify-between px-2 pt-2 pb-1">
-        <span class="text-muted-foreground hidden text-xs font-semibold tracking-wide uppercase sm:inline">Text</span>
-        {#if chat.isAdmin}
-          <Button variant="ghost" size="icon" class="size-5" title="Create channel" onclick={createChannel}>
-            <Plus class="size-4" />
-          </Button>
-        {/if}
-      </div>
-      {#each textChannels as c (c.id)}
-        <Button
-          variant="ghost"
-          class={cn(
-            'text-muted-foreground h-8 w-full justify-start gap-2 px-2 font-normal',
-            c.id === chat.currentChannelId && 'bg-sidebar-accent text-sidebar-accent-foreground',
-          )}
-          onclick={() => chat.selectChannel(c.id)}
-        >
-          <Hash class="size-4 shrink-0" />
-          <span class="hidden truncate sm:inline">{c.name}</span>
-          {#if (chat.unread[c.id] ?? 0) > 0}
-            <Badge variant="destructive" class="ml-auto h-5 min-w-5 justify-center px-1.5">
-              {chat.unread[c.id]}
-            </Badge>
-          {/if}
-        </Button>
-      {/each}
-
-      <div class="px-2 pt-4 pb-1">
-        <span class="text-muted-foreground hidden text-xs font-semibold tracking-wide uppercase sm:inline">Voice</span>
-      </div>
-      {#each voiceChannels as c (c.id)}
-        {@const members = chat.voicePresence[c.id] ?? []}
-        <div>
-          <Button
-            variant="ghost"
-            class={cn(
-              'text-muted-foreground h-8 w-full justify-start gap-2 px-2 font-normal',
-              c.id === voice.channelId && 'bg-sidebar-accent text-sidebar-accent-foreground',
-            )}
-            title="Join voice"
-            onclick={() => joinVoice(c)}
-          >
-            <Volume2 class="size-4 shrink-0" />
-            <span class="hidden truncate sm:inline">{c.name}</span>
-            {#if members.length > 0}
-              <Badge variant="secondary" class="ml-auto h-5 min-w-5 justify-center px-1.5">
-                {members.length}
-              </Badge>
-            {/if}
-          </Button>
-
-          {#if members.length > 0}
-            <div class="mt-0.5 mb-1 ml-4 flex flex-col gap-0.5">
-              {#each members as m (m.id)}
-                {@const av = avatarUrl(m.id, m.avatarVersion)}
-                {@const speaking =
-                  c.id === voice.channelId &&
-                  voice.participants.find((p) => p.identity === m.id)?.speaking}
-                <div class="flex items-center gap-2 px-2 py-0.5">
-                  <Avatar.Root class={cn('size-5 shrink-0', speaking && 'ring-2 ring-green-500')}>
-                    {#if av}<Avatar.Image src={av} alt="" />{/if}
-                    <Avatar.Fallback class="bg-primary/70 text-primary-foreground text-[9px]">
-                      {(m.name[0] ?? '?').toUpperCase()}
-                    </Avatar.Fallback>
-                  </Avatar.Root>
-                  <span class="text-muted-foreground hidden truncate text-xs sm:inline">{m.name}</span>
-                </div>
-              {/each}
-            </div>
-          {/if}
-        </div>
-      {/each}
-    </nav>
-
-    {#if voice.inCall}
-      <VoiceBar />
-    {/if}
-
-    <div class="flex items-center gap-1 border-t p-2">
-      <button
-        class="hover:bg-sidebar-accent flex min-w-0 flex-1 items-center gap-2 rounded p-1"
-        title="Settings"
-        onclick={() => (showSettings = true)}
-      >
-        <Avatar.Root class="size-8 shrink-0">
-          {#if myAvatar}<Avatar.Image src={myAvatar} alt="" />{/if}
-          <Avatar.Fallback class="bg-primary text-primary-foreground text-xs">
-            {initial(chat.user?.displayName)}
-          </Avatar.Fallback>
-        </Avatar.Root>
-        <div class="hidden min-w-0 flex-1 text-left sm:block">
-          <div class="truncate text-sm font-medium">{chat.user?.displayName}</div>
-          <div class="text-muted-foreground text-xs">{chat.user?.role}</div>
-        </div>
-      </button>
-      <Button variant="ghost" size="icon" class="shrink-0" title="Log out" onclick={() => chat.logout()}>
-        <LogOut class="size-4" />
-      </Button>
-    </div>
+<div class="grid h-dvh grid-cols-1 sm:grid-cols-[248px_1fr]">
+  <!-- Channel sidebar: a fixed column on desktop, a drawer on mobile. Below sm
+       there isn't room for a usable rail, so it collapses behind the header's
+       menu button rather than shrinking into unreadable icons. -->
+  <aside class="bg-sidebar text-sidebar-foreground hidden min-h-0 flex-col border-r sm:flex">
+    <Sidebar withVoice onOpenSettings={() => (showSettings = true)} />
   </aside>
+
+  <Sheet.Root bind:open={showNav}>
+    <Sheet.Content
+      side="left"
+      class="bg-sidebar text-sidebar-foreground flex w-72 flex-col p-0 sm:max-w-xs"
+    >
+      <Sidebar
+        onNavigate={() => (showNav = false)}
+        onOpenSettings={() => {
+          showNav = false;
+          showSettings = true;
+        }}
+      />
+    </Sheet.Content>
+  </Sheet.Root>
+
 
   <!-- Main channel view -->
   <main class="bg-background flex min-w-0 flex-col">
-    <header class="flex h-12 items-center justify-between border-b px-4">
-      <div class="flex items-center gap-1.5 font-semibold">
-        <Hash class="text-muted-foreground size-5" />
-        {chat.currentChannel?.name ?? 'no channel'}
+    <header class="flex h-12 items-center justify-between gap-2 border-b px-2 sm:px-4">
+      <div class="flex min-w-0 items-center gap-1.5 font-semibold">
+        <Button
+          variant="ghost"
+          size="icon"
+          class="shrink-0 sm:hidden"
+          title="Channels"
+          onclick={() => (showNav = true)}
+        >
+          <Menu class="size-5" />
+          {#if chat.totalUnread > 0}
+            <span class="bg-destructive absolute top-1.5 right-1.5 size-2 rounded-full"></span>
+          {/if}
+        </Button>
+        <Hash class="text-muted-foreground size-5 shrink-0" />
+        <span class="truncate">{chat.currentChannel?.name ?? 'no channel'}</span>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex shrink-0 items-center gap-1 sm:gap-2">
         <Button
           variant="ghost"
           size="icon"
@@ -231,8 +135,28 @@
         </Button>
         <span class="text-muted-foreground hidden text-sm sm:inline">{chat.online.size} online</span>
         {#if chat.isAdmin}
-          <Button variant="outline" size="sm" onclick={makeInvite}>Invite</Button>
-          <Button variant="outline" size="sm" onclick={() => (showMembers = true)}>
+          <!-- Labels collapse to icons on mobile: the header can't fit both. -->
+          <Button variant="outline" size="icon" class="sm:hidden" title="Invite" onclick={makeInvite}>
+            <Copy class="size-4" />
+          </Button>
+          <Button variant="outline" size="sm" class="hidden sm:inline-flex" onclick={makeInvite}>
+            Invite
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            class="sm:hidden"
+            title="Members"
+            onclick={() => (showMembers = true)}
+          >
+            <Users class="size-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            class="hidden sm:inline-flex"
+            onclick={() => (showMembers = true)}
+          >
             <Users class="size-4" /> Members
           </Button>
         {/if}
@@ -240,19 +164,24 @@
     </header>
 
     {#if inviteCode}
-      <div class="bg-muted/50 flex items-center gap-3 border-b px-4 py-2 text-sm">
-        <span class="shrink-0">Invite link:</span>
-        <code class="bg-background truncate rounded px-2 py-0.5 font-mono">{inviteLink(inviteCode)}</code>
-        <Button variant="secondary" size="sm" class="ml-auto shrink-0" onclick={copyInvite}>
-          {#if inviteCopied}
-            <Check class="size-4" /> Copied
-          {:else}
-            <Copy class="size-4" /> Copy
-          {/if}
-        </Button>
-        <Button variant="ghost" size="sm" class="shrink-0" onclick={() => (inviteCode = '')}>
-          dismiss
-        </Button>
+      <div class="bg-muted/50 border-b px-2 py-2 text-sm sm:px-4">
+        <div class="flex items-center gap-2">
+          <span class="hidden shrink-0 sm:inline">Invite link:</span>
+          <code class="bg-background min-w-0 flex-1 truncate rounded px-2 py-1 font-mono text-xs sm:text-sm">
+            {inviteLink(inviteCode)}
+          </code>
+          <Button variant="secondary" size="sm" class="shrink-0" onclick={copyInvite}>
+            {#if inviteCopied}
+              <Check class="size-4" /> Copied
+            {:else}
+              <Copy class="size-4" /> Copy
+            {/if}
+          </Button>
+          <Button variant="ghost" size="sm" class="shrink-0" onclick={() => (inviteCode = '')}>
+            <X class="size-4" />
+            <span class="sr-only">dismiss</span>
+          </Button>
+        </div>
       </div>
     {/if}
 
@@ -266,7 +195,7 @@
       </Alert.Root>
     {/if}
 
-    <div bind:this={scroller} class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-4">
+    <div bind:this={scroller} class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-2 sm:p-4">
       {#each chat.messages as m (m.id)}
         {@const av = m.author ? avatarUrl(m.author.id, m.author.avatarVersion) : null}
         <div class="group hover:bg-muted/40 relative flex gap-3 rounded-md px-2 py-1">
@@ -287,7 +216,7 @@
             <Button
               variant="ghost"
               size="icon"
-              class="absolute top-1 right-2 size-7 opacity-0 group-hover:opacity-100"
+              class="absolute top-1 right-2 size-7 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
               title="Delete"
               onclick={() => chat.deleteMessage(m.id)}
             >
@@ -300,7 +229,15 @@
       {/each}
     </div>
 
-    <form class="flex gap-2 p-4" onsubmit={sendDraft}>
+    {#if voice.inCall}
+      <!-- On mobile the sidebar is behind a drawer, so the call controls dock
+           here instead — mute and leave must never be a menu away mid-call. -->
+      <div class="sm:hidden">
+        <VoiceBar compact />
+      </div>
+    {/if}
+
+    <form class="flex gap-2 p-2 sm:p-4" onsubmit={sendDraft}>
       <Input
         bind:value={draft}
         placeholder={`Message #${chat.currentChannel?.name ?? ''}`}
