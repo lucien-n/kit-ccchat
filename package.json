@@ -4,6 +4,7 @@
   "private": true,
   "description": "Self-hosted, Discord-like chat for you and your friends. One machine, your data.",
   "workspaces": [
+    "shared",
     "server",
     "client"
   ],

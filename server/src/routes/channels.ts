@@ -1,12 +1,20 @@
 import { Hono } from 'hono';
 import { and, asc, count, eq, gt, ne } from 'drizzle-orm';
+import { createChannelBody, type Channel, type ChannelType } from '@ccchat/shared';
 import { db } from '../db/index.js';
 import { channelReads, channels, messages } from '../db/schema.js';
 import { newId, requireAuth, requireRole, type Env } from '../auth.js';
+import { validate } from '../validate.js';
 
 const app = new Hono<Env>();
 
 app.use('*', requireAuth);
+
+/** `type` is a plain TEXT column, so this cast is the boundary where a db string
+ *  becomes the union the rest of the app relies on. */
+function toChannelView(row: typeof channels.$inferSelect): Channel {
+  return { id: row.id, name: row.name, type: row.type as ChannelType, position: row.position };
+}
 
 app.get('/', (c) => {
   const list = db
@@ -14,7 +22,7 @@ app.get('/', (c) => {
     .from(channels)
     .orderBy(asc(channels.position), asc(channels.createdAt))
     .all();
-  return c.json({ channels: list });
+  return c.json({ channels: list.map(toChannelView) });
 });
 
 /** Unread counts for the current user, keyed by channel id. A message counts as
@@ -63,11 +71,8 @@ app.post('/:id/read', (c) => {
   return c.json({ ok: true });
 });
 
-app.post('/', requireRole('admin'), async (c) => {
-  const body = await c.req.json().catch(() => null);
-  const name = String(body?.name ?? '').trim();
-  const type = body?.type === 'voice' ? 'voice' : 'text';
-  if (!/^[\w\- ]{1,32}$/.test(name)) return c.json({ error: 'invalid channel name' }, 400);
+app.post('/', requireRole('admin'), validate('json', createChannelBody), async (c) => {
+  const { name, type } = c.req.valid('json');
 
   const channel = {
     id: newId(),

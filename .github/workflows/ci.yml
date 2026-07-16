@@ -28,6 +28,9 @@ jobs:
 
       - run: npm ci
 
+      - name: typecheck shared contract
+        run: npm run -w shared typecheck
+
       - name: typecheck server
         run: npm run -w server typecheck
 

@@ -3,8 +3,10 @@ import { eq } from 'drizzle-orm';
 import { AccessToken } from 'livekit-server-sdk';
 import { db } from '../db/index.js';
 import { channels } from '../db/schema.js';
+import { voiceTokenBody } from '@ccchat/shared';
 import { requireAuth, type Env } from '../auth.js';
 import { LIVEKIT_API_KEY, LIVEKIT_API_SECRET, LIVEKIT_PATH, LIVEKIT_URL } from '../env.js';
+import { validate } from '../validate.js';
 import type { Context } from 'hono';
 
 const app = new Hono<Env>();
@@ -30,9 +32,8 @@ app.get('/config', (c) => c.json({ url: livekitUrl(c) }));
 /** Mint a short-lived LiveKit access token for a voice channel. The LiveKit
  *  "room" is simply the channel id, so joining a channel = joining its room.
  *  Moderation carries over: a muted member may listen but not publish. */
-app.post('/token', async (c) => {
-  const body = await c.req.json().catch(() => null);
-  const channelId = String(body?.channelId ?? '');
+app.post('/token', validate('json', voiceTokenBody), async (c) => {
+  const { channelId } = c.req.valid('json');
 
   const channel = db.select().from(channels).where(eq(channels.id, channelId)).get();
   if (!channel || channel.type !== 'voice')

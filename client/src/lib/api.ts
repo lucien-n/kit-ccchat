@@ -1,49 +1,18 @@
 /** Thin REST helper. `base` is empty in the browser (same-origin, dev-proxied),
  *  but the mobile app can point at a remote server by setting it. */
 
-export interface PublicUser {
-  id: string;
-  username: string;
-  displayName: string;
-  role: string;
-  avatarVersion: number | null;
-}
+// Shapes come from @ccchat/shared, which the server derives its responses from
+// too. Re-exported so callers keep importing them from here.
+export type {
+  Channel,
+  Invite,
+  MemberView,
+  MessageView,
+  PublicUser,
+  VoiceMember,
+} from '@ccchat/shared';
 
-export interface VoiceMember {
-  id: string;
-  name: string;
-  avatarVersion: number | null;
-}
-
-export interface Channel {
-  id: string;
-  name: string;
-  type: 'text' | 'voice';
-  position: number;
-}
-
-export interface Invite {
-  code: string;
-  createdAt: number;
-  createdBy: string;
-  /** 0 = unlimited. */
-  maxUses: number;
-  uses: number;
-  expiresAt: number | null;
-  revoked: boolean;
-  /** Server-computed: still redeemable? Don't re-derive this on the client. */
-  active: boolean;
-  status: 'active' | 'revoked' | 'expired' | 'used up';
-}
-
-export interface MessageView {
-  id: string;
-  channelId: string;
-  content: string;
-  createdAt: number;
-  editedAt: number | null;
-  author: { id: string; username: string; displayName: string; avatarVersion: number | null } | null;
-}
+import type { Channel, Invite, MemberView, MessageView, PublicUser } from '@ccchat/shared';
 
 export class ApiError extends Error {
   constructor(public status: number, message: string) {
@@ -145,10 +114,7 @@ export const api = {
     }),
 
   members: (token: string) =>
-    request<{ members: Array<PublicUser & { banned: number; mutedUntil: number | null }> }>(
-      '/api/moderation/members',
-      { token },
-    ),
+    request<{ members: MemberView[] }>('/api/moderation/members', { token }),
 
   mod: (token: string, id: string, action: 'kick' | 'ban' | 'unban' | 'mute' | 'unmute', body?: unknown) =>
     request<{ ok: true }>(`/api/moderation/${id}/${action}`, { method: 'POST', body, token }),

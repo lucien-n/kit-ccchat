@@ -4,8 +4,10 @@ import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node
 import { join } from 'node:path';
 import { db } from '../db/index.js';
 import { users } from '../db/schema.js';
+import { avatarBody, changePasswordBody, updateProfileBody } from '@ccchat/shared';
 import { hashPassword, requireAuth, verifyPassword, type Env } from '../auth.js';
 import { toPublicUser } from '../views.js';
+import { validate } from '../validate.js';
 import { DATA_DIR } from '../env.js';
 
 const AVATAR_DIR = join(DATA_DIR, 'avatars');
@@ -36,10 +38,9 @@ app.get('/:id/avatar', (c) => {
   return c.body(buf);
 });
 
-app.post('/me/avatar', requireAuth, async (c) => {
+app.post('/me/avatar', requireAuth, validate('json', avatarBody), async (c) => {
   const user = c.get('user');
-  const body = await c.req.json().catch(() => null);
-  const m = /^data:image\/(png|jpeg|webp|gif);base64,(.+)$/.exec(String(body?.image ?? ''));
+  const m = /^data:image\/(png|jpeg|webp|gif);base64,(.+)$/.exec(c.req.valid('json').image);
   if (!m) return c.json({ error: 'invalid image' }, 400);
 
   const buf = Buffer.from(m[2], 'base64');
@@ -59,27 +60,20 @@ app.delete('/me/avatar', requireAuth, (c) => {
   return c.json({ ok: true });
 });
 
-app.patch('/me', requireAuth, async (c) => {
+app.patch('/me', requireAuth, validate('json', updateProfileBody), async (c) => {
   const user = c.get('user');
-  const body = await c.req.json().catch(() => null);
-  const displayName = String(body?.displayName ?? '').trim();
-  if (!displayName || displayName.length > 32)
-    return c.json({ error: 'display name must be 1–32 characters' }, 400);
+  const { displayName } = c.req.valid('json');
 
   db.update(users).set({ displayName }).where(eq(users.id, user.id)).run();
   return c.json({ user: toPublicUser({ ...user, displayName }) });
 });
 
-app.post('/me/password', requireAuth, async (c) => {
+app.post('/me/password', requireAuth, validate('json', changePasswordBody), async (c) => {
   const user = c.get('user');
-  const body = await c.req.json().catch(() => null);
-  const currentPassword = String(body?.currentPassword ?? '');
-  const newPassword = String(body?.newPassword ?? '');
+  const { currentPassword, newPassword } = c.req.valid('json');
 
   if (!verifyPassword(currentPassword, user.passwordHash))
     return c.json({ error: 'current password is incorrect' }, 403);
-  if (newPassword.length < 8)
-    return c.json({ error: 'new password must be at least 8 characters' }, 400);
 
   db.update(users).set({ passwordHash: hashPassword(newPassword) }).where(eq(users.id, user.id)).run();
   return c.json({ ok: true });

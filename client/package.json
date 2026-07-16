@@ -13,6 +13,7 @@
     "livekit-client": "^2.7.5"
   },
   "devDependencies": {
+    "@ccchat/shared": "*",
     "@fontsource-variable/figtree": "^5.2.10",
     "@internationalized/date": "^3.12.2",
     "@lucide/svelte": "^1.24.0",

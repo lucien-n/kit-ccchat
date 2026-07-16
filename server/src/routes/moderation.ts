@@ -1,8 +1,10 @@
 import { Hono } from 'hono';
 import { eq } from 'drizzle-orm';
+import { muteBody, type MemberView } from '@ccchat/shared';
 import { db } from '../db/index.js';
 import { sessions, users } from '../db/schema.js';
 import { hasRole, requireAuth, requireRole, type Env } from '../auth.js';
+import { validate } from '../validate.js';
 import type { User } from '../db/schema.js';
 
 const app = new Hono<Env>();
@@ -48,11 +50,10 @@ app.post('/:id/unban', (c) => {
 });
 
 /** Mute for N minutes (default 60). Body: { minutes } */
-app.post('/:id/mute', async (c) => {
+app.post('/:id/mute', validate('json', muteBody), async (c) => {
   const { target, error, status } = loadTarget(c);
   if (error) return c.json({ error }, status as any);
-  const body = await c.req.json().catch(() => ({}));
-  const minutes = Number(body?.minutes) > 0 ? Number(body.minutes) : 60;
+  const { minutes } = c.req.valid('json');
   db.update(users)
     .set({ mutedUntil: Date.now() + minutes * 60_000 })
     .where(eq(users.id, target!.id))
@@ -68,7 +69,7 @@ app.post('/:id/unmute', (c) => {
 });
 
 app.get('/members', (c) => {
-  const members = db
+  const members: MemberView[] = db
     .select({
       id: users.id,
       username: users.username,

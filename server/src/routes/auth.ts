@@ -1,5 +1,7 @@
 import { Hono } from 'hono';
+import { zValidator } from '@hono/zod-validator';
 import { eq, sql } from 'drizzle-orm';
+import { loginBody, registerBody } from '@ccchat/shared';
 import { db } from '../db/index.js';
 import { invites, users } from '../db/schema.js';
 import {
@@ -12,22 +14,15 @@ import {
   type Env,
 } from '../auth.js';
 import { toPublicUser } from '../views.js';
+import { validate } from '../validate.js';
 
 const app = new Hono<Env>();
 
 const publicUser = toPublicUser;
 
-app.post('/register', async (c) => {
-  const body = await c.req.json().catch(() => null);
-  const inviteCode = String(body?.inviteCode ?? '').trim();
-  const username = String(body?.username ?? '').trim().toLowerCase();
-  const displayName = String(body?.displayName ?? '').trim() || username;
-  const password = String(body?.password ?? '');
-
-  if (!inviteCode) return c.json({ error: 'invite code required' }, 400);
-  if (!/^[a-z0-9_.-]{2,24}$/.test(username))
-    return c.json({ error: 'username must be 2-24 chars: a-z 0-9 _ . -' }, 400);
-  if (password.length < 8) return c.json({ error: 'password must be at least 8 characters' }, 400);
+app.post('/register', validate('json', registerBody), async (c) => {
+  const { inviteCode, username, password } = c.req.valid('json');
+  const displayName = c.req.valid('json').displayName || username;
 
   const invite = db.select().from(invites).where(eq(invites.code, inviteCode)).get();
   if (!invite || invite.revoked) return c.json({ error: 'invalid invite code' }, 400);
@@ -62,10 +57,8 @@ app.post('/register', async (c) => {
   return c.json({ token, user: publicUser(user) });
 });
 
-app.post('/login', async (c) => {
-  const body = await c.req.json().catch(() => null);
-  const username = String(body?.username ?? '').trim().toLowerCase();
-  const password = String(body?.password ?? '');
+app.post('/login', validate('json', loginBody), async (c) => {
+  const { username, password } = c.req.valid('json');
 
   const user = db.select().from(users).where(eq(users.username, username)).get();
   if (!user || !verifyPassword(password, user.passwordHash))

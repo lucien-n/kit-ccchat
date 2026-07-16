@@ -1,15 +1,9 @@
 import { eq } from 'drizzle-orm';
+import type { MessageView, PublicUser } from '@ccchat/shared';
 import { db } from './db/index.js';
 import { messages, users, type Message } from './db/schema.js';
 
-/** The safe, public shape of a user (no password hash), shared across responses. */
-export interface PublicUser {
-  id: string;
-  username: string;
-  displayName: string;
-  role: string;
-  avatarVersion: number | null;
-}
+export type { MessageView, PublicUser };
 
 export function toPublicUser(u: {
   id: string;
@@ -25,15 +19,6 @@ export function toPublicUser(u: {
     role: u.role,
     avatarVersion: u.avatarVersion ?? null,
   };
-}
-
-export interface MessageView {
-  id: string;
-  channelId: string;
-  content: string;
-  createdAt: number;
-  editedAt: number | null;
-  author: { id: string; username: string; displayName: string; avatarVersion: number | null } | null;
 }
 
 export function toMessageView(m: Message): MessageView {
