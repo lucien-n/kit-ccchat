@@ -1,4 +1,5 @@
 import {
+  index,
   integer,
   primaryKey,
   sqliteTable,
@@ -47,16 +48,20 @@ export const channels = sqliteTable("channels", {
   createdAt: integer("created_at").notNull(),
 });
 
-export const messages = sqliteTable("messages", {
-  id: text("id").primaryKey(),
-  channelId: text("channel_id").notNull(),
-  authorId: text("author_id").notNull(),
-  content: text("content").notNull(),
-  createdAt: integer("created_at").notNull(),
-  editedAt: integer("edited_at"),
-  // Soft delete so moderation actions are auditable rather than destructive.
-  deleted: integer("deleted").notNull().default(0),
-});
+export const messages = sqliteTable(
+  "messages",
+  {
+    id: text("id").primaryKey(),
+    channelId: text("channel_id").notNull(),
+    authorId: text("author_id").notNull(),
+    content: text("content").notNull(),
+    createdAt: integer("created_at").notNull(),
+    editedAt: integer("edited_at"),
+    // Soft delete so moderation actions are auditable rather than destructive.
+    deleted: integer("deleted").notNull().default(0),
+  },
+  (t) => ({ byChannel: index("idx_messages_channel").on(t.channelId, t.createdAt) }),
+);
 
 /** Opaque bearer tokens. Works identically for the web client and the future
  *  Capacitor mobile app (no cookie assumptions). */

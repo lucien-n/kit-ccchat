@@ -3,9 +3,9 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import type { Hono } from 'hono';
 
-// This runs at import time, before any dynamic import of the db — which builds
-// its SQLite handle from DATA_DIR at *its* import time. Statically importing the
-// app here instead would open the developer's real database.
+// Runs at import time, before any dynamic import of the db, which builds its
+// SQLite handle from DATA_DIR at *its* import time. A static import of the app
+// here would open the developer's real database.
 process.env.NODE_ENV = 'test';
 process.env.LIVEKIT_API_SECRET = 'test-only-secret-not-a-real-one';
 process.env.COMMUNITY_NAME = 'Test Community';

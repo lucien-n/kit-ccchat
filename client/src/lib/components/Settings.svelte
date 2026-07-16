@@ -12,8 +12,7 @@
   const isOwner = $derived(chat.user?.role === "owner");
 </script>
 
-<!-- Dialog.Content only renders while open, so each tab mounts fresh and seeds
-     its forms from the store — no reset bookkeeping needed here. -->
+<!-- Dialog.Content only renders while open, so each tab mounts fresh. -->
 <Dialog.Root bind:open>
   <Dialog.Content class="max-w-lg">
     <Dialog.Header>

@@ -45,8 +45,7 @@
     {
       SPA: true,
       validators: zod4Client(changePasswordBody),
-      // Clear both fields on success — nobody wants their password sitting in an
-      // input after the change went through.
+      // Clear both fields on success.
       resetForm: true,
       onUpdate: async ({ form }) => {
         if (!form.valid || !chat.token) return;

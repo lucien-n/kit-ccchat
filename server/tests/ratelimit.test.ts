@@ -46,7 +46,7 @@ describe("login rate limit", () => {
 
   it("still refuses the right password once locked out", async () => {
     for (let i = 0; i < 9; i++) await login("wrongpass123");
-    // Not "wrong password" — the limiter runs before we ever hash.
+    // Not "wrong password": the limiter runs before we ever hash.
     expect((await login("ownerpass123")).status).toBe(429);
   });
 });
@@ -74,13 +74,13 @@ describe("who gets blamed", () => {
   });
 
   // Deliberately /register, not /login: login also has a per-username bucket,
-  // which would return 429 even if the IP handling were broken — the test would
-  // pass for the wrong reason and prove nothing. Register is keyed on IP alone,
+  // which would return 429 even if the IP handling were broken, so the test
+  // would pass for the wrong reason. Register is keyed on IP alone,
   // so only the X-Forwarded-For logic can produce this 429.
   it("ignores an X-Forwarded-For the caller made up", async () => {
     // Caddy APPENDS the real peer, so the LAST hop is the one it vouched for.
-    // Trusting the leftmost — the classic mistake — would let anyone mint a
-    // fresh bucket per request just by sending a header.
+    // Trusting the leftmost (the classic mistake) would let anyone mint a fresh
+    // bucket per request just by sending a header.
     const spoof = (n: number) =>
       app.request("/api/auth/register", {
         method: "POST",
