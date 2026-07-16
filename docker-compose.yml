@@ -1,33 +1,44 @@
 name: ccchat
 
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
 services:
-  # ── The only thing exposed to the internet ─────────────────────────────────
-  # Terminates TLS with an automatic Let's Encrypt certificate, and serves both
-  # the app and the voice signaling from one origin. See ./Caddyfile.
   caddy:
     image: caddy:2-alpine
     container_name: ccchat-caddy
     restart: unless-stopped
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          memory: 128M
     ports:
-      - "80:80" # required for the Let's Encrypt HTTP challenge
+      - "80:80"
       - "443:443"
-      - "443:443/udp" # HTTP/3
+      - "443:443/udp"
     environment:
       CCCHAT_DOMAIN: ${CCCHAT_DOMAIN:?set CCCHAT_DOMAIN in .env (e.g. chat.example.com)}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data # certificates live here — do not delete
+      - caddy_data:/data
       - caddy_config:/config
     depends_on:
       - ccchat
       - livekit
 
-  # ── The app: REST API, WebSocket, and the built client ─────────────────────
-  # Not published to the host: it is only reachable through Caddy.
   ccchat:
     image: ${CCCHAT_IMAGE:-ghcr.io/lucien-n/kit-ccchat:latest}
     container_name: ccchat
     restart: unless-stopped
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     environment:
       DATA_DIR: /app/data
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-ccchat}
@@ -41,19 +52,21 @@ services:
     depends_on:
       - livekit
 
-  # ── Voice ──────────────────────────────────────────────────────────────────
-  # Signaling goes through Caddy (/livekit). Media does NOT — WebRTC audio is
-  # UDP straight to the host, so 7882/udp must be open on your firewall/router.
   livekit:
     image: livekit/livekit-server:latest
     container_name: ccchat-livekit
     restart: unless-stopped
+    logging: *logging
+    deploy:
+      resources:
+        limits:
+          memory: 512M
     command: --config /etc/livekit.yaml
     environment:
       LIVEKIT_KEYS: "${LIVEKIT_API_KEY:-ccchat}: ${LIVEKIT_API_SECRET:?run ./install.sh, or set LIVEKIT_API_SECRET in .env}"
     ports:
-      - "7882:7882/udp" # media (UDP) — the one port you must forward
-      - "7881:7881" # media over TCP, fallback for restrictive networks
+      - "7882:7882/udp"
+      - "7881:7881"
     volumes:
       - ./livekit.yaml:/etc/livekit.yaml:ro
 
