@@ -1,7 +1,6 @@
 import { Hono } from 'hono';
-import { zValidator } from '@hono/zod-validator';
 import { eq, sql } from 'drizzle-orm';
-import { loginBody, registerBody } from '@ccchat/shared';
+import { loginBody, registerBody, type LoginBody } from '@ccchat/shared';
 import { db } from '../db/index.js';
 import { invites, users } from '../db/schema.js';
 import {
@@ -15,12 +14,20 @@ import {
 } from '../auth.js';
 import { toPublicUser } from '../views.js';
 import { validate } from '../validate.js';
+import { rateLimit } from '../ratelimit.js';
 
 const app = new Hono<Env>();
 
 const publicUser = toPublicUser;
 
-app.post('/register', validate('json', registerBody), async (c) => {
+// Invite codes carry 48 bits, so this isn't about guessing them — it's that an
+// unauthenticated caller shouldn't be able to make us scrypt-hash on demand.
+// Generous: a whole friend group joining from one flat's wifi shares an IP.
+app.post(
+  '/register',
+  rateLimit({ limit: 20, windowMs: 60_000 }),
+  validate('json', registerBody),
+  async (c) => {
   const { inviteCode, username, password } = c.req.valid('json');
   const displayName = c.req.valid('json').displayName || username;
 
@@ -53,11 +60,31 @@ app.post('/register', validate('json', registerBody), async (c) => {
       .run();
   });
 
-  const token = createSession(user.id);
-  return c.json({ token, user: publicUser(user) });
+    const token = createSession(user.id);
+    return c.json({ token, user: publicUser(user) });
+  },
+);
+
+// The endpoint worth attacking: each attempt costs a scrypt hash and buys the
+// caller a guess. Two limits, because they defend different things:
+
+// One address flooding us. Loose — a household or a phone on CGNAT is many
+// honest people behind one IP — but capped so nobody grinds scrypt for free.
+const loginFlood = rateLimit({ limit: 30, windowMs: 60_000 });
+
+// One account being guessed at. Tight, and independent of where it comes from,
+// so spreading the attempt across a botnet buys no extra guesses.
+const loginGuess = rateLimit({
+  limit: 8,
+  windowMs: 60_000,
+  // Mounted after the validator, so the body is parsed and on the context by
+  // now. Hono only types valid() for a route's own handler, not for a shared
+  // middleware, hence the cast.
+  keys: (c) => [`user:${(c.req.valid('json' as never) as LoginBody).username}`],
+  message: 'too many login attempts for this account, wait a minute',
 });
 
-app.post('/login', validate('json', loginBody), async (c) => {
+app.post('/login', loginFlood, validate('json', loginBody), loginGuess, async (c) => {
   const { username, password } = c.req.valid('json');
 
   const user = db.select().from(users).where(eq(users.username, username)).get();
