@@ -65,7 +65,7 @@ export function migrate() {
     );
 
     CREATE TABLE IF NOT EXISTS channel_reads (
-      user_id TEXT NOT NULL,
+      user_id TEXT NOT NULL,  
       channel_id TEXT NOT NULL,
       last_read_at INTEGER NOT NULL,
       PRIMARY KEY (user_id, channel_id)

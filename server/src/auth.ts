@@ -49,12 +49,14 @@ export function destroySession(token: string): void {
 
 export function userForToken(token: string | undefined): User | null {
   if (!token) return null;
+
   const session = db
     .select()
     .from(sessions)
     .where(eq(sessions.token, token))
     .get();
   if (!session) return null;
+
   if (session.expiresAt < Date.now()) {
     db.delete(sessions).where(eq(sessions.token, token)).run();
     return null;
