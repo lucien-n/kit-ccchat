@@ -3,33 +3,42 @@
   import * as Alert from "$lib/components/ui/alert";
   import { Button } from "$lib/components/ui/button";
   import * as Card from "$lib/components/ui/card";
+  import * as Form from "$lib/components/ui/form";
   import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
+  import { apiErrorMessage } from "$lib/forms";
   import { inviteLink } from "$lib/invite";
+  import { setupBody } from "@ccchat/shared";
   import { Check, Copy, TriangleAlert } from "@lucide/svelte";
-
-  let communityName = $state("");
-  let username = $state("");
-  let password = $state("");
-  let error = $state("");
-  let busy = $state(false);
+  import { defaults, setMessage, superForm } from "sveltekit-superforms";
+  import { zod4, zod4Client } from "sveltekit-superforms/adapters";
 
   let inviteCode = $state("");
   let copied = $state(false);
   const link = $derived(inviteCode ? inviteLink(inviteCode) : "");
 
-  async function submit(e: Event) {
-    e.preventDefault();
-    error = "";
-    busy = true;
-    try {
-      inviteCode = await chat.setup({ communityName, username, password });
-    } catch (err: any) {
-      error = err?.message ?? "something went wrong";
-    } finally {
-      busy = false;
-    }
-  }
+  const form = superForm(
+    defaults(
+      { communityName: "", username: "", displayName: "", password: "" },
+      zod4(setupBody),
+    ),
+    {
+      SPA: true,
+      validators: zod4Client(setupBody),
+      resetForm: false,
+      onUpdate: async ({ form }) => {
+        if (!form.valid) return;
+        try {
+          inviteCode = await chat.setup(form.data);
+        } catch (err) {
+          setMessage(form, apiErrorMessage(err, "something went wrong"), {
+            status: 400,
+          });
+        }
+      },
+    },
+  );
+
+  const { form: formData, enhance, submitting, message } = form;
 
   async function copy() {
     await navigator.clipboard.writeText(link);
@@ -63,7 +72,7 @@
         </button>
         <p class="text-muted-foreground text-center text-sm">
           Clicking it opens ccchat with the code already filled in. It never
-          expires and any number of people can use it — the code on its own is
+          expires and any number of people can use it - the code on its own is
           <code class="bg-muted rounded px-1 py-0.5 font-mono"
             >{inviteCode}</code
           >.
@@ -79,58 +88,73 @@
       <Card.Header class="text-center">
         <Card.Title class="text-2xl">Welcome to ccchat</Card.Title>
         <Card.Description>
-          This community is brand new. Name it and create your owner account —
+          This community is brand new. Name it and create your owner account -
           you'll get an invite code for your friends.
         </Card.Description>
       </Card.Header>
 
-      <form onsubmit={submit}>
+      <form method="POST" use:enhance>
         <Card.Content class="space-y-4">
-          <div class="space-y-2">
-            <Label for="community">Community name</Label>
-            <Input
-              id="community"
-              bind:value={communityName}
-              placeholder="e.g. The Group Chat"
-              autocomplete="off"
-            />
-          </div>
+          <Form.Field {form} name="communityName">
+            <Form.Control>
+              {#snippet children({ props })}
+                <Form.Label>Community name</Form.Label>
+                <Input
+                  {...props}
+                  bind:value={$formData.communityName}
+                  placeholder="e.g. The Group Chat"
+                  autocomplete="off"
+                />
+              {/snippet}
+            </Form.Control>
+            <Form.FieldErrors />
+          </Form.Field>
 
-          <div class="space-y-2">
-            <Label for="username">Your username</Label>
-            <Input
-              id="username"
-              bind:value={username}
-              placeholder="lowercase, 2–24 chars"
-              autocomplete="username"
-            />
-          </div>
+          <Form.Field {form} name="username">
+            <Form.Control>
+              {#snippet children({ props })}
+                <Form.Label>Your username</Form.Label>
+                <Input
+                  {...props}
+                  bind:value={$formData.username}
+                  placeholder="lowercase, 2–24 chars"
+                  autocomplete="username"
+                />
+              {/snippet}
+            </Form.Control>
+            <Form.FieldErrors />
+          </Form.Field>
 
-          <div class="space-y-2">
-            <Label for="password">Your password</Label>
-            <Input
-              id="password"
-              type="password"
-              bind:value={password}
-              placeholder="at least 8 characters"
-              autocomplete="new-password"
-            />
-          </div>
+          <Form.Field {form} name="password">
+            <Form.Control>
+              {#snippet children({ props })}
+                <Form.Label>Your password</Form.Label>
+                <Input
+                  {...props}
+                  type="password"
+                  bind:value={$formData.password}
+                  placeholder="at least 8 characters"
+                  autocomplete="new-password"
+                />
+              {/snippet}
+            </Form.Control>
+            <Form.FieldErrors />
+          </Form.Field>
 
-          {#if error}
+          {#if $message}
             <Alert.Root variant="destructive">
               <TriangleAlert class="size-4" />
-              <Alert.Description>{error}</Alert.Description>
+              <Alert.Description>{$message}</Alert.Description>
             </Alert.Root>
           {/if}
         </Card.Content>
 
         <Card.Footer class="mt-6 flex-col gap-3">
-          <Button type="submit" class="w-full" disabled={busy}>
-            {busy ? "Creating…" : "Create community"}
-          </Button>
+          <Form.Button class="w-full" disabled={$submitting}>
+            {$submitting ? "Creating…" : "Create community"}
+          </Form.Button>
           <p class="text-muted-foreground text-center text-xs">
-            Whoever fills this in first becomes the owner, so do it now — before
+            Whoever fills this in first becomes the owner, so do it now - before
             you share the address.
           </p>
         </Card.Footer>

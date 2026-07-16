@@ -6,6 +6,7 @@ import {
   displayName,
   inviteCode,
   maxUses,
+  optionalDisplayName,
   password,
   username,
 } from './primitives.js';
@@ -16,7 +17,7 @@ import {
 export const registerBody = z.object({
   inviteCode,
   username,
-  displayName: displayName.optional(),
+  displayName: optionalDisplayName,
   password,
 });
 export type RegisterBody = z.infer<typeof registerBody>;
@@ -30,7 +31,7 @@ export type LoginBody = z.infer<typeof loginBody>;
 export const setupBody = z.object({
   communityName,
   username,
-  displayName: displayName.optional(),
+  displayName: optionalDisplayName,
   password,
 });
 export type SetupBody = z.infer<typeof setupBody>;

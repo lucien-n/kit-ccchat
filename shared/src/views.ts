@@ -1,7 +1,7 @@
-import { z } from 'zod';
-import { channelType } from './primitives.js';
+import { z } from "zod";
+import { channelType } from "./primitives.js";
 
-/** A user as everyone else sees them. Never carries passwordHash — that
+/** A user as everyone else sees them. Never carries passwordHash - that
  *  omission is the reason this shape exists rather than leaking the db row. */
 export const publicUser = z.object({
   id: z.string(),
@@ -44,7 +44,7 @@ export const messageView = z.object({
 });
 export type MessageView = z.infer<typeof messageView>;
 
-export const inviteStatus = z.enum(['active', 'revoked', 'expired', 'used up']);
+export const inviteStatus = z.enum(["active", "revoked", "expired", "used up"]);
 export type InviteStatus = z.infer<typeof inviteStatus>;
 
 export const invite = z.object({

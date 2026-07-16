@@ -5,91 +5,137 @@
   import * as Avatar from "$lib/components/ui/avatar";
   import { Button } from "$lib/components/ui/button";
   import * as Dialog from "$lib/components/ui/dialog";
+  import * as Form from "$lib/components/ui/form";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { Switch } from "$lib/components/ui/switch";
   import * as Tabs from "$lib/components/ui/tabs";
+  import { apiErrorMessage } from "$lib/forms";
   import { resizeImage } from "$lib/image";
   import { cn } from "$lib/utils";
+  import {
+    changePasswordBody,
+    renameCommunityBody,
+    updateProfileBody,
+  } from "@ccchat/shared";
   import { Monitor, Moon, Sun, Trash2, Upload } from "@lucide/svelte";
+  import {
+    defaults,
+    setError,
+    setMessage,
+    superForm,
+  } from "sveltekit-superforms";
+  import { zod4, zod4Client } from "sveltekit-superforms/adapters";
 
   let { open = $bindable(false) }: { open?: boolean } = $props();
 
-  let displayName = $state(chat.user?.displayName ?? "");
-  let currentPassword = $state("");
-  let newPassword = $state("");
-  let communityName = $state(chat.serverName);
-  let profileMsg = $state("");
-  let passwordMsg = $state("");
+  const isOwner = $derived(chat.user?.role === "owner");
+
   let avatarMsg = $state("");
-  let communityMsg = $state("");
-  let busy = $state(false);
   let fileInput: HTMLInputElement | null = $state(null);
 
-  const isOwner = $derived(chat.user?.role === "owner");
+  const profileForm = superForm(
+    defaults(
+      { displayName: chat.user?.displayName ?? "" },
+      zod4(updateProfileBody),
+    ),
+    {
+      SPA: true,
+      validators: zod4Client(updateProfileBody),
+      resetForm: false,
+      onUpdate: async ({ form }) => {
+        if (!form.valid || !chat.token) return;
+        try {
+          const { user } = await api.updateProfile(chat.token, form.data);
+          chat.patchUser({ displayName: user.displayName });
+          setMessage(form, "Saved.");
+        } catch (err) {
+          setError(form, "displayName", apiErrorMessage(err, "failed to save"));
+        }
+      },
+    },
+  );
+  const {
+    form: profileData,
+    enhance: profileEnhance,
+    submitting: profileBusy,
+    message: profileMsg,
+  } = profileForm;
+
+  const passwordForm = superForm(
+    defaults(
+      { currentPassword: "", newPassword: "" },
+      zod4(changePasswordBody),
+    ),
+    {
+      SPA: true,
+      validators: zod4Client(changePasswordBody),
+      resetForm: true,
+      onUpdate: async ({ form }) => {
+        if (!form.valid || !chat.token) return;
+        try {
+          await api.changePassword(chat.token, form.data);
+          setMessage(form, "Password changed.");
+        } catch (err) {
+          setError(
+            form,
+            "currentPassword",
+            apiErrorMessage(err, "failed to change password"),
+          );
+        }
+      },
+    },
+  );
+  const {
+    form: passwordData,
+    enhance: passwordEnhance,
+    submitting: passwordBusy,
+    message: passwordMsg,
+  } = passwordForm;
+
+  const communityForm = superForm(
+    defaults({ communityName: chat.serverName }, zod4(renameCommunityBody)),
+    {
+      SPA: true,
+      validators: zod4Client(renameCommunityBody),
+      resetForm: false,
+      onUpdate: async ({ form }) => {
+        if (!form.valid || !chat.token) return;
+        try {
+          await api.renameCommunity(chat.token, form.data.communityName);
+          setMessage(form, "Saved.");
+        } catch (err) {
+          setError(
+            form,
+            "communityName",
+            apiErrorMessage(err, "failed to save"),
+          );
+        }
+      },
+    },
+  );
+  const {
+    form: communityData,
+    enhance: communityEnhance,
+    submitting: communityBusy,
+    message: communityMsg,
+  } = communityForm;
 
   $effect(() => {
     if (open) {
-      displayName = chat.user?.displayName ?? "";
-      communityName = chat.serverName;
-      currentPassword = newPassword = "";
-      profileMsg = passwordMsg = avatarMsg = communityMsg = "";
+      profileForm.reset({
+        newState: { displayName: chat.user?.displayName ?? "" },
+      });
+      communityForm.reset({ newState: { communityName: chat.serverName } });
+      passwordForm.reset();
+      avatarMsg = "";
     }
   });
-
-  async function saveCommunity(e: Event) {
-    e.preventDefault();
-    if (!chat.token) return;
-    busy = true;
-    communityMsg = "";
-    try {
-      await api.renameCommunity(chat.token, communityName.trim());
-      communityMsg = "Saved.";
-    } catch (err: any) {
-      communityMsg = err?.message ?? "failed to save";
-    } finally {
-      busy = false;
-    }
-  }
 
   const initial = (chat.user?.displayName ?? "?")[0]?.toUpperCase() ?? "?";
   const avatar = $derived(
     avatarUrl(chat.user?.id ?? "", chat.user?.avatarVersion),
   );
-
-  async function saveName(e: Event) {
-    e.preventDefault();
-    if (!chat.token) return;
-    busy = true;
-    profileMsg = "";
-    try {
-      const { user } = await api.updateProfile(chat.token, {
-        displayName: displayName.trim(),
-      });
-      chat.patchUser({ displayName: user.displayName });
-      profileMsg = "Saved.";
-    } catch (err: any) {
-      profileMsg = err?.message ?? "failed to save";
-    } finally {
-      busy = false;
-    }
-  }
-
-  async function savePassword(e: Event) {
-    e.preventDefault();
-    if (!chat.token) return;
-    busy = true;
-    passwordMsg = "";
-    try {
-      await api.changePassword(chat.token, { currentPassword, newPassword });
-      passwordMsg = "Password changed.";
-      currentPassword = newPassword = "";
-    } catch (err: any) {
-      passwordMsg = err?.message ?? "failed to change password";
-    } finally {
-      busy = false;
-    }
-  }
 
   async function onAvatarFile(e: Event) {
     const file = (e.currentTarget as HTMLInputElement).files?.[0];
@@ -99,8 +145,8 @@
       const dataUrl = await resizeImage(file, 256);
       const { avatarVersion } = await api.uploadAvatar(chat.token, dataUrl);
       chat.patchUser({ avatarVersion });
-    } catch (err: any) {
-      avatarMsg = err?.message ?? "upload failed";
+    } catch (err) {
+      avatarMsg = apiErrorMessage(err, "upload failed");
     } finally {
       if (fileInput) fileInput.value = "";
     }
@@ -175,46 +221,67 @@
           />
         </div>
 
-        <form class="space-y-2" onsubmit={saveName}>
-          <Label for="dn">Display name</Label>
-          <div class="flex gap-2">
-            <Input
-              id="dn"
-              bind:value={displayName}
-              maxlength={32}
-              class="flex-1"
-            />
-            <Button type="submit" disabled={busy}>Save</Button>
-          </div>
-          {#if profileMsg}<p class="text-muted-foreground text-xs">
-              {profileMsg}
-            </p>{/if}
+        <form method="POST" use:profileEnhance>
+          <Form.Field form={profileForm} name="displayName">
+            <Form.Control>
+              {#snippet children({ props })}
+                <Form.Label>Display name</Form.Label>
+                <div class="flex gap-2">
+                  <Input
+                    {...props}
+                    bind:value={$profileData.displayName}
+                    maxlength={32}
+                    class="flex-1"
+                  />
+                  <Form.Button disabled={$profileBusy}>Save</Form.Button>
+                </div>
+              {/snippet}
+            </Form.Control>
+            <Form.FieldErrors />
+          </Form.Field>
+          {#if $profileMsg}
+            <p class="text-muted-foreground text-xs">{$profileMsg}</p>
+          {/if}
         </form>
 
-        <form class="space-y-2" onsubmit={savePassword}>
+        <form method="POST" use:passwordEnhance class="space-y-2">
           <Label>Change password</Label>
-          <Input
-            type="password"
-            placeholder="current password"
-            bind:value={currentPassword}
-            autocomplete="current-password"
-          />
-          <Input
-            type="password"
-            placeholder="new password (min 8)"
-            bind:value={newPassword}
-            autocomplete="new-password"
-          />
-          <Button
-            type="submit"
-            variant="secondary"
-            disabled={busy || !currentPassword || !newPassword}
-          >
+          <Form.Field form={passwordForm} name="currentPassword">
+            <Form.Control>
+              {#snippet children({ props })}
+                <Input
+                  {...props}
+                  type="password"
+                  placeholder="current password"
+                  bind:value={$passwordData.currentPassword}
+                  autocomplete="current-password"
+                />
+              {/snippet}
+            </Form.Control>
+            <Form.FieldErrors />
+          </Form.Field>
+
+          <Form.Field form={passwordForm} name="newPassword">
+            <Form.Control>
+              {#snippet children({ props })}
+                <Input
+                  {...props}
+                  type="password"
+                  placeholder="new password (min 8)"
+                  bind:value={$passwordData.newPassword}
+                  autocomplete="new-password"
+                />
+              {/snippet}
+            </Form.Control>
+            <Form.FieldErrors />
+          </Form.Field>
+
+          <Form.Button variant="secondary" disabled={$passwordBusy}>
             Update password
-          </Button>
-          {#if passwordMsg}<p class="text-muted-foreground text-xs">
-              {passwordMsg}
-            </p>{/if}
+          </Form.Button>
+          {#if $passwordMsg}
+            <p class="text-muted-foreground text-xs">{$passwordMsg}</p>
+          {/if}
         </form>
       </Tabs.Content>
 
@@ -252,26 +319,31 @@
 
       {#if isOwner}
         <Tabs.Content value="community" class="space-y-6 pt-4">
-          <form class="space-y-2" onsubmit={saveCommunity}>
-            <Label for="cn">Community name</Label>
-            <div class="flex gap-2">
-              <Input
-                id="cn"
-                bind:value={communityName}
-                maxlength={60}
-                class="flex-1"
-              />
-              <Button type="submit" disabled={busy || !communityName.trim()}
-                >Save</Button
-              >
-            </div>
-            <p class="text-muted-foreground text-xs">
-              Shown on the login screen and in the header. Everyone sees the
-              change immediately.
-            </p>
-            {#if communityMsg}<p class="text-muted-foreground text-xs">
-                {communityMsg}
-              </p>{/if}
+          <form method="POST" use:communityEnhance>
+            <Form.Field form={communityForm} name="communityName">
+              <Form.Control>
+                {#snippet children({ props })}
+                  <Form.Label>Community name</Form.Label>
+                  <div class="flex gap-2">
+                    <Input
+                      {...props}
+                      bind:value={$communityData.communityName}
+                      maxlength={60}
+                      class="flex-1"
+                    />
+                    <Form.Button disabled={$communityBusy}>Save</Form.Button>
+                  </div>
+                {/snippet}
+              </Form.Control>
+              <Form.Description>
+                Shown on the login screen and in the header. Everyone sees the
+                change immediately.
+              </Form.Description>
+              <Form.FieldErrors />
+            </Form.Field>
+            {#if $communityMsg}
+              <p class="text-muted-foreground text-xs">{$communityMsg}</p>
+            {/if}
           </form>
         </Tabs.Content>
       {/if}

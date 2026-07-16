@@ -1,18 +1,18 @@
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-import { mkdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { DATA_DIR } from '../env.js';
-import * as schema from './schema.js';
+import Database from "better-sqlite3";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
+import { DATA_DIR } from "../env.js";
+import * as schema from "./schema.js";
 
 mkdirSync(DATA_DIR, { recursive: true });
 
-const sqlite = new Database(join(DATA_DIR, 'ccchat.sqlite'));
-sqlite.pragma('journal_mode = WAL'); // better concurrency for many chatters
-sqlite.pragma('foreign_keys = ON');
+const sqlite = new Database(join(DATA_DIR, "ccchat.sqlite"));
+sqlite.pragma("journal_mode = WAL"); // better concurrency for many chatters
+sqlite.pragma("foreign_keys = ON");
 
 /** Idempotent schema creation. We use raw DDL at boot instead of a separate
- *  migration-generation step so the server just runs — no build tooling needed
+ *  migration-generation step so the server just runs - no build tooling needed
  *  to stand up a fresh instance. Drizzle is still used for all queries. */
 export function migrate() {
   sqlite.exec(`
@@ -77,13 +77,15 @@ export function migrate() {
     );
   `);
 
-  addColumn('users', 'avatar_version', 'INTEGER');
+  addColumn("users", "avatar_version", "INTEGER");
 }
 
 /** Add a column to an existing table if it isn't already present (SQLite has no
  *  ADD COLUMN IF NOT EXISTS). */
 function addColumn(table: string, column: string, type: string) {
-  const cols = sqlite.prepare(`PRAGMA table_info(${table})`).all() as Array<{ name: string }>;
+  const cols = sqlite.prepare(`PRAGMA table_info(${table})`).all() as Array<{
+    name: string;
+  }>;
   if (!cols.some((c) => c.name === column)) {
     sqlite.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${type}`);
   }

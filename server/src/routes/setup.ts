@@ -1,9 +1,9 @@
-import { Hono } from 'hono';
-import { setupBody } from '@ccchat/shared';
-import { createSession, type Env } from '../auth.js';
-import { needsSetup, seedCommunity } from '../bootstrap.js';
-import { toPublicUser } from '../views.js';
-import { validate } from '../validate.js';
+import { setupBody } from "@ccchat/shared";
+import { Hono } from "hono";
+import { createSession, type Env } from "../auth.js";
+import { needsSetup, seedCommunity } from "../bootstrap.js";
+import { validate } from "../validate.js";
+import { toPublicUser } from "../views.js";
 
 const app = new Hono<Env>();
 
@@ -12,20 +12,31 @@ const app = new Hono<Env>();
 // check. Node is single-threaded, so a plain flag is enough.
 let claiming = false;
 
-/** Open only while the database has no users — the moment an owner exists this
+/** Open only while the database has no users - the moment an owner exists this
  *  returns 409 forever. That is the whole security model, so a public instance
  *  must be set up promptly after first boot. */
-app.post('/', validate('json', setupBody), async (c) => {
-  if (claiming || !needsSetup()) return c.json({ error: 'this community is already set up' }, 409);
+app.post("/", validate("json", setupBody), async (c) => {
+  if (claiming || !needsSetup())
+    return c.json({ error: "this community is already set up" }, 409);
 
-  const { communityName, username, password } = c.req.valid('json');
-  const displayName = c.req.valid('json').displayName || username;
+  const { communityName, username, password } = c.req.valid("json");
+  const displayName = c.req.valid("json").displayName || username;
 
   claiming = true;
   try {
-    const { owner, inviteCode } = seedCommunity({ communityName, username, displayName, password });
+    const { owner, inviteCode } = seedCommunity({
+      communityName,
+      username,
+      displayName,
+      password,
+    });
     const token = createSession(owner.id);
-    return c.json({ token, user: toPublicUser(owner), inviteCode, communityName });
+    return c.json({
+      token,
+      user: toPublicUser(owner),
+      inviteCode,
+      communityName,
+    });
   } finally {
     claiming = false;
   }

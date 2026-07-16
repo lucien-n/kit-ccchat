@@ -1,12 +1,19 @@
-import { api, apiBase, type Channel, type MessageView, type PublicUser, type VoiceMember } from './api';
-import { playPing, unlockAudio } from './notify';
+import {
+  api,
+  apiBase,
+  type Channel,
+  type MessageView,
+  type PublicUser,
+  type VoiceMember,
+} from "./api";
+import { playPing, unlockAudio } from "./notify";
 
-type Status = 'disconnected' | 'connecting' | 'connected';
+type Status = "disconnected" | "connecting" | "connected";
 
 function wsUrl(token: string): string {
   const u = new URL(apiBase() || location.origin);
-  u.protocol = u.protocol === 'https:' ? 'wss:' : 'ws:';
-  u.pathname = '/ws';
+  u.protocol = u.protocol === "https:" ? "wss:" : "ws:";
+  u.pathname = "/ws";
   u.search = `?token=${encodeURIComponent(token)}`;
   return u.toString();
 }
@@ -14,7 +21,7 @@ function wsUrl(token: string): string {
 class ChatStore {
   token = $state<string | null>(null);
   user = $state<PublicUser | null>(null);
-  serverName = $state('ccchat');
+  serverName = $state("ccchat");
   /** True on a brand-new instance with no accounts: show the setup wizard
    *  instead of a login form, so the first visitor claims it as owner. */
   needsSetup = $state(false);
@@ -23,7 +30,7 @@ class ChatStore {
   currentChannelId = $state<string | null>(null);
   messages = $state<MessageView[]>([]);
   online = $state<Set<string>>(new Set());
-  status = $state<Status>('disconnected');
+  status = $state<Status>("disconnected");
 
   unread = $state<Record<string, number>>({});
   voicePresence = $state<Record<string, VoiceMember[]>>({});
@@ -38,7 +45,7 @@ class ChatStore {
   }
 
   get isAdmin(): boolean {
-    return this.user?.role === 'admin' || this.user?.role === 'owner';
+    return this.user?.role === "admin" || this.user?.role === "owner";
   }
 
   get totalUnread(): number {
@@ -51,14 +58,14 @@ class ChatStore {
 
   toggleSound() {
     this.soundEnabled = !this.soundEnabled;
-    localStorage.setItem('soundEnabled', this.soundEnabled ? '1' : '0');
+    localStorage.setItem("soundEnabled", this.soundEnabled ? "1" : "0");
   }
 
   async init() {
-    this.soundEnabled = localStorage.getItem('soundEnabled') !== '0';
-    window.addEventListener('focus', () => this.markCurrentRead());
+    this.soundEnabled = localStorage.getItem("soundEnabled") !== "0";
+    window.addEventListener("focus", () => this.markCurrentRead());
     // Satisfy the browser autoplay policy so the first ping can play.
-    window.addEventListener('pointerdown', () => unlockAudio(), { once: true });
+    window.addEventListener("pointerdown", () => unlockAudio(), { once: true });
 
     try {
       const info = await api.info();
@@ -67,16 +74,16 @@ class ChatStore {
     } catch {
       /* server may be unreachable; login screen will surface it */
     }
-    if (this.needsSetup) return; // nothing to restore — there are no accounts yet
+    if (this.needsSetup) return; // nothing to restore - there are no accounts yet
 
-    const saved = localStorage.getItem('token');
+    const saved = localStorage.getItem("token");
     if (!saved) return;
     try {
       this.user = (await api.me(saved)).user;
       this.token = saved;
       await this.afterLogin();
     } catch {
-      localStorage.removeItem('token');
+      localStorage.removeItem("token");
     }
   }
 
@@ -88,7 +95,11 @@ class ChatStore {
 
   /** Claim a fresh instance: name it and become its owner. Returns the invite
    *  code to share with friends. */
-  async setup(input: { communityName: string; username: string; password: string }) {
+  async setup(input: {
+    communityName: string;
+    username: string;
+    password: string;
+  }) {
     const { token, user, inviteCode, communityName } = await api.setup(input);
     this.serverName = communityName;
     this.setSession(token, user);
@@ -98,8 +109,18 @@ class ChatStore {
     return inviteCode;
   }
 
-  async register(inviteCode: string, username: string, password: string, displayName?: string) {
-    const { token, user } = await api.register({ inviteCode, username, password, displayName });
+  async register(
+    inviteCode: string,
+    username: string,
+    password: string,
+    displayName?: string,
+  ) {
+    const { token, user } = await api.register({
+      inviteCode,
+      username,
+      password,
+      displayName,
+    });
     this.setSession(token, user);
     await this.afterLogin();
   }
@@ -107,13 +128,13 @@ class ChatStore {
   private setSession(token: string, user: PublicUser) {
     this.token = token;
     this.user = user;
-    localStorage.setItem('token', token);
+    localStorage.setItem("token", token);
   }
 
   private async afterLogin() {
     await this.loadChannels();
     await this.loadUnreads();
-    const firstText = this.channels.find((c) => c.type === 'text');
+    const firstText = this.channels.find((c) => c.type === "text");
     if (firstText) await this.selectChannel(firstText.id);
     this.connect();
   }
@@ -149,7 +170,7 @@ class ChatStore {
     this.currentChannelId = id;
     void this.markRead(id); // opening a channel clears + persists its read state
     const channel = this.channels.find((c) => c.id === id);
-    if (!channel || channel.type !== 'text') {
+    if (!channel || channel.type !== "text") {
       this.messages = [];
       return;
     }
@@ -160,31 +181,32 @@ class ChatStore {
 
   private connect() {
     if (!this.token || this.ws) return;
-    this.status = 'connecting';
+    this.status = "connecting";
     const ws = new WebSocket(wsUrl(this.token));
     this.ws = ws;
 
-    ws.onopen = () => (this.status = 'connected');
+    ws.onopen = () => (this.status = "connected");
     ws.onclose = () => {
-      this.status = 'disconnected';
+      this.status = "disconnected";
       this.ws = null;
-      if (this.token) this.reconnectTimer = setTimeout(() => this.connect(), 1500);
+      if (this.token)
+        this.reconnectTimer = setTimeout(() => this.connect(), 1500);
     };
     ws.onmessage = (ev) => this.onEvent(JSON.parse(ev.data));
   }
 
   private onEvent(event: any) {
     switch (event.type) {
-      case 'message.new': {
+      case "message.new": {
         const m = event.message as MessageView;
         const isCurrent = m.channelId === this.currentChannelId;
         if (isCurrent) this.messages = [...this.messages, m];
 
         if (m.author?.id === this.user?.id) break; // your own message: never notify
-        const focused = typeof document !== 'undefined' && document.hasFocus();
+        const focused = typeof document !== "undefined" && document.hasFocus();
 
         if (isCurrent) {
-          // The open channel never badges — you're reading it. Keep its read
+          // The open channel never badges - you're reading it. Keep its read
           // marker current so it stays at zero across reloads.
           this.scheduleMarkRead(m.channelId);
           if (!focused && this.soundEnabled) playPing();
@@ -194,26 +216,28 @@ class ChatStore {
         }
         break;
       }
-      case 'message.deleted':
+      case "message.deleted":
         if (event.channelId === this.currentChannelId)
           this.messages = this.messages.filter((m) => m.id !== event.id);
         break;
-      case 'presence':
+      case "presence":
         this.online = new Set(event.online);
         break;
-      case 'voice.presence':
+      case "voice.presence":
         this.voicePresence = event.presence ?? {};
         break;
-      case 'community.renamed':
+      case "community.renamed":
         this.serverName = event.name;
         break;
     }
   }
 
   setVoiceChannel(channelId: string | null) {
-    if (!this.ws || this.status !== 'connected') return;
+    if (!this.ws || this.status !== "connected") return;
     this.ws.send(
-      JSON.stringify(channelId ? { type: 'voice.join', channelId } : { type: 'voice.leave' }),
+      JSON.stringify(
+        channelId ? { type: "voice.join", channelId } : { type: "voice.leave" },
+      ),
     );
   }
 
@@ -222,9 +246,14 @@ class ChatStore {
   }
 
   send(content: string) {
-    if (!this.ws || this.status !== 'connected' || !this.currentChannelId) return;
+    if (!this.ws || this.status !== "connected" || !this.currentChannelId)
+      return;
     this.ws.send(
-      JSON.stringify({ type: 'message.create', channelId: this.currentChannelId, content }),
+      JSON.stringify({
+        type: "message.create",
+        channelId: this.currentChannelId,
+        content,
+      }),
     );
   }
 
@@ -245,7 +274,7 @@ class ChatStore {
     this.channels = [];
     this.unread = {};
     this.voicePresence = {};
-    localStorage.removeItem('token');
+    localStorage.removeItem("token");
     if (token) await api.logout(token).catch(() => {});
   }
 }
