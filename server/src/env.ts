@@ -8,11 +8,16 @@ import { loadEnvFile } from 'node:process';
 // overrides the shared root .env — the same root file docker-compose reads.
 const SERVER_DIR = join(dirname(fileURLToPath(import.meta.url)), '..');
 const REPO_ROOT = join(SERVER_DIR, '..');
-for (const file of [join(SERVER_DIR, '.env'), join(REPO_ROOT, '.env')]) {
-  try {
-    loadEnvFile(file);
-  } catch {
-    /* file absent — that's fine */
+
+// Tests must not inherit whatever the developer happens to have in .env — a real
+// LIVEKIT_API_SECRET sitting there once made a security guard look like it passed.
+if (process.env.NODE_ENV !== 'test') {
+  for (const file of [join(SERVER_DIR, '.env'), join(REPO_ROOT, '.env')]) {
+    try {
+      loadEnvFile(file);
+    } catch {
+      /* file absent — that's fine */
+    }
   }
 }
 

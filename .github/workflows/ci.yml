@@ -1,13 +1,15 @@
-name: publish image
+name: ci
 
-# Builds the container once, here, so that self-hosters never have to. Pushes a
-# multi-arch image: amd64 covers thin clients and mini-PCs (Wyse 3040, NUC, any
-# old laptop), arm64 covers a Raspberry Pi.
+# Work happens on `dev`. Tests run when code is headed for `main` — on the PR
+# that merges it, and again on main itself — and the image only publishes if
+# they pass. Day-to-day pushes to `dev` don't burn CI minutes.
 
 on:
   push:
     branches: [main]
     tags: ['v*']
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 
 env:
@@ -15,7 +17,30 @@ env:
   IMAGE: ${{ github.repository }}
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: typecheck server
+        run: npm run -w server typecheck
+
+      - name: test server
+        run: npm run -w server test
+
+      - name: check client
+        run: npm run -w client check
+
   publish:
+    needs: test
+    # A PR gets the test job for feedback but must not publish an image.
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
       contents: read
