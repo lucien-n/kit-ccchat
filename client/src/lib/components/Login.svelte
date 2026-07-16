@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { chat } from "$lib/chat.svelte";
+  import { community } from "$lib/stores/community.svelte";
   import { Button } from "$lib/components/ui/button";
   import * as Card from "$lib/components/ui/card";
   import { clearInviteFromUrl, readInviteFromUrl } from "$lib/invite";
@@ -16,7 +16,7 @@
 <div class="grid min-h-dvh place-items-center p-4">
   <Card.Root class="w-full max-w-md">
     <Card.Header class="text-center">
-      <Card.Title class="text-2xl">{chat.serverName}</Card.Title>
+      <Card.Title class="text-2xl">{community.name}</Card.Title>
       <Card.Description>
         {#if mode === "login"}
           Welcome back.

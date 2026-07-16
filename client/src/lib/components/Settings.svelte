@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { chat } from "$lib/chat.svelte";
+  import { session } from "$lib/stores/session.svelte";
   import * as Dialog from "$lib/components/ui/dialog";
   import * as Tabs from "$lib/components/ui/tabs";
   import { cn } from "$lib/utils";
@@ -9,7 +9,7 @@
 
   let { open = $bindable(false) }: { open?: boolean } = $props();
 
-  const isOwner = $derived(chat.user?.role === "owner");
+  const isOwner = $derived(session.user?.role === "owner");
 </script>
 
 <!-- Dialog.Content only renders while open, so each tab mounts fresh. -->

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { chat } from "$lib/chat.svelte";
+  import { login } from "$lib/app";
   import * as Card from "$lib/components/ui/card";
   import * as Form from "$lib/components/ui/form";
   import { Input } from "$lib/components/ui/input";
@@ -15,7 +15,7 @@
     onUpdate: async ({ form }) => {
       if (!form.valid) return;
       try {
-        await chat.login(form.data.username, form.data.password);
+        await login(form.data.username, form.data.password);
       } catch (err) {
         setMessage(form, fail(apiErrorMessage(err, "something went wrong")));
       }

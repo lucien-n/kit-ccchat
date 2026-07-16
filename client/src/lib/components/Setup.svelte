@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { chat } from "$lib/chat.svelte";
+  import { setup } from "$lib/app";
+  import { community } from "$lib/stores/community.svelte";
   import { Button } from "$lib/components/ui/button";
   import * as Card from "$lib/components/ui/card";
   import * as Form from "$lib/components/ui/form";
@@ -27,7 +28,7 @@
       onUpdate: async ({ form }) => {
         if (!form.valid) return;
         try {
-          inviteCode = await chat.setup(form.data);
+          inviteCode = await setup(form.data);
         } catch (err) {
           setMessage(form, fail(apiErrorMessage(err, "something went wrong")));
         }
@@ -49,7 +50,7 @@
   <Card.Root class="w-full max-w-md">
     {#if inviteCode}
       <Card.Header class="text-center">
-        <Card.Title class="text-2xl">{chat.serverName} is live</Card.Title>
+        <Card.Title class="text-2xl">{community.name} is live</Card.Title>
         <Card.Description
           >Send this link to your friends so they can join.</Card.Description
         >
@@ -76,8 +77,8 @@
       </Card.Content>
 
       <Card.Footer class="mt-2">
-        <Button class="w-full" onclick={() => (chat.needsSetup = false)}
-          >Enter {chat.serverName}</Button
+        <Button class="w-full" onclick={() => (community.needsSetup = false)}
+          >Enter {community.name}</Button
         >
       </Card.Footer>
     {:else}

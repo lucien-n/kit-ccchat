@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { chat } from "$lib/chat.svelte";
+  import { register } from "$lib/app";
   import * as Card from "$lib/components/ui/card";
   import * as Form from "$lib/components/ui/form";
   import { Input } from "$lib/components/ui/input";
@@ -28,12 +28,7 @@
       onUpdate: async ({ form }) => {
         if (!form.valid) return;
         try {
-          await chat.register(
-            form.data.inviteCode,
-            form.data.username,
-            form.data.password,
-            form.data.displayName || undefined,
-          );
+          await register(form.data);
         } catch (err) {
           const msg = apiErrorMessage(err, "something went wrong");
           if (/invite/i.test(msg)) setError(form, "inviteCode", msg);

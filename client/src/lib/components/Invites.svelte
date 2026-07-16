@@ -1,6 +1,6 @@
 <script lang="ts">
   import { api, type Invite } from "$lib/api";
-  import { chat } from "$lib/chat.svelte";
+  import { session } from "$lib/stores/session.svelte";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
   import { Label } from "$lib/components/ui/label";
@@ -43,19 +43,19 @@
   });
 
   async function load() {
-    if (!chat.token) return;
+    if (!session.token) return;
     try {
-      invites = (await api.invites(chat.token)).invites;
+      invites = (await api.invites(session.token)).invites;
     } catch (e) {
       toast.error(apiErrorMessage(e, "failed to load invites"));
     }
   }
 
   async function create(p: (typeof presets)[number]) {
-    if (!chat.token) return;
+    if (!session.token) return;
     busy = true;
     try {
-      const { invite } = await api.createInvite(chat.token, {
+      const { invite } = await api.createInvite(session.token, {
         maxUses: p.maxUses,
         expiresInHours: p.expiresInHours,
       });
@@ -70,9 +70,9 @@
   }
 
   async function revoke(code: string) {
-    if (!chat.token) return;
+    if (!session.token) return;
     try {
-      const { invite } = await api.revokeInvite(chat.token, code);
+      const { invite } = await api.revokeInvite(session.token, code);
       invites = invites.map((i) => (i.code === code ? invite : i));
       toast.success("Invite revoked. That link no longer works.");
     } catch (e) {

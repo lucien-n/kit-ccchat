@@ -1,6 +1,7 @@
 <script lang="ts">
   import { api } from "$lib/api";
-  import { chat } from "$lib/chat.svelte";
+  import { community } from "$lib/stores/community.svelte";
+  import { session } from "$lib/stores/session.svelte";
   import * as Form from "$lib/components/ui/form";
   import { Input } from "$lib/components/ui/input";
   import { apiErrorMessage, fail, ok, toastMessage } from "$lib/forms";
@@ -9,15 +10,15 @@
   import { zod4, zod4Client } from "sveltekit-superforms/adapters";
 
   const form = superForm(
-    defaults({ communityName: chat.serverName }, zod4(renameCommunityBody)),
+    defaults({ communityName: community.name }, zod4(renameCommunityBody)),
     {
       SPA: true,
       validators: zod4Client(renameCommunityBody),
       resetForm: false,
       onUpdate: async ({ form }) => {
-        if (!form.valid || !chat.token) return;
+        if (!form.valid || !session.token) return;
         try {
-          await api.renameCommunity(chat.token, form.data.communityName);
+          await api.renameCommunity(session.token, form.data.communityName);
           setMessage(form, ok("Community renamed."));
         } catch (err) {
           setMessage(form, fail(apiErrorMessage(err, "failed to save")));

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { api, avatarUrl } from "$lib/api";
-  import { chat } from "$lib/chat.svelte";
+  import { session } from "$lib/stores/session.svelte";
   import * as Avatar from "$lib/components/ui/avatar";
   import { Button } from "$lib/components/ui/button";
   import { apiErrorMessage } from "$lib/forms";
@@ -11,16 +11,16 @@
   // Not a form: a file picker that uploads on change.
   let fileInput: HTMLInputElement | null = $state(null);
 
-  const initial = $derived((chat.user?.displayName ?? "?")[0]?.toUpperCase() ?? "?");
-  const avatar = $derived(avatarUrl(chat.user?.id ?? "", chat.user?.avatarVersion));
+  const initial = $derived((session.user?.displayName ?? "?")[0]?.toUpperCase() ?? "?");
+  const avatar = $derived(avatarUrl(session.user?.id ?? "", session.user?.avatarVersion));
 
   async function onFile(e: Event) {
     const file = (e.currentTarget as HTMLInputElement).files?.[0];
-    if (!file || !chat.token) return;
+    if (!file || !session.token) return;
     try {
       const dataUrl = await resizeImage(file, 256);
-      const { avatarVersion } = await api.uploadAvatar(chat.token, dataUrl);
-      chat.patchUser({ avatarVersion });
+      const { avatarVersion } = await api.uploadAvatar(session.token, dataUrl);
+      session.patchUser({ avatarVersion });
     } catch (err) {
       toast.error(apiErrorMessage(err, "upload failed"));
     } finally {
@@ -29,9 +29,9 @@
   }
 
   async function remove() {
-    if (!chat.token) return;
-    await api.removeAvatar(chat.token).catch(() => {});
-    chat.patchUser({ avatarVersion: null });
+    if (!session.token) return;
+    await api.removeAvatar(session.token).catch(() => {});
+    session.patchUser({ avatarVersion: null });
   }
 </script>
 
@@ -48,7 +48,7 @@
       <Button variant="outline" size="sm" onclick={() => fileInput?.click()}>
         <Upload class="size-4" /> Upload
       </Button>
-      {#if chat.user?.avatarVersion}
+      {#if session.user?.avatarVersion}
         <Button variant="ghost" size="sm" onclick={remove}>
           <Trash2 class="size-4" /> Remove
         </Button>

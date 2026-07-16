@@ -1,11 +1,17 @@
 <script lang="ts">
   import { avatarUrl } from "$lib/api";
-  import { chat } from "$lib/chat.svelte";
   import * as Avatar from "$lib/components/ui/avatar";
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
   import * as Sheet from "$lib/components/ui/sheet";
   import { setBaseTitle, setTitleBadge } from "$lib/notify";
+  import { channels } from "$lib/stores/channels.svelte";
+  import { community } from "$lib/stores/community.svelte";
+  import { messages } from "$lib/stores/messages.svelte";
+  import { prefs } from "$lib/stores/prefs.svelte";
+  import { presence } from "$lib/stores/presence.svelte";
+  import { session } from "$lib/stores/session.svelte";
+  import { unread } from "$lib/stores/unread.svelte";
   import { voice } from "$lib/voice.svelte";
   import { Bell, BellOff, Hash, Link2, Menu, Send, Trash2, Users } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
@@ -23,13 +29,13 @@
   let scroller: HTMLDivElement | null = $state(null);
 
   $effect(() => {
-    void chat.messages.length;
+    void messages.list.length;
     if (scroller) scroller.scrollTop = scroller.scrollHeight;
   });
 
   $effect(() => {
-    setBaseTitle(chat.serverName);
-    setTitleBadge(chat.totalUnread);
+    setBaseTitle(community.name);
+    setTitleBadge(unread.total);
   });
 
   // Voice failures used to sit in a banner above the composer until dismissed.
@@ -47,8 +53,14 @@
   function sendDraft(e: Event) {
     e.preventDefault();
     const text = draft.trim();
-    if (!text) return;
-    chat.send(text);
+    const channelId = channels.currentId;
+    if (!text || !channelId) return;
+    // Keep the draft if the socket is down, rather than clearing the box for a
+    // message that went nowhere.
+    if (!messages.send(channelId, text)) {
+      toast.error("Not connected, your message wasn't sent.");
+      return;
+    }
     draft = "";
   }
 
@@ -62,7 +74,7 @@
   }
 
   const canDelete = (authorId: string | undefined) =>
-    chat.isAdmin || authorId === chat.user?.id;
+    session.isAdmin || authorId === session.user?.id;
   const initial = (name: string | undefined) => (name ?? "?")[0]?.toUpperCase() ?? "?";
 </script>
 
@@ -99,31 +111,31 @@
           onclick={() => (showNav = true)}
         >
           <Menu class="size-5" />
-          {#if chat.totalUnread > 0}
+          {#if unread.total > 0}
             <span class="bg-destructive absolute top-1.5 right-1.5 size-2 rounded-full"
             ></span>
           {/if}
         </Button>
         <Hash class="text-muted-foreground size-5 shrink-0" />
-        <span class="truncate">{chat.currentChannel?.name ?? "no channel"}</span>
+        <span class="truncate">{channels.current?.name ?? "no channel"}</span>
       </div>
       <div class="flex shrink-0 items-center gap-1 sm:gap-2">
         <Button
           variant="ghost"
           size="icon"
-          title={chat.soundEnabled
+          title={prefs.soundEnabled
             ? "Mute notification sound"
             : "Unmute notification sound"}
-          onclick={() => chat.toggleSound()}
+          onclick={() => prefs.toggleSound()}
         >
-          {#if chat.soundEnabled}<Bell class="size-4" />{:else}<BellOff
+          {#if prefs.soundEnabled}<Bell class="size-4" />{:else}<BellOff
               class="size-4"
             />{/if}
         </Button>
         <span class="text-muted-foreground hidden text-sm sm:inline"
-          >{chat.online.size} online</span
+          >{presence.online.size} online</span
         >
-        {#if chat.isAdmin}
+        {#if session.isAdmin}
           <Button
             variant="outline"
             size="icon"
@@ -166,7 +178,7 @@
       bind:this={scroller}
       class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-2 sm:p-4"
     >
-      {#each chat.messages as m (m.id)}
+      {#each messages.list as m (m.id)}
         {@const av = m.author ? avatarUrl(m.author.id, m.author.avatarVersion) : null}
         <div class="group hover:bg-muted/40 relative flex gap-3 rounded-md px-2 py-1">
           <Avatar.Root class="mt-0.5 size-9">
@@ -188,7 +200,7 @@
               size="icon"
               class="absolute top-1 right-2 size-7 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
               title="Delete"
-              onclick={() => chat.deleteMessage(m.id)}
+              onclick={() => messages.delete(m.id)}
             >
               <Trash2 class="size-4" />
             </Button>
@@ -208,8 +220,8 @@
     <form class="flex gap-2 p-2 sm:p-4" onsubmit={sendDraft}>
       <Input
         bind:value={draft}
-        placeholder={`Message #${chat.currentChannel?.name ?? ""}`}
-        disabled={chat.currentChannel?.type !== "text"}
+        placeholder={`Message #${channels.current?.name ?? ""}`}
+        disabled={channels.current?.type !== "text"}
         class="flex-1"
       />
       <Button type="submit" size="icon"><Send class="size-4" /></Button>

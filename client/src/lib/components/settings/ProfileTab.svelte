@@ -1,6 +1,6 @@
 <script lang="ts">
   import { api } from "$lib/api";
-  import { chat } from "$lib/chat.svelte";
+  import { session } from "$lib/stores/session.svelte";
   import * as Form from "$lib/components/ui/form";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
@@ -11,16 +11,16 @@
   import AvatarPicker from "./AvatarPicker.svelte";
 
   const nameForm = superForm(
-    defaults({ displayName: chat.user?.displayName ?? "" }, zod4(updateProfileBody)),
+    defaults({ displayName: session.user?.displayName ?? "" }, zod4(updateProfileBody)),
     {
       SPA: true,
       validators: zod4Client(updateProfileBody),
       resetForm: false,
       onUpdate: async ({ form }) => {
-        if (!form.valid || !chat.token) return;
+        if (!form.valid || !session.token) return;
         try {
-          const { user } = await api.updateProfile(chat.token, form.data);
-          chat.patchUser({ displayName: user.displayName });
+          const { user } = await api.updateProfile(session.token, form.data);
+          session.patchUser({ displayName: user.displayName });
           setMessage(form, ok("Display name saved."));
         } catch (err) {
           setMessage(form, fail(apiErrorMessage(err, "failed to save")));
@@ -39,9 +39,9 @@
       // Clear both fields on success.
       resetForm: true,
       onUpdate: async ({ form }) => {
-        if (!form.valid || !chat.token) return;
+        if (!form.valid || !session.token) return;
         try {
-          await api.changePassword(chat.token, form.data);
+          await api.changePassword(session.token, form.data);
           setMessage(form, ok("Password changed."));
         } catch (err) {
           // Stays inline rather than becoming a toast: this one names a field,

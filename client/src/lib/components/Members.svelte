@@ -1,6 +1,7 @@
 <script lang="ts">
   import { api, avatarUrl, type PublicUser } from "$lib/api";
-  import { chat } from "$lib/chat.svelte";
+  import { presence } from "$lib/stores/presence.svelte";
+  import { session } from "$lib/stores/session.svelte";
   import * as Avatar from "$lib/components/ui/avatar";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
@@ -28,19 +29,19 @@
   });
 
   async function load() {
-    if (!chat.token) return;
+    if (!session.token) return;
     try {
-      members = (await api.members(chat.token)).members;
+      members = (await api.members(session.token)).members;
     } catch (e) {
       toast.error(apiErrorMessage(e, "failed to load members"));
     }
   }
 
   async function act(id: string, action: "kick" | "ban" | "unban" | "mute" | "unmute") {
-    if (!chat.token) return;
+    if (!session.token) return;
     try {
       const body = action === "mute" ? { minutes: 60 } : undefined;
-      await api.mod(chat.token, id, action, body);
+      await api.mod(session.token, id, action, body);
       await load();
     } catch (e) {
       toast.error(apiErrorMessage(e, "action failed"));
@@ -72,7 +73,7 @@
               <span
                 class={cn(
                   "bg-muted-foreground size-2 shrink-0 rounded-full",
-                  chat.online.has(m.id) && "bg-green-500",
+                  presence.online.has(m.id) && "bg-green-500",
                 )}
               ></span>
               <Avatar.Root class="size-7">
@@ -89,7 +90,7 @@
               {#if isMuted(m)}<Badge variant="secondary">muted</Badge>{/if}
             </div>
 
-            {#if m.id !== chat.user?.id && m.role !== "owner"}
+            {#if m.id !== session.user?.id && m.role !== "owner"}
               <div class="flex flex-wrap gap-1 pt-2 pl-9">
                 {#if isMuted(m)}
                   <Button

@@ -7,9 +7,9 @@ import {
   type RemoteTrackPublication,
 } from "livekit-client";
 import { api } from "./api";
-import { chat } from "./chat.svelte";
 import { apiErrorMessage, errorName } from "./forms";
 import { playMute, playUnmute, playVoiceJoin, playVoiceLeave } from "./notify";
+import { realtime } from "./stores/realtime.svelte";
 
 export interface VoiceParticipant {
   identity: string;
@@ -70,7 +70,7 @@ class VoiceStore {
       // reachable by this browser - this is what fails.
       await room.connect(url, res.token);
       this.status = "connected";
-      chat.setVoiceChannel(channel.id); // broadcast our voice presence
+      realtime.send({ type: "voice.join", channelId: channel.id }); // broadcast our presence
       playVoiceJoin();
       this.refresh();
 
@@ -129,7 +129,7 @@ class VoiceStore {
         }
         if (wasConnected) {
           playVoiceLeave();
-          chat.setVoiceChannel(null); // clear our voice presence for everyone
+          realtime.send({ type: "voice.leave" }); // clear our presence for everyone
         }
         this.reset();
       });

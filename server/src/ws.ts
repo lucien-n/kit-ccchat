@@ -11,10 +11,40 @@ import { toMessageView } from "./views.js";
 
 const wss = new WebSocketServer({ noServer: true });
 
+const DEFAULT_HEARTBEAT_MS = 30_000;
+
+/** Sockets that have answered a ping since the last sweep. */
+const alive = new WeakMap<WebSocket, boolean>();
+
+/** A browser cannot send WebSocket pings, so liveness has to be probed from
+ *  here. Without this, a closed laptop or a dropped network leaves the user
+ *  listed as online for everyone else until the OS gives up on the TCP
+ *  connection, which can take many minutes or, on a silent drop, never.
+ *  `ws` answers pings automatically, so a client that misses a whole round is
+ *  gone: terminate it and let the close handler clean up presence. */
+function startHeartbeat(everyMs: number) {
+  const timer = setInterval(() => {
+    for (const ws of wss.clients) {
+      if (alive.get(ws) === false) {
+        ws.terminate();
+        continue;
+      }
+      alive.set(ws, false);
+      ws.ping();
+    }
+  }, everyMs);
+  // Never hold the process open just to run the sweep.
+  timer.unref();
+  return timer;
+}
+
 /** Hook the WebSocket upgrade onto the shared HTTP server, but only for /ws.
  *  Auth happens here via ?token=... so the same bearer token works for the web
  *  client and the future Capacitor mobile app. */
-export function attachWebSocket(server: Server) {
+export function attachWebSocket(server: Server, heartbeatMs = DEFAULT_HEARTBEAT_MS) {
+  const heartbeat = startHeartbeat(heartbeatMs);
+  server.on("close", () => clearInterval(heartbeat));
+
   server.on("upgrade", (req: IncomingMessage, socket: Duplex, head: Buffer) => {
     const url = new URL(req.url ?? "", "http://localhost");
     if (url.pathname !== "/ws") {
@@ -36,6 +66,9 @@ export function attachWebSocket(server: Server) {
 function onConnection(ws: WebSocket, userId: string) {
   const client: Client = { ws, userId };
   hub.add(client);
+
+  alive.set(ws, true);
+  ws.on("pong", () => alive.set(ws, true));
 
   ws.on("message", (raw) => {
     let parsed;
