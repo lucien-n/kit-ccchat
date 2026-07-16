@@ -1,5 +1,6 @@
 <script lang="ts">
   import { chat } from '$lib/chat.svelte';
+  import { inviteLink } from '$lib/invite';
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import { Label } from '$lib/components/ui/label';
@@ -20,6 +21,7 @@
   // it's the thing the owner actually came here for.
   let inviteCode = $state('');
   let copied = $state(false);
+  const link = $derived(inviteCode ? inviteLink(inviteCode) : '');
 
   async function submit(e: Event) {
     e.preventDefault();
@@ -35,7 +37,7 @@
   }
 
   async function copy() {
-    await navigator.clipboard.writeText(inviteCode);
+    await navigator.clipboard.writeText(link);
     copied = true;
     setTimeout(() => (copied = false), 1500);
   }
@@ -46,25 +48,26 @@
     {#if inviteCode}
       <Card.Header class="text-center">
         <Card.Title class="text-2xl">{chat.serverName} is live</Card.Title>
-        <Card.Description>Share this invite code with your friends so they can join.</Card.Description>
+        <Card.Description>Send this link to your friends so they can join.</Card.Description>
       </Card.Header>
 
       <Card.Content class="space-y-4">
         <button
           type="button"
           onclick={copy}
-          class="bg-muted hover:bg-muted/70 flex w-full items-center justify-center gap-3 rounded-lg py-6 font-mono text-2xl tracking-widest transition-colors"
+          class="bg-muted hover:bg-muted/70 flex w-full items-center justify-between gap-3 rounded-lg px-4 py-4 text-left transition-colors"
         >
-          {inviteCode}
+          <span class="font-mono text-sm break-all">{link}</span>
           {#if copied}
-            <Check class="size-5 text-emerald-500" />
+            <Check class="size-5 shrink-0 text-emerald-500" />
           {:else}
-            <Copy class="text-muted-foreground size-5" />
+            <Copy class="text-muted-foreground size-5 shrink-0" />
           {/if}
         </button>
         <p class="text-muted-foreground text-center text-sm">
-          It never expires and any number of people can use it. You can create more — or revoke this
-          one — from the members panel later.
+          Clicking it opens ccchat with the code already filled in. It never expires and any number
+          of people can use it — the code on its own is
+          <code class="bg-muted rounded px-1 py-0.5 font-mono">{inviteCode}</code>.
         </p>
       </Card.Content>
 

@@ -1,6 +1,7 @@
 <script lang="ts">
   import { api, avatarUrl } from '$lib/api';
   import { chat } from '$lib/chat.svelte';
+  import { inviteLink } from '$lib/invite';
   import * as Alert from '$lib/components/ui/alert';
   import * as Avatar from '$lib/components/ui/avatar';
   import { Badge } from '$lib/components/ui/badge';
@@ -12,6 +13,8 @@
   import {
     Bell,
     BellOff,
+    Check,
+    Copy,
     Hash,
     LogOut,
     Plus,
@@ -29,6 +32,7 @@
   let showMembers = $state(false);
   let showSettings = $state(false);
   let inviteCode = $state('');
+  let inviteCopied = $state(false);
   let scroller: HTMLDivElement | null = $state(null);
 
   const textChannels = $derived(chat.channels.filter((c) => c.type === 'text'));
@@ -65,6 +69,12 @@
     if (!chat.token) return;
     const { invite } = await api.createInvite(chat.token, { maxUses: 0 });
     inviteCode = invite.code;
+  }
+
+  async function copyInvite() {
+    await navigator.clipboard.writeText(inviteLink(inviteCode));
+    inviteCopied = true;
+    setTimeout(() => (inviteCopied = false), 1500);
   }
 
   function joinVoice(c: { id: string; name: string }) {
@@ -231,9 +241,18 @@
 
     {#if inviteCode}
       <div class="bg-muted/50 flex items-center gap-3 border-b px-4 py-2 text-sm">
-        <span>Invite code:</span>
-        <code class="bg-background rounded px-2 py-0.5 font-mono">{inviteCode}</code>
-        <Button variant="ghost" size="sm" class="ml-auto" onclick={() => (inviteCode = '')}>dismiss</Button>
+        <span class="shrink-0">Invite link:</span>
+        <code class="bg-background truncate rounded px-2 py-0.5 font-mono">{inviteLink(inviteCode)}</code>
+        <Button variant="secondary" size="sm" class="ml-auto shrink-0" onclick={copyInvite}>
+          {#if inviteCopied}
+            <Check class="size-4" /> Copied
+          {:else}
+            <Copy class="size-4" /> Copy
+          {/if}
+        </Button>
+        <Button variant="ghost" size="sm" class="shrink-0" onclick={() => (inviteCode = '')}>
+          dismiss
+        </Button>
       </div>
     {/if}
 

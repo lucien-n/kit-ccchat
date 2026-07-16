@@ -1,5 +1,7 @@
 <script lang="ts">
+  import { onMount } from 'svelte';
   import { chat } from '$lib/chat.svelte';
+  import { clearInviteFromUrl, readInviteFromUrl } from '$lib/invite';
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import { Label } from '$lib/components/ui/label';
@@ -7,8 +9,15 @@
   import * as Alert from '$lib/components/ui/alert';
   import { TriangleAlert } from '@lucide/svelte';
 
-  let mode = $state<'login' | 'register'>('login');
-  let inviteCode = $state('');
+  // An invite link lands here as ?invite=<code>. Read it once as we initialise:
+  // its presence means "this person was invited", so open on Register with the
+  // code filled in. The field owns the value afterwards, and we drop it from the
+  // address bar on mount so it isn't left lying in history.
+  const linkedInvite = readInviteFromUrl();
+  onMount(clearInviteFromUrl);
+
+  let mode = $state<'login' | 'register'>(linkedInvite ? 'register' : 'login');
+  let inviteCode = $state(linkedInvite);
   let username = $state('');
   let displayName = $state('');
   let password = $state('');
@@ -38,9 +47,13 @@
     <Card.Header class="text-center">
       <Card.Title class="text-2xl">{chat.serverName}</Card.Title>
       <Card.Description>
-        {mode === 'login'
-          ? 'Welcome back.'
-          : 'Join with an invite code from the server owner.'}
+        {#if mode === 'login'}
+          Welcome back.
+        {:else if linkedInvite}
+          You've been invited. Pick a username and password to join.
+        {:else}
+          Join with an invite code from the server owner.
+        {/if}
       </Card.Description>
     </Card.Header>
 
