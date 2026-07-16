@@ -47,7 +47,6 @@ export function migrate() {
   baselineLegacyDb();
   runMigrations(db, { migrationsFolder: MIGRATIONS_DIR });
 }
-export { schema };
 
 /** Release the file handle. Only tests need this: Windows refuses to unlink an
  *  open SQLite file, so a temp database can't be cleaned up without it. */

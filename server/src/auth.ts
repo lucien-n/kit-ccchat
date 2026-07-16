@@ -78,8 +78,14 @@ export async function requireAuth(c: Context<Env>, next: Next) {
 const RANK = { member: 0, admin: 1, owner: 2 } as const;
 export type Role = keyof typeof RANK;
 
+/** `role` is a plain TEXT column, so an unrecognised value has to mean something.
+ *  It ranks below everyone: a hand-edited database fails closed. */
+export function rankOf(user: User): number {
+  return RANK[user.role as Role] ?? -1;
+}
+
 export function hasRole(user: User, min: Role): boolean {
-  return RANK[(user.role as Role) ?? "member"] >= RANK[min];
+  return rankOf(user) >= RANK[min];
 }
 
 /** Require at least the given role (use after requireAuth). */

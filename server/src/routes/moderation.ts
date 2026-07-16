@@ -3,7 +3,7 @@ import { eq } from "drizzle-orm";
 import { muteBody, type MemberView } from "@ccchat/shared";
 import { db } from "../db/index.js";
 import { sessions, users } from "../db/schema.js";
-import { requireAuth, requireRole, type Env } from "../auth.js";
+import { rankOf, requireAuth, requireRole, type Env } from "../auth.js";
 import { validate } from "../validate.js";
 import type { User } from "../db/schema.js";
 
@@ -26,9 +26,8 @@ function loadTarget(c: Context<Env>): {
   if (!target) return { error: "user not found", status: 404 };
   if (target.id === actor.id)
     return { error: "you cannot moderate yourself", status: 400 };
-  const actorRank = actor.role === "owner" ? 2 : actor.role === "admin" ? 1 : 0;
-  const targetRank = target.role === "owner" ? 2 : target.role === "admin" ? 1 : 0;
-  if (targetRank >= actorRank) return { error: "target outranks you", status: 403 };
+  if (rankOf(target) >= rankOf(actor))
+    return { error: "target outranks you", status: 403 };
   return { target };
 }
 
@@ -61,11 +60,9 @@ app.post("/:id/mute", validate("json", muteBody), async (c) => {
   const { target, error, status } = loadTarget(c);
   if (error) return c.json({ error }, status!);
   const { minutes } = c.req.valid("json");
-  db.update(users)
-    .set({ mutedUntil: Date.now() + minutes * 60_000 })
-    .where(eq(users.id, target!.id))
-    .run();
-  return c.json({ ok: true, mutedUntil: Date.now() + minutes * 60_000 });
+  const mutedUntil = Date.now() + minutes * 60_000;
+  db.update(users).set({ mutedUntil }).where(eq(users.id, target!.id)).run();
+  return c.json({ ok: true, mutedUntil });
 });
 
 app.post("/:id/unmute", (c) => {

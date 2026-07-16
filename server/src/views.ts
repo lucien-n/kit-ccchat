@@ -1,9 +1,7 @@
 import { eq } from "drizzle-orm";
 import type { MessageView, PublicUser } from "@ccchat/shared";
 import { db } from "./db/index.js";
-import { messages, users, type Message } from "./db/schema.js";
-
-export type { MessageView, PublicUser };
+import { users, type Message } from "./db/schema.js";
 
 export function toPublicUser(u: {
   id: string;
@@ -40,8 +38,4 @@ export function toMessageView(m: Message): MessageView {
     editedAt: m.editedAt,
     author: author ? { ...author, avatarVersion: author.avatarVersion ?? null } : null,
   };
-}
-
-export function getMessage(id: string): Message | undefined {
-  return db.select().from(messages).where(eq(messages.id, id)).get();
 }

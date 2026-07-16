@@ -20,9 +20,7 @@ export function clientIp(c: Context): string {
   }
 }
 
-type Time = number;
-
-const buckets = new Map<string, Time[]>();
+const buckets = new Map<string, number[]>();
 
 // unref: a timer must not hold a test run or a shutdown open.
 const sweep = setInterval(() => {

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api, avatarUrl, type PublicUser } from "$lib/api";
+  import { api, avatarUrl, type MemberView } from "$lib/api";
   import { presence } from "$lib/stores/presence.svelte";
   import { session } from "$lib/stores/session.svelte";
   import * as Avatar from "$lib/components/ui/avatar";
@@ -15,16 +15,14 @@
 
   let search = $state("");
 
-  type Member = PublicUser & { banned: number; mutedUntil: number | null };
-  let members = $state<Member[]>([]);
+  let members = $state<MemberView[]>([]);
 
   const shownMembers = $derived.by(() => {
-    const sanitizedSearch = search.trim().toLowerCase();
+    const q = search.trim().toLowerCase();
 
     return members.filter(
       (m) =>
-        m.displayName.toLowerCase().includes(sanitizedSearch) ||
-        m.username.toLowerCase().includes(search),
+        m.displayName.toLowerCase().includes(q) || m.username.toLowerCase().includes(q),
     );
   });
 
@@ -48,7 +46,7 @@
     }
   }
 
-  const isMuted = (m: Member) => m.mutedUntil != null && m.mutedUntil > Date.now();
+  const isMuted = (m: MemberView) => m.mutedUntil != null && m.mutedUntil > Date.now();
   const initial = (name: string) => name[0]?.toUpperCase() ?? "?";
 
   $effect(() => {
@@ -63,7 +61,7 @@
     </Sheet.Header>
 
     <div class="flex-1 space-y-1 overflow-y-auto px-2 pb-4">
-      <Input placeholder="Search by username" bind:value={search} class="my-2" />
+      <Input placeholder="Search members" bind:value={search} class="my-2" />
 
       {#if shownMembers.length}
         {#each shownMembers as m (m.id)}

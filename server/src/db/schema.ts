@@ -32,8 +32,8 @@ export const invites = sqliteTable("invites", {
   revoked: integer("revoked").notNull().default(0),
 });
 
-/** A room. Text channels carry messages; voice channels are placeholders for the
- *  phase-2 WebRTC work - they show up in the list but aren't functional yet. */
+/** A room. Text channels carry messages; a voice channel's id doubles as its
+ *  LiveKit room name. */
 export const channels = sqliteTable("channels", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),

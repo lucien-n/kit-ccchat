@@ -1,8 +1,6 @@
 import type { WebSocket } from "ws";
 import type { ServerEvent, VoiceMember } from "@ccchat/shared";
 
-export type { ServerEvent, VoiceMember };
-
 interface Client {
   ws: WebSocket;
   userId: string;
