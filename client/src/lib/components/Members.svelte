@@ -7,6 +7,8 @@
   import * as Sheet from "$lib/components/ui/sheet";
   import { cn } from "$lib/utils";
   import { Input } from "./ui/input";
+  import { toast } from "svelte-sonner";
+  import { apiErrorMessage } from "$lib/forms";
 
   let { open = $bindable(false) }: { open?: boolean } = $props();
 
@@ -24,15 +26,13 @@
         m.username.toLowerCase().includes(search),
     );
   });
-  let error = $state("");
 
   async function load() {
     if (!chat.token) return;
-    error = "";
     try {
       members = (await api.members(chat.token)).members;
     } catch (e: any) {
-      error = e?.message ?? "failed to load members";
+      toast.error(apiErrorMessage(e, "failed to load members"));
     }
   }
 
@@ -41,13 +41,12 @@
     action: "kick" | "ban" | "unban" | "mute" | "unmute",
   ) {
     if (!chat.token) return;
-    error = "";
     try {
       const body = action === "mute" ? { minutes: 60 } : undefined;
       await api.mod(chat.token, id, action, body);
       await load();
     } catch (e: any) {
-      error = e?.message ?? "action failed";
+      toast.error(apiErrorMessage(e, "action failed"));
     }
   }
 
@@ -65,10 +64,6 @@
     <Sheet.Header>
       <Sheet.Title>Members</Sheet.Title>
     </Sheet.Header>
-
-    {#if error}
-      <p class="text-destructive px-4 text-sm">{error}</p>
-    {/if}
 
     <div class="flex-1 space-y-1 overflow-y-auto px-2 pb-4">
       <Input

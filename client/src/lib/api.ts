@@ -11,11 +11,20 @@ export type {
 } from "@ccchat/shared";
 
 import type {
+  AvatarBody,
   Channel,
+  ChangePasswordBody,
+  CreateChannelBody,
+  CreateInviteBody,
   Invite,
+  LoginBody,
   MemberView,
   MessageView,
   PublicUser,
+  RegisterBody,
+  RenameCommunityBody,
+  SetupBody,
+  UpdateProfileBody,
 } from "@ccchat/shared";
 
 export class ApiError extends Error {
@@ -69,12 +78,7 @@ export const api = {
   info: () => request<{ name: string; needsSetup: boolean }>("/api/info"),
 
   /** Claim a brand-new instance. Only works while it has no accounts. */
-  setup: (body: {
-    communityName: string;
-    username: string;
-    displayName?: string;
-    password: string;
-  }) =>
+  setup: (body: SetupBody) =>
     request<{
       token: string;
       user: PublicUser;
@@ -89,18 +93,13 @@ export const api = {
       token,
     }),
 
-  register: (body: {
-    inviteCode: string;
-    username: string;
-    displayName?: string;
-    password: string;
-  }) =>
+  register: (body: RegisterBody) =>
     request<{ token: string; user: PublicUser }>("/api/auth/register", {
       method: "POST",
       body,
     }),
 
-  login: (body: { username: string; password: string }) =>
+  login: (body: LoginBody) =>
     request<{ token: string; user: PublicUser }>("/api/auth/login", {
       method: "POST",
       body,
@@ -115,10 +114,7 @@ export const api = {
   channels: (token: string) =>
     request<{ channels: Channel[] }>("/api/channels", { token }),
 
-  createChannel: (
-    token: string,
-    body: { name: string; type: "text" | "voice" },
-  ) =>
+  createChannel: (token: string, body: CreateChannelBody) =>
     request<{ channel: Channel }>("/api/channels", {
       method: "POST",
       body,
@@ -145,10 +141,7 @@ export const api = {
   deleteMessage: (token: string, id: string) =>
     request<{ ok: true }>(`/api/messages/${id}`, { method: "DELETE", token }),
 
-  createInvite: (
-    token: string,
-    body: { maxUses?: number; expiresInHours?: number } = {},
-  ) =>
+  createInvite: (token: string, body: Partial<CreateInviteBody> = {}) =>
     request<{ invite: Invite }>("/api/invites", {
       method: "POST",
       body,
@@ -188,17 +181,14 @@ export const api = {
       { method: "POST", body: { channelId }, token },
     ),
 
-  updateProfile: (token: string, body: { displayName: string }) =>
+  updateProfile: (token: string, body: UpdateProfileBody) =>
     request<{ user: PublicUser }>("/api/users/me", {
       method: "PATCH",
       body,
       token,
     }),
 
-  changePassword: (
-    token: string,
-    body: { currentPassword: string; newPassword: string },
-  ) =>
+  changePassword: (token: string, body: ChangePasswordBody) =>
     request<{ ok: true }>("/api/users/me/password", {
       method: "POST",
       body,

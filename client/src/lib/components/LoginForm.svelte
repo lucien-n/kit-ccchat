@@ -1,12 +1,10 @@
 <script lang="ts">
   import { chat } from "$lib/chat.svelte";
-  import * as Alert from "$lib/components/ui/alert";
   import * as Card from "$lib/components/ui/card";
   import * as Form from "$lib/components/ui/form";
   import { Input } from "$lib/components/ui/input";
-  import { apiErrorMessage } from "$lib/forms";
+  import { apiErrorMessage, fail, toastMessage } from "$lib/forms";
   import { loginBody } from "@ccchat/shared";
-  import { TriangleAlert } from "@lucide/svelte";
   import { defaults, setMessage, superForm } from "sveltekit-superforms";
   import { zod4, zod4Client } from "sveltekit-superforms/adapters";
 
@@ -21,15 +19,14 @@
         try {
           await chat.login(form.data.username, form.data.password);
         } catch (err) {
-          setMessage(form, apiErrorMessage(err, "something went wrong"), {
-            status: 401,
-          });
+          setMessage(form, fail(apiErrorMessage(err, "something went wrong")));
         }
       },
+      onUpdated: toastMessage,
     },
   );
 
-  const { form: formData, enhance, submitting, message } = form;
+  const { form: formData, enhance, submitting } = form;
 </script>
 
 <form method="POST" use:enhance>
@@ -63,12 +60,6 @@
       <Form.FieldErrors />
     </Form.Field>
 
-    {#if $message}
-      <Alert.Root variant="destructive">
-        <TriangleAlert class="size-4" />
-        <Alert.Description>{$message}</Alert.Description>
-      </Alert.Root>
-    {/if}
   </Card.Content>
 
   <Card.Footer class="mt-6 flex-col gap-3">

@@ -8,11 +8,12 @@
   import { inviteLink } from "$lib/invite";
   import { cn } from "$lib/utils";
   import { Check, Copy, Link2, Trash2 } from "@lucide/svelte";
+  import { toast } from "svelte-sonner";
+  import { apiErrorMessage } from "$lib/forms";
 
   let { open = $bindable(false) }: { open?: boolean } = $props();
 
   let invites = $state<Invite[]>([]);
-  let error = $state("");
   let busy = $state(false);
   let copied = $state("");
 
@@ -43,18 +44,16 @@
 
   async function load() {
     if (!chat.token) return;
-    error = "";
     try {
       invites = (await api.invites(chat.token)).invites;
     } catch (e: any) {
-      error = e?.message ?? "failed to load invites";
+      toast.error(apiErrorMessage(e, "failed to load invites"));
     }
   }
 
   async function create(p: (typeof presets)[number]) {
     if (!chat.token) return;
     busy = true;
-    error = "";
     try {
       const { invite } = await api.createInvite(chat.token, {
         maxUses: p.maxUses,
@@ -62,8 +61,9 @@
       });
       invites = [invite, ...invites];
       await copy(invite.code);
+      toast.success("Invite link copied to your clipboard.");
     } catch (e: any) {
-      error = e?.message ?? "failed to create invite";
+      toast.error(apiErrorMessage(e, "failed to create invite"));
     } finally {
       busy = false;
     }
@@ -71,12 +71,12 @@
 
   async function revoke(code: string) {
     if (!chat.token) return;
-    error = "";
     try {
       const { invite } = await api.revokeInvite(chat.token, code);
       invites = invites.map((i) => (i.code === code ? invite : i));
+      toast.success("Invite revoked. That link no longer works.");
     } catch (e: any) {
-      error = e?.message ?? "failed to revoke";
+      toast.error(apiErrorMessage(e, "failed to revoke"));
     }
   }
 
@@ -129,10 +129,6 @@
         The link is copied to your clipboard automatically.
       </p>
     </div>
-
-    {#if error}
-      <p class="text-destructive px-4 py-2 text-sm">{error}</p>
-    {/if}
 
     <div class="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
       {#each invites as i (i.code)}

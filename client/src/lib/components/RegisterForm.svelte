@@ -1,12 +1,10 @@
 <script lang="ts">
   import { chat } from "$lib/chat.svelte";
-  import * as Alert from "$lib/components/ui/alert";
   import * as Card from "$lib/components/ui/card";
   import * as Form from "$lib/components/ui/form";
   import { Input } from "$lib/components/ui/input";
-  import { apiErrorMessage } from "$lib/forms";
+  import { apiErrorMessage, fail, toastMessage } from "$lib/forms";
   import { registerBody } from "@ccchat/shared";
-  import { TriangleAlert } from "@lucide/svelte";
   import { untrack } from "svelte";
   import {
     defaults,
@@ -45,13 +43,14 @@
           const msg = apiErrorMessage(err, "something went wrong");
           if (/invite/i.test(msg)) setError(form, "inviteCode", msg);
           else if (/username/i.test(msg)) setError(form, "username", msg);
-          else setMessage(form, msg, { status: 400 });
+          else setMessage(form, fail(msg));
         }
       },
+      onUpdated: toastMessage,
     },
   );
 
-  const { form: formData, enhance, submitting, message } = form;
+  const { form: formData, enhance, submitting } = form;
 </script>
 
 <form method="POST" use:enhance>
@@ -119,12 +118,6 @@
       <Form.FieldErrors />
     </Form.Field>
 
-    {#if $message}
-      <Alert.Root variant="destructive">
-        <TriangleAlert class="size-4" />
-        <Alert.Description>{$message}</Alert.Description>
-      </Alert.Root>
-    {/if}
   </Card.Content>
 
   <Card.Footer class="mt-6 flex-col gap-3">

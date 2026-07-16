@@ -4,7 +4,7 @@
   import * as Form from "$lib/components/ui/form";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
-  import { apiErrorMessage } from "$lib/forms";
+  import { apiErrorMessage, fail, ok, toastMessage } from "$lib/forms";
   import { changePasswordBody, updateProfileBody } from "@ccchat/shared";
   import {
     defaults,
@@ -26,18 +26,18 @@
         try {
           const { user } = await api.updateProfile(chat.token, form.data);
           chat.patchUser({ displayName: user.displayName });
-          setMessage(form, "Saved.");
+          setMessage(form, ok("Display name saved."));
         } catch (err) {
-          setError(form, "displayName", apiErrorMessage(err, "failed to save"));
+          setMessage(form, fail(apiErrorMessage(err, "failed to save")));
         }
       },
+      onUpdated: toastMessage,
     },
   );
   const {
     form: nameData,
     enhance: nameEnhance,
     submitting: nameBusy,
-    message: nameMsg,
   } = nameForm;
 
   const passwordForm = superForm(
@@ -52,10 +52,10 @@
         if (!form.valid || !chat.token) return;
         try {
           await api.changePassword(chat.token, form.data);
-          setMessage(form, "Password changed.");
+          setMessage(form, ok("Password changed."));
         } catch (err) {
-          // Whether the current password is right is the one thing the client
-          // can't check, so that's where the server's rejection belongs.
+          // Stays inline rather than becoming a toast: this one names a field,
+          // and a toast can't point at the input you got wrong.
           setError(
             form,
             "currentPassword",
@@ -63,13 +63,13 @@
           );
         }
       },
+      onUpdated: toastMessage,
     },
   );
   const {
     form: passwordData,
     enhance: passwordEnhance,
     submitting: passwordBusy,
-    message: passwordMsg,
   } = passwordForm;
 </script>
 
@@ -93,7 +93,6 @@
     </Form.Control>
     <Form.FieldErrors />
   </Form.Field>
-  {#if $nameMsg}<p class="text-muted-foreground text-xs">{$nameMsg}</p>{/if}
 </form>
 
 <form method="POST" use:passwordEnhance class="space-y-2">
@@ -132,7 +131,4 @@
   <Form.Button variant="secondary" disabled={$passwordBusy}>
     Update password
   </Form.Button>
-  {#if $passwordMsg}
-    <p class="text-muted-foreground text-xs">{$passwordMsg}</p>
-  {/if}
 </form>

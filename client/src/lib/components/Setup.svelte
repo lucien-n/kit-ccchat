@@ -1,14 +1,13 @@
 <script lang="ts">
   import { chat } from "$lib/chat.svelte";
-  import * as Alert from "$lib/components/ui/alert";
   import { Button } from "$lib/components/ui/button";
   import * as Card from "$lib/components/ui/card";
   import * as Form from "$lib/components/ui/form";
   import { Input } from "$lib/components/ui/input";
-  import { apiErrorMessage } from "$lib/forms";
+  import { apiErrorMessage, fail, toastMessage } from "$lib/forms";
   import { inviteLink } from "$lib/invite";
   import { setupBody } from "@ccchat/shared";
-  import { Check, Copy, TriangleAlert } from "@lucide/svelte";
+  import { Check, Copy } from "@lucide/svelte";
   import { defaults, setMessage, superForm } from "sveltekit-superforms";
   import { zod4, zod4Client } from "sveltekit-superforms/adapters";
 
@@ -30,15 +29,14 @@
         try {
           inviteCode = await chat.setup(form.data);
         } catch (err) {
-          setMessage(form, apiErrorMessage(err, "something went wrong"), {
-            status: 400,
-          });
+          setMessage(form, fail(apiErrorMessage(err, "something went wrong")));
         }
       },
+      onUpdated: toastMessage,
     },
   );
 
-  const { form: formData, enhance, submitting, message } = form;
+  const { form: formData, enhance, submitting } = form;
 
   async function copy() {
     await navigator.clipboard.writeText(link);
@@ -141,12 +139,6 @@
             <Form.FieldErrors />
           </Form.Field>
 
-          {#if $message}
-            <Alert.Root variant="destructive">
-              <TriangleAlert class="size-4" />
-              <Alert.Description>{$message}</Alert.Description>
-            </Alert.Root>
-          {/if}
         </Card.Content>
 
         <Card.Footer class="mt-6 flex-col gap-3">

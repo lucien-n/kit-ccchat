@@ -6,9 +6,9 @@
   import { apiErrorMessage } from "$lib/forms";
   import { resizeImage } from "$lib/image";
   import { Trash2, Upload } from "@lucide/svelte";
+  import { toast } from "svelte-sonner";
 
-  // Not a form: a file picker that uploads on change, so it keeps its own state.
-  let error = $state("");
+  // Not a form: a file picker that uploads on change.
   let fileInput: HTMLInputElement | null = $state(null);
 
   const initial = $derived((chat.user?.displayName ?? "?")[0]?.toUpperCase() ?? "?");
@@ -17,13 +17,12 @@
   async function onFile(e: Event) {
     const file = (e.currentTarget as HTMLInputElement).files?.[0];
     if (!file || !chat.token) return;
-    error = "";
     try {
       const dataUrl = await resizeImage(file, 256);
       const { avatarVersion } = await api.uploadAvatar(chat.token, dataUrl);
       chat.patchUser({ avatarVersion });
     } catch (err) {
-      error = apiErrorMessage(err, "upload failed");
+      toast.error(apiErrorMessage(err, "upload failed"));
     } finally {
       if (fileInput) fileInput.value = "";
     }
@@ -58,7 +57,6 @@
     <p class="text-muted-foreground text-xs">
       JPG, PNG, GIF or WebP. Square looks best.
     </p>
-    {#if error}<p class="text-destructive text-xs">{error}</p>{/if}
   </div>
 
   <input

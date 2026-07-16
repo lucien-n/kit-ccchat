@@ -3,14 +3,9 @@
   import { chat } from "$lib/chat.svelte";
   import * as Form from "$lib/components/ui/form";
   import { Input } from "$lib/components/ui/input";
-  import { apiErrorMessage } from "$lib/forms";
+  import { apiErrorMessage, fail, ok, toastMessage } from "$lib/forms";
   import { renameCommunityBody } from "@ccchat/shared";
-  import {
-    defaults,
-    setError,
-    setMessage,
-    superForm,
-  } from "sveltekit-superforms";
+  import { defaults, setMessage, superForm } from "sveltekit-superforms";
   import { zod4, zod4Client } from "sveltekit-superforms/adapters";
 
   const form = superForm(
@@ -23,15 +18,16 @@
         if (!form.valid || !chat.token) return;
         try {
           await api.renameCommunity(chat.token, form.data.communityName);
-          setMessage(form, "Saved.");
+          setMessage(form, ok("Community renamed."));
         } catch (err) {
-          setError(form, "communityName", apiErrorMessage(err, "failed to save"));
+          setMessage(form, fail(apiErrorMessage(err, "failed to save")));
         }
       },
+      onUpdated: toastMessage,
     },
   );
 
-  const { form: formData, enhance, submitting, message } = form;
+  const { form: formData, enhance, submitting } = form;
 </script>
 
 <form method="POST" use:enhance>
@@ -56,5 +52,4 @@
     </Form.Description>
     <Form.FieldErrors />
   </Form.Field>
-  {#if $message}<p class="text-muted-foreground text-xs">{$message}</p>{/if}
 </form>

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { avatarUrl } from "$lib/api";
   import { chat } from "$lib/chat.svelte";
-  import * as Alert from "$lib/components/ui/alert";
   import * as Avatar from "$lib/components/ui/avatar";
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
@@ -16,9 +15,9 @@
     Menu,
     Send,
     Trash2,
-    TriangleAlert,
     Users,
   } from "@lucide/svelte";
+  import { toast } from "svelte-sonner";
   import Invites from "./Invites.svelte";
   import Members from "./Members.svelte";
   import Settings from "./Settings.svelte";
@@ -41,6 +40,18 @@
     setBaseTitle(chat.serverName);
     setTitleBadge(chat.totalUnread);
   });
+
+  // Voice failures used to sit in a banner above the composer until dismissed.
+  // They're transient and belong to no field, so they toast and clear.
+  $effect(() => {
+    if (!voice.error) return;
+    toast.error(voice.error);
+    voice.error = "";
+  });
+
+  // voice.micError deliberately stays out of here: it's durable status for the
+  // length of the call ("you're listening only"), which VoiceBar shows inline.
+  // Toasting it would mean clearing it, and the indicator would vanish.
 
   function sendDraft(e: Event) {
     e.preventDefault();
@@ -164,18 +175,6 @@
         {/if}
       </div>
     </header>
-
-    {#if voice.error}
-      <Alert.Root variant="destructive" class="m-3 w-auto">
-        <TriangleAlert class="size-4" />
-        <Alert.Description class="flex items-center justify-between gap-3">
-          <span>{voice.error}</span>
-          <Button variant="ghost" size="sm" onclick={() => (voice.error = "")}
-            >dismiss</Button
-          >
-        </Alert.Description>
-      </Alert.Root>
-    {/if}
 
     <div
       bind:this={scroller}
