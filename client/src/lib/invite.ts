@@ -3,8 +3,7 @@ import { apiBase } from "./api";
 /** https://your.server/invite/<code> - that route funnels into the main page
  *  with ?invite=<code>, which pre-fills the register form. */
 export function inviteLink(code: string): string {
-  const origin =
-    apiBase() || (typeof location !== "undefined" ? location.origin : "");
+  const origin = apiBase() || (typeof location !== "undefined" ? location.origin : "");
   return `${origin}/invite/${encodeURIComponent(code)}`;
 }
 

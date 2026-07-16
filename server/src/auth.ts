@@ -1,11 +1,6 @@
 import { eq } from "drizzle-orm";
 import type { Context, Next } from "hono";
-import {
-  randomBytes,
-  randomUUID,
-  scryptSync,
-  timingSafeEqual,
-} from "node:crypto";
+import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { db } from "./db/index.js";
 import { sessions, users, type User } from "./db/schema.js";
 import { SESSION_TTL_MS } from "./env.js";
@@ -50,22 +45,14 @@ export function destroySession(token: string): void {
 export function userForToken(token: string | undefined): User | null {
   if (!token) return null;
 
-  const session = db
-    .select()
-    .from(sessions)
-    .where(eq(sessions.token, token))
-    .get();
+  const session = db.select().from(sessions).where(eq(sessions.token, token)).get();
   if (!session) return null;
 
   if (session.expiresAt < Date.now()) {
     db.delete(sessions).where(eq(sessions.token, token)).run();
     return null;
   }
-  const user = db
-    .select()
-    .from(users)
-    .where(eq(users.id, session.userId))
-    .get();
+  const user = db.select().from(users).where(eq(users.id, session.userId)).get();
   if (!user || user.banned) return null;
   return user;
 }

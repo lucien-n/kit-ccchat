@@ -62,13 +62,9 @@ export const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY ?? "ccchat";
 const DEV_LIVEKIT_SECRET = "dev-only-insecure-secret-set-LIVEKIT_API_SECRET";
 // `||`, not `??`: an empty LIVEKIT_API_SECRET='' is as insecure as an unset one,
 // so it must also fall back to the dev default and be caught by the guard below.
-export const LIVEKIT_API_SECRET =
-  process.env.LIVEKIT_API_SECRET || DEV_LIVEKIT_SECRET;
+export const LIVEKIT_API_SECRET = process.env.LIVEKIT_API_SECRET || DEV_LIVEKIT_SECRET;
 
-if (
-  process.env.NODE_ENV === "production" &&
-  LIVEKIT_API_SECRET === DEV_LIVEKIT_SECRET
-) {
+if (process.env.NODE_ENV === "production" && LIVEKIT_API_SECRET === DEV_LIVEKIT_SECRET) {
   throw new Error(
     "LIVEKIT_API_SECRET is unset in production. Set it to a strong random value " +
       "(the installer does this for you: openssl rand -hex 32).",

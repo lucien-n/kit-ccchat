@@ -46,7 +46,7 @@
     if (!chat.token) return;
     try {
       invites = (await api.invites(chat.token)).invites;
-    } catch (e: any) {
+    } catch (e) {
       toast.error(apiErrorMessage(e, "failed to load invites"));
     }
   }
@@ -62,7 +62,7 @@
       invites = [invite, ...invites];
       await copy(invite.code);
       toast.success("Invite link copied to your clipboard.");
-    } catch (e: any) {
+    } catch (e) {
       toast.error(apiErrorMessage(e, "failed to create invite"));
     } finally {
       busy = false;
@@ -75,7 +75,7 @@
       const { invite } = await api.revokeInvite(chat.token, code);
       invites = invites.map((i) => (i.code === code ? invite : i));
       toast.success("Invite revoked. That link no longer works.");
-    } catch (e: any) {
+    } catch (e) {
       toast.error(apiErrorMessage(e, "failed to revoke"));
     }
   }
@@ -119,9 +119,7 @@
             onclick={() => create(p)}
           >
             <span class="text-sm font-medium">{p.label}</span>
-            <span class="text-muted-foreground text-[10px] leading-tight"
-              >{p.hint}</span
-            >
+            <span class="text-muted-foreground text-[10px] leading-tight">{p.hint}</span>
           </Button>
         {/each}
       </div>

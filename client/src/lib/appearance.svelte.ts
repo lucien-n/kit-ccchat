@@ -11,10 +11,8 @@ class Appearance {
 
   init() {
     this.media = window.matchMedia("(prefers-color-scheme: dark)");
-    this.mode =
-      (localStorage.getItem("appearance:mode") as ThemeMode) || "dark";
-    this.reducedMotion =
-      localStorage.getItem("appearance:reducedMotion") === "1";
+    this.mode = (localStorage.getItem("appearance:mode") as ThemeMode) || "dark";
+    this.reducedMotion = localStorage.getItem("appearance:reducedMotion") === "1";
     this.applyTheme();
     this.applyMotion();
 
@@ -36,9 +34,7 @@ class Appearance {
   }
 
   private prefersDark(): boolean {
-    return (
-      this.mode === "dark" || (this.mode === "system" && !!this.media?.matches)
-    );
+    return this.mode === "dark" || (this.mode === "system" && !!this.media?.matches);
   }
 
   private applyTheme() {
@@ -46,10 +42,7 @@ class Appearance {
   }
 
   private applyMotion() {
-    document.documentElement.classList.toggle(
-      "reduce-motion",
-      this.reducedMotion,
-    );
+    document.documentElement.classList.toggle("reduce-motion", this.reducedMotion);
   }
 }
 

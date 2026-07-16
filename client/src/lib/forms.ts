@@ -1,6 +1,6 @@
-import { toast } from 'svelte-sonner';
-import type { SuperValidated } from 'sveltekit-superforms';
-import { ApiError } from './api';
+import { toast } from "svelte-sonner";
+import type { SuperValidated } from "sveltekit-superforms";
+import { ApiError } from "./api";
 
 export function apiErrorMessage(err: unknown, fallback: string): string {
   if (err instanceof ApiError) return err.message;
@@ -8,8 +8,13 @@ export function apiErrorMessage(err: unknown, fallback: string): string {
   return fallback;
 }
 
-export const ok = (text: string): App.Superforms.Message => ({ type: 'success', text });
-export const fail = (text: string): App.Superforms.Message => ({ type: 'error', text });
+/** DOMException name for a thrown error, e.g. NotAllowedError from getUserMedia. */
+export function errorName(err: unknown, fallback = "error"): string {
+  return err instanceof Error && err.name ? err.name : fallback;
+}
+
+export const ok = (text: string): App.Superforms.Message => ({ type: "success", text });
+export const fail = (text: string): App.Superforms.Message => ({ type: "error", text });
 
 /** A form's `onUpdated`. Field errors stay inline; this is the form-wide outcome. */
 export function toastMessage({
@@ -19,6 +24,6 @@ export function toastMessage({
 }) {
   if (!form.message) return;
   const { type, text } = form.message;
-  if (type === 'error') toast.error(text);
+  if (type === "error") toast.error(text);
   else toast.success(text);
 }

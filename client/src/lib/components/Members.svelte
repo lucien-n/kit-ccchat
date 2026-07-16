@@ -31,27 +31,23 @@
     if (!chat.token) return;
     try {
       members = (await api.members(chat.token)).members;
-    } catch (e: any) {
+    } catch (e) {
       toast.error(apiErrorMessage(e, "failed to load members"));
     }
   }
 
-  async function act(
-    id: string,
-    action: "kick" | "ban" | "unban" | "mute" | "unmute",
-  ) {
+  async function act(id: string, action: "kick" | "ban" | "unban" | "mute" | "unmute") {
     if (!chat.token) return;
     try {
       const body = action === "mute" ? { minutes: 60 } : undefined;
       await api.mod(chat.token, id, action, body);
       await load();
-    } catch (e: any) {
+    } catch (e) {
       toast.error(apiErrorMessage(e, "action failed"));
     }
   }
 
-  const isMuted = (m: Member) =>
-    m.mutedUntil != null && m.mutedUntil > Date.now();
+  const isMuted = (m: Member) => m.mutedUntil != null && m.mutedUntil > Date.now();
   const initial = (name: string) => name[0]?.toUpperCase() ?? "?";
 
   $effect(() => {
@@ -66,11 +62,7 @@
     </Sheet.Header>
 
     <div class="flex-1 space-y-1 overflow-y-auto px-2 pb-4">
-      <Input
-        placeholder="Search by username"
-        bind:value={search}
-        class="my-2"
-      />
+      <Input placeholder="Search by username" bind:value={search} class="my-2" />
 
       {#if shownMembers.length}
         {#each shownMembers as m (m.id)}
@@ -85,18 +77,13 @@
               ></span>
               <Avatar.Root class="size-7">
                 {#if av}<Avatar.Image src={av} alt="" />{/if}
-                <Avatar.Fallback
-                  class="bg-primary text-primary-foreground text-xs"
-                >
+                <Avatar.Fallback class="bg-primary text-primary-foreground text-xs">
                   {initial(m.displayName)}
                 </Avatar.Fallback>
               </Avatar.Root>
               <div class="flex min-w-0 flex-1 items-center gap-1.5">
-                <span class="truncate text-sm font-medium">{m.displayName}</span
-                >
-                <span class="text-muted-foreground text-[10px] uppercase"
-                  >{m.role}</span
-                >
+                <span class="truncate text-sm font-medium">{m.displayName}</span>
+                <span class="text-muted-foreground text-[10px] uppercase">{m.role}</span>
               </div>
               {#if m.banned}<Badge variant="destructive">banned</Badge>{/if}
               {#if isMuted(m)}<Badge variant="secondary">muted</Badge>{/if}
@@ -145,7 +132,7 @@
           </div>
         {/each}
       {:else}
-        <p class="text-center text-muted-foreground">No members found</p>
+        <p class="text-muted-foreground text-center">No members found</p>
       {/if}
     </div>
   </Sheet.Content>

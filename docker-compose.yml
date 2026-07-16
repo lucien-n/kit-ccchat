@@ -9,9 +9,9 @@ services:
     container_name: ccchat-caddy
     restart: unless-stopped
     ports:
-      - '80:80' # required for the Let's Encrypt HTTP challenge
-      - '443:443'
-      - '443:443/udp' # HTTP/3
+      - "80:80" # required for the Let's Encrypt HTTP challenge
+      - "443:443"
+      - "443:443/udp" # HTTP/3
     environment:
       CCCHAT_DOMAIN: ${CCCHAT_DOMAIN:?set CCCHAT_DOMAIN in .env (e.g. chat.example.com)}
     volumes:
@@ -50,10 +50,10 @@ services:
     restart: unless-stopped
     command: --config /etc/livekit.yaml
     environment:
-      LIVEKIT_KEYS: '${LIVEKIT_API_KEY:-ccchat}: ${LIVEKIT_API_SECRET:?run ./install.sh, or set LIVEKIT_API_SECRET in .env}'
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY:-ccchat}: ${LIVEKIT_API_SECRET:?run ./install.sh, or set LIVEKIT_API_SECRET in .env}"
     ports:
-      - '7882:7882/udp' # media (UDP) — the one port you must forward
-      - '7881:7881' # media over TCP, fallback for restrictive networks
+      - "7882:7882/udp" # media (UDP) — the one port you must forward
+      - "7881:7881" # media over TCP, fallback for restrictive networks
     volumes:
       - ./livekit.yaml:/etc/livekit.yaml:ro
 

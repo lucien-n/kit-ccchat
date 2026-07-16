@@ -16,11 +16,7 @@ app.use("*", requireAuth, requireRole("admin"));
 function toInviteView(i: typeof invites.$inferSelect): Invite {
   const exhausted = i.maxUses !== 0 && i.uses >= i.maxUses;
   const expired = i.expiresAt != null && i.expiresAt < Date.now();
-  const creator = db
-    .select()
-    .from(users)
-    .where(eq(users.id, i.createdBy))
-    .get();
+  const creator = db.select().from(users).where(eq(users.id, i.createdBy)).get();
   return {
     code: i.code,
     createdAt: i.createdAt,
@@ -45,9 +41,7 @@ function toInviteView(i: typeof invites.$inferSelect): Invite {
 app.post("/", validate("json", createInviteBody), async (c) => {
   const { maxUses, expiresInHours } = c.req.valid("json");
   const expiresAt =
-    expiresInHours && expiresInHours > 0
-      ? Date.now() + expiresInHours * 3600_000
-      : null;
+    expiresInHours && expiresInHours > 0 ? Date.now() + expiresInHours * 3600_000 : null;
 
   const invite = {
     code: randomToken(6),

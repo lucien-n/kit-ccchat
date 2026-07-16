@@ -60,11 +60,7 @@ export interface RateLimitOptions {
 }
 
 export function rateLimit(opts: RateLimitOptions): MiddlewareHandler {
-  const {
-    limit,
-    windowMs,
-    message = "too many attempts, try again shortly",
-  } = opts;
+  const { limit, windowMs, message = "too many attempts, try again shortly" } = opts;
   const keysOf = opts.keys ?? ((c: Context) => [`ip:${clientIp(c)}`]);
 
   return async (c, next) => {

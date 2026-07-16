@@ -28,23 +28,14 @@ app.post(
     const { inviteCode, username, password } = c.req.valid("json");
     const displayName = c.req.valid("json").displayName || username;
 
-    const invite = db
-      .select()
-      .from(invites)
-      .where(eq(invites.code, inviteCode))
-      .get();
-    if (!invite || invite.revoked)
-      return c.json({ error: "invalid invite code" }, 400);
+    const invite = db.select().from(invites).where(eq(invites.code, inviteCode)).get();
+    if (!invite || invite.revoked) return c.json({ error: "invalid invite code" }, 400);
     if (invite.expiresAt && invite.expiresAt < Date.now())
       return c.json({ error: "invite code expired" }, 400);
     if (invite.maxUses !== 0 && invite.uses >= invite.maxUses)
       return c.json({ error: "invite code already used up" }, 400);
 
-    const existing = db
-      .select()
-      .from(users)
-      .where(eq(users.username, username))
-      .get();
+    const existing = db.select().from(users).where(eq(users.username, username)).get();
     if (existing) return c.json({ error: "username taken" }, 409);
 
     const user = {
@@ -90,27 +81,17 @@ const loginGuess = rateLimit({
   message: "too many login attempts for this account, wait a minute",
 });
 
-app.post(
-  "/login",
-  loginFlood,
-  validate("json", loginBody),
-  loginGuess,
-  async (c) => {
-    const { username, password } = c.req.valid("json");
+app.post("/login", loginFlood, validate("json", loginBody), loginGuess, async (c) => {
+  const { username, password } = c.req.valid("json");
 
-    const user = db
-      .select()
-      .from(users)
-      .where(eq(users.username, username))
-      .get();
-    if (!user || !verifyPassword(password, user.passwordHash))
-      return c.json({ error: "invalid username or password" }, 401);
-    if (user.banned) return c.json({ error: "account banned" }, 403);
+  const user = db.select().from(users).where(eq(users.username, username)).get();
+  if (!user || !verifyPassword(password, user.passwordHash))
+    return c.json({ error: "invalid username or password" }, 401);
+  if (user.banned) return c.json({ error: "account banned" }, 403);
 
-    const token = createSession(user.id);
-    return c.json({ token, user: publicUser(user) });
-  },
-);
+  const token = createSession(user.id);
+  return c.json({ token, user: publicUser(user) });
+});
 
 app.post("/logout", requireAuth, async (c) => {
   const header = c.req.header("Authorization");

@@ -7,16 +7,7 @@
   import * as Sheet from "$lib/components/ui/sheet";
   import { setBaseTitle, setTitleBadge } from "$lib/notify";
   import { voice } from "$lib/voice.svelte";
-  import {
-    Bell,
-    BellOff,
-    Hash,
-    Link2,
-    Menu,
-    Send,
-    Trash2,
-    Users,
-  } from "@lucide/svelte";
+  import { Bell, BellOff, Hash, Link2, Menu, Send, Trash2, Users } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
   import Invites from "./Invites.svelte";
   import Members from "./Members.svelte";
@@ -72,8 +63,7 @@
 
   const canDelete = (authorId: string | undefined) =>
     chat.isAdmin || authorId === chat.user?.id;
-  const initial = (name: string | undefined) =>
-    (name ?? "?")[0]?.toUpperCase() ?? "?";
+  const initial = (name: string | undefined) => (name ?? "?")[0]?.toUpperCase() ?? "?";
 </script>
 
 <div class="grid h-dvh grid-cols-1 sm:grid-cols-[248px_1fr]">
@@ -99,9 +89,7 @@
   </Sheet.Root>
 
   <main class="bg-background flex min-w-0 flex-col">
-    <header
-      class="flex h-12 items-center justify-between gap-2 border-b px-2 sm:px-4"
-    >
+    <header class="flex h-12 items-center justify-between gap-2 border-b px-2 sm:px-4">
       <div class="flex min-w-0 items-center gap-1.5 font-semibold">
         <Button
           variant="ghost"
@@ -112,14 +100,12 @@
         >
           <Menu class="size-5" />
           {#if chat.totalUnread > 0}
-            <span
-              class="bg-destructive absolute top-1.5 right-1.5 size-2 rounded-full"
+            <span class="bg-destructive absolute top-1.5 right-1.5 size-2 rounded-full"
             ></span>
           {/if}
         </Button>
         <Hash class="text-muted-foreground size-5 shrink-0" />
-        <span class="truncate">{chat.currentChannel?.name ?? "no channel"}</span
-        >
+        <span class="truncate">{chat.currentChannel?.name ?? "no channel"}</span>
       </div>
       <div class="flex shrink-0 items-center gap-1 sm:gap-2">
         <Button
@@ -181,12 +167,8 @@
       class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-2 sm:p-4"
     >
       {#each chat.messages as m (m.id)}
-        {@const av = m.author
-          ? avatarUrl(m.author.id, m.author.avatarVersion)
-          : null}
-        <div
-          class="group hover:bg-muted/40 relative flex gap-3 rounded-md px-2 py-1"
-        >
+        {@const av = m.author ? avatarUrl(m.author.id, m.author.avatarVersion) : null}
+        <div class="group hover:bg-muted/40 relative flex gap-3 rounded-md px-2 py-1">
           <Avatar.Root class="mt-0.5 size-9">
             {#if av}<Avatar.Image src={av} alt="" />{/if}
             <Avatar.Fallback class="bg-primary text-primary-foreground text-sm">
@@ -195,12 +177,8 @@
           </Avatar.Root>
           <div class="min-w-0">
             <div class="flex items-baseline gap-2">
-              <span class="font-semibold"
-                >{m.author?.displayName ?? "unknown"}</span
-              >
-              <span class="text-muted-foreground text-xs"
-                >{fmtTime(m.createdAt)}</span
-              >
+              <span class="font-semibold">{m.author?.displayName ?? "unknown"}</span>
+              <span class="text-muted-foreground text-xs">{fmtTime(m.createdAt)}</span>
             </div>
             <div class="wrap-break-word whitespace-pre-wrap">{m.content}</div>
           </div>
@@ -217,9 +195,7 @@
           {/if}
         </div>
       {:else}
-        <div class="text-muted-foreground m-auto">
-          No messages yet. Say hi 👋
-        </div>
+        <div class="text-muted-foreground m-auto">No messages yet. Say hi 👋</div>
       {/each}
     </div>
 

@@ -1,20 +1,20 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
-import { mkdtempSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-import Database from 'better-sqlite3';
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import Database from "better-sqlite3";
 
 // This suite drives raw SQLite files rather than the app: the thing under test
 // is what happens to a database on boot, including one that predates migrations.
 const dirs: string[] = [];
 const freshDir = () => {
-  const d = mkdtempSync(join(tmpdir(), 'ccchat-mig-'));
+  const d = mkdtempSync(join(tmpdir(), "ccchat-mig-"));
   dirs.push(d);
   return d;
 };
 
 beforeAll(() => {
-  process.env.NODE_ENV = 'test';
+  process.env.NODE_ENV = "test";
 });
 
 afterAll(() => {
@@ -33,7 +33,7 @@ afterAll(() => {
 async function bootAt(dir: string) {
   vi.resetModules();
   process.env.DATA_DIR = dir;
-  const mod = await import('../src/db/index.js');
+  const mod = await import("../src/db/index.js");
   mod.migrate();
   return mod;
 }
@@ -47,43 +47,45 @@ const tables = (file: string): string[] => {
   return rows.map((r) => r.name);
 };
 
-describe('a fresh database', () => {
-  it('gets every table the app queries', async () => {
+describe("a fresh database", () => {
+  it("gets every table the app queries", async () => {
     const dir = freshDir();
     const { closeDb } = await bootAt(dir);
     closeDb();
 
-    const names = tables(join(dir, 'ccchat.sqlite'));
+    const names = tables(join(dir, "ccchat.sqlite"));
     for (const t of [
-      'users',
-      'invites',
-      'channels',
-      'messages',
-      'sessions',
-      'channel_reads',
-      'settings',
+      "users",
+      "invites",
+      "channels",
+      "messages",
+      "sessions",
+      "channel_reads",
+      "settings",
     ]) {
       expect(names, `missing table ${t}`).toContain(t);
     }
   });
 
-  it('keeps the index message history depends on', async () => {
+  it("keeps the index message history depends on", async () => {
     const dir = freshDir();
     const { closeDb } = await bootAt(dir);
     closeDb();
 
-    const raw = new Database(join(dir, 'ccchat.sqlite'), { readonly: true });
+    const raw = new Database(join(dir, "ccchat.sqlite"), { readonly: true });
     const idx = raw
-      .prepare("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='messages'")
+      .prepare(
+        "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='messages'",
+      )
       .all() as Array<{ name: string }>;
     raw.close();
 
     // It lived only in the old hand-written DDL. Regenerating without declaring
     // it in schema.ts would have silently dropped it.
-    expect(idx.map((i) => i.name)).toContain('idx_messages_channel');
+    expect(idx.map((i) => i.name)).toContain("idx_messages_channel");
   });
 
-  it('is idempotent: booting twice is not an error', async () => {
+  it("is idempotent: booting twice is not an error", async () => {
     const dir = freshDir();
     const first = await bootAt(dir);
     first.closeDb();
@@ -94,11 +96,11 @@ describe('a fresh database', () => {
   });
 });
 
-describe('a database that predates migrations', () => {
+describe("a database that predates migrations", () => {
   /** Exactly what the old hand-written DDL produced, with a user in it. */
   function legacyDb(dir: string) {
-    const raw = new Database(join(dir, 'ccchat.sqlite'));
-    raw.pragma('journal_mode = WAL');
+    const raw = new Database(join(dir, "ccchat.sqlite"));
+    raw.pragma("journal_mode = WAL");
     raw.exec(`
       CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE, display_name TEXT NOT NULL,
@@ -137,7 +139,11 @@ describe('a database that predates migrations', () => {
          VALUES ('u1', 'lucien', 'Lucien', 'hash', 'owner', 1, 0)`,
       )
       .run();
-    raw.prepare(`INSERT INTO settings (key, value) VALUES ('communityName', 'Real Community')`).run();
+    raw
+      .prepare(
+        `INSERT INTO settings (key, value) VALUES ('communityName', 'Real Community')`,
+      )
+      .run();
     raw.close();
   }
 
@@ -151,33 +157,33 @@ describe('a database that predates migrations', () => {
     closeDb();
   });
 
-  it('does not touch the data that was already there', async () => {
+  it("does not touch the data that was already there", async () => {
     const dir = freshDir();
     legacyDb(dir);
 
     const { db, closeDb } = await bootAt(dir);
-    const { users, settings } = await import('../src/db/schema.js');
+    const { users, settings } = await import("../src/db/schema.js");
 
     const found = db.select().from(users).all();
     expect(found).toHaveLength(1);
-    expect(found[0]!.username).toBe('lucien');
-    expect(found[0]!.role).toBe('owner');
+    expect(found[0]!.username).toBe("lucien");
+    expect(found[0]!.role).toBe("owner");
 
     const cfg = db.select().from(settings).all();
-    expect(cfg[0]!.value).toBe('Real Community');
+    expect(cfg[0]!.value).toBe("Real Community");
     closeDb();
   });
 
-  it('records the baseline so it is not applied twice', async () => {
+  it("records the baseline so it is not applied twice", async () => {
     const dir = freshDir();
     legacyDb(dir);
 
     const { closeDb } = await bootAt(dir);
     closeDb();
 
-    const raw = new Database(join(dir, 'ccchat.sqlite'), { readonly: true });
+    const raw = new Database(join(dir, "ccchat.sqlite"), { readonly: true });
     const applied = raw
-      .prepare('SELECT COUNT(*) AS n FROM __drizzle_migrations')
+      .prepare("SELECT COUNT(*) AS n FROM __drizzle_migrations")
       .get() as { n: number };
     raw.close();
     expect(applied.n).toBeGreaterThan(0);

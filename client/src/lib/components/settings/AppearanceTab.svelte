@@ -32,9 +32,7 @@
 <div class="flex items-center justify-between">
   <div>
     <Label>Reduced motion</Label>
-    <p class="text-muted-foreground text-xs">
-      Minimize animations and transitions.
-    </p>
+    <p class="text-muted-foreground text-xs">Minimize animations and transitions.</p>
   </div>
   <Switch
     checked={appearance.reducedMotion}

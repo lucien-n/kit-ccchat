@@ -54,9 +54,7 @@
         </Button>
       {/if}
     </div>
-    <p class="text-muted-foreground text-xs">
-      JPG, PNG, GIF or WebP. Square looks best.
-    </p>
+    <p class="text-muted-foreground text-xs">JPG, PNG, GIF or WebP. Square looks best.</p>
   </div>
 
   <input

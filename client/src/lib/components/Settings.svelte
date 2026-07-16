@@ -20,9 +20,7 @@
     </Dialog.Header>
 
     <Tabs.Root value="profile" class="w-full">
-      <Tabs.List
-        class={cn("grid w-full", isOwner ? "grid-cols-3" : "grid-cols-2")}
-      >
+      <Tabs.List class={cn("grid w-full", isOwner ? "grid-cols-3" : "grid-cols-2")}>
         <Tabs.Trigger value="profile">Profile</Tabs.Trigger>
         <Tabs.Trigger value="appearance">Appearance</Tabs.Trigger>
         {#if isOwner}

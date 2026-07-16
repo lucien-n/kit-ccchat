@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import { z } from "zod";
 import {
   channelName,
   channelType,
@@ -9,7 +9,7 @@ import {
   optionalDisplayName,
   password,
   username,
-} from './primitives.js';
+} from "./primitives.js";
 
 /** Request bodies. The server validates with these; the client's forms are
  *  built from the same objects, so a rule can't drift between the two. */
@@ -48,7 +48,7 @@ export type CreateInviteBody = z.infer<typeof createInviteBody>;
 
 export const createChannelBody = z.object({
   name: channelName,
-  type: channelType.default('text'),
+  type: channelType.default("text"),
 });
 export type CreateChannelBody = z.infer<typeof createChannelBody>;
 
@@ -59,7 +59,7 @@ export const updateProfileBody = z.object({ displayName });
 export type UpdateProfileBody = z.infer<typeof updateProfileBody>;
 
 export const changePasswordBody = z.object({
-  currentPassword: z.string().min(1, 'current password required'),
+  currentPassword: z.string().min(1, "current password required"),
   newPassword: password,
 });
 export type ChangePasswordBody = z.infer<typeof changePasswordBody>;
@@ -67,7 +67,9 @@ export type ChangePasswordBody = z.infer<typeof changePasswordBody>;
 export const voiceTokenBody = z.object({ channelId: z.string().min(1) });
 export type VoiceTokenBody = z.infer<typeof voiceTokenBody>;
 
-export const muteBody = z.object({ minutes: z.number().int().positive().max(10080).default(60) });
+export const muteBody = z.object({
+  minutes: z.number().int().positive().max(10080).default(60),
+});
 export type MuteBody = z.infer<typeof muteBody>;
 
 export const avatarBody = z.object({ image: z.string().min(1) });

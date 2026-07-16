@@ -1,21 +1,21 @@
-import { Hono } from 'hono';
-import { and, desc, eq, lt } from 'drizzle-orm';
-import { db } from '../db/index.js';
-import { messages } from '../db/schema.js';
-import { hasRole, requireAuth, type Env } from '../auth.js';
-import { hub } from '../hub.js';
-import { toMessageView } from '../views.js';
+import { Hono } from "hono";
+import { and, desc, eq, lt } from "drizzle-orm";
+import { db } from "../db/index.js";
+import { messages } from "../db/schema.js";
+import { hasRole, requireAuth, type Env } from "../auth.js";
+import { hub } from "../hub.js";
+import { toMessageView } from "../views.js";
 
 const app = new Hono<Env>();
 
-app.use('*', requireAuth);
+app.use("*", requireAuth);
 
 /** Message history for a channel, newest-first, keyset-paginated by `before`
  *  (a message createdAt timestamp). Deleted messages are omitted. */
-app.get('/:channelId', (c) => {
-  const channelId = c.req.param('channelId');
-  const before = Number(c.req.query('before'));
-  const limit = Math.min(Number(c.req.query('limit')) || 50, 100);
+app.get("/:channelId", (c) => {
+  const channelId = c.req.param("channelId");
+  const before = Number(c.req.query("before"));
+  const limit = Math.min(Number(c.req.query("limit")) || 50, 100);
 
   const rows = db
     .select()
@@ -24,7 +24,9 @@ app.get('/:channelId', (c) => {
       and(
         eq(messages.channelId, channelId),
         eq(messages.deleted, 0),
-        Number.isFinite(before) && before > 0 ? lt(messages.createdAt, before) : undefined,
+        Number.isFinite(before) && before > 0
+          ? lt(messages.createdAt, before)
+          : undefined,
       ),
     )
     .orderBy(desc(messages.createdAt))
@@ -37,17 +39,17 @@ app.get('/:channelId', (c) => {
 
 /** Delete a message. Allowed for the author or any admin/owner. Soft delete so
  *  moderation stays auditable. Broadcasts the removal to everyone live. */
-app.delete('/:id', (c) => {
-  const id = c.req.param('id');
-  const user = c.get('user');
+app.delete("/:id", (c) => {
+  const id = c.req.param("id");
+  const user = c.get("user");
   const msg = db.select().from(messages).where(eq(messages.id, id)).get();
-  if (!msg || msg.deleted) return c.json({ error: 'not found' }, 404);
+  if (!msg || msg.deleted) return c.json({ error: "not found" }, 404);
 
-  if (msg.authorId !== user.id && !hasRole(user, 'admin'))
-    return c.json({ error: 'forbidden' }, 403);
+  if (msg.authorId !== user.id && !hasRole(user, "admin"))
+    return c.json({ error: "forbidden" }, 403);
 
   db.update(messages).set({ deleted: 1 }).where(eq(messages.id, id)).run();
-  hub.broadcast({ type: 'message.deleted', id, channelId: msg.channelId });
+  hub.broadcast({ type: "message.deleted", id, channelId: msg.channelId });
   return c.json({ ok: true });
 });
 

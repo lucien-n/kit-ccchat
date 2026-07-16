@@ -6,11 +6,15 @@ import {
   type PublicUser,
   type VoiceMember,
 } from "./api";
+import type { ServerEvent } from "@ccchat/shared";
 import { playPing, unlockAudio } from "./notify";
 
 type Status = "disconnected" | "connecting" | "connected";
 
 function wsUrl(token: string): string {
+  // Local, stringified before it escapes: never reactive state, so SvelteURL
+  // would buy nothing.
+  // eslint-disable-next-line svelte/prefer-svelte-reactivity
   const u = new URL(apiBase() || location.origin);
   u.protocol = u.protocol === "https:" ? "wss:" : "ws:";
   u.pathname = "/ws";
@@ -95,11 +99,7 @@ class ChatStore {
 
   /** Claim a fresh instance: name it and become its owner. Returns the invite
    *  code to share with friends. */
-  async setup(input: {
-    communityName: string;
-    username: string;
-    password: string;
-  }) {
+  async setup(input: { communityName: string; username: string; password: string }) {
     const { token, user, inviteCode, communityName } = await api.setup(input);
     this.serverName = communityName;
     this.setSession(token, user);
@@ -189,16 +189,15 @@ class ChatStore {
     ws.onclose = () => {
       this.status = "disconnected";
       this.ws = null;
-      if (this.token)
-        this.reconnectTimer = setTimeout(() => this.connect(), 1500);
+      if (this.token) this.reconnectTimer = setTimeout(() => this.connect(), 1500);
     };
     ws.onmessage = (ev) => this.onEvent(JSON.parse(ev.data));
   }
 
-  private onEvent(event: any) {
+  private onEvent(event: ServerEvent) {
     switch (event.type) {
       case "message.new": {
-        const m = event.message as MessageView;
+        const m = event.message;
         const isCurrent = m.channelId === this.currentChannelId;
         if (isCurrent) this.messages = [...this.messages, m];
 
@@ -246,8 +245,7 @@ class ChatStore {
   }
 
   send(content: string) {
-    if (!this.ws || this.status !== "connected" || !this.currentChannelId)
-      return;
+    if (!this.ws || this.status !== "connected" || !this.currentChannelId) return;
     this.ws.send(
       JSON.stringify({
         type: "message.create",

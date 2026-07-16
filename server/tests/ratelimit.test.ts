@@ -56,18 +56,14 @@ describe("who gets blamed", () => {
     for (let i = 0; i < 10; i++)
       await login("wrongpass123", "203.0.113.99", "someoneelse");
     // Different IP, different account: unaffected.
-    expect((await login("ownerpass123", "198.51.100.7", "owner")).status).toBe(
-      200,
-    );
+    expect((await login("ownerpass123", "198.51.100.7", "owner")).status).toBe(200);
   });
 
   it("follows one account across many IPs", async () => {
     // A botnet: every request from a fresh address, all against one username.
     const statuses: number[] = [];
     for (let i = 0; i < 12; i++) {
-      statuses.push(
-        (await login("wrongpass123", `198.51.100.${i}`, "owner")).status,
-      );
+      statuses.push((await login("wrongpass123", `198.51.100.${i}`, "owner")).status);
     }
     // The per-IP bucket never fills, but the per-username one does.
     expect(statuses).toContain(429);

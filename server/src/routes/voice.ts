@@ -26,8 +26,7 @@ function livekitUrl(c: Context): string {
   if (LIVEKIT_URL) return LIVEKIT_URL; // explicit override wins
 
   const forwarded = c.req.header("x-forwarded-proto")?.split(",")[0]?.trim();
-  const host =
-    c.req.header("x-forwarded-host") ?? c.req.header("host") ?? "localhost";
+  const host = c.req.header("x-forwarded-host") ?? c.req.header("host") ?? "localhost";
   const secure = forwarded
     ? forwarded === "https"
     : new URL(c.req.url).protocol === "https:";
@@ -43,11 +42,7 @@ app.get("/config", (c) => c.json({ url: livekitUrl(c) }));
 app.post("/token", validate("json", voiceTokenBody), async (c) => {
   const { channelId } = c.req.valid("json");
 
-  const channel = db
-    .select()
-    .from(channels)
-    .where(eq(channels.id, channelId))
-    .get();
+  const channel = db.select().from(channels).where(eq(channels.id, channelId)).get();
   if (!channel || channel.type !== "voice")
     return c.json({ error: "not a voice channel" }, 400);
 

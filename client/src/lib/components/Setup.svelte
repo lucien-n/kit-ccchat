@@ -69,11 +69,9 @@
           {/if}
         </button>
         <p class="text-muted-foreground text-center text-sm">
-          Clicking it opens ccchat with the code already filled in. It never
-          expires and any number of people can use it - the code on its own is
-          <code class="bg-muted rounded px-1 py-0.5 font-mono"
-            >{inviteCode}</code
-          >.
+          Clicking it opens ccchat with the code already filled in. It never expires and
+          any number of people can use it - the code on its own is
+          <code class="bg-muted rounded px-1 py-0.5 font-mono">{inviteCode}</code>.
         </p>
       </Card.Content>
 
@@ -86,8 +84,8 @@
       <Card.Header class="text-center">
         <Card.Title class="text-2xl">Welcome to ccchat</Card.Title>
         <Card.Description>
-          This community is brand new. Name it and create your owner account -
-          you'll get an invite code for your friends.
+          This community is brand new. Name it and create your owner account - you'll get
+          an invite code for your friends.
         </Card.Description>
       </Card.Header>
 
@@ -138,7 +136,6 @@
             </Form.Control>
             <Form.FieldErrors />
           </Form.Field>
-
         </Card.Content>
 
         <Card.Footer class="mt-6 flex-col gap-3">
@@ -146,8 +143,8 @@
             {$submitting ? "Creating…" : "Create community"}
           </Form.Button>
           <p class="text-muted-foreground text-center text-xs">
-            Whoever fills this in first becomes the owner, so do it now - before
-            you share the address.
+            Whoever fills this in first becomes the owner, so do it now - before you share
+            the address.
           </p>
         </Card.Footer>
       </form>

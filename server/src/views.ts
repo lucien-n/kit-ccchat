@@ -1,7 +1,7 @@
-import { eq } from 'drizzle-orm';
-import type { MessageView, PublicUser } from '@ccchat/shared';
-import { db } from './db/index.js';
-import { messages, users, type Message } from './db/schema.js';
+import { eq } from "drizzle-orm";
+import type { MessageView, PublicUser } from "@ccchat/shared";
+import { db } from "./db/index.js";
+import { messages, users, type Message } from "./db/schema.js";
 
 export type { MessageView, PublicUser };
 

@@ -18,18 +18,14 @@ export const username = z
 
 /** Only a floor. Length is the one rule worth enforcing: composition rules push
  *  people toward `Passw0rd!` and away from the long passphrases we want. */
-export const password = z
-  .string()
-  .min(8, "password must be at least 8 characters");
+export const password = z.string().min(8, "password must be at least 8 characters");
 
 export const displayName = z.string().trim().min(1).max(32);
 
 /** Blank means "use my username", so an empty string is valid here rather than
  *  a too-short name. A form binds an untouched optional field to '', and the
  *  server reads `displayName || username`. */
-export const optionalDisplayName = z
-  .union([z.literal(""), displayName])
-  .optional();
+export const optionalDisplayName = z.union([z.literal(""), displayName]).optional();
 
 /** Word chars, dashes and spaces. Narrow because channel names show up in
  *  `#mentions` and the composer placeholder. */

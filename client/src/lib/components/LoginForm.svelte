@@ -8,23 +8,20 @@
   import { defaults, setMessage, superForm } from "sveltekit-superforms";
   import { zod4, zod4Client } from "sveltekit-superforms/adapters";
 
-  const form = superForm(
-    defaults({ username: "", password: "" }, zod4(loginBody)),
-    {
-      SPA: true,
-      validators: zod4Client(loginBody),
-      resetForm: false,
-      onUpdate: async ({ form }) => {
-        if (!form.valid) return;
-        try {
-          await chat.login(form.data.username, form.data.password);
-        } catch (err) {
-          setMessage(form, fail(apiErrorMessage(err, "something went wrong")));
-        }
-      },
-      onUpdated: toastMessage,
+  const form = superForm(defaults({ username: "", password: "" }, zod4(loginBody)), {
+    SPA: true,
+    validators: zod4Client(loginBody),
+    resetForm: false,
+    onUpdate: async ({ form }) => {
+      if (!form.valid) return;
+      try {
+        await chat.login(form.data.username, form.data.password);
+      } catch (err) {
+        setMessage(form, fail(apiErrorMessage(err, "something went wrong")));
+      }
     },
-  );
+    onUpdated: toastMessage,
+  });
 
   const { form: formData, enhance, submitting } = form;
 </script>
@@ -35,11 +32,7 @@
       <Form.Control>
         {#snippet children({ props })}
           <Form.Label>Username</Form.Label>
-          <Input
-            {...props}
-            bind:value={$formData.username}
-            autocomplete="username"
-          />
+          <Input {...props} bind:value={$formData.username} autocomplete="username" />
         {/snippet}
       </Form.Control>
       <Form.FieldErrors />
@@ -59,7 +52,6 @@
       </Form.Control>
       <Form.FieldErrors />
     </Form.Field>
-
   </Card.Content>
 
   <Card.Footer class="mt-6 flex-col gap-3">

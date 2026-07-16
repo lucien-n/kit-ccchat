@@ -8,6 +8,7 @@ import {
 } from "livekit-client";
 import { api } from "./api";
 import { chat } from "./chat.svelte";
+import { apiErrorMessage, errorName } from "./forms";
 import { playMute, playUnmute, playVoiceJoin, playVoiceLeave } from "./notify";
 
 export interface VoiceParticipant {
@@ -78,15 +79,15 @@ class VoiceStore {
       if (res.canPublish) {
         try {
           await room.localParticipant.setMicrophoneEnabled(true);
-        } catch (e: any) {
-          this.micError = `Microphone unavailable (${e?.name ?? "error"}) - you're listening only.`;
+        } catch (e) {
+          this.micError = `Microphone unavailable (${errorName(e)}) - you're listening only.`;
         }
       }
       await room.startAudio().catch(() => {});
       this.refresh();
-    } catch (e: any) {
+    } catch (e) {
       console.error("[voice] failed to connect", { url, error: e });
-      this.error = `Couldn't connect to voice${url ? ` (${url})` : ""}: ${e?.message ?? e}`;
+      this.error = `Couldn't connect to voice${url ? ` (${url})` : ""}: ${apiErrorMessage(e, String(e))}`;
       await this.leave();
     }
   }
@@ -112,14 +113,11 @@ class VoiceStore {
           this.refresh();
         },
       )
-      .on(
-        RoomEvent.TrackUnsubscribed,
-        (track: RemoteTrack, _pub, p: Participant) => {
-          track.detach().forEach((el) => el.remove());
-          this.audioEls.delete(`${p.identity}:${track.sid}`);
-          this.refresh();
-        },
-      )
+      .on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack, _pub, p: Participant) => {
+        track.detach().forEach((el) => el.remove());
+        this.audioEls.delete(`${p.identity}:${track.sid}`);
+        this.refresh();
+      })
       .on(RoomEvent.Disconnected, () => {
         const wasConnected = this.status === "connected";
         // If we didn't ask to leave, the media connection dropped on its own.

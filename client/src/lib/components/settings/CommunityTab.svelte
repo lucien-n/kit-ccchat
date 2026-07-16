@@ -47,8 +47,7 @@
       {/snippet}
     </Form.Control>
     <Form.Description>
-      Shown on the login screen and in the header. Everyone sees the change
-      immediately.
+      Shown on the login screen and in the header. Everyone sees the change immediately.
     </Form.Description>
     <Form.FieldErrors />
   </Form.Field>

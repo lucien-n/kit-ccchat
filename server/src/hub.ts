@@ -1,19 +1,7 @@
 import type { WebSocket } from "ws";
+import type { ServerEvent, VoiceMember } from "@ccchat/shared";
 
-export interface VoiceMember {
-  id: string;
-  name: string;
-  avatarVersion: number | null;
-}
-
-/** Events the server pushes down to clients over the WebSocket. */
-export type ServerEvent =
-  | { type: "message.new"; message: unknown }
-  | { type: "message.deleted"; id: string; channelId: string }
-  | { type: "presence"; online: string[] }
-  | { type: "voice.presence"; presence: Record<string, VoiceMember[]> }
-  | { type: "community.renamed"; name: string }
-  | { type: "error"; message: string };
+export type { ServerEvent, VoiceMember };
 
 interface Client {
   ws: WebSocket;
@@ -35,9 +23,7 @@ class Hub {
 
   remove(client: Client) {
     this.clients.delete(client);
-    const stillConnected = [...this.clients].some(
-      (c) => c.userId === client.userId,
-    );
+    const stillConnected = [...this.clients].some((c) => c.userId === client.userId);
     if (!stillConnected) this.voiceLeaveAll(client.userId);
     this.broadcastPresence();
   }

@@ -11,7 +11,6 @@ export type {
 } from "@ccchat/shared";
 
 import type {
-  AvatarBody,
   Channel,
   ChangePasswordBody,
   CreateChannelBody,
@@ -22,7 +21,6 @@ import type {
   MessageView,
   PublicUser,
   RegisterBody,
-  RenameCommunityBody,
   SetupBody,
   UpdateProfileBody,
 } from "@ccchat/shared";
@@ -37,16 +35,12 @@ export class ApiError extends Error {
 }
 
 export function apiBase(): string {
-  if (typeof localStorage !== "undefined")
-    return localStorage.getItem("serverUrl") ?? "";
+  if (typeof localStorage !== "undefined") return localStorage.getItem("serverUrl") ?? "";
   return "";
 }
 
 /** `version` doubles as a cache-buster. */
-export function avatarUrl(
-  id: string,
-  version: number | null | undefined,
-): string | null {
+export function avatarUrl(id: string, version: number | null | undefined): string | null {
   if (version == null) return null;
   return `${apiBase()}/api/users/${id}/avatar?v=${version}`;
 }
@@ -67,10 +61,7 @@ async function request<T>(
 
   const data = res.status === 204 ? null : await res.json().catch(() => null);
   if (!res.ok)
-    throw new ApiError(
-      res.status,
-      data?.error ?? `request failed (${res.status})`,
-    );
+    throw new ApiError(res.status, data?.error ?? `request failed (${res.status})`);
   return data as T;
 }
 
@@ -105,8 +96,7 @@ export const api = {
       body,
     }),
 
-  me: (token: string) =>
-    request<{ user: PublicUser }>("/api/auth/me", { token }),
+  me: (token: string) => request<{ user: PublicUser }>("/api/auth/me", { token }),
 
   logout: (token: string) =>
     request<{ ok: true }>("/api/auth/logout", { method: "POST", token }),
@@ -148,17 +138,13 @@ export const api = {
       token,
     }),
 
-  invites: (token: string) =>
-    request<{ invites: Invite[] }>("/api/invites", { token }),
+  invites: (token: string) => request<{ invites: Invite[] }>("/api/invites", { token }),
 
   revokeInvite: (token: string, code: string) =>
-    request<{ invite: Invite }>(
-      `/api/invites/${encodeURIComponent(code)}/revoke`,
-      {
-        method: "POST",
-        token,
-      },
-    ),
+    request<{ invite: Invite }>(`/api/invites/${encodeURIComponent(code)}/revoke`, {
+      method: "POST",
+      token,
+    }),
 
   members: (token: string) =>
     request<{ members: MemberView[] }>("/api/moderation/members", { token }),

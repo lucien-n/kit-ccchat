@@ -18,31 +18,36 @@ let claiming = false;
  *  must be set up promptly after first boot. */
 // Open to the internet on a fresh box until someone claims it. Limited so that
 // window can't be ground on, and so the 409 afterwards is cheap to serve.
-app.post("/", rateLimit({ limit: 5, windowMs: 60_000 }), validate("json", setupBody), async (c) => {
-  if (claiming || !needsSetup())
-    return c.json({ error: "this community is already set up" }, 409);
+app.post(
+  "/",
+  rateLimit({ limit: 5, windowMs: 60_000 }),
+  validate("json", setupBody),
+  async (c) => {
+    if (claiming || !needsSetup())
+      return c.json({ error: "this community is already set up" }, 409);
 
-  const { communityName, username, password } = c.req.valid("json");
-  const displayName = c.req.valid("json").displayName || username;
+    const { communityName, username, password } = c.req.valid("json");
+    const displayName = c.req.valid("json").displayName || username;
 
-  claiming = true;
-  try {
-    const { owner, inviteCode } = seedCommunity({
-      communityName,
-      username,
-      displayName,
-      password,
-    });
-    const token = createSession(owner.id);
-    return c.json({
-      token,
-      user: toPublicUser(owner),
-      inviteCode,
-      communityName,
-    });
-  } finally {
-    claiming = false;
-  }
-});
+    claiming = true;
+    try {
+      const { owner, inviteCode } = seedCommunity({
+        communityName,
+        username,
+        displayName,
+        password,
+      });
+      const token = createSession(owner.id);
+      return c.json({
+        token,
+        user: toPublicUser(owner),
+        inviteCode,
+        communityName,
+      });
+    } finally {
+      claiming = false;
+    }
+  },
+);
 
 export default app;

@@ -6,12 +6,7 @@
   import { Label } from "$lib/components/ui/label";
   import { apiErrorMessage, fail, ok, toastMessage } from "$lib/forms";
   import { changePasswordBody, updateProfileBody } from "@ccchat/shared";
-  import {
-    defaults,
-    setError,
-    setMessage,
-    superForm,
-  } from "sveltekit-superforms";
+  import { defaults, setError, setMessage, superForm } from "sveltekit-superforms";
   import { zod4, zod4Client } from "sveltekit-superforms/adapters";
   import AvatarPicker from "./AvatarPicker.svelte";
 
@@ -34,11 +29,7 @@
       onUpdated: toastMessage,
     },
   );
-  const {
-    form: nameData,
-    enhance: nameEnhance,
-    submitting: nameBusy,
-  } = nameForm;
+  const { form: nameData, enhance: nameEnhance, submitting: nameBusy } = nameForm;
 
   const passwordForm = superForm(
     defaults({ currentPassword: "", newPassword: "" }, zod4(changePasswordBody)),
@@ -127,7 +118,5 @@
     <Form.FieldErrors />
   </Form.Field>
 
-  <Form.Button variant="secondary" disabled={$passwordBusy}>
-    Update password
-  </Form.Button>
+  <Form.Button variant="secondary" disabled={$passwordBusy}>Update password</Form.Button>
 </form>

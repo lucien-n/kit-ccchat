@@ -6,12 +6,7 @@
   import { apiErrorMessage, fail, toastMessage } from "$lib/forms";
   import { registerBody } from "@ccchat/shared";
   import { untrack } from "svelte";
-  import {
-    defaults,
-    setError,
-    setMessage,
-    superForm,
-  } from "sveltekit-superforms";
+  import { defaults, setError, setMessage, superForm } from "sveltekit-superforms";
   import { zod4, zod4Client } from "sveltekit-superforms/adapters";
 
   let { invite = "" }: { invite?: string } = $props();
@@ -117,7 +112,6 @@
       </Form.Control>
       <Form.FieldErrors />
     </Form.Field>
-
   </Card.Content>
 
   <Card.Footer class="mt-6 flex-col gap-3">

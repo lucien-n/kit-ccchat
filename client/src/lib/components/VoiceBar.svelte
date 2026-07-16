@@ -63,9 +63,7 @@
               p.speaking && "bg-green-500 opacity-100 ring-2 ring-green-500/30",
             )}
           ></span>
-          <span class="flex-1 truncate"
-            >{p.name}{p.isLocal ? " (you)" : ""}</span
-          >
+          <span class="flex-1 truncate">{p.name}{p.isLocal ? " (you)" : ""}</span>
           {#if p.muted}<MicOff class="size-3.5 shrink-0" />{/if}
         </div>
       {/each}

@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
-  import { chat } from '$lib/chat.svelte';
-  import { appearance } from '$lib/appearance.svelte';
-  import Login from '$lib/components/Login.svelte';
-  import Setup from '$lib/components/Setup.svelte';
-  import Chat from '$lib/components/Chat.svelte';
+  import { onMount } from "svelte";
+  import { chat } from "$lib/chat.svelte";
+  import { appearance } from "$lib/appearance.svelte";
+  import Login from "$lib/components/Login.svelte";
+  import Setup from "$lib/components/Setup.svelte";
+  import Chat from "$lib/components/Chat.svelte";
 
   let ready = $state(false);
 
@@ -16,7 +16,7 @@
 </script>
 
 {#if !ready}
-  <div class="grid min-h-dvh place-items-center text-muted-foreground">Connecting…</div>
+  <div class="text-muted-foreground grid min-h-dvh place-items-center">Connecting…</div>
 {:else if chat.needsSetup}
   <Setup />
 {:else if !chat.user}

@@ -37,11 +37,7 @@ export function bootstrap() {
     username: OWNER_USERNAME,
     password: OWNER_PASSWORD,
   });
-  printBanner(
-    "seeded from environment",
-    OWNER_USERNAME.toLowerCase(),
-    inviteCode,
-  );
+  printBanner("seeded from environment", OWNER_USERNAME.toLowerCase(), inviteCode);
 }
 
 /** Create the community: the owner account, the default channels, and an initial
@@ -121,22 +117,14 @@ export function seedCommunity(input: {
 function resetOwnerPassword() {
   if (!RESET_OWNER_PASSWORD) return;
   if (!OWNER_PASSWORD) {
-    console.warn(
-      "RESET_OWNER_PASSWORD=1 but OWNER_PASSWORD is empty - skipping.",
-    );
+    console.warn("RESET_OWNER_PASSWORD=1 but OWNER_PASSWORD is empty - skipping.");
     return;
   }
 
   const username = OWNER_USERNAME.toLowerCase();
-  const owner = db
-    .select()
-    .from(users)
-    .where(eq(users.username, username))
-    .get();
+  const owner = db.select().from(users).where(eq(users.username, username)).get();
   if (!owner) {
-    console.warn(
-      `RESET_OWNER_PASSWORD=1 but no user "${username}" exists - skipping.`,
-    );
+    console.warn(`RESET_OWNER_PASSWORD=1 but no user "${username}" exists - skipping.`);
     return;
   }
 
