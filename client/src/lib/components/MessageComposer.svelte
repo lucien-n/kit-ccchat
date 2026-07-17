@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { MessageView } from "$lib/api";
   import Markdown from "$lib/components/markdown/Markdown.svelte";
   import { Button } from "$lib/components/ui/button";
   import { Textarea } from "$lib/components/ui/textarea";
@@ -10,11 +11,18 @@
     type EmojiEntry,
     type EmojiIndex,
   } from "$lib/emoji";
-  import type { MessageView } from "$lib/api";
   import { MESSAGE_MAX_LENGTH } from "@ccchat/shared";
   import { Eye, EyeOff, Reply, Send, X } from "@lucide/svelte";
   import { tick } from "svelte";
   import EmojiPicker from "./EmojiPicker.svelte";
+
+  interface Props {
+    placeholder: string;
+    disabled?: boolean;
+    onsend: (text: string) => boolean;
+    replyingTo?: MessageView | null;
+    oncancelreply?: () => void;
+  }
 
   let {
     placeholder,
@@ -22,13 +30,7 @@
     onsend,
     replyingTo = null,
     oncancelreply,
-  }: {
-    placeholder: string;
-    disabled?: boolean;
-    onsend: (text: string) => boolean;
-    replyingTo?: MessageView | null;
-    oncancelreply?: () => void;
-  } = $props();
+  }: Props = $props();
 
   export function focus() {
     el?.focus();
