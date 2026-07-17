@@ -1,3 +1,4 @@
+import { InviteStatus } from "@ccchat/shared";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Hono } from "hono";
 import {
@@ -38,7 +39,7 @@ describe("single-use invites", () => {
 
     const { invites } = await get(app, "/api/invites", token).then(json);
     const mine = invites.find((i: any) => i.code === invite.code);
-    expect(mine.status).toBe("used up");
+    expect(mine.status).toBe(InviteStatus.Used_Up);
     expect(mine.active).toBe(false);
     expect(mine.uses).toBe(1);
   });
@@ -67,7 +68,7 @@ describe("revoking", () => {
     ).then(json);
     expect(revoked.invite.revoked).toBe(true);
     expect(revoked.invite.active).toBe(false);
-    expect(revoked.invite.status).toBe("revoked");
+    expect(revoked.invite.status).toBe(InviteStatus.Revoked);
 
     expect((await register(app, invite.code, uniq())).status).toBe(400);
   });
@@ -104,7 +105,9 @@ describe("expiry", () => {
     expect((await register(app, invite.code, uniq())).status).toBe(400);
 
     const list = await get(app, "/api/invites", token).then(json);
-    expect(list.invites.find((i: any) => i.code === invite.code).status).toBe("expired");
+    expect(list.invites.find((i: any) => i.code === invite.code).status).toBe(
+      InviteStatus.Expired,
+    );
   });
 
   it("ignores a negative expiry rather than minting a dead link", async () => {

@@ -1,3 +1,4 @@
+import { Role } from "@ccchat/shared";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Hono } from "hono";
 import {
@@ -73,7 +74,7 @@ describe("register", () => {
   it("joins as a member, never as an admin", async () => {
     const { invite } = await mkInvite(app, token, { maxUses: 0 });
     const body = await register(app, invite.code, uniq()).then(json);
-    expect(body.user.role).toBe("member");
+    expect(body.user.role).toBe(Role.Member);
   });
 });
 

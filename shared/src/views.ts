@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { channelType, systemEvent } from "./primitives.js";
+import { channelType, role, systemEvent } from "./primitives.js";
 
 /** A user as everyone else sees them. Never carries passwordHash - that
  *  omission is the reason this shape exists rather than leaking the db row. */
@@ -7,7 +7,7 @@ export const publicUser = z.object({
   id: z.string(),
   username: z.string(),
   displayName: z.string(),
-  role: z.string(),
+  role,
   avatarVersion: z.number().nullable(),
 });
 export type PublicUser = z.infer<typeof publicUser>;
@@ -59,8 +59,13 @@ export const messageView = z.object({
 });
 export type MessageView = z.infer<typeof messageView>;
 
-export const inviteStatus = z.enum(["active", "revoked", "expired", "used up"]);
-export type InviteStatus = z.infer<typeof inviteStatus>;
+export enum InviteStatus {
+  Active = "active",
+  Revoked = "revoked",
+  Expired = "expired",
+  Used_Up = "used up",
+}
+export const inviteStatus = z.enum(InviteStatus);
 
 export const invite = z.object({
   code: z.string(),

@@ -1,5 +1,6 @@
 import {
   REPLY_SNIPPET_MAX,
+  Role,
   type MessageView,
   type PublicUser,
   type ReplyRef,
@@ -20,7 +21,7 @@ export function toPublicUser(u: {
     id: u.id,
     username: u.username,
     displayName: u.displayName,
-    role: u.role,
+    role: u.role as Role,
     avatarVersion: u.avatarVersion ?? null,
   };
 }

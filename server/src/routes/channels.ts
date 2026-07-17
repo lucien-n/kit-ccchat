@@ -1,4 +1,4 @@
-import { createChannelBody, type Channel, type ChannelType } from "@ccchat/shared";
+import { ChannelType, createChannelBody, Role, type Channel } from "@ccchat/shared";
 import { and, asc, count, eq, gt, isNull, ne } from "drizzle-orm";
 import { Hono } from "hono";
 import { newId, requireAuth, requireRole, type Env } from "../auth.js";
@@ -44,7 +44,7 @@ app.get("/unreads", (c) => {
 
   const unreads: Record<string, number> = {};
   for (const ch of db.select().from(channels).all()) {
-    if (ch.type !== "text") continue;
+    if (ch.type !== ChannelType.Text) continue;
     const since = readMap.get(ch.id) ?? user.createdAt;
     const row = db
       .select({ n: count() })
@@ -77,7 +77,7 @@ app.post("/:id/read", (c) => {
   return c.json({ ok: true });
 });
 
-app.post("/", requireRole("admin"), validate("json", createChannelBody), async (c) => {
+app.post("/", requireRole(Role.Admin), validate("json", createChannelBody), async (c) => {
   const { name, type } = c.req.valid("json");
 
   const channel = {
@@ -91,7 +91,7 @@ app.post("/", requireRole("admin"), validate("json", createChannelBody), async (
   return c.json({ channel });
 });
 
-app.delete("/:id", requireRole("admin"), (c) => {
+app.delete("/:id", requireRole(Role.Admin), (c) => {
   const id = String(c.req.param("id"));
   db.delete(channels).where(eq(channels.id, id)).run();
   return c.json({ ok: true });

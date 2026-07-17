@@ -1,4 +1,4 @@
-import { ServerEventType } from "@ccchat/shared";
+import { Role, ServerEventType } from "@ccchat/shared";
 import { and, desc, eq, lt } from "drizzle-orm";
 import { Hono } from "hono";
 import { hasRole, requireAuth, type Env } from "../auth.js";
@@ -46,7 +46,7 @@ app.delete("/:id", (c) => {
   const msg = db.select().from(messages).where(eq(messages.id, id)).get();
   if (!msg || msg.deleted) return c.json({ error: "not found" }, 404);
 
-  if (msg.authorId !== user.id && !hasRole(user, "admin"))
+  if (msg.authorId !== user.id && !hasRole(user, Role.Admin))
     return c.json({ error: "forbidden" }, 403);
 
   db.update(messages).set({ deleted: 1 }).where(eq(messages.id, id)).run();

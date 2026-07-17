@@ -1,4 +1,5 @@
 import {
+  ChannelType,
   clientEvent,
   ClientEventType,
   ServerEventType,
@@ -104,7 +105,7 @@ function onConnection(ws: WebSocket, userId: string) {
 
 function handleVoiceJoin(client: Client, channelId: string) {
   const channel = db.select().from(channels).where(eq(channels.id, channelId)).get();
-  if (!channel || channel.type !== "voice") return;
+  if (!channel || channel.type !== ChannelType.Voice) return;
 
   const u = db.select().from(users).where(eq(users.id, client.userId)).get();
   if (!u) return;
@@ -136,7 +137,7 @@ function handleCreate(
   const { channelId, content } = msg;
 
   const channel = db.select().from(channels).where(eq(channels.id, channelId)).get();
-  if (!channel || channel.type !== "text") return;
+  if (!channel || channel.type !== ChannelType.Text) return;
 
   const row = {
     id: newId(),

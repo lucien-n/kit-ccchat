@@ -12,6 +12,7 @@
   import { session } from "$lib/stores/session.svelte";
   import { unread } from "$lib/stores/unread.svelte";
   import { voice } from "$lib/stores/voice.svelte";
+  import { ChannelType } from "@ccchat/shared";
   import { Bell, BellOff, Hash, Link2, Menu, Users } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
   import Invites from "./Invites.svelte";
@@ -209,7 +210,7 @@
     <MessageComposer
       bind:this={composer}
       placeholder={`Message #${channels.current?.name ?? ""}`}
-      disabled={channels.current?.type !== "text"}
+      disabled={channels.current?.type !== ChannelType.Text}
       onsend={sendDraft}
       replyingTo={replyTo}
       oncancelreply={() => (replyTo = null)}

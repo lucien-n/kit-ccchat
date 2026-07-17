@@ -2,12 +2,12 @@ import z from "zod";
 import { messageView, voiceMember } from "../views";
 
 export enum ServerEventType {
-  Message_New = "Message_New",
-  Message_Deleted = "Message_Deleted",
-  Presence = "Presence",
-  Voice_Presence = "Voice_Presence",
-  Community_Renamed = "Community_Renamed",
-  Error = "Error",
+  Message_New = "message_new",
+  Message_Deleted = "message_deleted",
+  Presence = "presence",
+  Voice_Presence = "voice_presence",
+  Community_Renamed = "community_renamed",
+  Error = "error",
 }
 
 export type ServerEvent =

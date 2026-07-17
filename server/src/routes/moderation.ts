@@ -1,4 +1,4 @@
-import { muteBody, type MemberView } from "@ccchat/shared";
+import { muteBody, Role, type MemberView } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import { Hono, type Context, type Next } from "hono";
 import { rankOf, requireAuth, requireRole, type Env } from "../auth.js";
@@ -10,7 +10,7 @@ type ModEnv = { Variables: Env["Variables"] & { target: User } };
 
 const app = new Hono<ModEnv>();
 
-app.use("*", requireAuth, requireRole("admin"));
+app.use("*", requireAuth, requireRole(Role.Admin));
 
 /** Nobody may act on their own rank or above, so an admin can't ban the owner or
  *  another admin. */
@@ -70,7 +70,7 @@ app.post("/:id/unmute", loadTarget, (c) => {
 });
 
 app.get("/members", (c) => {
-  const members: MemberView[] = db
+  const rows = db
     .select({
       id: users.id,
       username: users.username,
@@ -82,6 +82,7 @@ app.get("/members", (c) => {
     })
     .from(users)
     .all();
+  const members: MemberView[] = rows.map((r) => ({ ...r, role: r.role as Role }));
   return c.json({ members });
 });
 

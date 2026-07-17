@@ -1,4 +1,4 @@
-import { ServerEventType, type SystemEvent } from "@ccchat/shared";
+import { ChannelType, ServerEventType, type SystemEvent } from "@ccchat/shared";
 import { asc, eq } from "drizzle-orm";
 import { newId } from "./auth.js";
 import { db } from "./db/index.js";
@@ -13,7 +13,7 @@ export function postSystemMessage(event: SystemEvent, subjectId: string) {
   const channel = db
     .select()
     .from(channels)
-    .where(eq(channels.type, "text"))
+    .where(eq(channels.type, ChannelType.Text))
     .orderBy(asc(channels.position), asc(channels.createdAt))
     .get();
   if (!channel) return;

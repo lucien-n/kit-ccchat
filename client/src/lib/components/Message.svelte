@@ -3,6 +3,7 @@
   import { messages } from "$lib/stores/messages.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { cn } from "$lib/utils";
+  import { SystemEvent } from "@ccchat/shared";
   import ReplyIcon from "@lucide/svelte/icons/reply";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import UserRoundPlusIcon from "@lucide/svelte/icons/user-round-plus";
@@ -39,7 +40,7 @@
     id="msg-{message.id}"
     class="text-muted-foreground flex items-center justify-center gap-1.5 py-1 text-xs"
   >
-    {#if message.systemEvent === "member_join"}
+    {#if message.systemEvent === SystemEvent.Member_Join}
       <UserRoundPlusIcon class="size-3.5 shrink-0" />
       <span><span class="text-foreground font-medium">{subject}</span> joined</span>
     {/if}

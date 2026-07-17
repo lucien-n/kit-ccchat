@@ -1,4 +1,4 @@
-import type { Channel, MessageView } from "@ccchat/shared";
+import { SystemEvent, type Channel, type MessageView } from "@ccchat/shared";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { boot, claim, cleanup, get, json, mkInvite, register, uniq } from "./harness.js";
 import type { Hono } from "hono";
@@ -34,7 +34,9 @@ it("posts a member_join line, authored by the newcomer, to the first text channe
   const res = await register(app, await invite(), name);
   expect(res.status).toBe(200);
 
-  const joins = (await history(general)).filter((m) => m.systemEvent === "member_join");
+  const joins = (await history(general)).filter(
+    (m) => m.systemEvent === SystemEvent.Member_Join,
+  );
   expect(joins).toHaveLength(1);
   expect(joins[0]!.author?.username).toBe(name);
   expect(joins[0]!.content).toBe("");

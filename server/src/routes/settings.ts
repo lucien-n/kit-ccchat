@@ -1,4 +1,4 @@
-import { renameCommunityBody, ServerEventType } from "@ccchat/shared";
+import { renameCommunityBody, Role, ServerEventType } from "@ccchat/shared";
 import { Hono } from "hono";
 import { requireAuth, requireRole, type Env } from "../auth.js";
 import { hub } from "../hub.js";
@@ -9,13 +9,18 @@ const app = new Hono<Env>();
 
 app.use("*", requireAuth);
 
-app.patch("/", requireRole("owner"), validate("json", renameCommunityBody), async (c) => {
-  const name = c.req.valid("json").communityName;
+app.patch(
+  "/",
+  requireRole(Role.Owner),
+  validate("json", renameCommunityBody),
+  async (c) => {
+    const name = c.req.valid("json").communityName;
 
-  setSetting("communityName", name);
-  hub.broadcast({ type: ServerEventType.Community_Renamed, name });
+    setSetting("communityName", name);
+    hub.broadcast({ type: ServerEventType.Community_Renamed, name });
 
-  return c.json({ communityName: communityName() });
-});
+    return c.json({ communityName: communityName() });
+  },
+);
 
 export default app;

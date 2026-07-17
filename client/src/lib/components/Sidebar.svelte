@@ -11,7 +11,7 @@
   import { unread } from "$lib/stores/unread.svelte";
   import { voice } from "$lib/stores/voice.svelte";
   import { cn } from "$lib/utils";
-  import type { ChannelType } from "@ccchat/shared";
+  import { ChannelType } from "@ccchat/shared";
   import { Hash, LogOut, Plus, Volume2 } from "@lucide/svelte";
   import UserAvatar from "./UserAvatar.svelte";
   import VoiceBar from "./VoiceBar.svelte";
@@ -26,8 +26,10 @@
     onOpenSettings?: () => void;
   } = $props();
 
-  const textChannels = $derived(channels.list.filter((c) => c.type === "text"));
-  const voiceChannels = $derived(channels.list.filter((c) => c.type === "voice"));
+  const textChannels = $derived(channels.list.filter((c) => c.type === ChannelType.Text));
+  const voiceChannels = $derived(
+    channels.list.filter((c) => c.type === ChannelType.Voice),
+  );
   const myAvatar = $derived(
     session.user ? avatarUrl(session.user.id, session.user.avatarVersion) : null,
   );
@@ -74,7 +76,7 @@
         size="icon"
         class="size-6"
         title="Create text channel"
-        onclick={() => createChannel("text")}
+        onclick={() => createChannel(ChannelType.Text)}
       >
         <Plus class="size-4" />
       </Button>
@@ -110,7 +112,7 @@
         size="icon"
         class="size-6"
         title="Create voice channel"
-        onclick={() => createChannel("voice")}
+        onclick={() => createChannel(ChannelType.Voice)}
       >
         <Plus class="size-4" />
       </Button>

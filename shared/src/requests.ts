@@ -2,6 +2,7 @@ import { z } from "zod";
 import {
   channelName,
   channelType,
+  ChannelType,
   communityName,
   displayName,
   inviteCode,
@@ -48,7 +49,7 @@ export type CreateInviteBody = z.infer<typeof createInviteBody>;
 
 export const createChannelBody = z.object({
   name: channelName,
-  type: channelType.default("text"),
+  type: channelType.default(ChannelType.Text),
 });
 export type CreateChannelBody = z.infer<typeof createChannelBody>;
 

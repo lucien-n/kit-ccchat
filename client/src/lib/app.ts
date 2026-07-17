@@ -1,4 +1,5 @@
 import {
+  ChannelType,
   ServerEventType,
   type RegisterBody,
   type ServerEvent,
@@ -56,7 +57,7 @@ export async function selectChannel(id: string) {
   channels.currentId = id;
   void unread.markRead(id);
   const channel = channels.list.find((c) => c.id === id);
-  if (!channel || channel.type !== "text") {
+  if (!channel || channel.type !== ChannelType.Text) {
     messages.clear();
     return;
   }
@@ -75,7 +76,7 @@ export async function logout() {
 async function afterLogin() {
   await channels.load();
   await unread.load();
-  const firstText = channels.list.find((c) => c.type === "text");
+  const firstText = channels.list.find((c) => c.type === ChannelType.Text);
   if (firstText) await selectChannel(firstText.id);
 
   const token = session.token;

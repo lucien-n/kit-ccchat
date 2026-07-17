@@ -3,13 +3,14 @@
   import * as Dialog from "$lib/components/ui/dialog";
   import * as Tabs from "$lib/components/ui/tabs";
   import { cn } from "$lib/utils";
+  import { Role } from "@ccchat/shared";
   import AppearanceTab from "./settings/AppearanceTab.svelte";
   import CommunityTab from "./settings/CommunityTab.svelte";
   import ProfileTab from "./settings/ProfileTab.svelte";
 
   let { open = $bindable(false) }: { open?: boolean } = $props();
 
-  const isOwner = $derived(session.user?.role === "owner");
+  const isOwner = $derived(session.user?.role === Role.Owner);
 </script>
 
 <!-- Dialog.Content only renders while open, so each tab mounts fresh. -->

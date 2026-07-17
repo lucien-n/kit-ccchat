@@ -1,4 +1,10 @@
-import { loginBody, registerBody, type LoginBody } from "@ccchat/shared";
+import {
+  loginBody,
+  registerBody,
+  Role,
+  SystemEvent,
+  type LoginBody,
+} from "@ccchat/shared";
 import { eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import {
@@ -42,7 +48,7 @@ app.post(
       username,
       displayName,
       passwordHash: hashPassword(password),
-      role: "member",
+      role: Role.Member,
       createdAt: Date.now(),
       banned: 0,
     };
@@ -57,7 +63,7 @@ app.post(
     });
 
     const token = createSession(user.id);
-    postSystemMessage("member_join", user.id);
+    postSystemMessage(SystemEvent.Member_Join, user.id);
     return c.json({ token, user: toPublicUser(user) });
   },
 );

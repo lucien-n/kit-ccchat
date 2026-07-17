@@ -1,16 +1,22 @@
 import { z } from "zod";
 
-export const ROLES = ["owner", "admin", "member"] as const;
-export const role = z.enum(ROLES);
-export type Role = z.infer<typeof role>;
+export enum Role {
+  Owner = "owner",
+  Admin = "admin",
+  Member = "member",
+}
+export const role = z.enum(Role);
 
-export const channelType = z.enum(["text", "voice"]);
-export type ChannelType = z.infer<typeof channelType>;
+export enum ChannelType {
+  Text = "text",
+  Voice = "voice",
+}
+export const channelType = z.enum(ChannelType);
 
-/** Machine-readable kind of a system message. The human sentence is composed on
- *  the client from this plus the subject, so it stays rename- and locale-live. */
-export const systemEvent = z.enum(["member_join"]);
-export type SystemEvent = z.infer<typeof systemEvent>;
+export enum SystemEvent {
+  Member_Join = "member_join",
+}
+export const systemEvent = z.enum(SystemEvent);
 
 export const username = z
   .string()
@@ -35,6 +41,4 @@ export const maxUses = z.number().int().min(0).max(1000);
 
 export const MESSAGE_MAX_LENGTH = 4000;
 
-/** How much of the quoted message a reply carries. Every reply repeats it, so
- *  the full 4000 would be paid for on each one. */
 export const REPLY_SNIPPET_MAX = 200;

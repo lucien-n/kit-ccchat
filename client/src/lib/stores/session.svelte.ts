@@ -1,4 +1,4 @@
-import type { RegisterBody } from "@ccchat/shared";
+import { Role, type RegisterBody } from "@ccchat/shared";
 import { api, type PublicUser } from "../api";
 
 /** Who you are and what proves it. Everything else keys off `token`. */
@@ -7,7 +7,7 @@ class Session {
   user = $state<PublicUser | null>(null);
 
   get isAdmin(): boolean {
-    return this.user?.role === "admin" || this.user?.role === "owner";
+    return this.user?.role === Role.Admin || this.user?.role === Role.Owner;
   }
 
   async login(username: string, password: string) {

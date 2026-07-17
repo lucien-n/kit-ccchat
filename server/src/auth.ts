@@ -1,3 +1,4 @@
+import { Role } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import type { Context, Next } from "hono";
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
@@ -75,8 +76,11 @@ export async function requireAuth(c: Context<Env>, next: Next) {
   await next();
 }
 
-const RANK = { member: 0, admin: 1, owner: 2 } as const;
-export type Role = keyof typeof RANK;
+const RANK: Record<Role, number> = {
+  [Role.Member]: 0,
+  [Role.Admin]: 1,
+  [Role.Owner]: 2,
+};
 
 /** `role` is a plain TEXT column, so an unrecognised value has to mean something.
  *  It ranks below everyone: a hand-edited database fails closed. */

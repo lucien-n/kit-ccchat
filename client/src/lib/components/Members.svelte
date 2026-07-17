@@ -8,6 +8,7 @@
   import { cn } from "$lib/utils";
   import { Input } from "./ui/input";
   import UserAvatar from "./UserAvatar.svelte";
+  import { Role } from "@ccchat/shared";
   import { toast } from "svelte-sonner";
   import { apiErrorMessage } from "$lib/forms";
 
@@ -87,7 +88,7 @@
               {#if isMuted(m)}<Badge variant="secondary">muted</Badge>{/if}
             </div>
 
-            {#if m.id !== session.user?.id && m.role !== "owner"}
+            {#if m.id !== session.user?.id && m.role !== Role.Owner}
               <div class="flex flex-wrap gap-1 pt-2 pl-9">
                 {#if isMuted(m)}
                   <Button

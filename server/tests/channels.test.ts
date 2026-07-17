@@ -1,4 +1,4 @@
-import type { Channel } from "@ccchat/shared";
+import { ChannelType, type Channel } from "@ccchat/shared";
 import type { Hono } from "hono";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import {
@@ -26,20 +26,25 @@ const list = async () =>
   (await json<{ channels: Channel[] }>(await get(app, "/api/channels", token))).channels;
 
 it("creates a voice channel and lists it as one", async () => {
-  const res = await post(app, "/api/channels", { name: uniq(), type: "voice" }, token);
+  const res = await post(
+    app,
+    "/api/channels",
+    { name: uniq(), type: ChannelType.Voice },
+    token,
+  );
   expect(res.status).toBe(200);
   const { channel } = await json<{ channel: Channel }>(res);
-  expect(channel.type).toBe("voice");
+  expect(channel.type).toBe(ChannelType.Voice);
 
   const found = (await list()).find((c) => c.id === channel.id);
-  expect(found?.type).toBe("voice");
+  expect(found?.type).toBe(ChannelType.Voice);
 });
 
 it("defaults to a text channel when no type is given", async () => {
   const { channel } = await json<{ channel: Channel }>(
     await post(app, "/api/channels", { name: uniq() }, token),
   );
-  expect(channel.type).toBe("text");
+  expect(channel.type).toBe(ChannelType.Text);
 });
 
 it("rejects an unknown channel type", async () => {
@@ -55,7 +60,7 @@ it("forbids non-admins from creating channels", async () => {
   const res = await post(
     app,
     "/api/channels",
-    { name: uniq(), type: "voice" },
+    { name: uniq(), type: ChannelType.Voice },
     memberToken,
   );
   expect(res.status).toBe(403);

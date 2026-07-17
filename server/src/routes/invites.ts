@@ -1,4 +1,4 @@
-import { createInviteBody, type Invite } from "@ccchat/shared";
+import { createInviteBody, InviteStatus, Role, type Invite } from "@ccchat/shared";
 import { desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { randomToken, requireAuth, requireRole, type Env } from "../auth.js";
@@ -8,7 +8,7 @@ import { validate } from "../validate.js";
 
 const app = new Hono<Env>();
 
-app.use("*", requireAuth, requireRole("admin"));
+app.use("*", requireAuth, requireRole(Role.Admin));
 
 /** Derived state is resolved here so the client never re-implements the
  *  expiry/exhaustion rules that /api/auth/register enforces. */
@@ -26,12 +26,12 @@ function toInviteView(i: typeof invites.$inferSelect): Invite {
     revoked: !!i.revoked,
     active: !i.revoked && !exhausted && !expired,
     status: i.revoked
-      ? "revoked"
+      ? InviteStatus.Revoked
       : expired
-        ? "expired"
+        ? InviteStatus.Expired
         : exhausted
-          ? "used up"
-          : "active",
+          ? InviteStatus.Used_Up
+          : InviteStatus.Active,
   };
 }
 

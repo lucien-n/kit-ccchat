@@ -1,4 +1,4 @@
-import { voiceTokenBody } from "@ccchat/shared";
+import { ChannelType, voiceTokenBody } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import type { Context } from "hono";
 import { Hono } from "hono";
@@ -40,7 +40,7 @@ app.post("/token", validate("json", voiceTokenBody), async (c) => {
   const { channelId } = c.req.valid("json");
 
   const channel = db.select().from(channels).where(eq(channels.id, channelId)).get();
-  if (!channel || channel.type !== "voice")
+  if (!channel || channel.type !== ChannelType.Voice)
     return c.json({ error: "not a voice channel" }, 400);
 
   const user = c.get("user");

@@ -2,9 +2,9 @@ import z from "zod";
 import { MESSAGE_MAX_LENGTH } from "../primitives";
 
 export enum ClientEventType {
-  Message_Create = "Message_Create",
-  Voice_Join = "Voice_Join",
-  Voice_Leave = "Voice_Leave",
+  Message_Create = "message_create",
+  Voice_Join = "voice_join",
+  Voice_Leave = "voice_leave",
 }
 
 export const clientEvent = z.discriminatedUnion("type", [
