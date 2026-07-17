@@ -2,11 +2,11 @@
   import { Toaster as Sonner, type ToasterProps as SonnerProps } from "svelte-sonner";
   // Ships wired to mode-watcher, which this project doesn't use — appearance
   // owns the `dark` class on <html>. Two theme sources would fight.
-  import { appearance } from "$lib/appearance.svelte";
-  import Loader2Icon from "@lucide/svelte/icons/loader-2";
+  import { appearance } from "$lib/stores/appearance.svelte";
   import CircleCheckIcon from "@lucide/svelte/icons/circle-check";
-  import OctagonXIcon from "@lucide/svelte/icons/octagon-x";
   import InfoIcon from "@lucide/svelte/icons/info";
+  import Loader2Icon from "@lucide/svelte/icons/loader-2";
+  import OctagonXIcon from "@lucide/svelte/icons/octagon-x";
   import TriangleAlertIcon from "@lucide/svelte/icons/triangle-alert";
 
   let { ...restProps }: SonnerProps = $props();

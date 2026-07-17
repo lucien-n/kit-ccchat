@@ -1,12 +1,12 @@
 <script lang="ts">
-  import { onMount } from "svelte";
   import { init } from "$lib/app";
-  import { appearance } from "$lib/appearance.svelte";
-  import { community } from "$lib/stores/community.svelte";
-  import { session } from "$lib/stores/session.svelte";
+  import Chat from "$lib/components/Chat.svelte";
   import Login from "$lib/components/Login.svelte";
   import Setup from "$lib/components/Setup.svelte";
-  import Chat from "$lib/components/Chat.svelte";
+  import { appearance } from "$lib/stores/appearance.svelte";
+  import { community } from "$lib/stores/community.svelte";
+  import { session } from "$lib/stores/session.svelte";
+  import { onMount } from "svelte";
 
   let ready = $state(false);
 
