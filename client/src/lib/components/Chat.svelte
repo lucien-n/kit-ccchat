@@ -13,7 +13,7 @@
   import { presence } from "$lib/stores/presence.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { unread } from "$lib/stores/unread.svelte";
-  import { voice } from "$lib/voice.svelte";
+  import { voice } from "$lib/stores/voice.svelte";
   import { Bell, BellOff, Hash, Link2, Menu, Reply, Trash2, Users } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
   import Invites from "./Invites.svelte";

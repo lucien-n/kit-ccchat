@@ -1,7 +1,7 @@
 <script lang="ts">
   import { Button } from "$lib/components/ui/button";
+  import { voice } from "$lib/stores/voice.svelte";
   import { cn } from "$lib/utils";
-  import { voice } from "$lib/voice.svelte";
   import { Mic, MicOff, PhoneOff, Volume2 } from "@lucide/svelte";
 
   let { compact = false }: { compact?: boolean } = $props();

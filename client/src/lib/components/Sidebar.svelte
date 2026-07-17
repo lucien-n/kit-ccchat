@@ -10,8 +10,8 @@
   import { realtime } from "$lib/stores/realtime.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { unread } from "$lib/stores/unread.svelte";
+  import { voice } from "$lib/stores/voice.svelte";
   import { cn } from "$lib/utils";
-  import { voice } from "$lib/voice.svelte";
   import { Hash, LogOut, Plus, Volume2 } from "@lucide/svelte";
   import VoiceBar from "./VoiceBar.svelte";
 
