@@ -11,6 +11,10 @@
   onMount(clearInviteFromUrl);
 
   let mode = $state<"login" | "register">(linkedInvite ? "register" : "login");
+
+  function toggleMode() {
+    mode = mode === "login" ? "register" : "login";
+  }
 </script>
 
 <div class="grid min-h-dvh place-items-center p-4">
@@ -39,7 +43,7 @@
         type="button"
         variant="link"
         class="text-muted-foreground"
-        onclick={() => (mode = mode === "login" ? "register" : "login")}
+        onclick={toggleMode}
       >
         {mode === "login"
           ? "Have an invite code? Register"
