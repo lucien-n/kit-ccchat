@@ -12,7 +12,6 @@
     (e.target as HTMLElement).closest(".spoiler")?.classList.add("revealed");
   }
 
-  // The anchor resolves its own href, so origin and protocol need no parsing.
   function confirmLink(e: MouseEvent) {
     const a = (e.target as HTMLElement).closest("a");
     if (!a || a.origin === location.origin) return;
