@@ -1,38 +1,32 @@
 <script lang="ts">
   import { type MessageView } from "$lib/api";
+  import CreateChannelDialog from "$lib/components/channel/CreateChannelDialog.svelte";
+  import CommunitySettings from "$lib/components/community/CommunitySettings.svelte";
+  import MembersSidebar from "$lib/components/layout/MembersSidebar.svelte";
+  import Sidebar from "$lib/components/layout/Sidebar.svelte";
+  import Settings from "$lib/components/settings/Settings.svelte";
   import { Button } from "$lib/components/ui/button";
+  import * as Resizable from "$lib/components/ui/resizable";
   import { ScrollArea } from "$lib/components/ui/scroll-area";
   import * as Sheet from "$lib/components/ui/sheet";
+  import VoiceBar from "$lib/components/voice/VoiceBar.svelte";
   import { setBaseTitle, setTitleBadge } from "$lib/notify";
   import { channels } from "$lib/stores/channels.svelte";
   import { community } from "$lib/stores/community.svelte";
   import { messages } from "$lib/stores/messages.svelte";
   import { prefs } from "$lib/stores/prefs.svelte";
   import { presence } from "$lib/stores/presence.svelte";
-  import { session } from "$lib/stores/session.svelte";
   import { unread } from "$lib/stores/unread.svelte";
   import { voice } from "$lib/stores/voice.svelte";
   import { ChannelType } from "@ccchat/shared";
-  import { Bell, BellOff, Hash, Menu, Users, X } from "@lucide/svelte";
+  import { Bell, BellOff, Hash, Menu, Users } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
-  import * as Resizable from "$lib/components/ui/resizable";
-  import CreateChannelDialog from "$lib/components/channel/CreateChannelDialog.svelte";
-  import CommunitySettings from "$lib/components/community/CommunitySettings.svelte";
-  import MembersPanel from "$lib/components/members/MembersPanel.svelte";
   import Message from "./Message.svelte";
   import MessageComposer from "./MessageComposer.svelte";
-  import Settings from "$lib/components/settings/Settings.svelte";
-  import Sidebar from "$lib/components/layout/Sidebar.svelte";
-  import VoiceBar from "$lib/components/voice/VoiceBar.svelte";
 
-  let showMembers = $state(false);
-  let showSettings = $state(false);
-  let showCommunitySettings = $state(false);
-  let showNav = $state(false);
-
-  let isDesktop = $state(
-    typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches,
-  );
+  const desktopNow =
+    typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
+  let isDesktop = $state(desktopNow);
   $effect(() => {
     const mq = window.matchMedia("(min-width: 640px)");
     const update = () => (isDesktop = mq.matches);
@@ -40,6 +34,16 @@
     mq.addEventListener("change", update);
     return () => mq.removeEventListener("change", update);
   });
+
+  let showMembers = $state(desktopNow && prefs.membersPanel);
+  let showSettings = $state(false);
+  let showCommunitySettings = $state(false);
+  let showNav = $state(false);
+
+  $effect(() => {
+    if (isDesktop) prefs.setMembersPanel(showMembers);
+  });
+
   let showCreateChannel = $state(false);
   let createChannelType = $state<ChannelType>(ChannelType.Text);
   let scroller: HTMLElement | null = $state(null);
@@ -147,21 +151,12 @@
           >{presence.online.size} online</span
         >
         <Button
-          variant="outline"
-          size="icon"
-          class="sm:hidden"
-          title="Members"
-          onclick={() => (showMembers = true)}
-        >
-          <Users class="size-4" />
-        </Button>
-        <Button
           variant={showMembers ? "secondary" : "outline"}
-          size="sm"
-          class="hidden sm:inline-flex"
+          size="icon"
+          title="Members"
           onclick={() => (showMembers = !showMembers)}
         >
-          <Users class="size-4" /> Members
+          <Users class="size-4" />
         </Button>
       </div>
     </header>
@@ -200,7 +195,7 @@
 
 {#if isDesktop}
   <div class="h-dvh">
-    <Resizable.PaneGroup direction="horizontal">
+    <Resizable.PaneGroup direction="horizontal" autoSaveId="app-layout">
       <Resizable.Pane
         defaultSize={18}
         minSize={12}
@@ -221,29 +216,7 @@
         {@render mainView()}
       </Resizable.Pane>
 
-      {#if showMembers}
-        <Resizable.Handle />
-
-        <Resizable.Pane
-          defaultSize={20}
-          minSize={14}
-          maxSize={32}
-          class="bg-background flex min-h-0 flex-col border-l"
-        >
-          <div class="flex h-12 shrink-0 items-center justify-between border-b px-3">
-            <span class="font-semibold">Members</span>
-            <Button
-              variant="ghost"
-              size="icon"
-              title="Close members"
-              onclick={() => (showMembers = false)}
-            >
-              <X class="size-4" />
-            </Button>
-          </div>
-          <MembersPanel />
-        </Resizable.Pane>
-      {/if}
+      <MembersSidebar bind:open={showMembers} isDesktop />
     </Resizable.PaneGroup>
   </div>
 {:else}
@@ -271,14 +244,7 @@
     </Sheet.Content>
   </Sheet.Root>
 
-  <Sheet.Root bind:open={showMembers}>
-    <Sheet.Content side="right" class="flex w-80 flex-col gap-0 p-0 sm:max-w-sm">
-      <Sheet.Header>
-        <Sheet.Title>Members</Sheet.Title>
-      </Sheet.Header>
-      <MembersPanel />
-    </Sheet.Content>
-  </Sheet.Root>
+  <MembersSidebar bind:open={showMembers} />
 {/if}
 
 <CommunitySettings bind:open={showCommunitySettings} />
