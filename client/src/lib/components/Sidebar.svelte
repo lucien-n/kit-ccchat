@@ -11,6 +11,7 @@
   import { unread } from "$lib/stores/unread.svelte";
   import { voice } from "$lib/stores/voice.svelte";
   import { cn } from "$lib/utils";
+  import type { ChannelType } from "@ccchat/shared";
   import { Hash, LogOut, Plus, Volume2 } from "@lucide/svelte";
   import UserAvatar from "./UserAvatar.svelte";
   import VoiceBar from "./VoiceBar.svelte";
@@ -42,10 +43,10 @@
     onNavigate?.();
   }
 
-  async function createChannel() {
-    const name = prompt("New channel name?");
+  async function createChannel(type: ChannelType) {
+    const name = prompt(`New ${type} channel name?`);
     if (!name || !session.token) return;
-    await api.createChannel(session.token, { name, type: "text" });
+    await api.createChannel(session.token, { name, type });
     await channels.load();
   }
 </script>
@@ -72,8 +73,8 @@
         variant="ghost"
         size="icon"
         class="size-6"
-        title="Create channel"
-        onclick={createChannel}
+        title="Create text channel"
+        onclick={() => createChannel("text")}
       >
         <Plus class="size-4" />
       </Button>
@@ -99,10 +100,21 @@
     </Button>
   {/each}
 
-  <div class="px-2 pt-4 pb-1">
+  <div class="flex items-center justify-between px-2 pt-4 pb-1">
     <span class="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
       >Voice</span
     >
+    {#if session.isAdmin}
+      <Button
+        variant="ghost"
+        size="icon"
+        class="size-6"
+        title="Create voice channel"
+        onclick={() => createChannel("voice")}
+      >
+        <Plus class="size-4" />
+      </Button>
+    {/if}
   </div>
 
   {#each voiceChannels as c (c.id)}
