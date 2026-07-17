@@ -48,6 +48,15 @@ jobs:
       - name: check client
         run: npm run -w client check
 
+      - name: test client
+        run: npm run -w client test
+
+      - name: emoji data matches its generator
+        run: |
+          npm run -w client emoji:gen
+          git diff --exit-code --stat client/src/lib/emoji/data.ts \
+            || (echo "::error::emoji/data.ts is out of date or was hand-edited. Run 'npm run -w client emoji:gen' and commit it." && exit 1)
+
   publish:
     needs: test
     if: github.event_name != 'pull_request'

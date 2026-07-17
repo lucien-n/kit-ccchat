@@ -1,8 +1,9 @@
 <script lang="ts">
   import { avatarUrl } from "$lib/api";
+  import Markdown from "$lib/components/markdown/Markdown.svelte";
   import * as Avatar from "$lib/components/ui/avatar";
   import { Button } from "$lib/components/ui/button";
-  import { Input } from "$lib/components/ui/input";
+  import { ScrollArea } from "$lib/components/ui/scroll-area";
   import * as Sheet from "$lib/components/ui/sheet";
   import { setBaseTitle, setTitleBadge } from "$lib/notify";
   import { channels } from "$lib/stores/channels.svelte";
@@ -13,20 +14,20 @@
   import { session } from "$lib/stores/session.svelte";
   import { unread } from "$lib/stores/unread.svelte";
   import { voice } from "$lib/voice.svelte";
-  import { Bell, BellOff, Hash, Link2, Menu, Send, Trash2, Users } from "@lucide/svelte";
+  import { Bell, BellOff, Hash, Link2, Menu, Trash2, Users } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
   import Invites from "./Invites.svelte";
   import Members from "./Members.svelte";
+  import MessageComposer from "./MessageComposer.svelte";
   import Settings from "./Settings.svelte";
   import Sidebar from "./Sidebar.svelte";
   import VoiceBar from "./VoiceBar.svelte";
 
-  let draft = $state("");
   let showMembers = $state(false);
   let showSettings = $state(false);
   let showInvites = $state(false);
   let showNav = $state(false);
-  let scroller: HTMLDivElement | null = $state(null);
+  let scroller: HTMLElement | null = $state(null);
 
   $effect(() => {
     void messages.list.length;
@@ -50,18 +51,16 @@
   // length of the call ("you're listening only"), which VoiceBar shows inline.
   // Toasting it would mean clearing it, and the indicator would vanish.
 
-  function sendDraft(e: Event) {
-    e.preventDefault();
-    const text = draft.trim();
+  function sendDraft(text: string) {
     const channelId = channels.currentId;
-    if (!text || !channelId) return;
+    if (!channelId) return false;
     // Keep the draft if the socket is down, rather than clearing the box for a
     // message that went nowhere.
     if (!messages.send(channelId, text)) {
       toast.error("Not connected, your message wasn't sent.");
-      return;
+      return false;
     }
-    draft = "";
+    return true;
   }
 
   function fmtTime(ts: number) {
@@ -100,7 +99,7 @@
     </Sheet.Content>
   </Sheet.Root>
 
-  <main class="bg-background flex min-w-0 flex-col">
+  <main class="bg-background flex min-h-0 min-w-0 flex-col">
     <header class="flex h-12 items-center justify-between gap-2 border-b px-2 sm:px-4">
       <div class="flex min-w-0 items-center gap-1.5 font-semibold">
         <Button
@@ -174,42 +173,41 @@
       </div>
     </header>
 
-    <div
-      bind:this={scroller}
-      class="flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto p-2 sm:p-4"
-    >
-      {#each messages.list as m (m.id)}
-        {@const av = m.author ? avatarUrl(m.author.id, m.author.avatarVersion) : null}
-        <div class="group hover:bg-muted/40 relative flex gap-3 rounded-md px-2 py-1">
-          <Avatar.Root class="mt-0.5 size-9">
-            {#if av}<Avatar.Image src={av} alt="" />{/if}
-            <Avatar.Fallback class="bg-primary text-primary-foreground text-sm">
-              {initial(m.author?.displayName)}
-            </Avatar.Fallback>
-          </Avatar.Root>
-          <div class="min-w-0">
-            <div class="flex items-baseline gap-2">
-              <span class="font-semibold">{m.author?.displayName ?? "unknown"}</span>
-              <span class="text-muted-foreground text-xs">{fmtTime(m.createdAt)}</span>
+    <ScrollArea class="min-h-0 flex-1" bind:viewportRef={scroller}>
+      <div class="flex flex-col gap-0.5 p-2 sm:p-4">
+        {#each messages.list as m (m.id)}
+          {@const av = m.author ? avatarUrl(m.author.id, m.author.avatarVersion) : null}
+          <div class="group hover:bg-muted/40 relative flex gap-3 rounded-md px-2 py-1">
+            <Avatar.Root class="mt-0.5 size-9">
+              {#if av}<Avatar.Image src={av} alt="" />{/if}
+              <Avatar.Fallback class="bg-primary text-primary-foreground text-sm">
+                {initial(m.author?.displayName)}
+              </Avatar.Fallback>
+            </Avatar.Root>
+            <div class="min-w-0">
+              <div class="flex items-baseline gap-2">
+                <span class="font-semibold">{m.author?.displayName ?? "unknown"}</span>
+                <span class="text-muted-foreground text-xs">{fmtTime(m.createdAt)}</span>
+              </div>
+              <Markdown content={m.content} />
             </div>
-            <div class="wrap-break-word whitespace-pre-wrap">{m.content}</div>
+            {#if canDelete(m.author?.id)}
+              <Button
+                variant="ghost"
+                size="icon"
+                class="absolute top-1 right-2 size-7 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
+                title="Delete"
+                onclick={() => messages.delete(m.id)}
+              >
+                <Trash2 class="size-4" />
+              </Button>
+            {/if}
           </div>
-          {#if canDelete(m.author?.id)}
-            <Button
-              variant="ghost"
-              size="icon"
-              class="absolute top-1 right-2 size-7 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
-              title="Delete"
-              onclick={() => messages.delete(m.id)}
-            >
-              <Trash2 class="size-4" />
-            </Button>
-          {/if}
-        </div>
-      {:else}
-        <div class="text-muted-foreground m-auto">No messages yet. Say hi 👋</div>
-      {/each}
-    </div>
+        {:else}
+          <div class="text-muted-foreground m-auto">No messages yet. Say hi 👋</div>
+        {/each}
+      </div>
+    </ScrollArea>
 
     {#if voice.inCall}
       <div class="sm:hidden">
@@ -217,15 +215,11 @@
       </div>
     {/if}
 
-    <form class="flex gap-2 p-2 sm:p-4" onsubmit={sendDraft}>
-      <Input
-        bind:value={draft}
-        placeholder={`Message #${channels.current?.name ?? ""}`}
-        disabled={channels.current?.type !== "text"}
-        class="flex-1"
-      />
-      <Button type="submit" size="icon"><Send class="size-4" /></Button>
-    </form>
+    <MessageComposer
+      placeholder={`Message #${channels.current?.name ?? ""}`}
+      disabled={channels.current?.type !== "text"}
+      onsend={sendDraft}
+    />
   </main>
 
   <Invites bind:open={showInvites} />
