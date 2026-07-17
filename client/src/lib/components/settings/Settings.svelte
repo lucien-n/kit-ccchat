@@ -4,9 +4,9 @@
   import * as Tabs from "$lib/components/ui/tabs";
   import { cn } from "$lib/utils";
   import { Role } from "@ccchat/shared";
-  import AppearanceTab from "./settings/AppearanceTab.svelte";
-  import CommunityTab from "./settings/CommunityTab.svelte";
-  import ProfileTab from "./settings/ProfileTab.svelte";
+  import AppearanceTab from "./AppearanceTab.svelte";
+  import CommunityTab from "./CommunityTab.svelte";
+  import ProfileTab from "./ProfileTab.svelte";
 
   let { open = $bindable(false) }: { open?: boolean } = $props();
 

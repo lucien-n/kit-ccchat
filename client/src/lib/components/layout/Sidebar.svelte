@@ -13,8 +13,8 @@
   import { cn } from "$lib/utils";
   import { ChannelType } from "@ccchat/shared";
   import { Hash, LogOut, Plus, Volume2 } from "@lucide/svelte";
-  import UserAvatar from "./UserAvatar.svelte";
-  import VoiceBar from "./VoiceBar.svelte";
+  import UserAvatar from "$lib/components/common/UserAvatar.svelte";
+  import VoiceBar from "$lib/components/voice/VoiceBar.svelte";
 
   let {
     withVoice = false,

@@ -6,7 +6,7 @@
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import * as Sheet from "$lib/components/ui/sheet";
-  import UserAvatar from "$lib/components/UserAvatar.svelte";
+  import UserAvatar from "$lib/components/common/UserAvatar.svelte";
   import { apiErrorMessage } from "$lib/forms";
   import { presence } from "$lib/stores/presence.svelte";
   import { session } from "$lib/stores/session.svelte";

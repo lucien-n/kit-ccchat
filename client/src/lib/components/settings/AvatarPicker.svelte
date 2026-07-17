@@ -2,7 +2,7 @@
   import { api, avatarUrl } from "$lib/api";
   import { session } from "$lib/stores/session.svelte";
   import { Button } from "$lib/components/ui/button";
-  import UserAvatar from "$lib/components/UserAvatar.svelte";
+  import UserAvatar from "$lib/components/common/UserAvatar.svelte";
   import { apiErrorMessage } from "$lib/forms";
   import { resizeImage } from "$lib/image";
   import { Trash2, Upload } from "@lucide/svelte";

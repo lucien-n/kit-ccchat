@@ -15,14 +15,14 @@
   import { ChannelType } from "@ccchat/shared";
   import { Bell, BellOff, Hash, Link2, Menu, Users } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
-  import CreateChannelDialog from "./CreateChannelDialog.svelte";
-  import Invites from "./Invites.svelte";
-  import Members from "./Members.svelte";
+  import CreateChannelDialog from "$lib/components/channel/CreateChannelDialog.svelte";
+  import Invites from "$lib/components/members/Invites.svelte";
+  import Members from "$lib/components/members/Members.svelte";
   import Message from "./Message.svelte";
   import MessageComposer from "./MessageComposer.svelte";
-  import Settings from "./Settings.svelte";
-  import Sidebar from "./Sidebar.svelte";
-  import VoiceBar from "./VoiceBar.svelte";
+  import Settings from "$lib/components/settings/Settings.svelte";
+  import Sidebar from "$lib/components/layout/Sidebar.svelte";
+  import VoiceBar from "$lib/components/voice/VoiceBar.svelte";
 
   let showMembers = $state(false);
   let showSettings = $state(false);

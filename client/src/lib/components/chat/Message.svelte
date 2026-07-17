@@ -7,9 +7,9 @@
   import ReplyIcon from "@lucide/svelte/icons/reply";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import UserRoundPlusIcon from "@lucide/svelte/icons/user-round-plus";
-  import Markdown from "./markdown/Markdown.svelte";
-  import UserAvatar from "./UserAvatar.svelte";
-  import { Button } from "./ui/button";
+  import Markdown from "$lib/components/markdown/Markdown.svelte";
+  import UserAvatar from "$lib/components/common/UserAvatar.svelte";
+  import { Button } from "$lib/components/ui/button";
 
   interface Props {
     message: MessageView;

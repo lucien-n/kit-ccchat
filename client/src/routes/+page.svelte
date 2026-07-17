@@ -1,8 +1,8 @@
 <script lang="ts">
   import { init } from "$lib/app";
-  import Chat from "$lib/components/Chat.svelte";
-  import Login from "$lib/components/Login.svelte";
-  import Setup from "$lib/components/Setup.svelte";
+  import Chat from "$lib/components/chat/Chat.svelte";
+  import Login from "$lib/components/auth/Login.svelte";
+  import Setup from "$lib/components/setup/Setup.svelte";
   import { appearance } from "$lib/stores/appearance.svelte";
   import { community } from "$lib/stores/community.svelte";
   import { session } from "$lib/stores/session.svelte";
