@@ -37,8 +37,7 @@
     if (scroller) scroller.scrollTop = scroller.scrollHeight;
   });
 
-  // A draft reply belongs to the channel it was started in; the server would
-  // drop the reference anyway once it points across channels.
+  // A draft reply belongs to the channel it was started in.
   $effect(() => {
     void channels.currentId;
     replyTo = null;
@@ -49,23 +48,19 @@
     setTitleBadge(unread.total);
   });
 
-  // Voice failures used to sit in a banner above the composer until dismissed.
-  // They're transient and belong to no field, so they toast and clear.
+  // Transient and tied to no field, so it toasts and clears. voice.micError
+  // stays out: it's durable call-length status that VoiceBar shows inline.
   $effect(() => {
     if (!voice.error) return;
     toast.error(voice.error);
     voice.error = "";
   });
 
-  // voice.micError deliberately stays out of here: it's durable status for the
-  // length of the call ("you're listening only"), which VoiceBar shows inline.
-  // Toasting it would mean clearing it, and the indicator would vanish.
-
   function sendDraft(text: string) {
     const channelId = channels.currentId;
     if (!channelId) return false;
-    // Keep the draft if the socket is down, rather than clearing the box for a
-    // message that went nowhere.
+    // Keep the draft if the socket is down rather than clear it for a message
+    // that went nowhere.
     if (!messages.send(channelId, text, replyTo?.id)) {
       toast.error("Not connected, your message wasn't sent.");
       return false;
@@ -79,8 +74,8 @@
     composer?.focus();
   }
 
-  /** Only messages already on screen can be reached: history stops at the first
-   *  page, so an older original has nothing to scroll to. */
+  /** Only messages already on screen: history stops at the first page, so an
+   *  older original has nothing to scroll to. */
   function handleJumpTo(id: string) {
     const el = document.getElementById(`msg-${id}`);
     if (!el) {

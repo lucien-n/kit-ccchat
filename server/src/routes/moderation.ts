@@ -22,7 +22,8 @@ async function loadTarget(c: Context<ModEnv>, next: Next) {
     .where(eq(users.id, c.req.param("id") ?? ""))
     .get();
   if (!target) return c.json({ error: "user not found" }, 404);
-  if (target.id === actor.id) return c.json({ error: "you cannot moderate yourself" }, 400);
+  if (target.id === actor.id)
+    return c.json({ error: "you cannot moderate yourself" }, 400);
   if (rankOf(target) >= rankOf(actor))
     return c.json({ error: "target outranks you" }, 403);
   c.set("target", target);
@@ -33,7 +34,11 @@ const endSessions = (userId: string) =>
   db.delete(sessions).where(eq(sessions.userId, userId)).run();
 
 const setOnTarget = (c: Context<ModEnv>, patch: Partial<User>) =>
-  db.update(users).set(patch).where(eq(users.id, c.get("target").id)).run();
+  db
+    .update(users)
+    .set(patch)
+    .where(eq(users.id, c.get("target").id))
+    .run();
 
 /** Kick ends every active session. With invite-only signup that forces a fresh
  *  invite to return. */

@@ -1,7 +1,6 @@
 <script lang="ts">
   import { api, avatarUrl } from "$lib/api";
   import * as app from "$lib/app";
-  import * as Avatar from "$lib/components/ui/avatar";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
   import { channels } from "$lib/stores/channels.svelte";
@@ -13,6 +12,7 @@
   import { voice } from "$lib/stores/voice.svelte";
   import { cn } from "$lib/utils";
   import { Hash, LogOut, Plus, Volume2 } from "@lucide/svelte";
+  import UserAvatar from "./UserAvatar.svelte";
   import VoiceBar from "./VoiceBar.svelte";
 
   let {
@@ -30,7 +30,6 @@
   const myAvatar = $derived(
     session.user ? avatarUrl(session.user.id, session.user.avatarVersion) : null,
   );
-  const initial = (name: string | undefined) => (name ?? "?")[0]?.toUpperCase() ?? "?";
 
   function selectChannel(id: string) {
     app.selectChannel(id);
@@ -135,14 +134,12 @@
               c.id === voice.channelId &&
               voice.participants.find((p) => p.identity === m.id)?.speaking}
             <div class="flex items-center gap-2 px-2 py-1">
-              <Avatar.Root
+              <UserAvatar
+                src={av}
+                name={m.name}
                 class={cn("size-5 shrink-0", speaking && "ring-2 ring-green-500")}
-              >
-                {#if av}<Avatar.Image src={av} alt="" />{/if}
-                <Avatar.Fallback class="bg-primary/70 text-primary-foreground text-[9px]">
-                  {(m.name[0] ?? "?").toUpperCase()}
-                </Avatar.Fallback>
-              </Avatar.Root>
+                fallbackClass="bg-primary/70 text-[9px]"
+              />
               <span class="text-muted-foreground truncate text-xs">{m.name}</span>
             </div>
           {/each}
@@ -162,12 +159,12 @@
     title="Settings"
     onclick={() => onOpenSettings?.()}
   >
-    <Avatar.Root class="size-8 shrink-0">
-      {#if myAvatar}<Avatar.Image src={myAvatar} alt="" />{/if}
-      <Avatar.Fallback class="bg-primary text-primary-foreground text-xs">
-        {initial(session.user?.displayName)}
-      </Avatar.Fallback>
-    </Avatar.Root>
+    <UserAvatar
+      src={myAvatar}
+      name={session.user?.displayName}
+      class="size-8 shrink-0"
+      fallbackClass="text-xs"
+    />
     <div class="min-w-0 flex-1 text-left">
       <div class="truncate text-sm font-medium">{session.user?.displayName}</div>
       <div class="text-muted-foreground text-xs">{session.user?.role}</div>

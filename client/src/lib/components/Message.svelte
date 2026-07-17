@@ -2,11 +2,11 @@
   import { avatarUrl, type MessageView } from "$lib/api";
   import { messages } from "$lib/stores/messages.svelte";
   import { session } from "$lib/stores/session.svelte";
-  import { cn, getInitials } from "$lib/utils";
+  import { cn } from "$lib/utils";
   import ReplyIcon from "@lucide/svelte/icons/reply";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import Markdown from "./markdown/Markdown.svelte";
-  import * as Avatar from "./ui/avatar";
+  import UserAvatar from "./UserAvatar.svelte";
   import { Button } from "./ui/button";
 
   interface Props {
@@ -39,14 +39,12 @@
     ? 'bg-primary/15'
     : ''}"
 >
-  <Avatar.Root class={cn("size-9", message.replyTo ? "mt-4.5" : "mt-0.5")}>
-    {#if avatar}
-      <Avatar.Image src={avatar} alt="" />
-    {/if}
-    <Avatar.Fallback class="bg-primary text-primary-foreground text-sm">
-      {getInitials(message.author?.displayName)}
-    </Avatar.Fallback>
-  </Avatar.Root>
+  <UserAvatar
+    src={avatar}
+    name={message.author?.displayName}
+    class={cn("size-9", message.replyTo ? "mt-4.5" : "mt-0.5")}
+    fallbackClass="text-sm"
+  />
   <div class="min-w-0">
     {#if message.replyTo}
       {@const r = message.replyTo}
@@ -63,12 +61,12 @@
           onclick={() => onJumpTo(r.id)}
         >
           <ReplyIcon class="size-3 shrink-0" />
-          <Avatar.Root class="size-4 shrink-0">
-            {#if rav}<Avatar.Image src={rav} alt="" />{/if}
-            <Avatar.Fallback class="bg-primary text-primary-foreground text-[0.5rem]">
-              {getInitials(r.author?.displayName)}
-            </Avatar.Fallback>
-          </Avatar.Root>
+          <UserAvatar
+            src={rav}
+            name={r.author?.displayName}
+            class="size-4 shrink-0"
+            fallbackClass="text-[0.5rem]"
+          />
           <span class="shrink-0 font-medium">
             {r.author?.displayName ?? "unknown"}
           </span>

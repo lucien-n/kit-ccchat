@@ -3,9 +3,8 @@ import { api, type MessageView } from "../api";
 import { realtime } from "./realtime.svelte";
 import { session } from "./session.svelte";
 
-/** Only ever the open channel's messages. Switching channels replaces the list
- *  rather than caching per channel: history is one request away, and a cache
- *  would need invalidating on every delete broadcast. */
+/** Only ever the open channel's messages; switching channels refetches rather
+ *  than caching, so there's no per-channel cache to invalidate on every delete. */
 class Messages {
   list = $state<MessageView[]>([]);
 
@@ -18,12 +17,9 @@ class Messages {
     this.list = [...this.list, message];
   }
 
-  /** Ids are unique across channels, so a delete for a channel we aren't
-   *  reading simply matches nothing.
-   *
-   *  Replies quoting the deleted message are tombstoned in place. The server
-   *  resolves a quote on read, so a reload would show this anyway; without it
-   *  the deleted text stays on screen, quoted, until someone refreshes. */
+  /** Tombstones any reply quoting the deleted message in place. The server
+   *  resolves quotes on read, so a reload would show this anyway; without it the
+   *  deleted text stays quoted on screen until someone refreshes. */
   remove(id: string) {
     let changed = false;
     const next: MessageView[] = [];
@@ -53,8 +49,8 @@ class Messages {
     });
   }
 
-  /** Deleting goes over REST for the permission check; the server broadcasts the
-   *  removal, so the list updates through the same path as everyone else's. */
+  /** Over REST for the permission check; the server then broadcasts the removal,
+   *  so our list updates through the same path as everyone else's. */
   async delete(id: string) {
     if (!session.token) return;
     await api.deleteMessage(session.token, id);

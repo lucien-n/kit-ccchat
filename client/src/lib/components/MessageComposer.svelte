@@ -225,8 +225,8 @@
     </div>
   {/if}
 
-  <!-- The box owns the border and focus ring so the textarea and the buttons
-       read as one control; the textarea's own ring is turned off below. -->
+  <!-- The box owns the border and focus ring so the textarea and buttons read
+       as one control; the textarea's own ring is turned off below. -->
   <div
     class="bg-input/50 focus-within:border-ring focus-within:ring-ring/30 flex items-end gap-0.5 rounded-2xl border border-transparent p-1 transition-[color,box-shadow] duration-200 focus-within:ring-3"
   >

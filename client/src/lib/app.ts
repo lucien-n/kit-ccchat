@@ -16,9 +16,8 @@ import { realtime } from "./stores/realtime.svelte";
 import { session } from "./stores/session.svelte";
 import { unread } from "./stores/unread.svelte";
 
-/** Flows that span more than one store. The stores hold state and own their own
- *  fetches; anything that has to touch several of them in order lives here, so
- *  no store has to import a sibling just to coordinate. */
+/** Flows that span more than one store, so no store has to import a sibling just
+ *  to coordinate. The stores still own their own state and fetches. */
 
 export async function init() {
   prefs.init();
@@ -29,7 +28,7 @@ export async function init() {
   window.addEventListener("pointerdown", () => unlockAudio(), { once: true });
 
   await community.load();
-  if (community.needsSetup) return; // no accounts yet, nothing to restore
+  if (community.needsSetup) return;
   if (await session.restore()) await afterLogin();
 }
 
@@ -43,9 +42,8 @@ export async function register(body: RegisterBody) {
   await afterLogin();
 }
 
-/** Claim a fresh instance: name it and become its owner. Returns the invite code
- *  to share. `needsSetup` stays true so the wizard can show that code; it clears
- *  when the owner dismisses the screen. */
+/** Returns the invite code to share. `needsSetup` stays true so the wizard can
+ *  show that code; it clears when the owner dismisses the screen. */
 export async function setup(body: SetupBody): Promise<string> {
   const { token, user, inviteCode, communityName } = await api.setup(body);
   community.name = communityName;
@@ -56,7 +54,7 @@ export async function setup(body: SetupBody): Promise<string> {
 
 export async function selectChannel(id: string) {
   channels.currentId = id;
-  void unread.markRead(id); // opening a channel clears and persists its read state
+  void unread.markRead(id);
   const channel = channels.list.find((c) => c.id === id);
   if (!channel || channel.type !== "text") {
     messages.clear();
@@ -122,8 +120,8 @@ function onMessage(m: MessageView) {
   const focused = typeof document !== "undefined" && document.hasFocus();
 
   if (isCurrent) {
-    // The open channel never badges, you're reading it. Keep its read marker
-    // current so it stays at zero across reloads.
+    // The open channel never badges; keep its read marker current so it stays at
+    // zero across reloads.
     unread.scheduleMarkRead(m.channelId);
     if (!focused && prefs.soundEnabled) playPing();
   } else {

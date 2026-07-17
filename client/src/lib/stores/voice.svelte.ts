@@ -22,9 +22,8 @@ export interface VoiceParticipant {
 
 type Status = "idle" | "connecting" | "connected";
 
-/** Manages the LiveKit voice session. One call at a time (like Discord: you're
- *  in exactly one voice channel), independent of which text channel you're
- *  reading. Uses an SFU so it scales past mesh's ~5-user ceiling to 20+. */
+/** The LiveKit voice session. One call at a time, independent of which text
+ *  channel you're reading. */
 class VoiceStore {
   channelId = $state<string | null>(null);
   channelName = $state("");
@@ -39,8 +38,7 @@ class VoiceStore {
 
   private room: Room | null = null;
   private audioEls = new Map<string, HTMLMediaElement>();
-  /** True while WE are tearing down, to tell an intentional leave apart from an
-   *  unexpected drop (e.g. media connection failure). */
+  /** Set while we tear down, to tell an intentional leave from a dropped call. */
   private leaving = false;
 
   get inCall(): boolean {
@@ -67,16 +65,14 @@ class VoiceStore {
       this.room = room;
       this.wire(room);
 
-      // If the SFU is unreachable - or its advertised media address isn't
-      // reachable by this browser - this is what fails.
       await room.connect(url, res.token);
       this.status = "connected";
       realtime.send({ type: ClientEventType.Voice_Join, channelId: channel.id });
       playVoiceJoin();
       this.refresh();
 
-      // A missing/denied microphone must NOT drop the call: you can still
-      // listen. Surface it as a soft notice instead of tearing down.
+      // A missing/denied mic must not drop the call: surface it as a soft notice
+      // and keep listening.
       if (res.canPublish) {
         try {
           await room.localParticipant.setMicrophoneEnabled(true);
@@ -121,7 +117,6 @@ class VoiceStore {
       })
       .on(RoomEvent.Disconnected, () => {
         const wasConnected = this.status === "connected";
-        // If we didn't ask to leave, the media connection dropped on its own.
         if (!this.leaving && wasConnected) {
           this.error =
             "Voice disconnected - the media connection dropped. If the server is " +

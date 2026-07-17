@@ -2,12 +2,12 @@
   import { api, avatarUrl, type MemberView } from "$lib/api";
   import { presence } from "$lib/stores/presence.svelte";
   import { session } from "$lib/stores/session.svelte";
-  import * as Avatar from "$lib/components/ui/avatar";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
   import * as Sheet from "$lib/components/ui/sheet";
   import { cn } from "$lib/utils";
   import { Input } from "./ui/input";
+  import UserAvatar from "./UserAvatar.svelte";
   import { toast } from "svelte-sonner";
   import { apiErrorMessage } from "$lib/forms";
 
@@ -47,7 +47,6 @@
   }
 
   const isMuted = (m: MemberView) => m.mutedUntil != null && m.mutedUntil > Date.now();
-  const initial = (name: string) => name[0]?.toUpperCase() ?? "?";
 
   $effect(() => {
     if (open) load();
@@ -74,12 +73,12 @@
                   presence.online.has(m.id) && "bg-green-500",
                 )}
               ></span>
-              <Avatar.Root class="size-7">
-                {#if av}<Avatar.Image src={av} alt="" />{/if}
-                <Avatar.Fallback class="bg-primary text-primary-foreground text-xs">
-                  {initial(m.displayName)}
-                </Avatar.Fallback>
-              </Avatar.Root>
+              <UserAvatar
+                src={av}
+                name={m.displayName}
+                class="size-7"
+                fallbackClass="text-xs"
+              />
               <div class="flex min-w-0 flex-1 items-center gap-1.5">
                 <span class="truncate text-sm font-medium">{m.displayName}</span>
                 <span class="text-muted-foreground text-[10px] uppercase">{m.role}</span>
