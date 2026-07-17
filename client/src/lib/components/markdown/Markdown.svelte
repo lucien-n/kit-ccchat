@@ -1,5 +1,6 @@
 <script lang="ts">
   import { isEmojiOnly, render } from "$lib/markdown";
+  import { externalLink } from "$lib/stores/externalLink.svelte";
 
   let { content, class: className = "" }: { content: string; class?: string } = $props();
 
@@ -10,13 +11,25 @@
   function reveal(e: Event) {
     (e.target as HTMLElement).closest(".spoiler")?.classList.add("revealed");
   }
+
+  // The anchor resolves its own href, so origin and protocol need no parsing.
+  function confirmLink(e: MouseEvent) {
+    const a = (e.target as HTMLElement).closest("a");
+    if (!a || a.origin === location.origin) return;
+    if (a.protocol !== "http:" && a.protocol !== "https:") return;
+    e.preventDefault();
+    externalLink.ask(a.href);
+  }
 </script>
 
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
   class="md min-w-0 wrap-break-word {className}"
   class:jumbo
-  onclick={reveal}
+  onclick={(e) => {
+    confirmLink(e);
+    reveal(e);
+  }}
   onkeydown={(e) => {
     if (e.key === "Enter" || e.key === " ") reveal(e);
   }}
