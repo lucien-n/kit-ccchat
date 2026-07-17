@@ -4,14 +4,12 @@
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
   import { Label } from "$lib/components/ui/label";
-  import * as Sheet from "$lib/components/ui/sheet";
   import { inviteLink } from "$lib/invite";
   import { cn } from "$lib/utils";
   import { Check, Copy, Link2, Trash2 } from "@lucide/svelte";
+  import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
   import { apiErrorMessage } from "$lib/forms";
-
-  let { open = $bindable(false) }: { open?: boolean } = $props();
 
   let invites = $state<Invite[]>([]);
   let busy = $state(false);
@@ -38,9 +36,7 @@
     },
   ];
 
-  $effect(() => {
-    if (open) void load();
-  });
+  onMount(load);
 
   async function load() {
     if (!session.token) return;
@@ -99,85 +95,74 @@
   }
 </script>
 
-<Sheet.Root bind:open>
-  <Sheet.Content side="right" class="flex w-full flex-col gap-0 sm:max-w-md">
-    <Sheet.Header>
-      <Sheet.Title>Invites</Sheet.Title>
-      <Sheet.Description
-        >Create a link to share, and revoke it if it gets out.</Sheet.Description
-      >
-    </Sheet.Header>
-
-    <div class="space-y-2 border-b px-4 pb-4">
-      <Label>New invite</Label>
-      <div class="grid grid-cols-3 gap-2">
-        {#each presets as p (p.label)}
-          <Button
-            variant="outline"
-            class="h-auto flex-col items-start gap-0.5 px-3 py-2 text-left"
-            disabled={busy}
-            onclick={() => create(p)}
-          >
-            <span class="text-sm font-medium">{p.label}</span>
-            <span class="text-muted-foreground text-[10px] leading-tight">{p.hint}</span>
-          </Button>
-        {/each}
-      </div>
-      <p class="text-muted-foreground text-xs">
-        The link is copied to your clipboard automatically.
-      </p>
+<div class="flex min-h-0 flex-1 flex-col">
+  <div class="space-y-2 pb-4">
+    <Label>New invite</Label>
+    <div class="grid grid-cols-3 gap-2">
+      {#each presets as p (p.label)}
+        <Button
+          variant="outline"
+          class="h-auto flex-col items-start gap-0.5 px-3 py-2 text-left"
+          disabled={busy}
+          onclick={() => create(p)}
+        >
+          <span class="text-sm font-medium">{p.label}</span>
+          <span class="text-muted-foreground text-[10px] leading-tight">{p.hint}</span>
+        </Button>
+      {/each}
     </div>
+    <p class="text-muted-foreground text-xs">
+      The link is copied to your clipboard automatically.
+    </p>
+  </div>
 
-    <div class="min-h-0 flex-1 space-y-2 overflow-y-auto p-4">
-      {#each invites as i (i.code)}
-        <div class={cn("rounded-lg border p-3", !i.active && "opacity-50")}>
-          <div class="flex items-center gap-2">
-            <Link2 class="text-muted-foreground size-4 shrink-0" />
-            <code class="min-w-0 flex-1 truncate font-mono text-xs"
-              >{inviteLink(i.code)}</code
-            >
+  <div class="min-h-0 flex-1 space-y-2 overflow-y-auto">
+    {#each invites as i (i.code)}
+      <div class={cn("rounded-lg border p-3", !i.active && "opacity-50")}>
+        <div class="flex items-center gap-2">
+          <Link2 class="text-muted-foreground size-4 shrink-0" />
+          <code class="min-w-0 flex-1 truncate font-mono text-xs"
+            >{inviteLink(i.code)}</code
+          >
+          <Button
+            variant="ghost"
+            size="icon"
+            class="size-7 shrink-0"
+            title="Copy link"
+            onclick={() => copy(i.code)}
+          >
+            {#if copied === i.code}
+              <Check class="size-4 text-emerald-500" />
+            {:else}
+              <Copy class="size-4" />
+            {/if}
+          </Button>
+          {#if i.active}
             <Button
               variant="ghost"
               size="icon"
-              class="size-7 shrink-0"
-              title="Copy link"
-              onclick={() => copy(i.code)}
+              class="text-destructive size-7 shrink-0"
+              title="Revoke"
+              onclick={() => revoke(i.code)}
             >
-              {#if copied === i.code}
-                <Check class="size-4 text-emerald-500" />
-              {:else}
-                <Copy class="size-4" />
-              {/if}
+              <Trash2 class="size-4" />
             </Button>
-            {#if i.active}
-              <Button
-                variant="ghost"
-                size="icon"
-                class="text-destructive size-7 shrink-0"
-                title="Revoke"
-                onclick={() => revoke(i.code)}
-              >
-                <Trash2 class="size-4" />
-              </Button>
-            {/if}
-          </div>
-          <div
-            class="text-muted-foreground mt-2 flex flex-wrap items-center gap-2 text-xs"
-          >
-            <Badge variant={i.active ? "secondary" : "outline"} class="h-5"
-              >{i.status}</Badge
-            >
-            <span>{usesLabel(i)}</span>
-            <span>·</span>
-            <span>{expiryLabel(i)}</span>
-            <span class="ml-auto">by {i.createdBy}</span>
-          </div>
+          {/if}
         </div>
-      {:else}
-        <p class="text-muted-foreground py-8 text-center text-sm">
-          No invites yet. Create one above.
-        </p>
-      {/each}
-    </div>
-  </Sheet.Content>
-</Sheet.Root>
+        <div class="text-muted-foreground mt-2 flex flex-wrap items-center gap-2 text-xs">
+          <Badge variant={i.active ? "secondary" : "outline"} class="h-5"
+            >{i.status}</Badge
+          >
+          <span>{usesLabel(i)}</span>
+          <span>·</span>
+          <span>{expiryLabel(i)}</span>
+          <span class="ml-auto">by {i.createdBy}</span>
+        </div>
+      </div>
+    {:else}
+      <p class="text-muted-foreground py-8 text-center text-sm">
+        No invites yet. Create one above.
+      </p>
+    {/each}
+  </div>
+</div>

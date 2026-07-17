@@ -1,16 +1,14 @@
 <script lang="ts">
-  import { session } from "$lib/stores/session.svelte";
   import * as Dialog from "$lib/components/ui/dialog";
   import * as Tabs from "$lib/components/ui/tabs";
-  import { cn } from "$lib/utils";
-  import { Role } from "@ccchat/shared";
   import AppearanceTab from "./AppearanceTab.svelte";
-  import CommunityTab from "./CommunityTab.svelte";
   import ProfileTab from "./ProfileTab.svelte";
 
-  let { open = $bindable(false) }: { open?: boolean } = $props();
+  interface Props {
+    open?: boolean;
+  }
 
-  const isOwner = $derived(session.user?.role === Role.Owner);
+  let { open = $bindable(false) }: Props = $props();
 </script>
 
 <!-- Dialog.Content only renders while open, so each tab mounts fresh. -->
@@ -21,12 +19,9 @@
     </Dialog.Header>
 
     <Tabs.Root value="profile" class="w-full">
-      <Tabs.List class={cn("grid w-full", isOwner ? "grid-cols-3" : "grid-cols-2")}>
+      <Tabs.List class="grid w-full grid-cols-2">
         <Tabs.Trigger value="profile">Profile</Tabs.Trigger>
         <Tabs.Trigger value="appearance">Appearance</Tabs.Trigger>
-        {#if isOwner}
-          <Tabs.Trigger value="community">Community</Tabs.Trigger>
-        {/if}
       </Tabs.List>
 
       <Tabs.Content value="profile" class="space-y-6 pt-4">
@@ -36,12 +31,6 @@
       <Tabs.Content value="appearance" class="space-y-6 pt-4">
         <AppearanceTab />
       </Tabs.Content>
-
-      {#if isOwner}
-        <Tabs.Content value="community" class="space-y-6 pt-4">
-          <CommunityTab />
-        </Tabs.Content>
-      {/if}
     </Tabs.Root>
   </Dialog.Content>
 </Dialog.Root>

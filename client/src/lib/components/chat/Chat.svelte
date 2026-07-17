@@ -13,11 +13,11 @@
   import { unread } from "$lib/stores/unread.svelte";
   import { voice } from "$lib/stores/voice.svelte";
   import { ChannelType } from "@ccchat/shared";
-  import { Bell, BellOff, Hash, Link2, Menu, Users, X } from "@lucide/svelte";
+  import { Bell, BellOff, Hash, Menu, Users, X } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
   import * as Resizable from "$lib/components/ui/resizable";
   import CreateChannelDialog from "$lib/components/channel/CreateChannelDialog.svelte";
-  import Invites from "$lib/components/members/Invites.svelte";
+  import CommunitySettings from "$lib/components/community/CommunitySettings.svelte";
   import MembersPanel from "$lib/components/members/MembersPanel.svelte";
   import Message from "./Message.svelte";
   import MessageComposer from "./MessageComposer.svelte";
@@ -27,7 +27,7 @@
 
   let showMembers = $state(false);
   let showSettings = $state(false);
-  let showInvites = $state(false);
+  let showCommunitySettings = $state(false);
   let showNav = $state(false);
 
   // Docked panes only make sense on a wide viewport; below sm the sidebar and
@@ -149,42 +149,23 @@
         <span class="text-muted-foreground hidden text-sm sm:inline"
           >{presence.online.size} online</span
         >
-        {#if session.isAdmin}
-          <Button
-            variant="outline"
-            size="icon"
-            class="sm:hidden"
-            title="Invites"
-            onclick={() => (showInvites = true)}
-          >
-            <Link2 class="size-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            class="hidden sm:inline-flex"
-            onclick={() => (showInvites = true)}
-          >
-            <Link2 class="size-4" /> Invite
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            class="sm:hidden"
-            title="Members"
-            onclick={() => (showMembers = true)}
-          >
-            <Users class="size-4" />
-          </Button>
-          <Button
-            variant={showMembers ? "secondary" : "outline"}
-            size="sm"
-            class="hidden sm:inline-flex"
-            onclick={() => (showMembers = !showMembers)}
-          >
-            <Users class="size-4" /> Members
-          </Button>
-        {/if}
+        <Button
+          variant="outline"
+          size="icon"
+          class="sm:hidden"
+          title="Members"
+          onclick={() => (showMembers = true)}
+        >
+          <Users class="size-4" />
+        </Button>
+        <Button
+          variant={showMembers ? "secondary" : "outline"}
+          size="sm"
+          class="hidden sm:inline-flex"
+          onclick={() => (showMembers = !showMembers)}
+        >
+          <Users class="size-4" /> Members
+        </Button>
       </div>
     </header>
 
@@ -234,6 +215,7 @@
         <Sidebar
           withVoice
           onOpenSettings={() => (showSettings = true)}
+          onOpenCommunitySettings={() => (showCommunitySettings = true)}
           onCreateChannel={openCreateChannel}
         />
       </Resizable.Pane>
@@ -285,6 +267,10 @@
           showNav = false;
           showSettings = true;
         }}
+        onOpenCommunitySettings={() => {
+          showNav = false;
+          showCommunitySettings = true;
+        }}
         onCreateChannel={openCreateChannel}
       />
     </Sheet.Content>
@@ -300,6 +286,6 @@
   </Sheet.Root>
 {/if}
 
-<Invites bind:open={showInvites} />
+<CommunitySettings bind:open={showCommunitySettings} />
 <Settings bind:open={showSettings} />
 <CreateChannelDialog bind:open={showCreateChannel} initialType={createChannelType} />

@@ -12,21 +12,25 @@
   import { voice } from "$lib/stores/voice.svelte";
   import { cn } from "$lib/utils";
   import { ChannelType } from "@ccchat/shared";
-  import { Hash, LogOut, Plus, Volume2 } from "@lucide/svelte";
+  import { Hash, LogOut, Plus, Settings, Volume2 } from "@lucide/svelte";
   import UserAvatar from "$lib/components/common/UserAvatar.svelte";
   import VoiceBar from "$lib/components/voice/VoiceBar.svelte";
+
+  interface Props {
+    withVoice?: boolean;
+    onNavigate?: () => void;
+    onOpenSettings?: () => void;
+    onOpenCommunitySettings?: () => void;
+    onCreateChannel?: (type: ChannelType) => void;
+  }
 
   let {
     withVoice = false,
     onNavigate,
     onOpenSettings,
+    onOpenCommunitySettings,
     onCreateChannel,
-  }: {
-    withVoice?: boolean;
-    onNavigate?: () => void;
-    onOpenSettings?: () => void;
-    onCreateChannel?: (type: ChannelType) => void;
-  } = $props();
+  }: Props = $props();
 
   const textChannels = $derived(channels.list.filter((c) => c.type === ChannelType.Text));
   const voiceChannels = $derived(
@@ -55,14 +59,27 @@
 
 <header class="flex h-12 shrink-0 items-center gap-2 border-b px-4 font-semibold">
   <span class="truncate">{community.name}</span>
-  <span
-    class={cn(
-      "bg-muted-foreground ml-auto size-2 shrink-0 rounded-full",
-      realtime.status === "connected" && "bg-green-500",
-      realtime.status === "connecting" && "bg-amber-500",
-    )}
-    title={realtime.status}
-  ></span>
+  <div class="ml-auto flex shrink-0 items-center gap-1">
+    {#if session.isAdmin}
+      <Button
+        variant="ghost"
+        size="icon"
+        class="size-7"
+        title="Community settings"
+        onclick={() => onOpenCommunitySettings?.()}
+      >
+        <Settings class="size-4" />
+      </Button>
+    {/if}
+    <span
+      class={cn(
+        "bg-muted-foreground size-2 shrink-0 rounded-full",
+        realtime.status === "connected" && "bg-green-500",
+        realtime.status === "connecting" && "bg-amber-500",
+      )}
+      title={realtime.status}
+    ></span>
+  </div>
 </header>
 
 <nav class="min-h-0 flex-1 overflow-y-auto p-2">
