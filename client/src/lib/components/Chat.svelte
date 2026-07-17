@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { avatarUrl, type MessageView } from "$lib/api";
-  import Markdown from "$lib/components/markdown/Markdown.svelte";
-  import * as Avatar from "$lib/components/ui/avatar";
+  import { type MessageView } from "$lib/api";
   import { Button } from "$lib/components/ui/button";
   import { ScrollArea } from "$lib/components/ui/scroll-area";
   import * as Sheet from "$lib/components/ui/sheet";
@@ -14,10 +12,11 @@
   import { session } from "$lib/stores/session.svelte";
   import { unread } from "$lib/stores/unread.svelte";
   import { voice } from "$lib/stores/voice.svelte";
-  import { Bell, BellOff, Hash, Link2, Menu, Reply, Trash2, Users } from "@lucide/svelte";
+  import { Bell, BellOff, Hash, Link2, Menu, Users } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
   import Invites from "./Invites.svelte";
   import Members from "./Members.svelte";
+  import Message from "./Message.svelte";
   import MessageComposer from "./MessageComposer.svelte";
   import Settings from "./Settings.svelte";
   import Sidebar from "./Sidebar.svelte";
@@ -75,14 +74,14 @@
     return true;
   }
 
-  function startReply(m: MessageView) {
-    replyTo = m;
+  function handleStartReply(message: MessageView) {
+    replyTo = message;
     composer?.focus();
   }
 
   /** Only messages already on screen can be reached: history stops at the first
    *  page, so an older original has nothing to scroll to. */
-  function jumpTo(id: string) {
+  function handleJumpTo(id: string) {
     const el = document.getElementById(`msg-${id}`);
     if (!el) {
       toast.info("That message is too far back to jump to.");
@@ -93,19 +92,6 @@
     clearTimeout(flashTimer);
     flashTimer = setTimeout(() => (flashId = null), 1400);
   }
-
-  function fmtTime(ts: number) {
-    return new Date(ts).toLocaleString([], {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  }
-
-  const canDelete = (authorId: string | undefined) =>
-    session.isAdmin || authorId === session.user?.id;
-  const initial = (name: string | undefined) => (name ?? "?")[0]?.toUpperCase() ?? "?";
 </script>
 
 <div class="grid h-dvh grid-cols-1 sm:grid-cols-[248px_1fr]">
@@ -206,87 +192,13 @@
 
     <ScrollArea class="min-h-0 flex-1" bind:viewportRef={scroller}>
       <div class="flex flex-col gap-0.5 p-2 sm:p-4">
-        {#each messages.list as m (m.id)}
-          {@const av = m.author ? avatarUrl(m.author.id, m.author.avatarVersion) : null}
-          <div
-            id="msg-{m.id}"
-            class="group hover:bg-muted/40 relative flex gap-3 rounded-md px-2 py-1 transition-colors duration-700 {flashId ===
-            m.id
-              ? 'bg-primary/15'
-              : ''}"
-          >
-            <Avatar.Root class="mt-0.5 size-9">
-              {#if av}<Avatar.Image src={av} alt="" />{/if}
-              <Avatar.Fallback class="bg-primary text-primary-foreground text-sm">
-                {initial(m.author?.displayName)}
-              </Avatar.Fallback>
-            </Avatar.Root>
-            <div class="min-w-0">
-              {#if m.replyTo}
-                {@const r = m.replyTo}
-                {@const rav = r.author
-                  ? avatarUrl(r.author.id, r.author.avatarVersion)
-                  : null}
-                {#if r.deleted}
-                  <div
-                    class="text-muted-foreground flex items-center gap-1.5 text-xs italic"
-                  >
-                    <Reply class="size-3 shrink-0" />
-                    Original message was deleted
-                  </div>
-                {:else}
-                  <button
-                    type="button"
-                    class="text-muted-foreground hover:text-foreground flex w-full min-w-0 items-center gap-1.5 text-left text-xs"
-                    onclick={() => jumpTo(r.id)}
-                  >
-                    <Reply class="size-3 shrink-0" />
-                    <Avatar.Root class="size-4 shrink-0">
-                      {#if rav}<Avatar.Image src={rav} alt="" />{/if}
-                      <Avatar.Fallback
-                        class="bg-primary text-primary-foreground text-[0.5rem]"
-                      >
-                        {initial(r.author?.displayName)}
-                      </Avatar.Fallback>
-                    </Avatar.Root>
-                    <span class="shrink-0 font-medium">
-                      {r.author?.displayName ?? "unknown"}
-                    </span>
-                    <span class="text-foreground truncate">{r.content}</span>
-                  </button>
-                {/if}
-              {/if}
-              <div class="flex items-baseline gap-2">
-                <span class="font-semibold">{m.author?.displayName ?? "unknown"}</span>
-                <span class="text-muted-foreground text-xs">{fmtTime(m.createdAt)}</span>
-              </div>
-              <Markdown content={m.content} />
-            </div>
-            <div
-              class="absolute top-1 right-2 flex gap-0.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100"
-            >
-              <Button
-                variant="ghost"
-                size="icon"
-                class="size-7"
-                title="Reply"
-                onclick={() => startReply(m)}
-              >
-                <Reply class="size-4" />
-              </Button>
-              {#if canDelete(m.author?.id)}
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  class="size-7"
-                  title="Delete"
-                  onclick={() => messages.delete(m.id)}
-                >
-                  <Trash2 class="size-4" />
-                </Button>
-              {/if}
-            </div>
-          </div>
+        {#each messages.list as message (message.id)}
+          <Message
+            {message}
+            {flashId}
+            onJumpTo={handleJumpTo}
+            onStartReply={() => handleStartReply(message)}
+          />
         {:else}
           <div class="text-muted-foreground m-auto">No messages yet. Say hi 👋</div>
         {/each}
