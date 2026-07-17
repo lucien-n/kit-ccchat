@@ -32,7 +32,12 @@
       <Form.Control>
         {#snippet children({ props })}
           <Form.Label>Username</Form.Label>
-          <Input {...props} bind:value={$formData.username} autocomplete="username" />
+          <Input
+            {...props}
+            bind:value={$formData.username}
+            autocomplete="username"
+            placeholder="john"
+          />
         {/snippet}
       </Form.Control>
       <Form.FieldErrors />
@@ -47,6 +52,7 @@
             type="password"
             bind:value={$formData.password}
             autocomplete="current-password"
+            placeholder="········"
           />
         {/snippet}
       </Form.Control>
