@@ -13,11 +13,12 @@
   import { unread } from "$lib/stores/unread.svelte";
   import { voice } from "$lib/stores/voice.svelte";
   import { ChannelType } from "@ccchat/shared";
-  import { Bell, BellOff, Hash, Link2, Menu, Users } from "@lucide/svelte";
+  import { Bell, BellOff, Hash, Link2, Menu, Users, X } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
+  import * as Resizable from "$lib/components/ui/resizable";
   import CreateChannelDialog from "$lib/components/channel/CreateChannelDialog.svelte";
   import Invites from "$lib/components/members/Invites.svelte";
-  import Members from "$lib/components/members/Members.svelte";
+  import MembersPanel from "$lib/components/members/MembersPanel.svelte";
   import Message from "./Message.svelte";
   import MessageComposer from "./MessageComposer.svelte";
   import Settings from "$lib/components/settings/Settings.svelte";
@@ -28,6 +29,20 @@
   let showSettings = $state(false);
   let showInvites = $state(false);
   let showNav = $state(false);
+
+  // Docked panes only make sense on a wide viewport; below sm the sidebar and
+  // members list are Sheets instead. Initialised synchronously since Chat only
+  // mounts client-side, after the parent's onMount gate.
+  let isDesktop = $state(
+    typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches,
+  );
+  $effect(() => {
+    const mq = window.matchMedia("(min-width: 640px)");
+    const update = () => (isDesktop = mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  });
   let showCreateChannel = $state(false);
   let createChannelType = $state<ChannelType>(ChannelType.Text);
   let scroller: HTMLElement | null = $state(null);
@@ -98,34 +113,8 @@
   }
 </script>
 
-<div class="grid h-dvh grid-cols-1 sm:grid-cols-[248px_1fr]">
-  <aside
-    class="bg-sidebar text-sidebar-foreground hidden min-h-0 flex-col border-r sm:flex"
-  >
-    <Sidebar
-      withVoice
-      onOpenSettings={() => (showSettings = true)}
-      onCreateChannel={openCreateChannel}
-    />
-  </aside>
-
-  <Sheet.Root bind:open={showNav}>
-    <Sheet.Content
-      side="left"
-      class="bg-sidebar text-sidebar-foreground flex w-72 flex-col p-0 sm:max-w-xs"
-    >
-      <Sidebar
-        onNavigate={() => (showNav = false)}
-        onOpenSettings={() => {
-          showNav = false;
-          showSettings = true;
-        }}
-        onCreateChannel={openCreateChannel}
-      />
-    </Sheet.Content>
-  </Sheet.Root>
-
-  <main class="bg-background flex min-h-0 min-w-0 flex-col">
+{#snippet mainView()}
+  <main class="bg-background flex min-h-0 min-w-0 flex-1 flex-col">
     <header class="flex h-12 items-center justify-between gap-2 border-b px-2 sm:px-4">
       <div class="flex min-w-0 items-center gap-1.5 font-semibold">
         <Button
@@ -188,10 +177,10 @@
             <Users class="size-4" />
           </Button>
           <Button
-            variant="outline"
+            variant={showMembers ? "secondary" : "outline"}
             size="sm"
             class="hidden sm:inline-flex"
-            onclick={() => (showMembers = true)}
+            onclick={() => (showMembers = !showMembers)}
           >
             <Users class="size-4" /> Members
           </Button>
@@ -229,9 +218,88 @@
       oncancelreply={() => (replyTo = null)}
     />
   </main>
+{/snippet}
 
-  <Invites bind:open={showInvites} />
-  <Members bind:open={showMembers} />
-  <Settings bind:open={showSettings} />
-  <CreateChannelDialog bind:open={showCreateChannel} initialType={createChannelType} />
-</div>
+{#if isDesktop}
+  <!-- paneforge forces the group to height:100% inline, so it needs a parent
+       with real viewport height to resolve against. -->
+  <div class="h-dvh">
+    <Resizable.PaneGroup direction="horizontal">
+      <Resizable.Pane
+        defaultSize={18}
+        minSize={12}
+        maxSize={28}
+        class="bg-sidebar text-sidebar-foreground flex min-h-0 flex-col border-r"
+      >
+        <Sidebar
+          withVoice
+          onOpenSettings={() => (showSettings = true)}
+          onCreateChannel={openCreateChannel}
+        />
+      </Resizable.Pane>
+
+      <Resizable.Handle />
+
+      <Resizable.Pane minSize={30} class="flex min-w-0 flex-col">
+        {@render mainView()}
+      </Resizable.Pane>
+
+      {#if showMembers}
+        <Resizable.Handle />
+
+        <Resizable.Pane
+          defaultSize={20}
+          minSize={14}
+          maxSize={32}
+          class="bg-background flex min-h-0 flex-col border-l"
+        >
+          <div class="flex h-12 shrink-0 items-center justify-between border-b px-3">
+            <span class="font-semibold">Members</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              title="Close members"
+              onclick={() => (showMembers = false)}
+            >
+              <X class="size-4" />
+            </Button>
+          </div>
+          <MembersPanel />
+        </Resizable.Pane>
+      {/if}
+    </Resizable.PaneGroup>
+  </div>
+{:else}
+  <div class="flex h-dvh flex-col">
+    {@render mainView()}
+  </div>
+
+  <Sheet.Root bind:open={showNav}>
+    <Sheet.Content
+      side="left"
+      class="bg-sidebar text-sidebar-foreground flex w-72 flex-col p-0 sm:max-w-xs"
+    >
+      <Sidebar
+        onNavigate={() => (showNav = false)}
+        onOpenSettings={() => {
+          showNav = false;
+          showSettings = true;
+        }}
+        onCreateChannel={openCreateChannel}
+      />
+    </Sheet.Content>
+  </Sheet.Root>
+
+  <Sheet.Root bind:open={showMembers}>
+    <Sheet.Content side="right" class="flex w-80 flex-col gap-0 p-0 sm:max-w-sm">
+      <Sheet.Header>
+        <Sheet.Title>Members</Sheet.Title>
+      </Sheet.Header>
+      <MembersPanel />
+    </Sheet.Content>
+  </Sheet.Root>
+{/if}
+
+<Invites bind:open={showInvites} />
+<Settings bind:open={showSettings} />
+<CreateChannelDialog bind:open={showCreateChannel} initialType={createChannelType} />
