@@ -2,7 +2,7 @@
   import { avatarUrl, type MessageView } from "$lib/api";
   import { messages } from "$lib/stores/messages.svelte";
   import { session } from "$lib/stores/session.svelte";
-  import { getInitials } from "$lib/utils";
+  import { cn, getInitials } from "$lib/utils";
   import ReplyIcon from "@lucide/svelte/icons/reply";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import Markdown from "./markdown/Markdown.svelte";
@@ -39,7 +39,7 @@
     ? 'bg-primary/15'
     : ''}"
 >
-  <Avatar.Root class="mt-0.5 size-9">
+  <Avatar.Root class={cn("size-9", message.replyTo ? "mt-4.5" : "mt-0.5")}>
     {#if avatar}
       <Avatar.Image src={avatar} alt="" />
     {/if}
