@@ -51,8 +51,8 @@ export const messages = sqliteTable(
     content: text("content").notNull(),
     createdAt: integer("created_at").notNull(),
     editedAt: integer("edited_at"),
-    // Soft delete so moderation actions are auditable rather than destructive.
     deleted: integer("deleted").notNull().default(0),
+    replyToId: text("reply_to_id"),
   },
   (t) => ({ byChannel: index("idx_messages_channel").on(t.channelId, t.createdAt) }),
 );

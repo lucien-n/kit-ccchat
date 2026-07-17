@@ -15,6 +15,7 @@ export const clientEvent = z.discriminatedUnion("type", [
     type: z.literal("message.create"),
     channelId: z.string().min(1),
     content: z.string().trim().min(1).max(MESSAGE_MAX_LENGTH),
+    replyToId: z.string().min(1).optional(),
   }),
   z.object({ type: z.literal("voice.join"), channelId: z.string().min(1) }),
   z.object({ type: z.literal("voice.leave") }),

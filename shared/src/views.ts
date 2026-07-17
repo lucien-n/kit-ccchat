@@ -34,6 +34,17 @@ export const messageAuthor = z.object({
   avatarVersion: z.number().nullable(),
 });
 
+/** The quoted message shown above a reply. Resolved on every read rather than
+ *  snapshotted at send time, so an edit or a delete is reflected in the quote.
+ *  A deleted original keeps its id but surrenders its content and author. */
+export const replyRef = z.object({
+  id: z.string(),
+  content: z.string(),
+  author: messageAuthor.nullable(),
+  deleted: z.boolean(),
+});
+export type ReplyRef = z.infer<typeof replyRef>;
+
 export const messageView = z.object({
   id: z.string(),
   channelId: z.string(),
@@ -41,6 +52,7 @@ export const messageView = z.object({
   createdAt: z.number(),
   editedAt: z.number().nullable(),
   author: messageAuthor.nullable(),
+  replyTo: replyRef.nullable(),
 });
 export type MessageView = z.infer<typeof messageView>;
 

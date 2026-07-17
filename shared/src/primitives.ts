@@ -29,3 +29,7 @@ export const inviteCode = z.string().trim().min(1, "invite code required");
 export const maxUses = z.number().int().min(0).max(1000);
 
 export const MESSAGE_MAX_LENGTH = 4000;
+
+/** How much of the quoted message a reply carries. Every reply repeats it, so
+ *  the full 4000 would be paid for on each one. */
+export const REPLY_SNIPPET_MAX = 200;

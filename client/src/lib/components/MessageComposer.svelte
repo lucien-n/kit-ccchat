@@ -10,8 +10,9 @@
     type EmojiEntry,
     type EmojiIndex,
   } from "$lib/emoji";
+  import type { MessageView } from "$lib/api";
   import { MESSAGE_MAX_LENGTH } from "@ccchat/shared";
-  import { Eye, EyeOff, Send } from "@lucide/svelte";
+  import { Eye, EyeOff, Reply, Send, X } from "@lucide/svelte";
   import { tick } from "svelte";
   import EmojiPicker from "./EmojiPicker.svelte";
 
@@ -19,11 +20,19 @@
     placeholder,
     disabled = false,
     onsend,
+    replyingTo = null,
+    oncancelreply,
   }: {
     placeholder: string;
     disabled?: boolean;
     onsend: (text: string) => boolean;
+    replyingTo?: MessageView | null;
+    oncancelreply?: () => void;
   } = $props();
+
+  export function focus() {
+    el?.focus();
+  }
 
   const MAX_HEIGHT = 240;
 
@@ -132,6 +141,12 @@
         return;
       }
     }
+    // Only once the suggestion list above has had its chance at Escape.
+    if (e.key === "Escape" && replyingTo) {
+      e.preventDefault();
+      oncancelreply?.();
+      return;
+    }
     // isComposing: mid-IME, Enter commits a candidate rather than sending.
     if (e.key === "Enter" && !e.shiftKey && !e.isComposing) {
       e.preventDefault();
@@ -176,6 +191,27 @@
     >
       <div class="text-muted-foreground mb-1 text-xs font-medium">Preview</div>
       <Markdown content={draft} class="text-sm" />
+    </div>
+  {/if}
+
+  {#if replyingTo}
+    <div
+      class="bg-muted/40 text-muted-foreground mb-2 flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs"
+    >
+      <Reply class="size-3.5 shrink-0" />
+      <span class="shrink-0">Replying to</span>
+      <span class="text-foreground min-w-0 truncate font-medium">
+        {replyingTo.author?.displayName ?? "unknown"}
+      </span>
+      <Button
+        variant="ghost"
+        size="icon-xs"
+        class="ml-auto shrink-0"
+        title="Cancel reply"
+        onclick={() => oncancelreply?.()}
+      >
+        <X class="size-3.5" />
+      </Button>
     </div>
   {/if}
 

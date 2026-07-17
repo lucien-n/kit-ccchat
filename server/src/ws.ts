@@ -1,5 +1,5 @@
-import { eq } from "drizzle-orm";
 import { clientEvent, type ClientEvent } from "@ccchat/shared";
+import { eq } from "drizzle-orm";
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
 import { WebSocketServer, type WebSocket } from "ws";
@@ -107,11 +107,17 @@ function handleVoiceJoin(client: Client, channelId: string) {
   });
 }
 
+function replyTarget(replyToId: string | undefined, channelId: string): string | null {
+  if (!replyToId) return null;
+  const target = db.select().from(messages).where(eq(messages.id, replyToId)).get();
+  if (!target || target.deleted || target.channelId !== channelId) return null;
+  return target.id;
+}
+
 function handleCreate(
   client: Client,
   msg: Extract<ClientEvent, { type: "message.create" }>,
 ) {
-  // Re-check the user on every send so mute/ban take effect immediately.
   const u = db.select().from(users).where(eq(users.id, client.userId)).get();
   if (!u) return;
   if (u.banned) return hub.send(client, { type: "error", message: "you are banned" });
@@ -131,6 +137,7 @@ function handleCreate(
     createdAt: Date.now(),
     editedAt: null,
     deleted: 0,
+    replyToId: replyTarget(msg.replyToId, channelId),
   };
   db.insert(messages).values(row).run();
   hub.broadcast({ type: "message.new", message: toMessageView(row) });

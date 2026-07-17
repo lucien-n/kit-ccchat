@@ -18,18 +18,33 @@ class Messages {
   }
 
   /** Ids are unique across channels, so a delete for a channel we aren't
-   *  reading simply matches nothing. */
+   *  reading simply matches nothing.
+   *
+   *  Replies quoting the deleted message are tombstoned in place. The server
+   *  resolves a quote on read, so a reload would show this anyway; without it
+   *  the deleted text stays on screen, quoted, until someone refreshes. */
   remove(id: string) {
-    const next = this.list.filter((m) => m.id !== id);
-    if (next.length !== this.list.length) this.list = next;
+    let changed = false;
+    const next: MessageView[] = [];
+    for (const m of this.list) {
+      if (m.id === id) {
+        changed = true;
+      } else if (m.replyTo?.id === id && !m.replyTo.deleted) {
+        next.push({ ...m, replyTo: { id, content: "", author: null, deleted: true } });
+        changed = true;
+      } else {
+        next.push(m);
+      }
+    }
+    if (changed) this.list = next;
   }
 
   clear() {
     this.list = [];
   }
 
-  send(channelId: string, content: string): boolean {
-    return realtime.send({ type: "message.create", channelId, content });
+  send(channelId: string, content: string, replyToId?: string): boolean {
+    return realtime.send({ type: "message.create", channelId, content, replyToId });
   }
 
   /** Deleting goes over REST for the permission check; the server broadcasts the
