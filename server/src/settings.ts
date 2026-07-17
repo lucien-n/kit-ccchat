@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { db } from "./db/index.js";
-import { settings } from "./db/schema.js";
+import { settings } from "./db/schema";
 import { COMMUNITY_NAME } from "./env.js";
 
 /** Runtime settings live in the DB so the owner can change them from the UI.

@@ -1,11 +1,11 @@
-import { Hono, type Context } from "hono";
-import { eq } from "drizzle-orm";
 import { muteBody, type MemberView } from "@ccchat/shared";
-import { db } from "../db/index.js";
-import { sessions, users } from "../db/schema.js";
+import { eq } from "drizzle-orm";
+import { Hono, type Context } from "hono";
 import { rankOf, requireAuth, requireRole, type Env } from "../auth.js";
+import { db } from "../db/index.js";
+import type { User } from "../db/schema";
+import { sessions, users } from "../db/schema";
 import { validate } from "../validate.js";
-import type { User } from "../db/schema.js";
 
 type ErrorStatus = 400 | 403 | 404;
 

@@ -1,14 +1,14 @@
-import { Hono } from "hono";
+import { avatarBody, changePasswordBody, updateProfileBody } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
+import { Hono } from "hono";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { db } from "../db/index.js";
-import { users } from "../db/schema.js";
-import { avatarBody, changePasswordBody, updateProfileBody } from "@ccchat/shared";
 import { hashPassword, requireAuth, verifyPassword, type Env } from "../auth.js";
-import { toPublicUser } from "../views.js";
-import { validate } from "../validate.js";
+import { db } from "../db/index.js";
+import { users } from "../db/schema";
 import { DATA_DIR } from "../env.js";
+import { validate } from "../validate.js";
+import { toPublicUser } from "../views.js";
 
 const AVATAR_DIR = join(DATA_DIR, "avatars");
 mkdirSync(AVATAR_DIR, { recursive: true });

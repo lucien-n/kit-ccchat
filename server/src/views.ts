@@ -1,12 +1,12 @@
-import { eq } from "drizzle-orm";
 import {
   REPLY_SNIPPET_MAX,
   type MessageView,
   type PublicUser,
   type ReplyRef,
 } from "@ccchat/shared";
+import { eq } from "drizzle-orm";
 import { db } from "./db/index.js";
-import { messages, users, type Message } from "./db/schema.js";
+import { messages, users, type Message } from "./db/schema";
 
 export function toPublicUser(u: {
   id: string;

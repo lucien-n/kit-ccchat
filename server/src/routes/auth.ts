@@ -11,7 +11,7 @@ import {
   type Env,
 } from "../auth.js";
 import { db } from "../db/index.js";
-import { invites, users } from "../db/schema.js";
+import { invites, users } from "../db/schema";
 import { rateLimit } from "../ratelimit.js";
 import { validate } from "../validate.js";
 import { toPublicUser } from "../views.js";

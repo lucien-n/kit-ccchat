@@ -3,7 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { randomToken, requireAuth, requireRole, type Env } from "../auth.js";
 import { db } from "../db/index.js";
-import { invites, users } from "../db/schema.js";
+import { invites, users } from "../db/schema";
 import { validate } from "../validate.js";
 
 const app = new Hono<Env>();

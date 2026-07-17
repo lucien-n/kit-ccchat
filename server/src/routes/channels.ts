@@ -1,9 +1,9 @@
-import { Hono } from "hono";
-import { and, asc, count, eq, gt, ne } from "drizzle-orm";
 import { createChannelBody, type Channel, type ChannelType } from "@ccchat/shared";
-import { db } from "../db/index.js";
-import { channelReads, channels, messages } from "../db/schema.js";
+import { and, asc, count, eq, gt, ne } from "drizzle-orm";
+import { Hono } from "hono";
 import { newId, requireAuth, requireRole, type Env } from "../auth.js";
+import { db } from "../db/index.js";
+import { channelReads, channels, messages } from "../db/schema";
 import { validate } from "../validate.js";
 
 const app = new Hono<Env>();

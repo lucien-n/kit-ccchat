@@ -5,7 +5,7 @@ import { Hono } from "hono";
 import { AccessToken } from "livekit-server-sdk";
 import { requireAuth, type Env } from "../auth.js";
 import { db } from "../db/index.js";
-import { channels } from "../db/schema.js";
+import { channels } from "../db/schema";
 import {
   LIVEKIT_API_KEY,
   LIVEKIT_API_SECRET,

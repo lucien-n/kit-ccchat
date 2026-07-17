@@ -1,8 +1,8 @@
-import { Hono } from "hono";
 import { and, desc, eq, lt } from "drizzle-orm";
-import { db } from "../db/index.js";
-import { messages } from "../db/schema.js";
+import { Hono } from "hono";
 import { hasRole, requireAuth, type Env } from "../auth.js";
+import { db } from "../db/index.js";
+import { messages } from "../db/schema";
 import { hub } from "../hub.js";
 import { toMessageView } from "../views.js";
 

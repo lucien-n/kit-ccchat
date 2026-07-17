@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import type { Context, Next } from "hono";
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { db } from "./db/index.js";
-import { sessions, users, type User } from "./db/schema.js";
+import { sessions, users, type User } from "./db/schema";
 import { SESSION_TTL_MS } from "./env.js";
 
 /** Password hashing with Node's built-in scrypt - no native modules to compile,

@@ -10,7 +10,7 @@ import type { Duplex } from "node:stream";
 import { WebSocketServer, type WebSocket } from "ws";
 import { newId, userForToken } from "./auth.js";
 import { db } from "./db/index.js";
-import { channels, messages, users } from "./db/schema.js";
+import { channels, messages, users } from "./db/schema";
 import { hub, type Client } from "./hub.js";
 import { toMessageView } from "./views.js";
 

@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { hashPassword, newId, randomToken } from "./auth.js";
 import { db } from "./db/index.js";
-import { channels, invites, users } from "./db/schema.js";
+import { channels, invites, users } from "./db/schema";
 import {
   COMMUNITY_NAME,
   OWNER_PASSWORD,
