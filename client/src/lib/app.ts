@@ -1,4 +1,9 @@
-import type { RegisterBody, ServerEvent, SetupBody } from "@ccchat/shared";
+import {
+  ServerEventType,
+  type RegisterBody,
+  type ServerEvent,
+  type SetupBody,
+} from "@ccchat/shared";
 import { toast } from "svelte-sonner";
 import { api, type MessageView } from "./api";
 import { playPing, unlockAudio } from "./notify";
@@ -88,22 +93,22 @@ async function resync() {
 
 function dispatch(event: ServerEvent) {
   switch (event.type) {
-    case "message.new":
+    case ServerEventType.Message_New:
       onMessage(event.message);
       break;
-    case "message.deleted":
+    case ServerEventType.Message_Deleted:
       messages.remove(event.id);
       break;
-    case "presence":
+    case ServerEventType.Presence:
       presence.setOnline(event.online);
       break;
-    case "voice.presence":
+    case ServerEventType.Voice_Presence:
       presence.setVoice(event.presence);
       break;
-    case "community.renamed":
+    case ServerEventType.Community_Renamed:
       community.name = event.name;
       break;
-    case "error":
+    case ServerEventType.Error:
       toast.error(event.message);
       break;
   }

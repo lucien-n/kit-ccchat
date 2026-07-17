@@ -2,13 +2,41 @@ import { z } from "zod";
 import { MESSAGE_MAX_LENGTH } from "./primitives.js";
 import { messageView, voiceMember } from "./views.js";
 
+export enum ServerEventType {
+  Message_New = "Message_New",
+  Message_Deleted = "Message_Deleted",
+  Presence = "Presence",
+  Voice_Presence = "Voice_Presence",
+  Community_Renamed = "Community_Renamed",
+  Error = "Error",
+}
+
 export type ServerEvent =
-  | { type: "message.new"; message: z.infer<typeof messageView> }
-  | { type: "message.deleted"; id: string; channelId: string }
-  | { type: "presence"; online: string[] }
-  | { type: "voice.presence"; presence: Record<string, z.infer<typeof voiceMember>[]> }
-  | { type: "community.renamed"; name: string }
-  | { type: "error"; message: string };
+  | {
+      type: ServerEventType.Message_New;
+      message: z.infer<typeof messageView>;
+    }
+  | {
+      type: ServerEventType.Message_Deleted;
+      id: string;
+      channelId: string;
+    }
+  | {
+      type: ServerEventType.Presence;
+      online: string[];
+    }
+  | {
+      type: ServerEventType.Voice_Presence;
+      presence: Record<string, z.infer<typeof voiceMember>[]>;
+    }
+  | {
+      type: ServerEventType.Community_Renamed;
+      name: string;
+    }
+  | {
+      type: ServerEventType.Error;
+      message: string;
+    };
 
 export const clientEvent = z.discriminatedUnion("type", [
   z.object({
