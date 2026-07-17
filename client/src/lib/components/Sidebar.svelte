@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api, avatarUrl } from "$lib/api";
+  import { avatarUrl } from "$lib/api";
   import * as app from "$lib/app";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
@@ -20,10 +20,12 @@
     withVoice = false,
     onNavigate,
     onOpenSettings,
+    onCreateChannel,
   }: {
     withVoice?: boolean;
     onNavigate?: () => void;
     onOpenSettings?: () => void;
+    onCreateChannel?: (type: ChannelType) => void;
   } = $props();
 
   const textChannels = $derived(channels.list.filter((c) => c.type === ChannelType.Text));
@@ -45,11 +47,9 @@
     onNavigate?.();
   }
 
-  async function createChannel(type: ChannelType) {
-    const name = prompt(`New ${type} channel name?`);
-    if (!name || !session.token) return;
-    await api.createChannel(session.token, { name, type });
-    await channels.load();
+  function createChannel(type: ChannelType) {
+    onCreateChannel?.(type);
+    onNavigate?.();
   }
 </script>
 

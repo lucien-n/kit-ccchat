@@ -15,6 +15,7 @@
   import { ChannelType } from "@ccchat/shared";
   import { Bell, BellOff, Hash, Link2, Menu, Users } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
+  import CreateChannelDialog from "./CreateChannelDialog.svelte";
   import Invites from "./Invites.svelte";
   import Members from "./Members.svelte";
   import Message from "./Message.svelte";
@@ -27,6 +28,8 @@
   let showSettings = $state(false);
   let showInvites = $state(false);
   let showNav = $state(false);
+  let showCreateChannel = $state(false);
+  let createChannelType = $state<ChannelType>(ChannelType.Text);
   let scroller: HTMLElement | null = $state(null);
   let composer = $state<MessageComposer | null>(null);
   let replyTo = $state<MessageView | null>(null);
@@ -88,13 +91,22 @@
     clearTimeout(flashTimer);
     flashTimer = setTimeout(() => (flashId = null), 1400);
   }
+
+  function openCreateChannel(type: ChannelType) {
+    createChannelType = type;
+    showCreateChannel = true;
+  }
 </script>
 
 <div class="grid h-dvh grid-cols-1 sm:grid-cols-[248px_1fr]">
   <aside
     class="bg-sidebar text-sidebar-foreground hidden min-h-0 flex-col border-r sm:flex"
   >
-    <Sidebar withVoice onOpenSettings={() => (showSettings = true)} />
+    <Sidebar
+      withVoice
+      onOpenSettings={() => (showSettings = true)}
+      onCreateChannel={openCreateChannel}
+    />
   </aside>
 
   <Sheet.Root bind:open={showNav}>
@@ -108,6 +120,7 @@
           showNav = false;
           showSettings = true;
         }}
+        onCreateChannel={openCreateChannel}
       />
     </Sheet.Content>
   </Sheet.Root>
@@ -220,4 +233,5 @@
   <Invites bind:open={showInvites} />
   <Members bind:open={showMembers} />
   <Settings bind:open={showSettings} />
+  <CreateChannelDialog bind:open={showCreateChannel} initialType={createChannelType} />
 </div>
