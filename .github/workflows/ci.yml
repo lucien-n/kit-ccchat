@@ -1,9 +1,5 @@
 name: ci
 
-# Work happens on `dev`. Tests run when code is headed for `main`: on the PR
-# that merges it, and again on main itself. The image only publishes if they
-# pass. Day-to-day pushes to `dev` don't burn CI minutes.
-
 on:
   push:
     branches: [main]
@@ -40,9 +36,6 @@ jobs:
       - name: typecheck server
         run: npm run -w server typecheck
 
-      # schema.ts is the source of truth, but only if someone remembers to
-      # regenerate. Editing it without doing so is how the schema drifted from
-      # the DDL in the first place. Fail here rather than at boot on a server.
       - name: migrations match schema.ts
         run: |
           npm run -w server db:generate
@@ -57,7 +50,6 @@ jobs:
 
   publish:
     needs: test
-    # A PR gets the test job for feedback but must not publish an image.
     if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     permissions:
