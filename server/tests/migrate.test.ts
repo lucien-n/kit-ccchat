@@ -162,7 +162,7 @@ describe("a database that predates migrations", () => {
     legacyDb(dir);
 
     const { db, closeDb } = await bootAt(dir);
-    const { users, settings } = await import("../src/db/schema.js");
+    const { users, settings } = await import("../src/db/schema/index.js");
 
     const found = db.select().from(users).all();
     expect(found).toHaveLength(1);

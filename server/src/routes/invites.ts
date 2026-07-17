@@ -10,9 +10,8 @@ const app = new Hono<Env>();
 
 app.use("*", requireAuth, requireRole("admin"));
 
-/** How an invite looks to the admin UI: the raw row plus the derived state, so
- *  the client doesn't have to re-implement the expiry/exhaustion rules that
- *  /api/auth/register enforces. Keeping that logic in one place is the point. */
+/** Derived state is resolved here so the client never re-implements the
+ *  expiry/exhaustion rules that /api/auth/register enforces. */
 function toInviteView(i: typeof invites.$inferSelect): Invite {
   const exhausted = i.maxUses !== 0 && i.uses >= i.maxUses;
   const expired = i.expiresAt != null && i.expiresAt < Date.now();
@@ -36,8 +35,6 @@ function toInviteView(i: typeof invites.$inferSelect): Invite {
   };
 }
 
-/** Create an invite. Body: { maxUses?, expiresInHours? }
- *  maxUses 0 = unlimited, 1 = single-use (the default). */
 app.post("/", validate("json", createInviteBody), async (c) => {
   const { maxUses, expiresInHours } = c.req.valid("json");
   const expiresAt =
@@ -61,8 +58,7 @@ app.get("/", (c) => {
   return c.json({ invites: list.map(toInviteView) });
 });
 
-/** Kill a link. The row is kept rather than deleted so the invite list stays an
- *  audit trail - you can still see it existed and how many people used it. */
+/** The row is kept rather than deleted so the list stays an audit trail. */
 app.post("/:code/revoke", (c) => {
   const code = String(c.req.param("code"));
   const invite = db.select().from(invites).where(eq(invites.code, code)).get();

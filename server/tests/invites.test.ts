@@ -94,7 +94,7 @@ describe("expiry", () => {
     const { invite } = await mkInvite(app, token, { maxUses: 0, expiresInHours: 1 });
     // Reach past the API to age it, rather than sleeping an hour.
     const { db } = await import("../src/db/index.js");
-    const { invites } = await import("../src/db/schema.js");
+    const { invites } = await import("../src/db/schema/index.js");
     const { eq } = await import("drizzle-orm");
     db.update(invites)
       .set({ expiresAt: Date.now() - 1000 })

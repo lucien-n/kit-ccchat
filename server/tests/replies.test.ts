@@ -3,7 +3,13 @@ import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import type { WebSocket as WsClient } from "ws";
 import { WebSocket } from "ws";
-import { REPLY_SNIPPET_MAX, type Channel, type MessageView } from "@ccchat/shared";
+import {
+  ClientEventType,
+  REPLY_SNIPPET_MAX,
+  ServerEventType,
+  type Channel,
+  type MessageView,
+} from "@ccchat/shared";
 import { boot, claim, cleanup, get, json, uniq } from "./harness.js";
 
 let app: Awaited<ReturnType<typeof boot>>;
@@ -51,7 +57,8 @@ function awaitMessage(content: string, timeoutMs = 3000): Promise<MessageView> {
 
     function onMessage(raw: Buffer) {
       const event = JSON.parse(raw.toString());
-      if (event.type !== "message.new" || event.message.content !== content) return;
+      if (event.type !== ServerEventType.Message_New || event.message.content !== content)
+        return;
       clearTimeout(timer);
       ws.off("message", onMessage);
       resolve(event.message);
@@ -63,7 +70,14 @@ function awaitMessage(content: string, timeoutMs = 3000): Promise<MessageView> {
 /** Listener first, then send: the broadcast can land before send() returns. */
 function post(channelId: string, content: string, replyToId?: string) {
   const landed = awaitMessage(content);
-  ws.send(JSON.stringify({ type: "message.create", channelId, content, replyToId }));
+  ws.send(
+    JSON.stringify({
+      type: ClientEventType.Message_Create,
+      channelId,
+      content,
+      replyToId,
+    }),
+  );
   return landed;
 }
 

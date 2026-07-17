@@ -1,4 +1,4 @@
-import { ClientEvenType } from "@ccchat/shared";
+import { ClientEventType } from "@ccchat/shared";
 import {
   Room,
   RoomEvent,
@@ -71,7 +71,7 @@ class VoiceStore {
       // reachable by this browser - this is what fails.
       await room.connect(url, res.token);
       this.status = "connected";
-      realtime.send({ type: ClientEvenType.Voice_Join, channelId: channel.id });
+      realtime.send({ type: ClientEventType.Voice_Join, channelId: channel.id });
       playVoiceJoin();
       this.refresh();
 
@@ -130,7 +130,7 @@ class VoiceStore {
         }
         if (wasConnected) {
           playVoiceLeave();
-          realtime.send({ type: ClientEvenType.Voice_Leave });
+          realtime.send({ type: ClientEventType.Voice_Leave });
         }
         this.reset();
       });

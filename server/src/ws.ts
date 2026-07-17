@@ -1,6 +1,6 @@
 import {
   clientEvent,
-  ClientEvenType,
+  ClientEventType,
   ServerEventType,
   type ClientEvent,
 } from "@ccchat/shared";
@@ -86,13 +86,13 @@ function onConnection(ws: WebSocket, userId: string) {
     const msg = parsed.data;
 
     switch (msg.type) {
-      case ClientEvenType.Message_Create:
+      case ClientEventType.Message_Create:
         handleCreate(client, msg);
         break;
-      case ClientEvenType.Voice_Join:
+      case ClientEventType.Voice_Join:
         handleVoiceJoin(client, msg.channelId);
         break;
-      case ClientEvenType.Voice_Leave:
+      case ClientEventType.Voice_Leave:
         hub.voiceLeaveAll(client.userId);
         break;
     }
@@ -124,7 +124,7 @@ function replyTarget(replyToId: string | undefined, channelId: string): string |
 
 function handleCreate(
   client: Client,
-  msg: Extract<ClientEvent, { type: ClientEvenType.Message_Create }>,
+  msg: Extract<ClientEvent, { type: ClientEventType.Message_Create }>,
 ) {
   const u = db.select().from(users).where(eq(users.id, client.userId)).get();
   if (!u) return;

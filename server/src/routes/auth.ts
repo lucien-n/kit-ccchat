@@ -45,8 +45,8 @@ app.post(
       createdAt: Date.now(),
       banned: 0,
     };
-    // One transaction: an account must never come into existence without its
-    // invite being counted, or a single-use link would let a second person in.
+    // An account must never exist without its invite counted, or a single-use
+    // link would let a second person in.
     db.transaction((tx) => {
       tx.insert(users).values(user).run();
       tx.update(invites)
@@ -60,21 +60,14 @@ app.post(
   },
 );
 
-// The endpoint worth attacking: each attempt costs a scrypt hash and buys the
-// caller a guess. Two limits, because they defend different things:
-
-// One address flooding us. Loose, because a household or CGNAT is many honest
-// people behind one IP, but capped so nobody grinds scrypt for free.
+// Each attempt costs a scrypt hash and buys a guess, so two independent limits:
+// one address flooding us (loose - a CGNAT is many honest people), and one
+// account being guessed at (tight, and IP-independent so a botnet buys nothing).
 const loginFlood = rateLimit({ limit: 30, windowMs: 60_000 });
-
-// One account being guessed at. Tight, and independent of where it comes from,
-// so spreading the attempt across a botnet buys no extra guesses.
 const loginGuess = rateLimit({
   limit: 8,
   windowMs: 60_000,
-  // Mounted after the validator, so the body is parsed and on the context by
-  // now. Hono only types valid() for a route's own handler, not for a shared
-  // middleware, hence the cast.
+  // Hono only types valid() for a route's own handler, not a shared middleware.
   keys: (c) => [`user:${(c.req.valid("json" as never) as LoginBody).username}`],
   message: "too many login attempts for this account, wait a minute",
 });
