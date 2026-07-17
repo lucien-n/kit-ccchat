@@ -11,6 +11,7 @@ export const messages = sqliteTable(
     editedAt: integer("edited_at"),
     deleted: integer("deleted").notNull().default(0),
     replyToId: text("reply_to_id"),
+    systemEvent: text("system_event"),
   },
   (t) => ({ byChannel: index("idx_messages_channel").on(t.channelId, t.createdAt) }),
 );

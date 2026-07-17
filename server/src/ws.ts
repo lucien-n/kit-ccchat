@@ -147,6 +147,7 @@ function handleCreate(
     editedAt: null,
     deleted: 0,
     replyToId: replyTarget(msg.replyToId, channelId),
+    systemEvent: null,
   };
   db.insert(messages).values(row).run();
   hub.broadcast({ type: ServerEventType.Message_New, message: toMessageView(row) });

@@ -3,6 +3,7 @@ import {
   type MessageView,
   type PublicUser,
   type ReplyRef,
+  type SystemEvent,
 } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import { db } from "./db/index.js";
@@ -68,5 +69,6 @@ export function toMessageView(m: Message): MessageView {
     editedAt: m.editedAt,
     author: authorOf(m.authorId),
     replyTo: m.replyToId ? toReplyRef(m.replyToId) : null,
+    systemEvent: (m.systemEvent as SystemEvent | null) ?? null,
   };
 }

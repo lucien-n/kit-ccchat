@@ -116,6 +116,7 @@ function onMessage(m: MessageView) {
   const isCurrent = m.channelId === channels.currentId;
   if (isCurrent) messages.append(m);
 
+  if (m.systemEvent) return; // ambient status: never ping or badge
   if (m.author?.id === session.user?.id) return; // your own message: never notify
   const focused = typeof document !== "undefined" && document.hasFocus();
 

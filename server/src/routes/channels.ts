@@ -1,5 +1,5 @@
 import { createChannelBody, type Channel, type ChannelType } from "@ccchat/shared";
-import { and, asc, count, eq, gt, ne } from "drizzle-orm";
+import { and, asc, count, eq, gt, isNull, ne } from "drizzle-orm";
 import { Hono } from "hono";
 import { newId, requireAuth, requireRole, type Env } from "../auth.js";
 import { db } from "../db/index.js";
@@ -53,6 +53,7 @@ app.get("/unreads", (c) => {
         and(
           eq(messages.channelId, ch.id),
           eq(messages.deleted, 0),
+          isNull(messages.systemEvent),
           ne(messages.authorId, user.id),
           gt(messages.createdAt, since),
         ),

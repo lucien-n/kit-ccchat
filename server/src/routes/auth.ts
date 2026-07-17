@@ -12,6 +12,7 @@ import {
 } from "../auth.js";
 import { db } from "../db/index.js";
 import { invites, users } from "../db/schema";
+import { postSystemMessage } from "../messages.js";
 import { rateLimit } from "../ratelimit.js";
 import { validate } from "../validate.js";
 import { toPublicUser } from "../views.js";
@@ -56,6 +57,7 @@ app.post(
     });
 
     const token = createSession(user.id);
+    postSystemMessage("member_join", user.id);
     return c.json({ token, user: toPublicUser(user) });
   },
 );

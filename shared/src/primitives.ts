@@ -7,6 +7,11 @@ export type Role = z.infer<typeof role>;
 export const channelType = z.enum(["text", "voice"]);
 export type ChannelType = z.infer<typeof channelType>;
 
+/** Machine-readable kind of a system message. The human sentence is composed on
+ *  the client from this plus the subject, so it stays rename- and locale-live. */
+export const systemEvent = z.enum(["member_join"]);
+export type SystemEvent = z.infer<typeof systemEvent>;
+
 export const username = z
   .string()
   .trim()

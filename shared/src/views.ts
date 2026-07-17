@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { channelType } from "./primitives.js";
+import { channelType, systemEvent } from "./primitives.js";
 
 /** A user as everyone else sees them. Never carries passwordHash - that
  *  omission is the reason this shape exists rather than leaking the db row. */
@@ -53,6 +53,9 @@ export const messageView = z.object({
   editedAt: z.number().nullable(),
   author: messageAuthor.nullable(),
   replyTo: replyRef.nullable(),
+  /** null for an ordinary message; the event kind for a system line, whose
+   *  `author` is the subject (e.g. the member who joined). */
+  systemEvent: systemEvent.nullable(),
 });
 export type MessageView = z.infer<typeof messageView>;
 
