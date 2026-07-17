@@ -1,7 +1,7 @@
-import { muteBody, Role, type MemberView } from "@ccchat/shared";
+import { muteBody, rankOf, Role, type MemberView } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import { Hono, type Context, type Next } from "hono";
-import { rankOf, requireAuth, requireRole, type Env } from "../auth.js";
+import { requireAuth, requireRole, type Env } from "../auth.js";
 import { db } from "../db/index.js";
 import { sessions, users, type User } from "../db/schema";
 import { validate } from "../validate.js";
@@ -24,7 +24,7 @@ async function loadTarget(c: Context<ModEnv>, next: Next) {
   if (!target) return c.json({ error: "user not found" }, 404);
   if (target.id === actor.id)
     return c.json({ error: "you cannot moderate yourself" }, 400);
-  if (rankOf(target) >= rankOf(actor))
+  if (rankOf(target.role as Role) >= rankOf(actor.role as Role))
     return c.json({ error: "target outranks you" }, 403);
   c.set("target", target);
   await next();

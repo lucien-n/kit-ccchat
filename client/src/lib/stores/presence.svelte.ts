@@ -10,6 +10,10 @@ class Presence {
     this.online = new Set(ids);
   }
 
+  isOnline(id: string) {
+    return this.online.has(id);
+  }
+
   setVoice(presence: Record<string, VoiceMember[]>) {
     this.voice = presence ?? {};
   }
