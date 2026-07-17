@@ -1,3 +1,4 @@
+import { ServerEventType } from "@ccchat/shared";
 import { and, desc, eq, lt } from "drizzle-orm";
 import { Hono } from "hono";
 import { hasRole, requireAuth, type Env } from "../auth.js";
@@ -49,7 +50,7 @@ app.delete("/:id", (c) => {
     return c.json({ error: "forbidden" }, 403);
 
   db.update(messages).set({ deleted: 1 }).where(eq(messages.id, id)).run();
-  hub.broadcast({ type: "message.deleted", id, channelId: msg.channelId });
+  hub.broadcast({ type: ServerEventType.Message_Deleted, id, channelId: msg.channelId });
   return c.json({ ok: true });
 });
 
