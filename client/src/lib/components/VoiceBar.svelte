@@ -2,14 +2,14 @@
   import { Button } from "$lib/components/ui/button";
   import { cn } from "$lib/utils";
   import { voice } from "$lib/voice.svelte";
-  import { Mic, MicOff, PhoneOff, Volume2, X } from "@lucide/svelte";
+  import { Mic, MicOff, PhoneOff, Volume2 } from "@lucide/svelte";
 
   let { compact = false }: { compact?: boolean } = $props();
 </script>
 
 <div
   class={cn(
-    "bg-sidebar-accent/40 shrink-0 space-y-2 border-t p-2",
+    "bg-sidebar-accent/40 flex shrink-0 items-center justify-between space-y-2 border-t p-2",
     compact && "space-y-1.5",
   )}
 >
@@ -31,17 +31,6 @@
           : "Connecting…"}
       </div>
     </div>
-    {#if !compact}
-      <Button
-        variant="ghost"
-        size="icon"
-        class="size-7"
-        title="Disconnect"
-        onclick={() => voice.leave()}
-      >
-        <X class="size-4" />
-      </Button>
-    {/if}
   </div>
 
   {#if voice.micError}
@@ -70,11 +59,14 @@
     </div>
   {/if}
 
-  <div class="flex gap-1.5">
+  <div class="flex justify-end gap-1.5">
     <Button
-      variant={voice.micMuted || !voice.canPublish ? "secondary" : "default"}
-      size={compact ? "default" : "sm"}
-      class="flex-1"
+      variant={voice.micMuted
+        ? "secondary"
+        : !voice.canPublish
+          ? "destructive"
+          : "default"}
+      size="icon"
       disabled={!voice.canPublish}
       title={!voice.canPublish
         ? "You are muted by a moderator"
@@ -84,20 +76,16 @@
       onclick={() => voice.toggleMic()}
     >
       {#if !voice.canPublish}
-        <MicOff class="size-4" /> Muted by mod
+        <MicOff class="size-4" />
       {:else if voice.micMuted}
-        <MicOff class="size-4" /> Muted
+        <MicOff class="size-4" />
       {:else}
-        <Mic class="size-4" /> Live
+        <Mic class="size-4" />
       {/if}
     </Button>
-    <Button
-      variant="destructive"
-      size={compact ? "default" : "sm"}
-      onclick={() => voice.leave()}
-    >
+    <Button variant="destructive" size="icon" onclick={() => voice.leave()}>
       <PhoneOff class="size-4" />
-      <span class={cn(compact && "sr-only")}>Leave</span>
+      <span class="sr-only">Leave</span>
     </Button>
   </div>
 </div>
