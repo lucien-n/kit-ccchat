@@ -36,8 +36,6 @@
     el?.focus();
   }
 
-  const MAX_HEIGHT = 240;
-
   let draft = $state("");
   let el = $state<HTMLTextAreaElement | null>(null);
   let index = $state<EmojiIndex | null>(null);
@@ -51,14 +49,6 @@
   const remaining = $derived(MESSAGE_MAX_LENGTH - draft.length);
   const showCount = $derived(remaining <= 200);
   const showPreview = $derived(preview && draft.trim().length > 0);
-
-  // field-sizing: content is too new for Firefox and Safari to rely on here.
-  $effect(() => {
-    void draft;
-    if (!el) return;
-    el.style.height = "auto";
-    el.style.height = `${Math.min(el.scrollHeight, MAX_HEIGHT)}px`;
-  });
 
   function close() {
     anchor = -1;
@@ -239,7 +229,7 @@
       {disabled}
       rows={1}
       maxlength={MESSAGE_MAX_LENGTH}
-      class="thin-scrollbar field-sizing-fixed max-h-60 min-h-8 flex-1 rounded-none border-0 bg-transparent py-1.5 pl-2 focus-visible:border-transparent focus-visible:ring-0"
+      class="thin-scrollbar field-sizing-content max-h-60 min-h-8 flex-1 rounded-none border-0 bg-transparent py-1.5 pl-2 focus-visible:border-transparent focus-visible:ring-0"
       autocomplete="off"
       onkeydown={disabled ? undefined : onkeydown}
       oninput={refresh}

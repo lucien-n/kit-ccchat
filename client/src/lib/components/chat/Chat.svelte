@@ -30,9 +30,6 @@
   let showCommunitySettings = $state(false);
   let showNav = $state(false);
 
-  // Docked panes only make sense on a wide viewport; below sm the sidebar and
-  // members list are Sheets instead. Initialised synchronously since Chat only
-  // mounts client-side, after the parent's onMount gate.
   let isDesktop = $state(
     typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches,
   );
@@ -202,8 +199,6 @@
 {/snippet}
 
 {#if isDesktop}
-  <!-- paneforge forces the group to height:100% inline, so it needs a parent
-       with real viewport height to resolve against. -->
   <div class="h-dvh">
     <Resizable.PaneGroup direction="horizontal">
       <Resizable.Pane
