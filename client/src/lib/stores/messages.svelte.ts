@@ -1,3 +1,4 @@
+import { ClientEvenType } from "@ccchat/shared";
 import { api, type MessageView } from "../api";
 import { realtime } from "./realtime.svelte";
 import { session } from "./session.svelte";
@@ -44,7 +45,12 @@ class Messages {
   }
 
   send(channelId: string, content: string, replyToId?: string): boolean {
-    return realtime.send({ type: "message.create", channelId, content, replyToId });
+    return realtime.send({
+      type: ClientEvenType.Message_Create,
+      channelId,
+      content,
+      replyToId,
+    });
   }
 
   /** Deleting goes over REST for the permission check; the server broadcasts the

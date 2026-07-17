@@ -1,4 +1,9 @@
-import { clientEvent, type ClientEvent } from "@ccchat/shared";
+import {
+  clientEvent,
+  ClientEvenType,
+  ServerEventType,
+  type ClientEvent,
+} from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
@@ -80,9 +85,17 @@ function onConnection(ws: WebSocket, userId: string) {
     if (!parsed.success) return;
     const msg = parsed.data;
 
-    if (msg.type === "message.create") handleCreate(client, msg);
-    else if (msg.type === "voice.join") handleVoiceJoin(client, msg.channelId);
-    else if (msg.type === "voice.leave") hub.voiceLeaveAll(client.userId);
+    switch (msg.type) {
+      case ClientEvenType.Message_Create:
+        handleCreate(client, msg);
+        break;
+      case ClientEvenType.Voice_Join:
+        handleVoiceJoin(client, msg.channelId);
+        break;
+      case ClientEvenType.Voice_Leave:
+        hub.voiceLeaveAll(client.userId);
+        break;
+    }
     // message.delete + moderation go through the REST API for a clean
     // permission model; the hub broadcasts the resulting events to everyone.
   });
@@ -116,13 +129,14 @@ function replyTarget(replyToId: string | undefined, channelId: string): string |
 
 function handleCreate(
   client: Client,
-  msg: Extract<ClientEvent, { type: "message.create" }>,
+  msg: Extract<ClientEvent, { type: ClientEvenType.Message_Create }>,
 ) {
   const u = db.select().from(users).where(eq(users.id, client.userId)).get();
   if (!u) return;
-  if (u.banned) return hub.send(client, { type: "error", message: "you are banned" });
+  if (u.banned)
+    return hub.send(client, { type: ServerEventType.Error, message: "you are banned" });
   if (u.mutedUntil && u.mutedUntil > Date.now())
-    return hub.send(client, { type: "error", message: "you are muted" });
+    return hub.send(client, { type: ServerEventType.Error, message: "you are muted" });
 
   const { channelId, content } = msg;
 
@@ -140,5 +154,5 @@ function handleCreate(
     replyToId: replyTarget(msg.replyToId, channelId),
   };
   db.insert(messages).values(row).run();
-  hub.broadcast({ type: "message.new", message: toMessageView(row) });
+  hub.broadcast({ type: ServerEventType.Message_New, message: toMessageView(row) });
 }
