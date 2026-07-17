@@ -96,17 +96,12 @@ function onConnection(ws: WebSocket, userId: string) {
         hub.voiceLeaveAll(client.userId);
         break;
     }
-    // message.delete + moderation go through the REST API for a clean
-    // permission model; the hub broadcasts the resulting events to everyone.
   });
 
   ws.on("close", () => hub.remove(client));
   ws.on("error", () => hub.remove(client));
 }
 
-/** A client reports it joined a voice channel; broadcast presence to everyone.
- *  Client-reported (rather than via LiveKit webhooks) so it works identically in
- *  dev and Docker. Disconnect cleanup lives in the hub. */
 function handleVoiceJoin(client: Client, channelId: string) {
   const channel = db.select().from(channels).where(eq(channels.id, channelId)).get();
   if (!channel || channel.type !== "voice") return;
