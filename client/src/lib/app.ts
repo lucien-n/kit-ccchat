@@ -10,6 +10,7 @@ import { api, type MessageView } from "./api";
 import { playPing, unlockAudio } from "./notify";
 import { channels } from "./stores/channels.svelte";
 import { community } from "./stores/community.svelte";
+import { members } from "./stores/members.svelte";
 import { messages } from "./stores/messages.svelte";
 import { prefs } from "./stores/prefs.svelte";
 import { presence } from "./stores/presence.svelte";
@@ -71,6 +72,8 @@ export async function logout() {
   messages.clear();
   channels.clear();
   presence.clear();
+  members.clear();
+  roles.clear();
   await session.end();
 }
 
@@ -109,14 +112,20 @@ function dispatch(event: ServerEvent) {
       community.name = event.name;
       break;
     case ServerEventType.Roles_Changed:
-      session.refresh();
-      roles.invalidate();
-      messages.refreshAuthorColors();
+      void onRolesChanged();
       break;
     case ServerEventType.Error:
       toast.error(event.message);
       break;
   }
+}
+
+/** A role edit can change who is admin, every role's color, and each member's
+ *  top color, so refresh identity, the roster, and the names already on screen. */
+async function onRolesChanged() {
+  await session.refresh();
+  await Promise.all([roles.load(true), members.load(true)]);
+  messages.applyColors(new Map(members.list.map((m) => [m.id, m.color])));
 }
 
 function onMessage(m: MessageView) {

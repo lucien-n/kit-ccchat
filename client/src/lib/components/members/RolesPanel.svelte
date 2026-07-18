@@ -1,13 +1,14 @@
 <script lang="ts">
-  import { api, avatarUrl, type ModeratedMember } from "$lib/api";
+  import { api, type ModeratedMember } from "$lib/api";
   import { Select } from "$lib/components/common/select";
-  import UserAvatar from "$lib/components/common/UserAvatar.svelte";
+  import MemberIdentity from "$lib/components/common/MemberIdentity.svelte";
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { ScrollArea } from "$lib/components/ui/scroll-area";
   import { apiErrorMessage } from "$lib/forms";
   import { permissionSpecs } from "$lib/specs";
+  import { members } from "$lib/stores/members.svelte";
   import { roles as rolesStore } from "$lib/stores/roles.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { cn } from "$lib/utils";
@@ -17,7 +18,6 @@
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
 
-  let members = $state<ModeratedMember[]>([]);
   let selectedId = $state<string | null>(null);
   let memberSearch = $state("");
   let busy = $state(false);
@@ -30,7 +30,7 @@
 
   const shownMembers = $derived.by(() => {
     const q = memberSearch.trim().toLowerCase();
-    return members
+    return members.list
       .filter((m) => !m.banned)
       .filter(
         (m) =>
@@ -40,27 +40,14 @@
   });
 
   const countFor = (roleId: string) =>
-    members.filter((m) => m.roleIds.includes(roleId)).length;
+    members.list.filter((m) => m.roleIds.includes(roleId)).length;
 
   const canEdit = (m: ModeratedMember) => session.isOwner || !m.isOwner;
 
   onMount(() => {
     rolesStore.load();
-    loadMembers();
+    members.load();
   });
-
-  $effect(() => {
-    if (rolesStore.version > 0) loadMembers();
-  });
-
-  async function loadMembers() {
-    if (!session.token) return;
-    try {
-      members = (await api.members(session.token)).members;
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to load members"));
-    }
-  }
 
   async function create() {
     if (!session.token || !name.trim()) return;
@@ -87,22 +74,20 @@
       await api.deleteRole(session.token, id);
       if (selectedId === id) selectedId = null;
       await rolesStore.load(true);
-      await loadMembers();
+      await members.load(true);
     } catch (e) {
       toast.error(apiErrorMessage(e, "failed to delete role"));
     }
   }
 
   async function toggleMember(member: ModeratedMember, roleId: string) {
-    if (!session.token) return;
     const has = member.roleIds.includes(roleId);
     const next = has
       ? member.roleIds.filter((id) => id !== roleId)
       : [...member.roleIds, roleId];
     busy = true;
     try {
-      await api.setUserRoles(session.token, member.id, next);
-      await loadMembers();
+      await members.setRoles(member.id, next);
     } catch (e) {
       toast.error(apiErrorMessage(e, "failed to update roles"));
     } finally {
@@ -207,26 +192,11 @@
               disabled={busy || !canEdit(member)}
               onclick={() => toggleMember(member, selected.id)}
             >
-              <UserAvatar
-                src={avatarUrl(member.id, member.avatarVersion)}
-                name={member.displayName}
-                class="size-7"
-                fallbackClass="text-xs"
-              />
-              <span
-                class="flex-1 truncate text-sm font-medium"
-                style={member.color ? `color:${member.color}` : undefined}
-              >
-                {member.displayName}
-              </span>
-              {#if member.isOwner || member.isAdmin}
-                <span class="text-muted-foreground text-[10px] uppercase">
-                  {member.isOwner ? "owner" : "admin"}
-                </span>
-              {/if}
-              <CheckIcon
-                class={cn("size-4 shrink-0", on ? "opacity-100" : "opacity-0")}
-              />
+              <MemberIdentity {member}>
+                <CheckIcon
+                  class={cn("size-4 shrink-0", on ? "opacity-100" : "opacity-0")}
+                />
+              </MemberIdentity>
             </button>
           {:else}
             <p class="text-muted-foreground py-8 text-center text-sm">No members found</p>

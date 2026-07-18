@@ -4,6 +4,7 @@
   import * as Popover from "$lib/components/ui/popover";
   import { ScrollArea } from "$lib/components/ui/scroll-area";
   import { apiErrorMessage } from "$lib/forms";
+  import { members } from "$lib/stores/members.svelte";
   import { presence } from "$lib/stores/presence.svelte";
   import { roles as rolesStore } from "$lib/stores/roles.svelte";
   import { session } from "$lib/stores/session.svelte";
@@ -56,7 +57,7 @@
       : [...assignedIds, roleId];
     busyId = roleId;
     try {
-      await api.setUserRoles(session.token, user.id, next);
+      await members.setRoles(user.id, next);
       await loadProfile();
     } catch (e) {
       toast.error(apiErrorMessage(e, "failed to update roles"));

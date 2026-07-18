@@ -1,53 +1,40 @@
 <script lang="ts">
-  import { api, avatarUrl, type ModeratedMember } from "$lib/api";
+  import { api, type ModeratedMember } from "$lib/api";
+  import MemberIdentity from "$lib/components/common/MemberIdentity.svelte";
+  import PresenceDot from "$lib/components/common/PresenceDot.svelte";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
   import { Checkbox } from "$lib/components/ui/checkbox";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
-  import UserAvatar from "$lib/components/common/UserAvatar.svelte";
   import { apiErrorMessage } from "$lib/forms";
   import { byRank } from "$lib/members";
+  import { members } from "$lib/stores/members.svelte";
   import { presence } from "$lib/stores/presence.svelte";
   import { session } from "$lib/stores/session.svelte";
-  import { cn } from "$lib/utils";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
 
   let search = $state("");
   let showOnlyActiveMembers = $state(false);
 
-  let members = $state<ModeratedMember[]>([]);
-
   const shownMembers = $derived.by(() => {
     const q = search.trim().toLowerCase();
-
-    return members.filter((m) => {
-      if (!presence.isOnline(m.id) && showOnlyActiveMembers) {
-        return false;
-      }
-
-      return (
-        m.displayName.toLowerCase().includes(q) || m.username.toLowerCase().includes(q)
-      );
-    });
+    return members.list
+      .filter((m) => !(showOnlyActiveMembers && !presence.isOnline(m.id)))
+      .filter(
+        (m) =>
+          m.displayName.toLowerCase().includes(q) || m.username.toLowerCase().includes(q),
+      )
+      .sort(byRank);
   });
-
-  async function load() {
-    if (!session.token) return;
-    try {
-      members = (await api.members(session.token)).members;
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to load members"));
-    }
-  }
 
   async function act(id: string, action: "kick" | "ban" | "unban" | "mute" | "unmute") {
     if (!session.token) return;
     try {
       const body = action === "mute" ? { minutes: 60 } : undefined;
       await api.mod(session.token, id, action, body);
-      await load();
+      await members.load(true);
     } catch (e) {
       toast.error(apiErrorMessage(e, "action failed"));
     }
@@ -56,7 +43,7 @@
   const isMuted = (m: ModeratedMember) =>
     m.mutedUntil != null && m.mutedUntil > Date.now();
 
-  onMount(load);
+  onMount(() => members.load());
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col">
@@ -71,34 +58,14 @@
 
   <div class="min-h-0 flex-1 space-y-1 overflow-y-auto">
     {#if shownMembers.length}
-      {#each shownMembers.sort(byRank) as member (member.id)}
-        {@const av = avatarUrl(member.id, member.avatarVersion)}
+      {#each shownMembers as member (member.id)}
         <div class="hover:bg-muted/50 rounded-md p-2">
           <div class="flex items-center gap-2">
-            <span
-              class={cn(
-                "bg-muted-foreground size-2 shrink-0 rounded-full",
-                presence.online.has(member.id) && "bg-green-500",
-              )}
-            ></span>
-            <UserAvatar
-              src={av}
-              name={member.displayName}
-              class="size-7"
-              fallbackClass="text-xs"
-            />
-            <div class="flex min-w-0 flex-1 items-center gap-1.5">
-              <span
-                class="truncate text-sm font-medium"
-                style={member.color ? `color:${member.color}` : undefined}
-                >{member.displayName}</span
-              >
-              <span class="text-muted-foreground text-[10px] uppercase"
-                >{member.isOwner ? "owner" : member.isAdmin ? "admin" : "member"}</span
-              >
-            </div>
-            {#if member.banned}<Badge variant="destructive">banned</Badge>{/if}
-            {#if isMuted(member)}<Badge variant="secondary">muted</Badge>{/if}
+            <PresenceDot userId={member.id} />
+            <MemberIdentity {member} showMemberRank>
+              {#if member.banned}<Badge variant="destructive">banned</Badge>{/if}
+              {#if isMuted(member)}<Badge variant="secondary">muted</Badge>{/if}
+            </MemberIdentity>
           </div>
 
           {#if member.id !== session.user?.id && !member.isOwner}

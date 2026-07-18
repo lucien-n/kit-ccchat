@@ -3,7 +3,6 @@ import { session } from "./session.svelte";
 
 class Roles {
   list = $state<Role[]>([]);
-  version = $state(0);
   #loaded = false;
 
   async load(force = false) {
@@ -21,9 +20,9 @@ class Roles {
     return this.list.find((r) => r.id === id);
   }
 
-  async invalidate() {
-    this.version++;
-    await this.load(true);
+  clear() {
+    this.list = [];
+    this.#loaded = false;
   }
 }
 

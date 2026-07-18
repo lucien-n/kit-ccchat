@@ -17,10 +17,10 @@ class Messages {
     this.list = [...this.list, message];
   }
 
-  async refreshAuthorColors() {
-    if (!session.token || this.list.length === 0) return;
-    const { members } = await api.roster(session.token);
-    const colorById = new Map(members.map((m) => [m.id, m.color]));
+  /** Author colors come from roles, so a role change restyles names already on
+   *  screen. The color map is owned by the members store; passing it in keeps
+   *  this store from reaching across to a sibling. */
+  applyColors(colorById: Map<string, string | null>) {
     for (const m of this.list) {
       if (m.author && colorById.has(m.author.id))
         m.author.color = colorById.get(m.author.id) ?? null;
