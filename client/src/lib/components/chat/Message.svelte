@@ -9,6 +9,7 @@
   import UserRoundPlusIcon from "@lucide/svelte/icons/user-round-plus";
   import Markdown from "$lib/components/markdown/Markdown.svelte";
   import UserAvatar from "$lib/components/common/UserAvatar.svelte";
+  import UserCard from "$lib/components/common/UserCard.svelte";
   import { Button } from "$lib/components/ui/button";
 
   interface Props {
@@ -54,12 +55,26 @@
       ? 'bg-primary/15'
       : ''}"
   >
-    <UserAvatar
-      src={avatar}
-      name={message.author?.displayName}
-      class={cn("size-9", message.replyTo ? "mt-4.5" : "mt-0.5")}
-      fallbackClass="text-sm"
-    />
+    {#if message.author}
+      <UserCard
+        userId={message.author.id}
+        class={cn("shrink-0", message.replyTo ? "mt-4.5" : "mt-0.5")}
+      >
+        <UserAvatar
+          src={avatar}
+          name={message.author.displayName}
+          class="size-9"
+          fallbackClass="text-sm"
+        />
+      </UserCard>
+    {:else}
+      <UserAvatar
+        src={avatar}
+        name={undefined}
+        class={cn("size-9", message.replyTo ? "mt-4.5" : "mt-0.5")}
+        fallbackClass="text-sm"
+      />
+    {/if}
     <div class="min-w-0">
       {#if message.replyTo}
         {@const r = message.replyTo}
@@ -90,7 +105,18 @@
         {/if}
       {/if}
       <div class="flex items-baseline gap-2">
-        <span class="font-semibold">{message.author?.displayName ?? "unknown"}</span>
+        {#if message.author}
+          <UserCard userId={message.author.id}>
+            <span
+              class="font-semibold hover:underline"
+              style={message.author.color ? `color:${message.author.color}` : undefined}
+            >
+              {message.author.displayName}
+            </span>
+          </UserCard>
+        {:else}
+          <span class="font-semibold">unknown</span>
+        {/if}
         <span class="text-muted-foreground text-xs">{fmtTime(message.createdAt)}</span>
       </div>
       <Markdown content={message.content} />

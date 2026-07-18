@@ -110,9 +110,11 @@ function dispatch(event: ServerEvent) {
       break;
     case ServerEventType.Roles_Changed:
       // Our own color/permission may have shifted; refresh self and the role
-      // list, and bump the version so rosters keyed off it re-fetch.
+      // list, bump the version so rosters keyed off it re-fetch, and recolor
+      // the loaded chat messages (their author colors are snapshots).
       session.refresh();
       roles.invalidate();
+      messages.refreshAuthorColors();
       break;
     case ServerEventType.Error:
       toast.error(event.message);

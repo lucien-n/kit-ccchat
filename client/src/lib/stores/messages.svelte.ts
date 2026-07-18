@@ -17,6 +17,22 @@ class Messages {
     this.list = [...this.list, message];
   }
 
+  /** Author name colors are snapshotted into each message at fetch time, so a
+   *  role/color change leaves loaded messages stale. Patch them in place from
+   *  the roster: mutating nested fields (not the array) keeps the list length
+   *  unchanged, so the chat's scroll-to-bottom effect never fires. */
+  async refreshAuthorColors() {
+    if (!session.token || this.list.length === 0) return;
+    const { members } = await api.roster(session.token);
+    const colorById = new Map(members.map((m) => [m.id, m.color]));
+    for (const m of this.list) {
+      if (m.author && colorById.has(m.author.id))
+        m.author.color = colorById.get(m.author.id) ?? null;
+      if (m.replyTo?.author && colorById.has(m.replyTo.author.id))
+        m.replyTo.author.color = colorById.get(m.replyTo.author.id) ?? null;
+    }
+  }
+
   /** Tombstones any reply quoting the deleted message in place. The server
    *  resolves quotes on read, so a reload would show this anyway; without it the
    *  deleted text stays quoted on screen until someone refreshes. */
