@@ -34,8 +34,6 @@ export type ServerEvent =
       name: string;
     }
   | {
-      // Roles or their assignments changed. Clients refetch roles + members;
-      // affected sessions refetch /me so their own color/permission updates.
       type: ServerEventType.Roles_Changed;
     }
   | {

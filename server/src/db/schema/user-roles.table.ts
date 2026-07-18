@@ -1,7 +1,5 @@
 import { primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-/** Many-to-many: a user holds any number of roles. No FK constraints (matching
- *  the rest of the schema); orphans are cleaned up by the role-delete route. */
 export const userRoles = sqliteTable(
   "user_roles",
   {

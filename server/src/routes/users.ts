@@ -27,9 +27,6 @@ function sniffMime(buf: Buffer): string | null {
 
 const app = new Hono<Env>();
 
-/** The community roster: every member as a PublicUser (color/permission included,
- *  but no banned/muted moderation state - that stays on /api/moderation/members).
- *  Any authenticated user may read it; banned accounts are omitted. */
 app.get("/", requireAuth, (c) => {
   const members = db
     .select()
@@ -113,10 +110,6 @@ app.post("/me/password", requireAuth, validate("json", changePasswordBody), asyn
   return c.json({ ok: true });
 });
 
-/** A user's profile card: their public identity plus the roles they hold
- *  (highest-position first). Any member may read it; editing goes through
- *  /api/roles/members/:userId. Registered last so it can't shadow /me/* or
- *  /:id/avatar. */
 app.get("/:id", requireAuth, (c) => {
   const id = String(c.req.param("id"));
   const u = db.select().from(users).where(eq(users.id, id)).get();

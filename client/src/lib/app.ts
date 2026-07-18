@@ -109,9 +109,6 @@ function dispatch(event: ServerEvent) {
       community.name = event.name;
       break;
     case ServerEventType.Roles_Changed:
-      // Our own color/permission may have shifted; refresh self and the role
-      // list, bump the version so rosters keyed off it re-fetch, and recolor
-      // the loaded chat messages (their author colors are snapshots).
       session.refresh();
       roles.invalidate();
       messages.refreshAuthorColors();

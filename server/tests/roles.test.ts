@@ -73,13 +73,11 @@ describe("role management", () => {
     });
     expect(assign.status).toBe(200);
 
-    // Profile reflects the role + the member is now an admin with the role color.
     const profile = await get(app, `/api/users/${user.id}`, token).then(json);
     expect(profile.user.isAdmin).toBe(true);
     expect(profile.user.color).toBe("#00bcd4");
     expect(profile.roles.map((r: any) => r.id)).toContain(role.id);
 
-    // And that admin power is real: they can now create a role themselves.
     expect(
       (
         await createRole(token, {
@@ -114,7 +112,6 @@ describe("role management", () => {
   });
 
   it("an admin cannot rewrite the owner's roles", async () => {
-    // Promote a fresh member to admin.
     const { user: admin, token: adminToken } = await register(
       app,
       inviteCode,

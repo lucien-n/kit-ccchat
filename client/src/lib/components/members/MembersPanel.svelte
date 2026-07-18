@@ -12,7 +12,6 @@
 
   let members = $state<PublicUser[]>([]);
 
-  /** owner 2 > admin 1 > member 0, so the roster hoists staff to the top. */
   const level = (m: PublicUser) => (m.isOwner ? 2 : m.isAdmin ? 1 : 0);
 
   const roster = $derived(
@@ -33,7 +32,6 @@
 
   onMount(load);
 
-  // Role assignments changed somewhere: re-pull so colors/labels stay current.
   $effect(() => {
     if (roles.version > 0) load();
   });

@@ -14,14 +14,13 @@ class Session {
     return this.user?.isOwner ?? false;
   }
 
-  /** Re-pull the current user (role assignments changed our color/permission). */
   async refresh() {
     if (!this.token) return;
     try {
       const { user } = await api.me(this.token);
       this.user = user;
     } catch {
-      /* a failed refresh just leaves the stale view; next action re-auths */
+      /* empty */
     }
   }
 

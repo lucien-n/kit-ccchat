@@ -87,7 +87,6 @@ export const createRoleBody = z.object({
 });
 export type CreateRoleBody = z.infer<typeof createRoleBody>;
 
-/** All fields optional: a PATCH updates only what it sends. `position` reorders. */
 export const updateRoleBody = z.object({
   name: roleName.optional(),
   color: hexColor.nullable().optional(),
@@ -96,7 +95,6 @@ export const updateRoleBody = z.object({
 });
 export type UpdateRoleBody = z.infer<typeof updateRoleBody>;
 
-/** Replace a user's full role set (idempotent). */
 export const setUserRolesBody = z.object({
   roleIds: z.array(z.string()),
 });

@@ -18,8 +18,6 @@ const app = new Hono<Env>();
 
 app.use("*", requireAuth);
 
-/** Everyone reads the role list: the client needs it to render colors and to
- *  drive the management UI. Ordered high-to-low so the first is top priority. */
 app.get("/", (c) => {
   const list = db.select().from(roles).orderBy(desc(roles.position)).all();
   return c.json({ roles: list.map(toRoleView) });
@@ -55,7 +53,6 @@ app.patch("/:id", requireCan("manageRoles"), validate("json", updateRoleBody), (
 
 app.delete("/:id", requireCan("manageRoles"), (c) => {
   const id = String(c.req.param("id"));
-  // No FK cascade in this schema, so drop the assignments by hand.
   db.transaction((tx) => {
     tx.delete(userRoles).where(eq(userRoles.roleId, id)).run();
     tx.delete(roles).where(eq(roles.id, id)).run();
@@ -64,8 +61,6 @@ app.delete("/:id", requireCan("manageRoles"), (c) => {
   return c.json({ ok: true });
 });
 
-/** Replace a member's full role set. You cannot touch someone who outranks you
- *  (an admin can't rewrite the owner's roles). */
 app.put(
   "/members/:userId",
   requireCan("manageRoles"),

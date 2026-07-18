@@ -18,7 +18,6 @@
 
   let members = $state<MemberView[]>([]);
 
-  /** owner 2 > admin 1 > member 0. */
   const level = (m: MemberView) => (m.isOwner ? 2 : m.isAdmin ? 1 : 0);
 
   const shownMembers = $derived.by(() => {

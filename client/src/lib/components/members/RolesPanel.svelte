@@ -1,35 +1,64 @@
 <script lang="ts">
-  import { api, type Role } from "$lib/api";
+  import { api, avatarUrl, type MemberView } from "$lib/api";
+  import { Select } from "$lib/components/common/select";
+  import UserAvatar from "$lib/components/common/UserAvatar.svelte";
   import { Button } from "$lib/components/ui/button";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
+  import { ScrollArea } from "$lib/components/ui/scroll-area";
   import { apiErrorMessage } from "$lib/forms";
+  import { permissionSpecs } from "$lib/specs";
+  import { roles as rolesStore } from "$lib/stores/roles.svelte";
   import { session } from "$lib/stores/session.svelte";
+  import { cn } from "$lib/utils";
   import { Permission } from "@ccchat/shared";
+  import CheckIcon from "@lucide/svelte/icons/check";
+  import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
 
-  let roles = $state<Role[]>([]);
-  let search = $state("");
+  let members = $state<MemberView[]>([]);
+  let selectedId = $state<string | null>(null);
+  let memberSearch = $state("");
   let busy = $state(false);
 
-  // Draft for the "new role" form.
   let name = $state("");
   let color = $state("#5865f2");
   let permission = $state<Permission>(Permission.Member);
 
-  const shown = $derived(
-    roles.filter((r) => r.name.toLowerCase().includes(search.trim().toLowerCase())),
-  );
+  const selected = $derived(rolesStore.list.find((r) => r.id === selectedId) ?? null);
 
-  onMount(load);
+  const shownMembers = $derived.by(() => {
+    const q = memberSearch.trim().toLowerCase();
+    return members
+      .filter((m) => !m.banned)
+      .filter(
+        (m) =>
+          m.displayName.toLowerCase().includes(q) || m.username.toLowerCase().includes(q),
+      )
+      .sort((a, b) => a.displayName.localeCompare(b.displayName));
+  });
 
-  async function load() {
+  const countFor = (roleId: string) =>
+    members.filter((m) => m.roleIds.includes(roleId)).length;
+
+  const canEdit = (m: MemberView) => session.isOwner || !m.isOwner;
+
+  onMount(() => {
+    rolesStore.load();
+    loadMembers();
+  });
+
+  $effect(() => {
+    if (rolesStore.version > 0) loadMembers();
+  });
+
+  async function loadMembers() {
     if (!session.token) return;
     try {
-      roles = (await api.roles(session.token)).roles;
+      members = (await api.members(session.token)).members;
     } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to load roles"));
+      toast.error(apiErrorMessage(e, "failed to load members"));
     }
   }
 
@@ -37,9 +66,14 @@
     if (!session.token || !name.trim()) return;
     busy = true;
     try {
-      await api.createRole(session.token, { name: name.trim(), color, permission });
+      const { role } = await api.createRole(session.token, {
+        name: name.trim(),
+        color,
+        permission,
+      });
       name = "";
-      await load();
+      await rolesStore.load(true);
+      selectedId = role.id;
     } catch (e) {
       toast.error(apiErrorMessage(e, "failed to create role"));
     } finally {
@@ -51,67 +85,158 @@
     if (!session.token) return;
     try {
       await api.deleteRole(session.token, id);
-      await load();
+      if (selectedId === id) selectedId = null;
+      await rolesStore.load(true);
+      await loadMembers();
     } catch (e) {
       toast.error(apiErrorMessage(e, "failed to delete role"));
     }
   }
 
-  // TODO(you): inline edit (name/color/permission) -> api.updateRole
-  // TODO(you): reorder roles (position) -> api.updateRole({ position })
-  // TODO(you): assign roles to a member -> api.setUserRoles (likely in the members UI)
+  async function toggleMember(member: MemberView, roleId: string) {
+    if (!session.token) return;
+    const has = member.roleIds.includes(roleId);
+    const next = has
+      ? member.roleIds.filter((id) => id !== roleId)
+      : [...member.roleIds, roleId];
+    busy = true;
+    try {
+      await api.setUserRoles(session.token, member.id, next);
+      await loadMembers();
+    } catch (e) {
+      toast.error(apiErrorMessage(e, "failed to update roles"));
+    } finally {
+      busy = false;
+    }
+  }
 </script>
 
-<div class="flex min-h-0 flex-1 flex-col">
-  <div class="flex gap-2 pb-2">
-    <Input placeholder="Search roles" bind:value={search} class="flex-1" />
-  </div>
-
-  <!-- New role -->
-  <div class="space-y-2 border-b pb-4">
-    <Label>New role</Label>
-    <div class="flex items-end gap-2">
-      <Input placeholder="Role name" bind:value={name} class="flex-1" />
-      <input
-        type="color"
-        bind:value={color}
-        aria-label="Role color"
-        class="h-9 w-10 shrink-0 cursor-pointer rounded-md border bg-transparent"
-      />
-      <select
-        bind:value={permission}
-        class="border-input bg-background h-9 rounded-md border px-2 text-sm"
-      >
-        <option value={Permission.Member}>member</option>
-        <option value={Permission.Admin}>admin</option>
-      </select>
-      <Button onclick={create} disabled={busy || !name.trim()}>Create</Button>
+<div class="grid h-full grid-cols-2 gap-4">
+  <div class="flex w-full flex-col gap-3">
+    <div class="space-y-2">
+      <Label>New role</Label>
+      <Input placeholder="Role name" bind:value={name} class="w-full" />
+      <div class="flex items-center gap-2">
+        <Input type="color" bind:value={color} aria-label="Role color" />
+        <Select
+          bind:value={permission}
+          options={Object.values(permissionSpecs)}
+          triggerProps={{
+            class: "min-w-32",
+          }}
+        />
+        <Button onclick={create} disabled={busy || !name.trim()}>Create</Button>
+      </div>
     </div>
+
+    <ScrollArea class="min-h-0 flex-1">
+      <div class="space-y-0.5 pr-2">
+        {#each rolesStore.list as role (role.id)}
+          <div
+            class={cn(
+              "group flex items-center gap-2 rounded-md p-2",
+              selectedId === role.id ? "bg-muted" : "hover:bg-muted/50",
+            )}
+          >
+            <button
+              type="button"
+              class="flex min-w-0 flex-1 items-center gap-2 text-left"
+              onclick={() => (selectedId = role.id)}
+            >
+              <span
+                class="size-3 rounded-full border"
+                style={role.color ? `background:${role.color}` : undefined}
+              ></span>
+              <span
+                class="flex-1 truncate text-sm font-medium"
+                style={role.color ? `color:${role.color}` : undefined}
+              >
+                {role.name}
+              </span>
+              <span class="text-muted-foreground text-[10px] uppercase">
+                {role.permission}
+              </span>
+              <span class="text-muted-foreground text-xs">{countFor(role.id)}</span>
+            </button>
+            <Button
+              variant="ghost"
+              size="icon"
+              class="size-7 opacity-0 group-hover:opacity-100"
+              title="Delete role"
+              onclick={() => remove(role.id)}
+            >
+              <Trash2Icon class="size-4" />
+            </Button>
+          </div>
+        {:else}
+          <p class="text-muted-foreground py-8 text-center text-sm">
+            No roles yet. Create one.
+          </p>
+        {/each}
+      </div>
+    </ScrollArea>
   </div>
 
-  <!-- Role list -->
-  <div class="min-h-0 flex-1 space-y-1 overflow-y-auto pt-2">
-    {#each shown as role (role.id)}
-      <div class="hover:bg-muted/50 flex items-center gap-2 rounded-md p-2">
+  <div class="flex min-h-0 w-full flex-col border-l pl-4">
+    {#if selected}
+      <div class="flex items-center gap-2 pb-3">
         <span
-          class="size-3 shrink-0 rounded-full border"
-          style={role.color ? `background:${role.color}` : undefined}
+          class="size-3 rounded-full border"
+          style={selected.color ? `background:${selected.color}` : undefined}
         ></span>
         <span
-          class="flex-1 truncate text-sm font-medium"
-          style={role.color ? `color:${role.color}` : undefined}
+          class="font-medium"
+          style={selected.color ? `color:${selected.color}` : undefined}
         >
-          {role.name}
+          {selected.name}
         </span>
-        <span class="text-muted-foreground text-[10px] uppercase">{role.permission}</span>
-        <Button variant="ghost" size="sm" class="h-7" onclick={() => remove(role.id)}
-          >delete</Button
+        <span class="text-muted-foreground text-[10px] uppercase"
+          >{selected.permission}</span
         >
       </div>
+
+      <Input placeholder="Search members" bind:value={memberSearch} class="mb-2" />
+
+      <ScrollArea class="h-full">
+        <div class="space-y-0.5 pr-2">
+          {#each shownMembers as member (member.id)}
+            {@const on = member.roleIds.includes(selected.id)}
+            <button
+              type="button"
+              class="hover:bg-muted flex w-full items-center gap-2 rounded-md p-2 text-left disabled:opacity-50"
+              disabled={busy || !canEdit(member)}
+              onclick={() => toggleMember(member, selected.id)}
+            >
+              <UserAvatar
+                src={avatarUrl(member.id, member.avatarVersion)}
+                name={member.displayName}
+                class="size-7"
+                fallbackClass="text-xs"
+              />
+              <span
+                class="flex-1 truncate text-sm font-medium"
+                style={member.color ? `color:${member.color}` : undefined}
+              >
+                {member.displayName}
+              </span>
+              {#if member.isOwner || member.isAdmin}
+                <span class="text-muted-foreground text-[10px] uppercase">
+                  {member.isOwner ? "owner" : "admin"}
+                </span>
+              {/if}
+              <CheckIcon
+                class={cn("size-4 shrink-0", on ? "opacity-100" : "opacity-0")}
+              />
+            </button>
+          {:else}
+            <p class="text-muted-foreground py-8 text-center text-sm">No members found</p>
+          {/each}
+        </div>
+      </ScrollArea>
     {:else}
-      <p class="text-muted-foreground py-8 text-center text-sm">
-        No roles yet. Create one above.
-      </p>
-    {/each}
+      <div class="text-muted-foreground flex flex-1 items-center justify-center text-sm">
+        Select a role to manage its members.
+      </div>
+    {/if}
   </div>
 </div>

@@ -1,8 +1,5 @@
 import { z } from "zod";
 
-/** The authorization a Role grants. 'member' is the baseline (grants nothing
- *  beyond being a member), so a member-permission role is purely cosmetic.
- *  'owner' is intrinsic (users.isOwner), never a permission a role can hold. */
 export enum Permission {
   Admin = "admin",
   Member = "member",

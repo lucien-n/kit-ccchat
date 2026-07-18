@@ -5,8 +5,6 @@ export const users = sqliteTable("users", {
   username: text("username").notNull().unique(),
   displayName: text("display_name").notNull(),
   passwordHash: text("password_hash").notNull(),
-  // 1 = the intrinsic instance owner. Admin/member authorization comes from
-  // assigned roles (see roles + user_roles); owner is never a role.
   isOwner: integer("is_owner").notNull().default(0),
   createdAt: integer("created_at").notNull(),
   // Epoch ms until which the user is muted (cannot send). null/absent = not muted.

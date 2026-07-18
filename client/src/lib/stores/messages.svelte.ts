@@ -17,10 +17,6 @@ class Messages {
     this.list = [...this.list, message];
   }
 
-  /** Author name colors are snapshotted into each message at fetch time, so a
-   *  role/color change leaves loaded messages stale. Patch them in place from
-   *  the roster: mutating nested fields (not the array) keeps the list length
-   *  unchanged, so the chat's scroll-to-bottom effect never fires. */
   async refreshAuthorColors() {
     if (!session.token || this.list.length === 0) return;
     const { members } = await api.roster(session.token);

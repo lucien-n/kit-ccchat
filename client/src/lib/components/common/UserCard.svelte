@@ -25,7 +25,6 @@
   let busyId = $state<string | null>(null);
 
   const assignedIds = $derived(new Set(assigned.map((r) => r.id)));
-  // Admins manage everyone except the owner; only the owner manages the owner.
   const canManage = $derived(
     session.isAdmin && (session.isOwner || !user?.isOwner) && user !== null,
   );

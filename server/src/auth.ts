@@ -76,9 +76,6 @@ export async function requireAuth(c: Context<Env>, next: Next) {
   await next();
 }
 
-/** Named capabilities are the seam for future fine-grained permissions: today
- *  they all resolve to owner/admin, but when roles carry granular powers only
- *  `can`'s body changes - every call site already reads by intent. */
 export type Capability =
   | "manageChannels"
   | "moderateMembers"
@@ -94,7 +91,6 @@ export function can(user: User, cap: Capability): boolean {
   return isAdmin(user);
 }
 
-/** Require a capability (use after requireAuth). */
 export function requireCan(cap: Capability) {
   return async (c: Context<Env>, next: Next) => {
     if (!can(c.get("user"), cap)) return c.json({ error: "forbidden" }, 403);
