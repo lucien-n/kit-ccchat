@@ -8,7 +8,7 @@ import { db } from "../db/index.js";
 import { roles, userRoles, users } from "../db/schema";
 import { DATA_DIR } from "../env.js";
 import { validate } from "../validate.js";
-import { toPublicUser, toRoleView } from "../views.js";
+import { toMember, toRoleView } from "../views.js";
 
 const AVATAR_DIR = join(DATA_DIR, "avatars");
 mkdirSync(AVATAR_DIR, { recursive: true });
@@ -33,7 +33,7 @@ app.get("/", requireAuth, (c) => {
     .from(users)
     .all()
     .filter((u) => !u.banned)
-    .map(toPublicUser);
+    .map(toMember);
   return c.json({ members });
 });
 
@@ -93,7 +93,7 @@ app.patch("/me", requireAuth, validate("json", updateProfileBody), async (c) => 
   const { displayName } = c.req.valid("json");
 
   db.update(users).set({ displayName }).where(eq(users.id, user.id)).run();
-  return c.json({ user: toPublicUser({ ...user, displayName }) });
+  return c.json({ user: toMember({ ...user, displayName }) });
 });
 
 app.post("/me/password", requireAuth, validate("json", changePasswordBody), async (c) => {
@@ -130,7 +130,7 @@ app.get("/:id", requireAuth, (c) => {
     .orderBy(desc(roles.position))
     .all();
 
-  return c.json({ user: toPublicUser(u), roles: assigned.map(toRoleView) });
+  return c.json({ user: toMember(u), roles: assigned.map(toRoleView) });
 });
 
 export default app;

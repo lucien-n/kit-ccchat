@@ -1,9 +1,10 @@
 import {
   Permission,
   REPLY_SNIPPET_MAX,
-  type MemberView,
+  type Member,
+  type MemberRef,
   type MessageView,
-  type PublicUser,
+  type ModeratedMember,
   type ReplyRef,
   type Role,
   type SystemEvent,
@@ -13,13 +14,13 @@ import { db } from "./db/index.js";
 import { messages, roles, users, type Message, type User } from "./db/schema";
 import { colorFor, isAdmin, isOwner, roleIdsOf } from "./permissions.js";
 
-export function toPublicUser(u: {
+export function toMember(u: {
   id: string;
   username: string;
   displayName: string;
   isOwner: number;
   avatarVersion?: number | null;
-}): PublicUser {
+}): Member {
   return {
     id: u.id,
     username: u.username,
@@ -31,9 +32,9 @@ export function toPublicUser(u: {
   };
 }
 
-export function toMemberView(u: User): MemberView {
+export function toModeratedMember(u: User): ModeratedMember {
   return {
-    ...toPublicUser(u),
+    ...toMember(u),
     banned: u.banned,
     mutedUntil: u.mutedUntil,
     roleIds: roleIdsOf(u.id),
@@ -50,7 +51,7 @@ export function toRoleView(r: typeof roles.$inferSelect): Role {
   };
 }
 
-function authorOf(userId: string) {
+function authorOf(userId: string): MemberRef | null {
   const a = db
     .select({
       id: users.id,

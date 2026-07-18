@@ -1,18 +1,24 @@
 import { z } from "zod";
 import { channelType, hexColor, permission, systemEvent } from "./primitives.js";
 
-/** A user as everyone else sees them. Never carries passwordHash - that
- *  omission is the reason this shape exists rather than leaking the db row. */
-export const publicUser = z.object({
+/** A member's identity as everyone else sees them: the lean shape embedded
+ *  wherever a person is referenced (message author, reply, role list). Never
+ *  carries passwordHash - that omission is why this exists over the db row. */
+export const memberRef = z.object({
   id: z.string(),
   username: z.string(),
   displayName: z.string(),
-  isOwner: z.boolean(),
-  isAdmin: z.boolean(),
   color: z.string().nullable(),
   avatarVersion: z.number().nullable(),
 });
-export type PublicUser = z.infer<typeof publicUser>;
+export type MemberRef = z.infer<typeof memberRef>;
+
+/** A member of the community: identity plus rank. This is the roster row. */
+export const member = memberRef.extend({
+  isOwner: z.boolean(),
+  isAdmin: z.boolean(),
+});
+export type Member = z.infer<typeof member>;
 
 export const role = z.object({
   id: z.string(),
@@ -38,21 +44,13 @@ export const channel = z.object({
 });
 export type Channel = z.infer<typeof channel>;
 
-export const messageAuthor = z.object({
-  id: z.string(),
-  username: z.string(),
-  displayName: z.string(),
-  color: z.string().nullable(),
-  avatarVersion: z.number().nullable(),
-});
-
 /** The quoted message shown above a reply. Resolved on every read rather than
  *  snapshotted at send time, so an edit or a delete is reflected in the quote.
  *  A deleted original keeps its id but surrenders its content and author. */
 export const replyRef = z.object({
   id: z.string(),
   content: z.string(),
-  author: messageAuthor.nullable(),
+  author: memberRef.nullable(),
   deleted: z.boolean(),
 });
 export type ReplyRef = z.infer<typeof replyRef>;
@@ -63,7 +61,7 @@ export const messageView = z.object({
   content: z.string(),
   createdAt: z.number(),
   editedAt: z.number().nullable(),
-  author: messageAuthor.nullable(),
+  author: memberRef.nullable(),
   replyTo: replyRef.nullable(),
   /** null for an ordinary message; the event kind for a system line, whose
    *  `author` is the subject (e.g. the member who joined). */
@@ -94,9 +92,11 @@ export const invite = z.object({
 });
 export type Invite = z.infer<typeof invite>;
 
-export const memberView = publicUser.extend({
+/** A member seen through the moderation lens (admin-only): identity, rank, and
+ *  the enforcement state everyone else never gets to see. */
+export const moderatedMember = member.extend({
   banned: z.number(),
   mutedUntil: z.number().nullable(),
   roleIds: z.array(z.string()),
 });
-export type MemberView = z.infer<typeof memberView>;
+export type ModeratedMember = z.infer<typeof moderatedMember>;

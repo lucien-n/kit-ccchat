@@ -1,4 +1,4 @@
-import { muteBody, type MemberView } from "@ccchat/shared";
+import { muteBody, type ModeratedMember } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import { Hono, type Context, type Next } from "hono";
 import { requireAuth, requireCan, type Env } from "../auth.js";
@@ -6,7 +6,7 @@ import { db } from "../db/index.js";
 import { sessions, users, type User } from "../db/schema";
 import { authLevel } from "../permissions.js";
 import { validate } from "../validate.js";
-import { toMemberView } from "../views.js";
+import { toModeratedMember } from "../views.js";
 
 type ModEnv = { Variables: Env["Variables"] & { target: User } };
 
@@ -72,7 +72,7 @@ app.post("/:id/unmute", loadTarget, (c) => {
 });
 
 app.get("/members", (c) => {
-  const members: MemberView[] = db.select().from(users).all().map(toMemberView);
+  const members: ModeratedMember[] = db.select().from(users).all().map(toModeratedMember);
   return c.json({ members });
 });
 

@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { api, avatarUrl, type PublicUser } from "$lib/api";
+  import { api, avatarUrl, type Member } from "$lib/api";
   import UserAvatar from "$lib/components/common/UserAvatar.svelte";
   import UserCard from "$lib/components/common/UserCard.svelte";
   import { apiErrorMessage } from "$lib/forms";
+  import { byRank } from "$lib/members";
   import { presence } from "$lib/stores/presence.svelte";
   import { roles } from "$lib/stores/roles.svelte";
   import { session } from "$lib/stores/session.svelte";
@@ -10,16 +11,9 @@
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
 
-  let members = $state<PublicUser[]>([]);
+  let members = $state<Member[]>([]);
 
-  const level = (m: PublicUser) => (m.isOwner ? 2 : m.isAdmin ? 1 : 0);
-
-  const roster = $derived(
-    [...members].sort((a, b) => {
-      const diff = level(b) - level(a);
-      return diff !== 0 ? diff : a.displayName.localeCompare(b.displayName);
-    }),
-  );
+  const roster = $derived([...members].sort(byRank));
 
   async function load() {
     if (!session.token) return;

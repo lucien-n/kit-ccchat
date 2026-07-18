@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api, avatarUrl, type MemberView } from "$lib/api";
+  import { api, avatarUrl, type ModeratedMember } from "$lib/api";
   import { Select } from "$lib/components/common/select";
   import UserAvatar from "$lib/components/common/UserAvatar.svelte";
   import { Button } from "$lib/components/ui/button";
@@ -17,7 +17,7 @@
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
 
-  let members = $state<MemberView[]>([]);
+  let members = $state<ModeratedMember[]>([]);
   let selectedId = $state<string | null>(null);
   let memberSearch = $state("");
   let busy = $state(false);
@@ -42,7 +42,7 @@
   const countFor = (roleId: string) =>
     members.filter((m) => m.roleIds.includes(roleId)).length;
 
-  const canEdit = (m: MemberView) => session.isOwner || !m.isOwner;
+  const canEdit = (m: ModeratedMember) => session.isOwner || !m.isOwner;
 
   onMount(() => {
     rolesStore.load();
@@ -93,7 +93,7 @@
     }
   }
 
-  async function toggleMember(member: MemberView, roleId: string) {
+  async function toggleMember(member: ModeratedMember, roleId: string) {
     if (!session.token) return;
     const has = member.roleIds.includes(roleId);
     const next = has

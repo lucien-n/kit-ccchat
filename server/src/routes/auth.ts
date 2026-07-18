@@ -15,7 +15,7 @@ import { invites, users } from "../db/schema";
 import { postSystemMessage } from "../messages.js";
 import { rateLimit } from "../ratelimit.js";
 import { validate } from "../validate.js";
-import { toPublicUser } from "../views.js";
+import { toMember } from "../views.js";
 
 const app = new Hono<Env>();
 
@@ -58,7 +58,7 @@ app.post(
 
     const token = createSession(user.id);
     postSystemMessage(SystemEvent.Member_Join, user.id);
-    return c.json({ token, user: toPublicUser(user) });
+    return c.json({ token, user: toMember(user) });
   },
 );
 
@@ -83,7 +83,7 @@ app.post("/login", loginFlood, validate("json", loginBody), loginGuess, async (c
   if (user.banned) return c.json({ error: "account banned" }, 403);
 
   const token = createSession(user.id);
-  return c.json({ token, user: toPublicUser(user) });
+  return c.json({ token, user: toMember(user) });
 });
 
 app.post("/logout", requireAuth, async (c) => {
@@ -92,6 +92,6 @@ app.post("/logout", requireAuth, async (c) => {
   return c.json({ ok: true });
 });
 
-app.get("/me", requireAuth, (c) => c.json({ user: toPublicUser(c.get("user")) }));
+app.get("/me", requireAuth, (c) => c.json({ user: toMember(c.get("user")) }));
 
 export default app;

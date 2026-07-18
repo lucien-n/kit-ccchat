@@ -4,9 +4,9 @@
 export type {
   Channel,
   Invite,
-  MemberView,
+  Member,
   MessageView,
-  PublicUser,
+  ModeratedMember,
   Role,
   VoiceMember,
 } from "@ccchat/shared";
@@ -19,9 +19,9 @@ import type {
   CreateRoleBody,
   Invite,
   LoginBody,
-  MemberView,
+  Member,
   MessageView,
-  PublicUser,
+  ModeratedMember,
   RegisterBody,
   Role,
   SetupBody,
@@ -76,7 +76,7 @@ export const api = {
   setup: (body: SetupBody) =>
     request<{
       token: string;
-      user: PublicUser;
+      user: Member;
       inviteCode: string;
       communityName: string;
     }>("/api/setup", { method: "POST", body }),
@@ -89,18 +89,18 @@ export const api = {
     }),
 
   register: (body: RegisterBody) =>
-    request<{ token: string; user: PublicUser }>("/api/auth/register", {
+    request<{ token: string; user: Member }>("/api/auth/register", {
       method: "POST",
       body,
     }),
 
   login: (body: LoginBody) =>
-    request<{ token: string; user: PublicUser }>("/api/auth/login", {
+    request<{ token: string; user: Member }>("/api/auth/login", {
       method: "POST",
       body,
     }),
 
-  me: (token: string) => request<{ user: PublicUser }>("/api/auth/me", { token }),
+  me: (token: string) => request<{ user: Member }>("/api/auth/me", { token }),
 
   logout: (token: string) =>
     request<{ ok: true }>("/api/auth/logout", { method: "POST", token }),
@@ -151,15 +151,15 @@ export const api = {
     }),
 
   /** Full community roster, readable by any member (no moderation state). */
-  roster: (token: string) => request<{ members: PublicUser[] }>("/api/users", { token }),
+  roster: (token: string) => request<{ members: Member[] }>("/api/users", { token }),
 
   /** Moderation view of members (admin only): includes banned/muted + roleIds. */
   members: (token: string) =>
-    request<{ members: MemberView[] }>("/api/moderation/members", { token }),
+    request<{ members: ModeratedMember[] }>("/api/moderation/members", { token }),
 
   /** A single user's profile card: public identity + the roles they hold. */
   userProfile: (token: string, id: string) =>
-    request<{ user: PublicUser; roles: Role[] }>(`/api/users/${id}`, { token }),
+    request<{ user: Member; roles: Role[] }>(`/api/users/${id}`, { token }),
 
   mod: (
     token: string,
@@ -180,7 +180,7 @@ export const api = {
     ),
 
   updateProfile: (token: string, body: UpdateProfileBody) =>
-    request<{ user: PublicUser }>("/api/users/me", {
+    request<{ user: Member }>("/api/users/me", {
       method: "PATCH",
       body,
       token,

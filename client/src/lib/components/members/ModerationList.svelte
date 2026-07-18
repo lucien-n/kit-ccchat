@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api, avatarUrl, type MemberView } from "$lib/api";
+  import { api, avatarUrl, type ModeratedMember } from "$lib/api";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
   import { Checkbox } from "$lib/components/ui/checkbox";
@@ -7,6 +7,7 @@
   import { Label } from "$lib/components/ui/label";
   import UserAvatar from "$lib/components/common/UserAvatar.svelte";
   import { apiErrorMessage } from "$lib/forms";
+  import { byRank } from "$lib/members";
   import { presence } from "$lib/stores/presence.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { cn } from "$lib/utils";
@@ -16,9 +17,7 @@
   let search = $state("");
   let showOnlyActiveMembers = $state(false);
 
-  let members = $state<MemberView[]>([]);
-
-  const level = (m: MemberView) => (m.isOwner ? 2 : m.isAdmin ? 1 : 0);
+  let members = $state<ModeratedMember[]>([]);
 
   const shownMembers = $derived.by(() => {
     const q = search.trim().toLowerCase();
@@ -54,7 +53,8 @@
     }
   }
 
-  const isMuted = (m: MemberView) => m.mutedUntil != null && m.mutedUntil > Date.now();
+  const isMuted = (m: ModeratedMember) =>
+    m.mutedUntil != null && m.mutedUntil > Date.now();
 
   onMount(load);
 </script>
@@ -71,11 +71,7 @@
 
   <div class="min-h-0 flex-1 space-y-1 overflow-y-auto">
     {#if shownMembers.length}
-      {#each shownMembers.sort((a, b) => {
-        const diff = level(b) - level(a);
-
-        return diff !== 0 ? diff : a.displayName.localeCompare(b.displayName);
-      }) as member (member.id)}
+      {#each shownMembers.sort(byRank) as member (member.id)}
         {@const av = avatarUrl(member.id, member.avatarVersion)}
         <div class="hover:bg-muted/50 rounded-md p-2">
           <div class="flex items-center gap-2">

@@ -1,10 +1,10 @@
 import { type RegisterBody } from "@ccchat/shared";
-import { api, type PublicUser } from "../api";
+import { api, type Member } from "../api";
 
 /** Who you are and what proves it. Everything else keys off `token`. */
 class Session {
   token = $state<string | null>(null);
-  user = $state<PublicUser | null>(null);
+  user = $state<Member | null>(null);
 
   get isAdmin(): boolean {
     return this.user?.isAdmin ?? false;
@@ -49,13 +49,13 @@ class Session {
     }
   }
 
-  start(token: string, user: PublicUser) {
+  start(token: string, user: Member) {
     this.token = token;
     this.user = user;
     localStorage.setItem("token", token);
   }
 
-  patchUser(patch: Partial<PublicUser>) {
+  patchUser(patch: Partial<Member>) {
     if (this.user) this.user = { ...this.user, ...patch };
   }
 

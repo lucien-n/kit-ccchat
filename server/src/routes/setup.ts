@@ -4,7 +4,7 @@ import { createSession, type Env } from "../auth.js";
 import { needsSetup, seedCommunity } from "../bootstrap.js";
 import { rateLimit } from "../ratelimit.js";
 import { validate } from "../validate.js";
-import { toPublicUser } from "../views.js";
+import { toMember } from "../views.js";
 
 const app = new Hono<Env>();
 
@@ -40,7 +40,7 @@ app.post(
       const token = createSession(owner.id);
       return c.json({
         token,
-        user: toPublicUser(owner),
+        user: toMember(owner),
         inviteCode,
         communityName,
       });

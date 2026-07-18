@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api, avatarUrl, type PublicUser, type Role } from "$lib/api";
+  import { api, avatarUrl, type Member, type Role } from "$lib/api";
   import UserAvatar from "$lib/components/common/UserAvatar.svelte";
   import * as Popover from "$lib/components/ui/popover";
   import { ScrollArea } from "$lib/components/ui/scroll-area";
@@ -20,7 +20,7 @@
   let { userId, children, class: className }: Props = $props();
 
   let open = $state(false);
-  let user = $state<PublicUser | null>(null);
+  let user = $state<Member | null>(null);
   let assigned = $state<Role[]>([]);
   let busyId = $state<string | null>(null);
 
