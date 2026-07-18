@@ -97,3 +97,8 @@ export function requireCan(cap: Capability) {
     await next();
   };
 }
+
+export async function requireOwner(c: Context<Env>, next: Next) {
+  if (!isOwner(c.get("user"))) return c.json({ error: "forbidden" }, 403);
+  await next();
+}

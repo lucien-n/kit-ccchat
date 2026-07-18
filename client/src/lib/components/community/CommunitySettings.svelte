@@ -7,6 +7,7 @@
   import type { Component } from "svelte";
   import RolesPanel from "../members/RolesPanel.svelte";
   import GeneralSettings from "./GeneralSettings.svelte";
+  import SystemPanel from "./SystemPanel.svelte";
 
   interface Props {
     open?: boolean;
@@ -44,6 +45,12 @@
       value: "roles",
       label: "Roles",
       component: RolesPanel,
+    },
+    {
+      value: "system",
+      label: "System",
+      component: SystemPanel,
+      isHidden: !isOwner,
     },
   ]);
 </script>

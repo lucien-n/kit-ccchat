@@ -100,3 +100,35 @@ export const moderatedMember = member.extend({
   roleIds: z.array(z.string()),
 });
 export type ModeratedMember = z.infer<typeof moderatedMember>;
+
+/** Host machine snapshot, owner-only. Whole-box figures; disk is the filesystem
+ *  the data dir lives on. */
+export const systemStats = z.object({
+  hostname: z.string(),
+  platform: z.string(),
+  arch: z.string(),
+  uptimeSec: z.number(),
+  cpu: z.object({
+    model: z.string(),
+    cores: z.number(),
+    loadAvg: z.tuple([z.number(), z.number(), z.number()]),
+    usagePct: z.number(),
+  }),
+  memory: z.object({
+    totalBytes: z.number(),
+    usedBytes: z.number(),
+    freeBytes: z.number(),
+  }),
+  disk: z.object({
+    totalBytes: z.number(),
+    usedBytes: z.number(),
+    freeBytes: z.number(),
+  }),
+  app: z.object({
+    uptimeSec: z.number(),
+    rssBytes: z.number(),
+  }),
+  history: z.array(z.object({ t: z.number(), cpuPct: z.number(), memPct: z.number() })),
+  sampleIntervalSec: z.number(),
+});
+export type SystemStats = z.infer<typeof systemStats>;

@@ -9,7 +9,6 @@ const PAGE = 50;
  *  than caching, so there's no per-channel cache to invalidate on every delete. */
 class Messages {
   list = $state<MessageView[]>([]);
-  /** Whether an older page might still exist, so the view knows to keep paging. */
   hasMore = $state(false);
   loadingOlder = $state(false);
   #channelId: string | null = null;
@@ -23,7 +22,6 @@ class Messages {
     this.hasMore = messages.length >= PAGE;
   }
 
-  /** Fetch the page just before the oldest message on screen and prepend it. */
   async loadOlder() {
     if (!session.token || this.loadingOlder || !this.hasMore || this.list.length === 0)
       return;
@@ -45,8 +43,6 @@ class Messages {
     this.list = [...this.list, message];
   }
 
-  /** Swap in the server's post-edit view; the broadcast reaches the author too,
-   *  so an edit lands the same way for everyone. */
   applyEdit(message: MessageView) {
     const i = this.list.findIndex((m) => m.id === message.id);
     if (i === -1) return;
@@ -55,16 +51,13 @@ class Messages {
     this.list = next;
   }
 
-  /** Over REST for the author check; the resulting broadcast updates our list
-   *  through applyEdit, the same path as everyone else's. */
   async edit(id: string, content: string) {
     if (!session.token) return;
     await api.editMessage(session.token, id, content);
   }
 
-  /** Author colors come from roles, so a role change restyles names already on
-   *  screen. The color map is owned by the members store; passing it in keeps
-   *  this store from reaching across to a sibling. */
+  // Map is passed in rather than read from the members store, to keep this store
+  // from importing a sibling.
   applyColors(colorById: Map<string, string | null>) {
     for (const m of this.list) {
       if (m.author && colorById.has(m.author.id))

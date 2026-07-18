@@ -8,6 +8,7 @@ export type {
   MessageView,
   ModeratedMember,
   Role,
+  SystemStats,
   VoiceMember,
 } from "@ccchat/shared";
 
@@ -25,6 +26,7 @@ import type {
   RegisterBody,
   Role,
   SetupBody,
+  SystemStats,
   UpdateProfileBody,
   UpdateRoleBody,
 } from "@ccchat/shared";
@@ -184,6 +186,9 @@ export const api = {
       body,
       token,
     }),
+
+  /** Host machine snapshot (owner only). */
+  system: (token: string) => request<{ stats: SystemStats }>("/api/system", { token }),
 
   voiceToken: (token: string, channelId: string) =>
     request<{ token: string; url: string; room: string; canPublish: boolean }>(

@@ -16,6 +16,7 @@ import channelRoutes from "./routes/channels.js";
 import messageRoutes from "./routes/messages.js";
 import moderationRoutes from "./routes/moderation.js";
 import roleRoutes from "./routes/roles.js";
+import systemRoutes from "./routes/system.js";
 import voiceRoutes from "./routes/voice.js";
 import userRoutes from "./routes/users.js";
 
@@ -35,6 +36,7 @@ app.route("/api/channels", channelRoutes);
 app.route("/api/messages", messageRoutes);
 app.route("/api/moderation", moderationRoutes);
 app.route("/api/roles", roleRoutes);
+app.route("/api/system", systemRoutes);
 app.route("/api/voice", voiceRoutes);
 app.route("/api/users", userRoutes);
 
