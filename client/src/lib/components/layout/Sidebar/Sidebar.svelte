@@ -8,7 +8,8 @@
   import { session } from "$lib/stores/session.svelte";
   import { voice } from "$lib/stores/voice.svelte";
   import { ChannelType } from "@ccchat/shared";
-  import { LogOut, Plus } from "@lucide/svelte";
+  import { LogOut } from "@lucide/svelte";
+  import ChannelCategoryHeader from "./ChannelCategoryHeader.svelte";
   import SidebarHeader from "./SidebarHeader.svelte";
   import SingleChannelRow from "./SingleChannelRow.svelte";
 
@@ -47,7 +48,7 @@
     onNavigate?.();
   }
 
-  function createChannel(type: ChannelType) {
+  function handleCreateChannel(type: ChannelType) {
     onCreateChannel?.(type);
     onNavigate?.();
   }
@@ -56,43 +57,19 @@
 <SidebarHeader {onOpenCommunitySettings} />
 
 <nav class="min-h-0 flex-1 overflow-y-auto p-2">
-  <div class="flex items-center justify-between px-2 pt-2 pb-1">
-    <span class="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-      Text
-    </span>
-    {#if session.isAdmin}
-      <Button
-        variant="ghost"
-        size="icon"
-        class="size-6"
-        title="Create text channel"
-        onclick={() => createChannel(ChannelType.Text)}
-      >
-        <Plus class="size-4" />
-      </Button>
-    {/if}
-  </div>
+  <ChannelCategoryHeader
+    title="Text"
+    onCreate={() => handleCreateChannel(ChannelType.Text)}
+  />
 
   {#each textChannels as channel (channel.id)}
     <SingleChannelRow {channel} onSelect={() => handleSelectChannel(channel.id)} />
   {/each}
 
-  <div class="flex items-center justify-between px-2 pt-4 pb-1">
-    <span class="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
-      Voice
-    </span>
-    {#if session.isAdmin}
-      <Button
-        variant="ghost"
-        size="icon"
-        class="size-6"
-        title="Create voice channel"
-        onclick={() => createChannel(ChannelType.Voice)}
-      >
-        <Plus class="size-4" />
-      </Button>
-    {/if}
-  </div>
+  <ChannelCategoryHeader
+    title="Voice"
+    onCreate={() => handleCreateChannel(ChannelType.Voice)}
+  />
 
   {#each voiceChannels as channel (channel.id)}
     <SingleChannelRow {channel} onSelect={() => handleJoinVoice(channel)} />
