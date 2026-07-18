@@ -1,28 +1,52 @@
 import {
+  Permission,
   REPLY_SNIPPET_MAX,
-  Role,
+  type MemberView,
   type MessageView,
   type PublicUser,
   type ReplyRef,
+  type Role,
   type SystemEvent,
 } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import { db } from "./db/index.js";
-import { messages, users, type Message } from "./db/schema";
+import { messages, roles, users, type Message, type User } from "./db/schema";
+import { colorFor, isAdmin, isOwner, roleIdsOf } from "./permissions.js";
 
 export function toPublicUser(u: {
   id: string;
   username: string;
   displayName: string;
-  role: string;
+  isOwner: number;
   avatarVersion?: number | null;
 }): PublicUser {
   return {
     id: u.id,
     username: u.username,
     displayName: u.displayName,
-    role: u.role as Role,
+    isOwner: isOwner(u),
+    isAdmin: isAdmin(u),
+    color: colorFor(u.id),
     avatarVersion: u.avatarVersion ?? null,
+  };
+}
+
+export function toMemberView(u: User): MemberView {
+  return {
+    ...toPublicUser(u),
+    banned: u.banned,
+    mutedUntil: u.mutedUntil,
+    roleIds: roleIdsOf(u.id),
+  };
+}
+
+export function toRoleView(r: typeof roles.$inferSelect): Role {
+  return {
+    id: r.id,
+    name: r.name,
+    color: r.color,
+    permission: r.permission as Permission,
+    position: r.position,
   };
 }
 
@@ -37,7 +61,9 @@ function authorOf(userId: string) {
     .from(users)
     .where(eq(users.id, userId))
     .get();
-  return a ? { ...a, avatarVersion: a.avatarVersion ?? null } : null;
+  return a
+    ? { ...a, color: colorFor(a.id), avatarVersion: a.avatarVersion ?? null }
+    : null;
 }
 
 /** Spread across code points, not UTF-16 units, so the cut never lands inside an

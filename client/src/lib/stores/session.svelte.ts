@@ -1,4 +1,4 @@
-import { Role, type RegisterBody } from "@ccchat/shared";
+import { type RegisterBody } from "@ccchat/shared";
 import { api, type PublicUser } from "../api";
 
 /** Who you are and what proves it. Everything else keys off `token`. */
@@ -7,7 +7,22 @@ class Session {
   user = $state<PublicUser | null>(null);
 
   get isAdmin(): boolean {
-    return this.user?.role === Role.Admin || this.user?.role === Role.Owner;
+    return this.user?.isAdmin ?? false;
+  }
+
+  get isOwner(): boolean {
+    return this.user?.isOwner ?? false;
+  }
+
+  /** Re-pull the current user (role assignments changed our color/permission). */
+  async refresh() {
+    if (!this.token) return;
+    try {
+      const { user } = await api.me(this.token);
+      this.user = user;
+    } catch {
+      /* a failed refresh just leaves the stale view; next action re-auths */
+    }
   }
 
   async login(username: string, password: string) {

@@ -1,10 +1,10 @@
-import { rankOf, Role, ROLE_RANK } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import type { Context, Next } from "hono";
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { db } from "./db/index.js";
 import { sessions, users, type User } from "./db/schema";
 import { SESSION_TTL_MS } from "./env.js";
+import { isAdmin, isOwner } from "./permissions.js";
 
 /** Password hashing with Node's built-in scrypt - no native modules to compile,
  *  works the same on every platform. Format: <saltHex>:<keyHex>. */
@@ -76,15 +76,28 @@ export async function requireAuth(c: Context<Env>, next: Next) {
   await next();
 }
 
-export function hasRole(user: User, min: Role): boolean {
-  return rankOf(user.role as Role) >= ROLE_RANK[min];
+/** Named capabilities are the seam for future fine-grained permissions: today
+ *  they all resolve to owner/admin, but when roles carry granular powers only
+ *  `can`'s body changes - every call site already reads by intent. */
+export type Capability =
+  | "manageChannels"
+  | "moderateMembers"
+  | "manageInvites"
+  | "manageRoles"
+  | "deleteAnyMessage"
+  | "manageCommunity";
+
+const OWNER_ONLY = new Set<Capability>(["manageCommunity"]);
+
+export function can(user: User, cap: Capability): boolean {
+  if (OWNER_ONLY.has(cap)) return isOwner(user);
+  return isAdmin(user);
 }
 
-/** Require at least the given role (use after requireAuth). */
-export function requireRole(min: Role) {
+/** Require a capability (use after requireAuth). */
+export function requireCan(cap: Capability) {
   return async (c: Context<Env>, next: Next) => {
-    const user = c.get("user");
-    if (!hasRole(user, min)) return c.json({ error: "forbidden" }, 403);
+    if (!can(c.get("user"), cap)) return c.json({ error: "forbidden" }, 403);
     await next();
   };
 }

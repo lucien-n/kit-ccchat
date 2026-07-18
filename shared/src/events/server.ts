@@ -7,6 +7,7 @@ export enum ServerEventType {
   Presence = "presence",
   Voice_Presence = "voice_presence",
   Community_Renamed = "community_renamed",
+  Roles_Changed = "roles_changed",
   Error = "error",
 }
 
@@ -31,6 +32,11 @@ export type ServerEvent =
   | {
       type: ServerEventType.Community_Renamed;
       name: string;
+    }
+  | {
+      // Roles or their assignments changed. Clients refetch roles + members;
+      // affected sessions refetch /me so their own color/permission updates.
+      type: ServerEventType.Roles_Changed;
     }
   | {
       type: ServerEventType.Error;

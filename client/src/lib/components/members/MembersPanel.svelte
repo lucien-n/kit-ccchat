@@ -1,29 +1,29 @@
 <script lang="ts">
-  import { api, avatarUrl, type MemberView } from "$lib/api";
+  import { api, avatarUrl, type PublicUser } from "$lib/api";
   import UserAvatar from "$lib/components/common/UserAvatar.svelte";
   import { apiErrorMessage } from "$lib/forms";
   import { presence } from "$lib/stores/presence.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { cn } from "$lib/utils";
-  import { rankOf } from "@ccchat/shared";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
 
-  let members = $state<MemberView[]>([]);
+  let members = $state<PublicUser[]>([]);
+
+  /** owner 2 > admin 1 > member 0, so the roster hoists staff to the top. */
+  const level = (m: PublicUser) => (m.isOwner ? 2 : m.isAdmin ? 1 : 0);
 
   const roster = $derived(
-    [...members]
-      .filter((m) => !m.banned)
-      .sort((a, b) => {
-        const diff = rankOf(b.role) - rankOf(a.role);
-        return diff !== 0 ? diff : a.displayName.localeCompare(b.displayName);
-      }),
+    [...members].sort((a, b) => {
+      const diff = level(b) - level(a);
+      return diff !== 0 ? diff : a.displayName.localeCompare(b.displayName);
+    }),
   );
 
   async function load() {
     if (!session.token) return;
     try {
-      members = (await api.members(session.token)).members;
+      members = (await api.roster(session.token)).members;
     } catch (e) {
       toast.error(apiErrorMessage(e, "failed to load members"));
     }
@@ -49,8 +49,17 @@
         fallbackClass="text-xs"
       />
       <div class="flex min-w-0 flex-1 items-center gap-1.5">
-        <span class="truncate text-sm font-medium">{member.displayName}</span>
-        <span class="text-muted-foreground text-[10px] uppercase">{member.role}</span>
+        <span
+          class="truncate text-sm font-medium"
+          style={member.color ? `color:${member.color}` : undefined}
+        >
+          {member.displayName}
+        </span>
+        {#if member.isOwner || member.isAdmin}
+          <span class="text-muted-foreground text-[10px] uppercase">
+            {member.isOwner ? "owner" : "admin"}
+          </span>
+        {/if}
       </div>
     </div>
   {:else}

@@ -7,22 +7,26 @@ export type {
   MemberView,
   MessageView,
   PublicUser,
+  Role,
   VoiceMember,
 } from "@ccchat/shared";
 
 import type {
-  Channel,
   ChangePasswordBody,
+  Channel,
   CreateChannelBody,
   CreateInviteBody,
+  CreateRoleBody,
   Invite,
   LoginBody,
   MemberView,
   MessageView,
   PublicUser,
   RegisterBody,
+  Role,
   SetupBody,
   UpdateProfileBody,
+  UpdateRoleBody,
 } from "@ccchat/shared";
 
 export class ApiError extends Error {
@@ -146,8 +150,16 @@ export const api = {
       token,
     }),
 
+  /** Full community roster, readable by any member (no moderation state). */
+  roster: (token: string) => request<{ members: PublicUser[] }>("/api/users", { token }),
+
+  /** Moderation view of members (admin only): includes banned/muted + roleIds. */
   members: (token: string) =>
     request<{ members: MemberView[] }>("/api/moderation/members", { token }),
+
+  /** A single user's profile card: public identity + the roles they hold. */
+  userProfile: (token: string, id: string) =>
+    request<{ user: PublicUser; roles: Role[] }>(`/api/users/${id}`, { token }),
 
   mod: (
     token: string,
@@ -190,4 +202,23 @@ export const api = {
 
   removeAvatar: (token: string) =>
     request<{ ok: true }>("/api/users/me/avatar", { method: "DELETE", token }),
+
+  roles: (token: string) => request<{ roles: Role[] }>("/api/roles", { token }),
+
+  createRole: (token: string, body: CreateRoleBody) =>
+    request<{ role: Role }>("/api/roles", { method: "POST", body, token }),
+
+  updateRole: (token: string, id: string, body: UpdateRoleBody) =>
+    request<{ role: Role }>(`/api/roles/${id}`, { method: "PATCH", body, token }),
+
+  deleteRole: (token: string, id: string) =>
+    request<{ ok: true }>(`/api/roles/${id}`, { method: "DELETE", token }),
+
+  /** Replace a member's full set of roles. */
+  setUserRoles: (token: string, userId: string, roleIds: string[]) =>
+    request<{ ok: true }>(`/api/roles/members/${userId}`, {
+      method: "PUT",
+      body: { roleIds },
+      token,
+    }),
 };

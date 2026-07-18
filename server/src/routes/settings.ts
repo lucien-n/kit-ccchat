@@ -1,6 +1,6 @@
-import { renameCommunityBody, Role, ServerEventType } from "@ccchat/shared";
+import { renameCommunityBody, ServerEventType } from "@ccchat/shared";
 import { Hono } from "hono";
-import { requireAuth, requireRole, type Env } from "../auth.js";
+import { requireAuth, requireCan, type Env } from "../auth.js";
 import { hub } from "../hub.js";
 import { communityName, setSetting } from "../settings.js";
 import { validate } from "../validate.js";
@@ -11,7 +11,7 @@ app.use("*", requireAuth);
 
 app.patch(
   "/",
-  requireRole(Role.Owner),
+  requireCan("manageCommunity"),
   validate("json", renameCommunityBody),
   async (c) => {
     const name = c.req.valid("json").communityName;

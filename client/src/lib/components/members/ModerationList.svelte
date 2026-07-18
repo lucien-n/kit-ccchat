@@ -10,7 +10,6 @@
   import { presence } from "$lib/stores/presence.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { cn } from "$lib/utils";
-  import { rankOf, Role } from "@ccchat/shared";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
 
@@ -18,6 +17,9 @@
   let showOnlyActiveMembers = $state(false);
 
   let members = $state<MemberView[]>([]);
+
+  /** owner 2 > admin 1 > member 0. */
+  const level = (m: MemberView) => (m.isOwner ? 2 : m.isAdmin ? 1 : 0);
 
   const shownMembers = $derived.by(() => {
     const q = search.trim().toLowerCase();
@@ -71,7 +73,7 @@
   <div class="min-h-0 flex-1 space-y-1 overflow-y-auto">
     {#if shownMembers.length}
       {#each shownMembers.sort((a, b) => {
-        const diff = rankOf(b.role) - rankOf(a.role);
+        const diff = level(b) - level(a);
 
         return diff !== 0 ? diff : a.displayName.localeCompare(b.displayName);
       }) as member (member.id)}
@@ -91,16 +93,20 @@
               fallbackClass="text-xs"
             />
             <div class="flex min-w-0 flex-1 items-center gap-1.5">
-              <span class="truncate text-sm font-medium">{member.displayName}</span>
+              <span
+                class="truncate text-sm font-medium"
+                style={member.color ? `color:${member.color}` : undefined}
+                >{member.displayName}</span
+              >
               <span class="text-muted-foreground text-[10px] uppercase"
-                >{member.role}</span
+                >{member.isOwner ? "owner" : member.isAdmin ? "admin" : "member"}</span
               >
             </div>
             {#if member.banned}<Badge variant="destructive">banned</Badge>{/if}
             {#if isMuted(member)}<Badge variant="secondary">muted</Badge>{/if}
           </div>
 
-          {#if member.id !== session.user?.id && member.role !== Role.Owner}
+          {#if member.id !== session.user?.id && !member.isOwner}
             <div class="flex flex-wrap gap-1 pt-2 pl-9">
               {#if isMuted(member)}
                 <Button

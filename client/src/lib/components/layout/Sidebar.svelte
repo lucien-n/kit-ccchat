@@ -197,8 +197,15 @@
       fallbackClass="text-xs"
     />
     <div class="min-w-0 flex-1 text-left">
-      <div class="truncate text-sm font-medium">{session.user?.displayName}</div>
-      <div class="text-muted-foreground text-xs">{session.user?.role}</div>
+      <div
+        class="truncate text-sm font-medium"
+        style={session.user?.color ? `color:${session.user.color}` : undefined}
+      >
+        {session.user?.displayName}
+      </div>
+      <div class="text-muted-foreground text-xs">
+        {session.isOwner ? "owner" : session.isAdmin ? "admin" : "member"}
+      </div>
     </div>
   </button>
   <Button

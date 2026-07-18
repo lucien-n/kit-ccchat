@@ -1,14 +1,14 @@
-import { createInviteBody, InviteStatus, Role, type Invite } from "@ccchat/shared";
+import { createInviteBody, InviteStatus, type Invite } from "@ccchat/shared";
 import { desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
-import { randomToken, requireAuth, requireRole, type Env } from "../auth.js";
+import { randomToken, requireAuth, requireCan, type Env } from "../auth.js";
 import { db } from "../db/index.js";
 import { invites, users } from "../db/schema";
 import { validate } from "../validate.js";
 
 const app = new Hono<Env>();
 
-app.use("*", requireAuth, requireRole(Role.Admin));
+app.use("*", requireAuth, requireCan("manageInvites"));
 
 /** Derived state is resolved here so the client never re-implements the
  *  expiry/exhaustion rules that /api/auth/register enforces. */

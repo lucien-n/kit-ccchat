@@ -14,6 +14,7 @@ import { messages } from "./stores/messages.svelte";
 import { prefs } from "./stores/prefs.svelte";
 import { presence } from "./stores/presence.svelte";
 import { realtime } from "./stores/realtime.svelte";
+import { roles } from "./stores/roles.svelte";
 import { session } from "./stores/session.svelte";
 import { unread } from "./stores/unread.svelte";
 
@@ -106,6 +107,12 @@ function dispatch(event: ServerEvent) {
       break;
     case ServerEventType.Community_Renamed:
       community.name = event.name;
+      break;
+    case ServerEventType.Roles_Changed:
+      // Our own color/permission may have shifted; refresh self and the role
+      // list, and bump the version so rosters keyed off it re-fetch.
+      session.refresh();
+      roles.invalidate();
       break;
     case ServerEventType.Error:
       toast.error(event.message);

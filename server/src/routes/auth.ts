@@ -1,10 +1,4 @@
-import {
-  loginBody,
-  registerBody,
-  Role,
-  SystemEvent,
-  type LoginBody,
-} from "@ccchat/shared";
+import { loginBody, registerBody, SystemEvent, type LoginBody } from "@ccchat/shared";
 import { eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import {
@@ -48,7 +42,7 @@ app.post(
       username,
       displayName,
       passwordHash: hashPassword(password),
-      role: Role.Member,
+      isOwner: 0,
       createdAt: Date.now(),
       banned: 0,
     };

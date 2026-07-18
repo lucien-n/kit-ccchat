@@ -1,16 +1,32 @@
 import { z } from "zod";
-import { channelType, role, systemEvent } from "./primitives.js";
+import { channelType, hexColor, permission, systemEvent } from "./primitives.js";
 
 /** A user as everyone else sees them. Never carries passwordHash - that
- *  omission is the reason this shape exists rather than leaking the db row. */
+ *  omission is the reason this shape exists rather than leaking the db row.
+ *  `isOwner`/`isAdmin` are the effective authorization (isAdmin includes owner);
+ *  `color` is the name color from the user's highest-position colored role. */
 export const publicUser = z.object({
   id: z.string(),
   username: z.string(),
   displayName: z.string(),
-  role,
+  isOwner: z.boolean(),
+  isAdmin: z.boolean(),
+  color: z.string().nullable(),
   avatarVersion: z.number().nullable(),
 });
 export type PublicUser = z.infer<typeof publicUser>;
+
+/** A Role: the colored, assignable, many-per-user label that also carries a
+ *  permission. `color` null = no color; `position` orders them (higher wins
+ *  for a user's display color). */
+export const role = z.object({
+  id: z.string(),
+  name: z.string(),
+  color: hexColor.nullable(),
+  permission,
+  position: z.number(),
+});
+export type Role = z.infer<typeof role>;
 
 export const voiceMember = z.object({
   id: z.string(),
@@ -31,6 +47,7 @@ export const messageAuthor = z.object({
   id: z.string(),
   username: z.string(),
   displayName: z.string(),
+  color: z.string().nullable(),
   avatarVersion: z.number().nullable(),
 });
 
@@ -85,5 +102,7 @@ export type Invite = z.infer<typeof invite>;
 export const memberView = publicUser.extend({
   banned: z.number(),
   mutedUntil: z.number().nullable(),
+  /** Ids of the roles this member holds, for the management UI. */
+  roleIds: z.array(z.string()),
 });
 export type MemberView = z.infer<typeof memberView>;

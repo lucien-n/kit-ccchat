@@ -1,16 +1,18 @@
-import { muteBody, rankOf, Role, type MemberView } from "@ccchat/shared";
+import { muteBody, type MemberView } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import { Hono, type Context, type Next } from "hono";
-import { requireAuth, requireRole, type Env } from "../auth.js";
+import { requireAuth, requireCan, type Env } from "../auth.js";
 import { db } from "../db/index.js";
 import { sessions, users, type User } from "../db/schema";
+import { authLevel } from "../permissions.js";
 import { validate } from "../validate.js";
+import { toMemberView } from "../views.js";
 
 type ModEnv = { Variables: Env["Variables"] & { target: User } };
 
 const app = new Hono<ModEnv>();
 
-app.use("*", requireAuth, requireRole(Role.Admin));
+app.use("*", requireAuth, requireCan("moderateMembers"));
 
 /** Nobody may act on their own rank or above, so an admin can't ban the owner or
  *  another admin. */
@@ -24,7 +26,7 @@ async function loadTarget(c: Context<ModEnv>, next: Next) {
   if (!target) return c.json({ error: "user not found" }, 404);
   if (target.id === actor.id)
     return c.json({ error: "you cannot moderate yourself" }, 400);
-  if (rankOf(target.role as Role) >= rankOf(actor.role as Role))
+  if (authLevel(target) >= authLevel(actor))
     return c.json({ error: "target outranks you" }, 403);
   c.set("target", target);
   await next();
@@ -70,19 +72,7 @@ app.post("/:id/unmute", loadTarget, (c) => {
 });
 
 app.get("/members", (c) => {
-  const rows = db
-    .select({
-      id: users.id,
-      username: users.username,
-      displayName: users.displayName,
-      role: users.role,
-      banned: users.banned,
-      mutedUntil: users.mutedUntil,
-      avatarVersion: users.avatarVersion,
-    })
-    .from(users)
-    .all();
-  const members: MemberView[] = rows.map((r) => ({ ...r, role: r.role as Role }));
+  const members: MemberView[] = db.select().from(users).all().map(toMemberView);
   return c.json({ members });
 });
 

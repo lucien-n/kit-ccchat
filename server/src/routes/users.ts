@@ -1,14 +1,14 @@
 import { avatarBody, changePasswordBody, updateProfileBody } from "@ccchat/shared";
-import { eq } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { hashPassword, requireAuth, verifyPassword, type Env } from "../auth.js";
 import { db } from "../db/index.js";
-import { users } from "../db/schema";
+import { roles, userRoles, users } from "../db/schema";
 import { DATA_DIR } from "../env.js";
 import { validate } from "../validate.js";
-import { toPublicUser } from "../views.js";
+import { toPublicUser, toRoleView } from "../views.js";
 
 const AVATAR_DIR = join(DATA_DIR, "avatars");
 mkdirSync(AVATAR_DIR, { recursive: true });
@@ -26,6 +26,19 @@ function sniffMime(buf: Buffer): string | null {
 }
 
 const app = new Hono<Env>();
+
+/** The community roster: every member as a PublicUser (color/permission included,
+ *  but no banned/muted moderation state - that stays on /api/moderation/members).
+ *  Any authenticated user may read it; banned accounts are omitted. */
+app.get("/", requireAuth, (c) => {
+  const members = db
+    .select()
+    .from(users)
+    .all()
+    .filter((u) => !u.banned)
+    .map(toPublicUser);
+  return c.json({ members });
+});
 
 /** Hono hands back the *decoded* param, so an id of `..%2Fccchat.sqlite` arrives
  *  as a relative path and join() would walk straight out of AVATAR_DIR. An
@@ -98,6 +111,33 @@ app.post("/me/password", requireAuth, validate("json", changePasswordBody), asyn
     .where(eq(users.id, user.id))
     .run();
   return c.json({ ok: true });
+});
+
+/** A user's profile card: their public identity plus the roles they hold
+ *  (highest-position first). Any member may read it; editing goes through
+ *  /api/roles/members/:userId. Registered last so it can't shadow /me/* or
+ *  /:id/avatar. */
+app.get("/:id", requireAuth, (c) => {
+  const id = String(c.req.param("id"));
+  const u = db.select().from(users).where(eq(users.id, id)).get();
+  if (!u) return c.json({ error: "user not found" }, 404);
+
+  const assigned = db
+    .select({
+      id: roles.id,
+      name: roles.name,
+      color: roles.color,
+      permission: roles.permission,
+      position: roles.position,
+      createdAt: roles.createdAt,
+    })
+    .from(userRoles)
+    .innerJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, id))
+    .orderBy(desc(roles.position))
+    .all();
+
+  return c.json({ user: toPublicUser(u), roles: assigned.map(toRoleView) });
 });
 
 export default app;

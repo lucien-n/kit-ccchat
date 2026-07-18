@@ -27,22 +27,25 @@
     { value: ChannelType.Voice, label: "Voice", icon: Volume2 },
   ];
 
-  const form = superForm(defaults({ name: "", type: initialType }, zod4(createChannelBody)), {
-    SPA: true,
-    validators: zod4Client(createChannelBody),
-    resetForm: false,
-    onUpdate: async ({ form }) => {
-      if (!form.valid || !session.token) return;
-      try {
-        const { channel } = await api.createChannel(session.token, form.data);
-        await channels.load();
-        if (channel.type === ChannelType.Text) app.selectChannel(channel.id);
-        open = false;
-      } catch (err) {
-        setMessage(form, fail(apiErrorMessage(err, "failed to create channel")));
-      }
+  const form = superForm(
+    defaults({ name: "", type: initialType }, zod4(createChannelBody)),
+    {
+      SPA: true,
+      validators: zod4Client(createChannelBody),
+      resetForm: false,
+      onUpdate: async ({ form }) => {
+        if (!form.valid || !session.token) return;
+        try {
+          const { channel } = await api.createChannel(session.token, form.data);
+          await channels.load();
+          if (channel.type === ChannelType.Text) app.selectChannel(channel.id);
+          open = false;
+        } catch (err) {
+          setMessage(form, fail(apiErrorMessage(err, "failed to create channel")));
+        }
+      },
     },
-  });
+  );
 
   const { form: formData, enhance, submitting } = form;
 
@@ -88,7 +91,9 @@
             <Input
               {...props}
               bind:value={$formData.name}
-              placeholder={$formData.type === ChannelType.Voice ? "General Voice" : "general"}
+              placeholder={$formData.type === ChannelType.Voice
+                ? "General Voice"
+                : "general"}
               autocomplete="off"
             />
           {/snippet}
@@ -97,7 +102,9 @@
       </Form.Field>
 
       <Dialog.Footer>
-        <Button type="button" variant="ghost" onclick={() => (open = false)}>Cancel</Button>
+        <Button type="button" variant="ghost" onclick={() => (open = false)}
+          >Cancel</Button
+        >
         <Form.Button disabled={$submitting}>Create</Form.Button>
       </Dialog.Footer>
     </form>

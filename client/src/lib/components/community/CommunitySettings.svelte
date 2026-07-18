@@ -4,7 +4,8 @@
   import * as Dialog from "$lib/components/ui/dialog";
   import * as Tabs from "$lib/components/ui/tabs";
   import { session } from "$lib/stores/session.svelte";
-  import { Role } from "@ccchat/shared";
+  import type { Component } from "svelte";
+  import RolesPanel from "../members/RolesPanel.svelte";
   import GeneralSettings from "./GeneralSettings.svelte";
 
   interface Props {
@@ -13,7 +14,38 @@
 
   let { open = $bindable(false) }: Props = $props();
 
-  const isOwner = $derived(session.user?.role === Role.Owner);
+  const isOwner = $derived(session.isOwner);
+
+  const TABS = $derived<
+    {
+      value: string;
+      label: string;
+      component: Component;
+      isHidden?: boolean;
+    }[]
+  >([
+    {
+      value: "general",
+      label: "General",
+      component: GeneralSettings,
+      isHidden: !isOwner,
+    },
+    {
+      value: "moderation",
+      label: "Moderation",
+      component: ModerationList,
+    },
+    {
+      value: "invites",
+      label: "Invites",
+      component: InvitesPanel,
+    },
+    {
+      value: "roles",
+      label: "Roles",
+      component: RolesPanel,
+    },
+  ]);
 </script>
 
 <Dialog.Root bind:open>
@@ -28,27 +60,21 @@
       class="flex gap-4"
     >
       <Tabs.List class="w-40 shrink-0">
-        {#if isOwner}
-          <Tabs.Trigger value="general">General</Tabs.Trigger>
-        {/if}
-        <Tabs.Trigger value="moderation">Moderation</Tabs.Trigger>
-        <Tabs.Trigger value="invites">Invites</Tabs.Trigger>
+        {#each TABS as tab (tab.value)}
+          {#if !tab.isHidden}
+            <Tabs.Trigger value={tab.value}>{tab.label}</Tabs.Trigger>
+          {/if}
+        {/each}
       </Tabs.List>
 
       <div class="flex h-[60vh] min-h-0 flex-1 flex-col">
-        {#if isOwner}
-          <Tabs.Content value="general" class="mt-0">
-            <GeneralSettings />
-          </Tabs.Content>
-        {/if}
-
-        <Tabs.Content value="moderation" class="mt-0 flex min-h-0 flex-1 flex-col">
-          <ModerationList />
-        </Tabs.Content>
-
-        <Tabs.Content value="invites" class="mt-0 flex min-h-0 flex-1 flex-col">
-          <InvitesPanel />
-        </Tabs.Content>
+        {#each TABS as tab (tab.value)}
+          {#if !tab.isHidden}
+            <Tabs.Content value={tab.value} class="mt-0 flex min-h-0 flex-1 flex-col">
+              <tab.component />
+            </Tabs.Content>
+          {/if}
+        {/each}
       </div>
     </Tabs.Root>
   </Dialog.Content>

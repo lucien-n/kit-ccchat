@@ -1,7 +1,7 @@
-import { ChannelType, createChannelBody, Role, type Channel } from "@ccchat/shared";
+import { ChannelType, createChannelBody, type Channel } from "@ccchat/shared";
 import { and, asc, count, eq, gt, isNull, ne } from "drizzle-orm";
 import { Hono } from "hono";
-import { newId, requireAuth, requireRole, type Env } from "../auth.js";
+import { newId, requireAuth, requireCan, type Env } from "../auth.js";
 import { db } from "../db/index.js";
 import { channelReads, channels, messages } from "../db/schema";
 import { validate } from "../validate.js";
@@ -77,21 +77,26 @@ app.post("/:id/read", (c) => {
   return c.json({ ok: true });
 });
 
-app.post("/", requireRole(Role.Admin), validate("json", createChannelBody), async (c) => {
-  const { name, type } = c.req.valid("json");
+app.post(
+  "/",
+  requireCan("manageChannels"),
+  validate("json", createChannelBody),
+  async (c) => {
+    const { name, type } = c.req.valid("json");
 
-  const channel = {
-    id: newId(),
-    name,
-    type,
-    position: db.select().from(channels).all().length,
-    createdAt: Date.now(),
-  };
-  db.insert(channels).values(channel).run();
-  return c.json({ channel });
-});
+    const channel = {
+      id: newId(),
+      name,
+      type,
+      position: db.select().from(channels).all().length,
+      createdAt: Date.now(),
+    };
+    db.insert(channels).values(channel).run();
+    return c.json({ channel });
+  },
+);
 
-app.delete("/:id", requireRole(Role.Admin), (c) => {
+app.delete("/:id", requireCan("manageChannels"), (c) => {
   const id = String(c.req.param("id"));
   db.delete(channels).where(eq(channels.id, id)).run();
   return c.json({ ok: true });
