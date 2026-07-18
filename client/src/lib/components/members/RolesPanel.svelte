@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api, type ModeratedMember } from "$lib/api";
+  import { api, type ModeratedMember, type Role } from "$lib/api";
   import { Select } from "$lib/components/common/select";
   import MemberIdentity from "$lib/components/common/MemberIdentity.svelte";
   import { Button } from "$lib/components/ui/button";
@@ -14,19 +14,42 @@
   import { cn } from "$lib/utils";
   import { Permission } from "@ccchat/shared";
   import CheckIcon from "@lucide/svelte/icons/check";
+  import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
+  import ChevronUpIcon from "@lucide/svelte/icons/chevron-up";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
+
+  const DEFAULT_COLOR = "#5865f2";
 
   let selectedId = $state<string | null>(null);
   let memberSearch = $state("");
   let busy = $state(false);
 
   let name = $state("");
-  let color = $state("#5865f2");
+  let color = $state(DEFAULT_COLOR);
   let permission = $state<Permission>(Permission.Member);
 
+  // Selected role's editable fields, populated on select() so an in-flight edit
+  // isn't clobbered by a background roles refresh.
+  let editName = $state("");
+  let editColor = $state(DEFAULT_COLOR);
+  let editPermission = $state<Permission>(Permission.Member);
+
   const selected = $derived(rolesStore.list.find((r) => r.id === selectedId) ?? null);
+  const dirty = $derived(
+    !!selected &&
+      (editName.trim() !== selected.name ||
+        editColor !== (selected.color ?? DEFAULT_COLOR) ||
+        editPermission !== selected.permission),
+  );
+
+  function select(role: Role) {
+    selectedId = role.id;
+    editName = role.name;
+    editColor = role.color ?? DEFAULT_COLOR;
+    editPermission = role.permission;
+  }
 
   const shownMembers = $derived.by(() => {
     const q = memberSearch.trim().toLowerCase();
@@ -60,9 +83,46 @@
       });
       name = "";
       await rolesStore.load(true);
-      selectedId = role.id;
+      select(role);
     } catch (e) {
       toast.error(apiErrorMessage(e, "failed to create role"));
+    } finally {
+      busy = false;
+    }
+  }
+
+  async function saveEdit() {
+    if (!session.token || !selected || !editName.trim()) return;
+    busy = true;
+    try {
+      await api.updateRole(session.token, selected.id, {
+        name: editName.trim(),
+        color: editColor,
+        permission: editPermission,
+      });
+      await rolesStore.load(true);
+    } catch (e) {
+      toast.error(apiErrorMessage(e, "failed to update role"));
+    } finally {
+      busy = false;
+    }
+  }
+
+  /** Swap a role with its neighbour and send the whole new order; dir -1 is up
+   *  the list (higher precedence), +1 is down. */
+  async function move(id: string, dir: -1 | 1) {
+    if (!session.token) return;
+    const order = rolesStore.list.map((r) => r.id);
+    const i = order.indexOf(id);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= order.length) return;
+    [order[i], order[j]] = [order[j], order[i]];
+    busy = true;
+    try {
+      await api.reorderRoles(session.token, order);
+      await rolesStore.load(true);
+    } catch (e) {
+      toast.error(apiErrorMessage(e, "failed to reorder roles"));
     } finally {
       busy = false;
     }
@@ -116,17 +176,17 @@
 
     <ScrollArea class="min-h-0 flex-1">
       <div class="space-y-0.5 pr-2">
-        {#each rolesStore.list as role (role.id)}
+        {#each rolesStore.list as role, i (role.id)}
           <div
             class={cn(
-              "group flex items-center gap-2 rounded-md p-2",
+              "group flex items-center gap-1 rounded-md p-2",
               selectedId === role.id ? "bg-muted" : "hover:bg-muted/50",
             )}
           >
             <button
               type="button"
               class="flex min-w-0 flex-1 items-center gap-2 text-left"
-              onclick={() => (selectedId = role.id)}
+              onclick={() => select(role)}
             >
               <span
                 class="size-3 rounded-full border"
@@ -143,6 +203,26 @@
               </span>
               <span class="text-muted-foreground text-xs">{countFor(role.id)}</span>
             </button>
+            <Button
+              variant="ghost"
+              size="icon"
+              class="size-7 opacity-0 group-hover:opacity-100"
+              title="Move up"
+              disabled={busy || i === 0}
+              onclick={() => move(role.id, -1)}
+            >
+              <ChevronUpIcon class="size-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              class="size-7 opacity-0 group-hover:opacity-100"
+              title="Move down"
+              disabled={busy || i === rolesStore.list.length - 1}
+              onclick={() => move(role.id, 1)}
+            >
+              <ChevronDownIcon class="size-4" />
+            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -164,20 +244,20 @@
 
   <div class="flex min-h-0 w-full flex-col border-l pl-4">
     {#if selected}
-      <div class="flex items-center gap-2 pb-3">
-        <span
-          class="size-3 rounded-full border"
-          style={selected.color ? `background:${selected.color}` : undefined}
-        ></span>
-        <span
-          class="font-medium"
-          style={selected.color ? `color:${selected.color}` : undefined}
-        >
-          {selected.name}
-        </span>
-        <span class="text-muted-foreground text-[10px] uppercase"
-          >{selected.permission}</span
-        >
+      <div class="space-y-2 pb-3">
+        <Label>Edit role</Label>
+        <Input placeholder="Role name" bind:value={editName} class="w-full" />
+        <div class="flex items-center gap-2">
+          <Input type="color" bind:value={editColor} aria-label="Role color" />
+          <Select
+            bind:value={editPermission}
+            options={Object.values(permissionSpecs)}
+            triggerProps={{ class: "min-w-32" }}
+          />
+          <Button onclick={saveEdit} disabled={busy || !editName.trim() || !dirty}>
+            Save
+          </Button>
+        </div>
       </div>
 
       <Input placeholder="Search members" bind:value={memberSearch} class="mb-2" />

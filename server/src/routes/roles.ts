@@ -1,5 +1,6 @@
 import {
   createRoleBody,
+  reorderRolesBody,
   ServerEventType,
   setUserRolesBody,
   updateRoleBody,
@@ -49,6 +50,30 @@ app.patch("/:id", requireCan("manageRoles"), validate("json", updateRoleBody), (
   db.update(roles).set(patch).where(eq(roles.id, id)).run();
   notify();
   return c.json({ role: toRoleView({ ...existing, ...patch }) });
+});
+
+/** Reassign every position from the given order, so the list can't drift into
+ *  duplicate positions and the top role always wins the color. */
+app.put("/order", requireCan("manageRoles"), validate("json", reorderRolesBody), (c) => {
+  const { orderedIds } = c.req.valid("json");
+  const known = new Set(
+    db
+      .select({ id: roles.id })
+      .from(roles)
+      .all()
+      .map((r) => r.id),
+  );
+  const ids = orderedIds.filter((id) => known.has(id));
+  db.transaction((tx) => {
+    ids.forEach((id, i) => {
+      tx.update(roles)
+        .set({ position: ids.length - 1 - i })
+        .where(eq(roles.id, id))
+        .run();
+    });
+  });
+  notify();
+  return c.json({ ok: true });
 });
 
 app.delete("/:id", requireCan("manageRoles"), (c) => {

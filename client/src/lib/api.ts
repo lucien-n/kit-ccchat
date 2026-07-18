@@ -126,11 +126,23 @@ export const api = {
       token,
     }),
 
-  history: (token: string, channelId: string, before?: number) =>
-    request<{ messages: MessageView[] }>(
-      `/api/messages/${channelId}${before ? `?before=${before}` : ""}`,
+  history: (token: string, channelId: string, before?: number, limit?: number) => {
+    const q = new URLSearchParams();
+    if (before) q.set("before", String(before));
+    if (limit) q.set("limit", String(limit));
+    const qs = q.toString();
+    return request<{ messages: MessageView[] }>(
+      `/api/messages/${channelId}${qs ? `?${qs}` : ""}`,
       { token },
-    ),
+    );
+  },
+
+  editMessage: (token: string, id: string, content: string) =>
+    request<{ message: MessageView }>(`/api/messages/${id}`, {
+      method: "PATCH",
+      body: { content },
+      token,
+    }),
 
   deleteMessage: (token: string, id: string) =>
     request<{ ok: true }>(`/api/messages/${id}`, { method: "DELETE", token }),
@@ -213,6 +225,15 @@ export const api = {
 
   deleteRole: (token: string, id: string) =>
     request<{ ok: true }>(`/api/roles/${id}`, { method: "DELETE", token }),
+
+  /** Roles top-to-bottom (highest precedence first); the server rewrites all
+   *  positions from this order. */
+  reorderRoles: (token: string, orderedIds: string[]) =>
+    request<{ ok: true }>("/api/roles/order", {
+      method: "PUT",
+      body: { orderedIds },
+      token,
+    }),
 
   /** Replace a member's full set of roles. */
   setUserRoles: (token: string, userId: string, roleIds: string[]) =>

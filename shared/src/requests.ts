@@ -8,6 +8,7 @@ import {
   hexColor,
   inviteCode,
   maxUses,
+  MESSAGE_MAX_LENGTH,
   optionalDisplayName,
   password,
   permission,
@@ -99,3 +100,16 @@ export const setUserRolesBody = z.object({
   roleIds: z.array(z.string()),
 });
 export type SetUserRolesBody = z.infer<typeof setUserRolesBody>;
+
+/** Roles top-to-bottom as shown to the user (highest precedence first). The
+ *  server reassigns positions from this, so the order is the whole truth and
+ *  positions never collide. */
+export const reorderRolesBody = z.object({
+  orderedIds: z.array(z.string().min(1)).min(1),
+});
+export type ReorderRolesBody = z.infer<typeof reorderRolesBody>;
+
+export const editMessageBody = z.object({
+  content: z.string().trim().min(1).max(MESSAGE_MAX_LENGTH),
+});
+export type EditMessageBody = z.infer<typeof editMessageBody>;

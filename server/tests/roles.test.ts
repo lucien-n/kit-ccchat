@@ -9,6 +9,7 @@ import {
   json,
   mkInvite,
   post,
+  put,
   register,
   uniq,
 } from "./harness.js";
@@ -147,5 +148,43 @@ describe("role management", () => {
     const { token } = await register(app, inviteCode, uniq()).then(json);
     expect((await get(app, "/api/users", token)).status).toBe(200);
     expect((await get(app, "/api/moderation/members", token)).status).toBe(403);
+  });
+
+  it("reorder makes the top-most colored role win a member's color", async () => {
+    const mk = (color: string) =>
+      createRole(ownerToken, { name: uniq(), color, permission: Permission.Member })
+        .then(json)
+        .then((r: any) => r.role);
+    const green = await mk("#00ff00");
+    const blue = await mk("#0000ff");
+
+    const { user, token } = await register(app, inviteCode, uniq()).then(json);
+    await put(app, `/api/roles/members/${user.id}`, { roleIds: [green.id, blue.id] }, ownerToken);
+
+    // Full list, blue on top: the client always sends the complete order.
+    const allIds = () =>
+      get(app, "/api/roles", ownerToken)
+        .then(json)
+        .then((r: any) => r.roles.map((x: any) => x.id));
+    const withFront = async (front: string[]) => {
+      const rest = (await allIds()).filter((id: string) => !front.includes(id));
+      return put(app, "/api/roles/order", { orderedIds: [...front, ...rest] }, ownerToken);
+    };
+
+    expect((await withFront([blue.id, green.id])).status).toBe(200);
+    let profile = await get(app, `/api/users/${user.id}`, token).then(json);
+    expect(profile.user.color).toBe("#0000ff");
+    // The top of the list is the highest position.
+    expect((await allIds())[0]).toBe(blue.id);
+
+    await withFront([green.id, blue.id]);
+    profile = await get(app, `/api/users/${user.id}`, token).then(json);
+    expect(profile.user.color).toBe("#00ff00");
+  });
+
+  it("forbids a non-admin from reordering", async () => {
+    const { token } = await register(app, inviteCode, uniq()).then(json);
+    const res = await put(app, "/api/roles/order", { orderedIds: ["whatever"] }, token);
+    expect(res.status).toBe(403);
   });
 });

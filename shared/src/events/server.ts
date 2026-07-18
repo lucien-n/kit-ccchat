@@ -3,6 +3,7 @@ import { messageView, voiceMember } from "../views";
 
 export enum ServerEventType {
   Message_New = "message_new",
+  Message_Edited = "message_edited",
   Message_Deleted = "message_deleted",
   Presence = "presence",
   Voice_Presence = "voice_presence",
@@ -14,6 +15,10 @@ export enum ServerEventType {
 export type ServerEvent =
   | {
       type: ServerEventType.Message_New;
+      message: z.infer<typeof messageView>;
+    }
+  | {
+      type: ServerEventType.Message_Edited;
       message: z.infer<typeof messageView>;
     }
   | {

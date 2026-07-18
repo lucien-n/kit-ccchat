@@ -20,6 +20,7 @@
   import { voice } from "$lib/stores/voice.svelte";
   import { ChannelType } from "@ccchat/shared";
   import { Bell, BellOff, Hash, Menu, Users } from "@lucide/svelte";
+  import { tick } from "svelte";
   import { toast } from "svelte-sonner";
   import Message from "./Message.svelte";
   import MessageComposer from "./MessageComposer.svelte";
@@ -51,16 +52,45 @@
   let replyTo = $state<MessageView | null>(null);
   let flashId = $state<string | null>(null);
   let flashTimer: ReturnType<typeof setTimeout>;
+  // Whether the view is pinned to the newest message. False once the reader
+  // scrolls up, so incoming messages and paging don't yank them back down.
+  let stick = $state(true);
 
   $effect(() => {
     void messages.list.length;
-    if (scroller) scroller.scrollTop = scroller.scrollHeight;
+    if (scroller && stick) scroller.scrollTop = scroller.scrollHeight;
   });
 
-  // A draft reply belongs to the channel it was started in.
+  const onScroll = () => {
+    if (!scroller) return;
+    stick = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 80;
+    if (scroller.scrollTop < 150) void loadOlder();
+  };
+
+  $effect(() => {
+    const el = scroller;
+    if (!el) return;
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => el.removeEventListener("scroll", onScroll);
+  });
+
+  /** Prepending older messages grows the list upward, so hold the reader's spot
+   *  by nudging scrollTop down by exactly the height that appeared above. */
+  async function loadOlder() {
+    if (!scroller || messages.loadingOlder || !messages.hasMore) return;
+    const prevHeight = scroller.scrollHeight;
+    const prevTop = scroller.scrollTop;
+    await messages.loadOlder();
+    await tick();
+    if (scroller) scroller.scrollTop = prevTop + (scroller.scrollHeight - prevHeight);
+  }
+
+  // A draft reply belongs to the channel it was started in; a new channel opens
+  // pinned to its newest message.
   $effect(() => {
     void channels.currentId;
     replyTo = null;
+    stick = true;
   });
 
   $effect(() => {
@@ -163,6 +193,11 @@
 
     <ScrollArea class="min-h-0 flex-1" bind:viewportRef={scroller}>
       <div class="flex flex-col gap-0.5 p-2 sm:p-4">
+        {#if messages.loadingOlder}
+          <div class="text-muted-foreground py-2 text-center text-xs">
+            Loading older messages…
+          </div>
+        {/if}
         {#each messages.list as message (message.id)}
           <Message
             {message}

@@ -3,18 +3,63 @@ import { api, type MessageView } from "../api";
 import { realtime } from "./realtime.svelte";
 import { session } from "./session.svelte";
 
+const PAGE = 50;
+
 /** Only ever the open channel's messages; switching channels refetches rather
  *  than caching, so there's no per-channel cache to invalidate on every delete. */
 class Messages {
   list = $state<MessageView[]>([]);
+  /** Whether an older page might still exist, so the view knows to keep paging. */
+  hasMore = $state(false);
+  loadingOlder = $state(false);
+  #channelId: string | null = null;
 
   async load(channelId: string) {
     if (!session.token) return;
-    this.list = (await api.history(session.token, channelId)).messages;
+    this.#channelId = channelId;
+    this.loadingOlder = false;
+    const { messages } = await api.history(session.token, channelId, undefined, PAGE);
+    this.list = messages;
+    this.hasMore = messages.length >= PAGE;
+  }
+
+  /** Fetch the page just before the oldest message on screen and prepend it. */
+  async loadOlder() {
+    if (!session.token || this.loadingOlder || !this.hasMore || this.list.length === 0)
+      return;
+    const channelId = this.#channelId!;
+    const before = this.list[0].createdAt;
+    this.loadingOlder = true;
+    try {
+      const { messages } = await api.history(session.token, channelId, before, PAGE);
+      // A channel switch mid-flight would land this page in the wrong list.
+      if (this.#channelId !== channelId) return;
+      this.hasMore = messages.length >= PAGE;
+      if (messages.length) this.list = [...messages, ...this.list];
+    } finally {
+      this.loadingOlder = false;
+    }
   }
 
   append(message: MessageView) {
     this.list = [...this.list, message];
+  }
+
+  /** Swap in the server's post-edit view; the broadcast reaches the author too,
+   *  so an edit lands the same way for everyone. */
+  applyEdit(message: MessageView) {
+    const i = this.list.findIndex((m) => m.id === message.id);
+    if (i === -1) return;
+    const next = [...this.list];
+    next[i] = message;
+    this.list = next;
+  }
+
+  /** Over REST for the author check; the resulting broadcast updates our list
+   *  through applyEdit, the same path as everyone else's. */
+  async edit(id: string, content: string) {
+    if (!session.token) return;
+    await api.editMessage(session.token, id, content);
   }
 
   /** Author colors come from roles, so a role change restyles names already on
@@ -50,6 +95,9 @@ class Messages {
 
   clear() {
     this.list = [];
+    this.hasMore = false;
+    this.loadingOlder = false;
+    this.#channelId = null;
   }
 
   send(channelId: string, content: string, replyToId?: string): boolean {

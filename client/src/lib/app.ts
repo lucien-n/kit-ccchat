@@ -99,6 +99,9 @@ function dispatch(event: ServerEvent) {
     case ServerEventType.Message_New:
       onMessage(event.message);
       break;
+    case ServerEventType.Message_Edited:
+      messages.applyEdit(event.message);
+      break;
     case ServerEventType.Message_Deleted:
       messages.remove(event.id);
       break;
