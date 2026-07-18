@@ -1,7 +1,8 @@
+import { ChannelType } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import { hashPassword, newId, randomToken } from "./auth.js";
 import { db } from "./db/index.js";
-import { channels, invites, users } from "./db/schema.js";
+import { channels, invites, users } from "./db/schema";
 import {
   COMMUNITY_NAME,
   OWNER_PASSWORD,
@@ -55,7 +56,7 @@ export function seedCommunity(input: {
     username: input.username.toLowerCase(),
     displayName: input.displayName?.trim() || input.username,
     passwordHash: hashPassword(input.password),
-    role: "owner",
+    isOwner: 1,
     createdAt: now,
     mutedUntil: null,
     banned: 0,
@@ -73,21 +74,21 @@ export function seedCommunity(input: {
         {
           id: newId(),
           name: "general",
-          type: "text",
+          type: ChannelType.Text,
           position: 0,
           createdAt: now,
         },
         {
           id: newId(),
           name: "random",
-          type: "text",
+          type: ChannelType.Text,
           position: 1,
           createdAt: now,
         },
         {
           id: newId(),
           name: "General Voice",
-          type: "voice",
+          type: ChannelType.Voice,
           position: 2,
           createdAt: now,
         },
@@ -131,7 +132,7 @@ function resetOwnerPassword() {
   db.update(users)
     .set({
       passwordHash: hashPassword(OWNER_PASSWORD),
-      role: "owner",
+      isOwner: 1,
       banned: 0,
     })
     .where(eq(users.id, owner.id))

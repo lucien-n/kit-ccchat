@@ -1,3 +1,4 @@
+import { ChannelType } from "@ccchat/shared";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Hono } from "hono";
 import { boot, cleanup, get, json, post } from "./harness.js";
@@ -22,7 +23,7 @@ describe("claiming a fresh instance", () => {
     expect(res.status).toBe(200);
 
     const body = await json(res);
-    expect(body.user.role).toBe("owner");
+    expect(body.user.isOwner).toBe(true);
     expect(body.communityName).toBe("Chat Control Refugees");
     expect(body.inviteCode).toBeTruthy();
     expect(body.token).toBeTruthy();
@@ -53,7 +54,7 @@ describe("claiming a fresh instance", () => {
 
     const { channels } = await get(app, "/api/channels", token).then(json);
     expect(channels.length).toBeGreaterThan(0);
-    expect(channels.some((c: any) => c.type === "voice")).toBe(true);
-    expect(channels.some((c: any) => c.type === "text")).toBe(true);
+    expect(channels.some((c: any) => c.type === ChannelType.Voice)).toBe(true);
+    expect(channels.some((c: any) => c.type === ChannelType.Text)).toBe(true);
   });
 });

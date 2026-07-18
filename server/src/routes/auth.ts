@@ -1,4 +1,4 @@
-import { loginBody, registerBody, type LoginBody } from "@ccchat/shared";
+import { loginBody, registerBody, SystemEvent, type LoginBody } from "@ccchat/shared";
 import { eq, sql } from "drizzle-orm";
 import { Hono } from "hono";
 import {
@@ -11,14 +11,13 @@ import {
   type Env,
 } from "../auth.js";
 import { db } from "../db/index.js";
-import { invites, users } from "../db/schema.js";
+import { invites, users } from "../db/schema";
+import { postSystemMessage } from "../messages.js";
 import { rateLimit } from "../ratelimit.js";
 import { validate } from "../validate.js";
-import { toPublicUser } from "../views.js";
+import { toMember } from "../views.js";
 
 const app = new Hono<Env>();
-
-const publicUser = toPublicUser;
 
 app.post(
   "/register",
@@ -43,12 +42,12 @@ app.post(
       username,
       displayName,
       passwordHash: hashPassword(password),
-      role: "member",
+      isOwner: 0,
       createdAt: Date.now(),
       banned: 0,
     };
-    // One transaction: an account must never come into existence without its
-    // invite being counted, or a single-use link would let a second person in.
+    // An account must never exist without its invite counted, or a single-use
+    // link would let a second person in.
     db.transaction((tx) => {
       tx.insert(users).values(user).run();
       tx.update(invites)
@@ -58,25 +57,19 @@ app.post(
     });
 
     const token = createSession(user.id);
-    return c.json({ token, user: publicUser(user) });
+    postSystemMessage(SystemEvent.Member_Join, user.id);
+    return c.json({ token, user: toMember(user) });
   },
 );
 
-// The endpoint worth attacking: each attempt costs a scrypt hash and buys the
-// caller a guess. Two limits, because they defend different things:
-
-// One address flooding us. Loose, because a household or CGNAT is many honest
-// people behind one IP, but capped so nobody grinds scrypt for free.
+// Each attempt costs a scrypt hash and buys a guess, so two independent limits:
+// one address flooding us (loose - a CGNAT is many honest people), and one
+// account being guessed at (tight, and IP-independent so a botnet buys nothing).
 const loginFlood = rateLimit({ limit: 30, windowMs: 60_000 });
-
-// One account being guessed at. Tight, and independent of where it comes from,
-// so spreading the attempt across a botnet buys no extra guesses.
 const loginGuess = rateLimit({
   limit: 8,
   windowMs: 60_000,
-  // Mounted after the validator, so the body is parsed and on the context by
-  // now. Hono only types valid() for a route's own handler, not for a shared
-  // middleware, hence the cast.
+  // Hono only types valid() for a route's own handler, not a shared middleware.
   keys: (c) => [`user:${(c.req.valid("json" as never) as LoginBody).username}`],
   message: "too many login attempts for this account, wait a minute",
 });
@@ -90,7 +83,7 @@ app.post("/login", loginFlood, validate("json", loginBody), loginGuess, async (c
   if (user.banned) return c.json({ error: "account banned" }, 403);
 
   const token = createSession(user.id);
-  return c.json({ token, user: publicUser(user) });
+  return c.json({ token, user: toMember(user) });
 });
 
 app.post("/logout", requireAuth, async (c) => {
@@ -99,6 +92,6 @@ app.post("/logout", requireAuth, async (c) => {
   return c.json({ ok: true });
 });
 
-app.get("/me", requireAuth, (c) => c.json({ user: publicUser(c.get("user")) }));
+app.get("/me", requireAuth, (c) => c.json({ user: toMember(c.get("user")) }));
 
 export default app;

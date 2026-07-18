@@ -1,3 +1,4 @@
+import { ChannelType } from "@ccchat/shared";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Hono } from "hono";
 import { boot, claim, cleanup, get, json } from "./harness.js";
@@ -57,7 +58,7 @@ describe("LiveKit URL derivation", () => {
 describe("voice tokens", () => {
   it("mints a token whose room is the channel id", async () => {
     const { channels } = await get(app, "/api/channels", token).then(json);
-    const voice = channels.find((c: any) => c.type === "voice");
+    const voice = channels.find((c: any) => c.type === ChannelType.Voice);
 
     const res = await app.request("/api/voice/token", {
       method: "POST",
@@ -74,7 +75,7 @@ describe("voice tokens", () => {
 
   it("refuses a channel that is not a voice channel", async () => {
     const { channels } = await get(app, "/api/channels", token).then(json);
-    const text = channels.find((c: any) => c.type === "text");
+    const text = channels.find((c: any) => c.type === ChannelType.Text);
 
     const res = await app.request("/api/voice/token", {
       method: "POST",

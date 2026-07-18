@@ -1,39 +1,62 @@
-import { Hono } from "hono";
-import { eq } from "drizzle-orm";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
-import { db } from "../db/index.js";
-import { users } from "../db/schema.js";
 import { avatarBody, changePasswordBody, updateProfileBody } from "@ccchat/shared";
+import { desc, eq } from "drizzle-orm";
+import { Hono } from "hono";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
 import { hashPassword, requireAuth, verifyPassword, type Env } from "../auth.js";
-import { toPublicUser } from "../views.js";
-import { validate } from "../validate.js";
+import { db } from "../db/index.js";
+import { roles, userRoles, users } from "../db/schema";
 import { DATA_DIR } from "../env.js";
+import { validate } from "../validate.js";
+import { toMember, toRoleView } from "../views.js";
 
 const AVATAR_DIR = join(DATA_DIR, "avatars");
 mkdirSync(AVATAR_DIR, { recursive: true });
 
 const MAX_AVATAR_BYTES = 2_000_000;
 
-/** Content type from magic bytes so we serve avatars with the right header. */
-function sniffMime(buf: Buffer): string {
+/** Content type from magic bytes so we serve avatars with the right header.
+ *  null = these bytes are not an image we recognise. */
+function sniffMime(buf: Buffer): string | null {
   if (buf[0] === 0xff && buf[1] === 0xd8) return "image/jpeg";
   if (buf[0] === 0x89 && buf[1] === 0x50) return "image/png";
   if (buf.subarray(0, 4).toString("ascii") === "RIFF") return "image/webp";
   if (buf[0] === 0x47 && buf[1] === 0x49) return "image/gif";
-  return "application/octet-stream";
+  return null;
 }
 
 const app = new Hono<Env>();
 
+app.get("/", requireAuth, (c) => {
+  const members = db
+    .select()
+    .from(users)
+    .all()
+    .filter((u) => !u.banned)
+    .map(toMember);
+  return c.json({ members });
+});
+
+/** Hono hands back the *decoded* param, so an id of `..%2Fccchat.sqlite` arrives
+ *  as a relative path and join() would walk straight out of AVATAR_DIR. An
+ *  avatar is always a direct child of it; anything else is someone probing. */
+function avatarPath(id: string): string | null {
+  const path = resolve(AVATAR_DIR, id);
+  return dirname(path) === AVATAR_DIR ? path : null;
+}
+
 /** Serve a user's avatar image. Public (no auth): <img> tags can't send bearer
  *  tokens, and avatars aren't secret. 404 when the user has none. */
 app.get("/:id/avatar", (c) => {
-  const id = c.req.param("id");
-  const path = join(AVATAR_DIR, id);
-  if (!existsSync(path)) return c.text("not found", 404);
+  const path = avatarPath(c.req.param("id"));
+  if (!path || !existsSync(path)) return c.text("not found", 404);
   const buf = readFileSync(path);
-  c.header("Content-Type", sniffMime(buf));
+  const mime = sniffMime(buf);
+  if (!mime) return c.text("not found", 404);
+  c.header("Content-Type", mime);
+  // These are attacker-supplied bytes on our own origin, and our own origin is
+  // where the session token lives. Never let a browser re-interpret them.
+  c.header("X-Content-Type-Options", "nosniff");
   c.header("Cache-Control", "public, max-age=31536000, immutable");
   return c.body(buf);
 });
@@ -48,6 +71,8 @@ app.post("/me/avatar", requireAuth, validate("json", avatarBody), async (c) => {
   const buf = Buffer.from(m[2], "base64");
   if (buf.length > MAX_AVATAR_BYTES)
     return c.json({ error: "image too large (max 2MB)" }, 400);
+  // The data: prefix is just a claim the uploader makes. Trust the bytes.
+  if (!sniffMime(buf)) return c.json({ error: "invalid image" }, 400);
 
   writeFileSync(join(AVATAR_DIR, user.id), buf);
   const avatarVersion = Date.now();
@@ -68,7 +93,7 @@ app.patch("/me", requireAuth, validate("json", updateProfileBody), async (c) => 
   const { displayName } = c.req.valid("json");
 
   db.update(users).set({ displayName }).where(eq(users.id, user.id)).run();
-  return c.json({ user: toPublicUser({ ...user, displayName }) });
+  return c.json({ user: toMember({ ...user, displayName }) });
 });
 
 app.post("/me/password", requireAuth, validate("json", changePasswordBody), async (c) => {
@@ -83,6 +108,29 @@ app.post("/me/password", requireAuth, validate("json", changePasswordBody), asyn
     .where(eq(users.id, user.id))
     .run();
   return c.json({ ok: true });
+});
+
+app.get("/:id", requireAuth, (c) => {
+  const id = String(c.req.param("id"));
+  const u = db.select().from(users).where(eq(users.id, id)).get();
+  if (!u) return c.json({ error: "user not found" }, 404);
+
+  const assigned = db
+    .select({
+      id: roles.id,
+      name: roles.name,
+      color: roles.color,
+      permission: roles.permission,
+      position: roles.position,
+      createdAt: roles.createdAt,
+    })
+    .from(userRoles)
+    .innerJoin(roles, eq(userRoles.roleId, roles.id))
+    .where(eq(userRoles.userId, id))
+    .orderBy(desc(roles.position))
+    .all();
+
+  return c.json({ user: toMember(u), roles: assigned.map(toRoleView) });
 });
 
 export default app;

@@ -1,11 +1,17 @@
+import {
+  ChannelType,
+  clientEvent,
+  ClientEventType,
+  ServerEventType,
+  type ClientEvent,
+} from "@ccchat/shared";
 import { eq } from "drizzle-orm";
-import { clientEvent, type ClientEvent } from "@ccchat/shared";
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
 import { WebSocketServer, type WebSocket } from "ws";
 import { newId, userForToken } from "./auth.js";
 import { db } from "./db/index.js";
-import { channels, messages, users } from "./db/schema.js";
+import { channels, messages, users } from "./db/schema";
 import { hub, type Client } from "./hub.js";
 import { toMessageView } from "./views.js";
 
@@ -80,23 +86,26 @@ function onConnection(ws: WebSocket, userId: string) {
     if (!parsed.success) return;
     const msg = parsed.data;
 
-    if (msg.type === "message.create") handleCreate(client, msg);
-    else if (msg.type === "voice.join") handleVoiceJoin(client, msg.channelId);
-    else if (msg.type === "voice.leave") hub.voiceLeaveAll(client.userId);
-    // message.delete + moderation go through the REST API for a clean
-    // permission model; the hub broadcasts the resulting events to everyone.
+    switch (msg.type) {
+      case ClientEventType.Message_Create:
+        handleCreate(client, msg);
+        break;
+      case ClientEventType.Voice_Join:
+        handleVoiceJoin(client, msg.channelId);
+        break;
+      case ClientEventType.Voice_Leave:
+        hub.voiceLeaveAll(client.userId);
+        break;
+    }
   });
 
   ws.on("close", () => hub.remove(client));
   ws.on("error", () => hub.remove(client));
 }
 
-/** A client reports it joined a voice channel; broadcast presence to everyone.
- *  Client-reported (rather than via LiveKit webhooks) so it works identically in
- *  dev and Docker. Disconnect cleanup lives in the hub. */
 function handleVoiceJoin(client: Client, channelId: string) {
   const channel = db.select().from(channels).where(eq(channels.id, channelId)).get();
-  if (!channel || channel.type !== "voice") return;
+  if (!channel || channel.type !== ChannelType.Voice) return;
 
   const u = db.select().from(users).where(eq(users.id, client.userId)).get();
   if (!u) return;
@@ -107,21 +116,28 @@ function handleVoiceJoin(client: Client, channelId: string) {
   });
 }
 
+function replyTarget(replyToId: string | undefined, channelId: string): string | null {
+  if (!replyToId) return null;
+  const target = db.select().from(messages).where(eq(messages.id, replyToId)).get();
+  if (!target || target.deleted || target.channelId !== channelId) return null;
+  return target.id;
+}
+
 function handleCreate(
   client: Client,
-  msg: Extract<ClientEvent, { type: "message.create" }>,
+  msg: Extract<ClientEvent, { type: ClientEventType.Message_Create }>,
 ) {
-  // Re-check the user on every send so mute/ban take effect immediately.
   const u = db.select().from(users).where(eq(users.id, client.userId)).get();
   if (!u) return;
-  if (u.banned) return hub.send(client, { type: "error", message: "you are banned" });
+  if (u.banned)
+    return hub.send(client, { type: ServerEventType.Error, message: "you are banned" });
   if (u.mutedUntil && u.mutedUntil > Date.now())
-    return hub.send(client, { type: "error", message: "you are muted" });
+    return hub.send(client, { type: ServerEventType.Error, message: "you are muted" });
 
   const { channelId, content } = msg;
 
   const channel = db.select().from(channels).where(eq(channels.id, channelId)).get();
-  if (!channel || channel.type !== "text") return;
+  if (!channel || channel.type !== ChannelType.Text) return;
 
   const row = {
     id: newId(),
@@ -131,7 +147,9 @@ function handleCreate(
     createdAt: Date.now(),
     editedAt: null,
     deleted: 0,
+    replyToId: replyTarget(msg.replyToId, channelId),
+    systemEvent: null,
   };
   db.insert(messages).values(row).run();
-  hub.broadcast({ type: "message.new", message: toMessageView(row) });
+  hub.broadcast({ type: ServerEventType.Message_New, message: toMessageView(row) });
 }

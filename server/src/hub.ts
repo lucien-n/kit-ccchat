@@ -1,7 +1,5 @@
+import { ServerEventType, type ServerEvent, type VoiceMember } from "@ccchat/shared";
 import type { WebSocket } from "ws";
-import type { ServerEvent, VoiceMember } from "@ccchat/shared";
-
-export type { ServerEvent, VoiceMember };
 
 interface Client {
   ws: WebSocket;
@@ -74,12 +72,12 @@ class Hub {
     const presence: Record<string, VoiceMember[]> = {};
     for (const [channelId, members] of this.voice)
       presence[channelId] = [...members.values()];
-    return { type: "voice.presence", presence };
+    return { type: ServerEventType.Voice_Presence, presence };
   }
 
   private broadcastPresence() {
     const online = [...new Set([...this.clients].map((c) => c.userId))];
-    this.broadcast({ type: "presence", online });
+    this.broadcast({ type: ServerEventType.Presence, online });
   }
 }
 

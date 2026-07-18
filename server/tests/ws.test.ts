@@ -3,6 +3,7 @@ import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import type { WebSocket as WsClient } from "ws";
 import { WebSocket } from "ws";
+import { ServerEventType } from "@ccchat/shared";
 import { boot, claim, cleanup, json, mkInvite, register } from "./harness.js";
 
 // Fast enough that a reap takes ~2 sweeps rather than a minute, slow enough that
@@ -66,7 +67,7 @@ function presenceWhere(
 
     function onMessage(raw: Buffer) {
       const event = JSON.parse(raw.toString());
-      if (event.type !== "presence" || !match(event.online)) return;
+      if (event.type !== ServerEventType.Presence || !match(event.online)) return;
       clearTimeout(timer);
       ws.off("message", onMessage);
       resolve(event.online);

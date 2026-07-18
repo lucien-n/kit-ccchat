@@ -1,5 +1,5 @@
-/** Notification helpers: synthesized cues (no audio assets) and a document-title
- *  unread badge. All browser-only; callers run in the SPA. */
+/** Synthesized notification cues (no audio assets) and a document-title unread
+ *  badge. Browser-only. */
 
 let ctx: AudioContext | null = null;
 
@@ -45,7 +45,6 @@ export const playPing = () =>
     [1174.7, 0.18],
   ]);
 
-/** Voice cues: rising = joined, falling = left, and short blips for mic state. */
 export const playVoiceJoin = () =>
   playSequence([
     [523.25, 0.1],

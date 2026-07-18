@@ -2,12 +2,18 @@ import { z } from "zod";
 import {
   channelName,
   channelType,
+  ChannelType,
   communityName,
   displayName,
+  hexColor,
   inviteCode,
   maxUses,
+  MESSAGE_MAX_LENGTH,
   optionalDisplayName,
   password,
+  permission,
+  Permission,
+  roleName,
   username,
 } from "./primitives.js";
 
@@ -48,7 +54,7 @@ export type CreateInviteBody = z.infer<typeof createInviteBody>;
 
 export const createChannelBody = z.object({
   name: channelName,
-  type: channelType.default("text"),
+  type: channelType.default(ChannelType.Text),
 });
 export type CreateChannelBody = z.infer<typeof createChannelBody>;
 
@@ -74,3 +80,36 @@ export type MuteBody = z.infer<typeof muteBody>;
 
 export const avatarBody = z.object({ image: z.string().min(1) });
 export type AvatarBody = z.infer<typeof avatarBody>;
+
+export const createRoleBody = z.object({
+  name: roleName,
+  color: hexColor.nullable().default(null),
+  permission: permission.default(Permission.Member),
+});
+export type CreateRoleBody = z.infer<typeof createRoleBody>;
+
+export const updateRoleBody = z.object({
+  name: roleName.optional(),
+  color: hexColor.nullable().optional(),
+  permission: permission.optional(),
+  position: z.number().int().min(0).optional(),
+});
+export type UpdateRoleBody = z.infer<typeof updateRoleBody>;
+
+export const setUserRolesBody = z.object({
+  roleIds: z.array(z.string()),
+});
+export type SetUserRolesBody = z.infer<typeof setUserRolesBody>;
+
+/** Roles top-to-bottom as shown to the user (highest precedence first). The
+ *  server reassigns positions from this, so the order is the whole truth and
+ *  positions never collide. */
+export const reorderRolesBody = z.object({
+  orderedIds: z.array(z.string().min(1)).min(1),
+});
+export type ReorderRolesBody = z.infer<typeof reorderRolesBody>;
+
+export const editMessageBody = z.object({
+  content: z.string().trim().min(1).max(MESSAGE_MAX_LENGTH),
+});
+export type EditMessageBody = z.infer<typeof editMessageBody>;

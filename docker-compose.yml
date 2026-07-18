@@ -27,8 +27,10 @@ services:
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      - ccchat
-      - livekit
+      ccchat:
+        condition: service_healthy
+      livekit:
+        condition: service_started
 
   ccchat:
     image: ${CCCHAT_IMAGE:-ghcr.io/lucien-n/kit-ccchat:latest}
@@ -43,8 +45,6 @@ services:
       DATA_DIR: /app/data
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-ccchat}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?run ./install.sh, or set LIVEKIT_API_SECRET in .env}
-      # The community name and the owner account are created in the browser on
-      # first visit, so there is nothing to configure here.
     volumes:
       # Your entire community (accounts, channels, messages) is this one folder.
       # Back it up and you have backed up everything.

@@ -4,25 +4,31 @@
 export type {
   Channel,
   Invite,
-  MemberView,
+  Member,
   MessageView,
-  PublicUser,
+  ModeratedMember,
+  Role,
+  SystemStats,
   VoiceMember,
 } from "@ccchat/shared";
 
 import type {
-  Channel,
   ChangePasswordBody,
+  Channel,
   CreateChannelBody,
   CreateInviteBody,
+  CreateRoleBody,
   Invite,
   LoginBody,
-  MemberView,
+  Member,
   MessageView,
-  PublicUser,
+  ModeratedMember,
   RegisterBody,
+  Role,
   SetupBody,
+  SystemStats,
   UpdateProfileBody,
+  UpdateRoleBody,
 } from "@ccchat/shared";
 
 export class ApiError extends Error {
@@ -72,7 +78,7 @@ export const api = {
   setup: (body: SetupBody) =>
     request<{
       token: string;
-      user: PublicUser;
+      user: Member;
       inviteCode: string;
       communityName: string;
     }>("/api/setup", { method: "POST", body }),
@@ -85,18 +91,18 @@ export const api = {
     }),
 
   register: (body: RegisterBody) =>
-    request<{ token: string; user: PublicUser }>("/api/auth/register", {
+    request<{ token: string; user: Member }>("/api/auth/register", {
       method: "POST",
       body,
     }),
 
   login: (body: LoginBody) =>
-    request<{ token: string; user: PublicUser }>("/api/auth/login", {
+    request<{ token: string; user: Member }>("/api/auth/login", {
       method: "POST",
       body,
     }),
 
-  me: (token: string) => request<{ user: PublicUser }>("/api/auth/me", { token }),
+  me: (token: string) => request<{ user: Member }>("/api/auth/me", { token }),
 
   logout: (token: string) =>
     request<{ ok: true }>("/api/auth/logout", { method: "POST", token }),
@@ -122,11 +128,23 @@ export const api = {
       token,
     }),
 
-  history: (token: string, channelId: string, before?: number) =>
-    request<{ messages: MessageView[] }>(
-      `/api/messages/${channelId}${before ? `?before=${before}` : ""}`,
+  history: (token: string, channelId: string, before?: number, limit?: number) => {
+    const q = new URLSearchParams();
+    if (before) q.set("before", String(before));
+    if (limit) q.set("limit", String(limit));
+    const qs = q.toString();
+    return request<{ messages: MessageView[] }>(
+      `/api/messages/${channelId}${qs ? `?${qs}` : ""}`,
       { token },
-    ),
+    );
+  },
+
+  editMessage: (token: string, id: string, content: string) =>
+    request<{ message: MessageView }>(`/api/messages/${id}`, {
+      method: "PATCH",
+      body: { content },
+      token,
+    }),
 
   deleteMessage: (token: string, id: string) =>
     request<{ ok: true }>(`/api/messages/${id}`, { method: "DELETE", token }),
@@ -146,8 +164,16 @@ export const api = {
       token,
     }),
 
+  /** Full community roster, readable by any member (no moderation state). */
+  roster: (token: string) => request<{ members: Member[] }>("/api/users", { token }),
+
+  /** Moderation view of members (admin only): includes banned/muted + roleIds. */
   members: (token: string) =>
-    request<{ members: MemberView[] }>("/api/moderation/members", { token }),
+    request<{ members: ModeratedMember[] }>("/api/moderation/members", { token }),
+
+  /** A single user's profile card: public identity + the roles they hold. */
+  userProfile: (token: string, id: string) =>
+    request<{ user: Member; roles: Role[] }>(`/api/users/${id}`, { token }),
 
   mod: (
     token: string,
@@ -161,6 +187,9 @@ export const api = {
       token,
     }),
 
+  /** Host machine snapshot (owner only). */
+  system: (token: string) => request<{ stats: SystemStats }>("/api/system", { token }),
+
   voiceToken: (token: string, channelId: string) =>
     request<{ token: string; url: string; room: string; canPublish: boolean }>(
       "/api/voice/token",
@@ -168,7 +197,7 @@ export const api = {
     ),
 
   updateProfile: (token: string, body: UpdateProfileBody) =>
-    request<{ user: PublicUser }>("/api/users/me", {
+    request<{ user: Member }>("/api/users/me", {
       method: "PATCH",
       body,
       token,
@@ -190,4 +219,32 @@ export const api = {
 
   removeAvatar: (token: string) =>
     request<{ ok: true }>("/api/users/me/avatar", { method: "DELETE", token }),
+
+  roles: (token: string) => request<{ roles: Role[] }>("/api/roles", { token }),
+
+  createRole: (token: string, body: CreateRoleBody) =>
+    request<{ role: Role }>("/api/roles", { method: "POST", body, token }),
+
+  updateRole: (token: string, id: string, body: UpdateRoleBody) =>
+    request<{ role: Role }>(`/api/roles/${id}`, { method: "PATCH", body, token }),
+
+  deleteRole: (token: string, id: string) =>
+    request<{ ok: true }>(`/api/roles/${id}`, { method: "DELETE", token }),
+
+  /** Roles top-to-bottom (highest precedence first); the server rewrites all
+   *  positions from this order. */
+  reorderRoles: (token: string, orderedIds: string[]) =>
+    request<{ ok: true }>("/api/roles/order", {
+      method: "PUT",
+      body: { orderedIds },
+      token,
+    }),
+
+  /** Replace a member's full set of roles. */
+  setUserRoles: (token: string, userId: string, roleIds: string[]) =>
+    request<{ ok: true }>(`/api/roles/members/${userId}`, {
+      method: "PUT",
+      body: { roleIds },
+      token,
+    }),
 };

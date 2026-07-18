@@ -36,7 +36,6 @@
     {
       SPA: true,
       validators: zod4Client(changePasswordBody),
-      // Clear both fields on success.
       resetForm: true,
       onUpdate: async ({ form }) => {
         if (!form.valid || !session.token) return;

@@ -13,3 +13,6 @@ export type WithoutChildrenOrChild<T> = WithoutChildren<WithoutChild<T>>;
 export type WithElementRef<T, U extends HTMLElement = HTMLElement> = T & {
   ref?: U | null;
 };
+
+export const getInitials = (name: string | undefined) =>
+  (name ?? "?")[0]?.toUpperCase() ?? "?";

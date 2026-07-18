@@ -62,6 +62,18 @@ export async function get(
   });
 }
 
+function withBody(method: string) {
+  return (app: Hono<any>, path: string, body?: unknown, token?: string) =>
+    app.request(path, {
+      method,
+      headers: token ? { ...JSONH, authorization: `Bearer ${token}` } : JSONH,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
+}
+
+export const put = withBody("PUT");
+export const patch = withBody("PATCH");
+
 /** Claim the instance and return the owner's token. One shot per database. */
 export async function claim(app: Hono<any>, username = "owner") {
   const res = await post(app, "/api/setup", {

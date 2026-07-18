@@ -1,13 +1,27 @@
-import type { RegisterBody } from "@ccchat/shared";
-import { api, type PublicUser } from "../api";
+import { type RegisterBody } from "@ccchat/shared";
+import { api, type Member } from "../api";
 
 /** Who you are and what proves it. Everything else keys off `token`. */
 class Session {
   token = $state<string | null>(null);
-  user = $state<PublicUser | null>(null);
+  user = $state<Member | null>(null);
 
   get isAdmin(): boolean {
-    return this.user?.role === "admin" || this.user?.role === "owner";
+    return this.user?.isAdmin ?? false;
+  }
+
+  get isOwner(): boolean {
+    return this.user?.isOwner ?? false;
+  }
+
+  async refresh() {
+    if (!this.token) return;
+    try {
+      const { user } = await api.me(this.token);
+      this.user = user;
+    } catch {
+      /* empty */
+    }
   }
 
   async login(username: string, password: string) {
@@ -35,13 +49,13 @@ class Session {
     }
   }
 
-  start(token: string, user: PublicUser) {
+  start(token: string, user: Member) {
     this.token = token;
     this.user = user;
     localStorage.setItem("token", token);
   }
 
-  patchUser(patch: Partial<PublicUser>) {
+  patchUser(patch: Partial<Member>) {
     if (this.user) this.user = { ...this.user, ...patch };
   }
 

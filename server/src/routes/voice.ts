@@ -1,11 +1,11 @@
-import { voiceTokenBody } from "@ccchat/shared";
+import { ChannelType, voiceTokenBody } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import type { Context } from "hono";
 import { Hono } from "hono";
 import { AccessToken } from "livekit-server-sdk";
 import { requireAuth, type Env } from "../auth.js";
 import { db } from "../db/index.js";
-import { channels } from "../db/schema.js";
+import { channels } from "../db/schema";
 import {
   LIVEKIT_API_KEY,
   LIVEKIT_API_SECRET,
@@ -18,12 +18,11 @@ const app = new Hono<Env>();
 
 app.use("*", requireAuth);
 
-/** Derived from the request, so however the user reaches the app they reach
- *  LiveKit the same way, through the proxy that fronted us - nothing to
- *  configure. The proxy sets X-Forwarded-Proto; falling back to the raw Host
- *  header keeps `npm run dev` (no proxy) working. */
+/** Derived from the request so the client reaches LiveKit through whatever proxy
+ *  fronted us. Falling back to the raw Host header keeps `npm run dev` working,
+ *  where there is no proxy to set X-Forwarded-Proto. */
 function livekitUrl(c: Context): string {
-  if (LIVEKIT_URL) return LIVEKIT_URL; // explicit override wins
+  if (LIVEKIT_URL) return LIVEKIT_URL;
 
   const forwarded = c.req.header("x-forwarded-proto")?.split(",")[0]?.trim();
   const host = c.req.header("x-forwarded-host") ?? c.req.header("host") ?? "localhost";
@@ -36,14 +35,12 @@ function livekitUrl(c: Context): string {
 
 app.get("/config", (c) => c.json({ url: livekitUrl(c) }));
 
-/** Mint a short-lived LiveKit access token for a voice channel. The LiveKit
- *  "room" is simply the channel id, so joining a channel = joining its room.
- *  Moderation carries over: a muted member may listen but not publish. */
+/** The LiveKit room is the channel id, so joining a channel is joining its room. */
 app.post("/token", validate("json", voiceTokenBody), async (c) => {
   const { channelId } = c.req.valid("json");
 
   const channel = db.select().from(channels).where(eq(channels.id, channelId)).get();
-  if (!channel || channel.type !== "voice")
+  if (!channel || channel.type !== ChannelType.Voice)
     return c.json({ error: "not a voice channel" }, 400);
 
   const user = c.get("user");

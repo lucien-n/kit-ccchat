@@ -1,9 +1,9 @@
+import { ChannelType, createChannelBody, type Channel } from "@ccchat/shared";
+import { and, asc, count, eq, gt, isNull, ne } from "drizzle-orm";
 import { Hono } from "hono";
-import { and, asc, count, eq, gt, ne } from "drizzle-orm";
-import { createChannelBody, type Channel, type ChannelType } from "@ccchat/shared";
+import { newId, requireAuth, requireCan, type Env } from "../auth.js";
 import { db } from "../db/index.js";
-import { channelReads, channels, messages } from "../db/schema.js";
-import { newId, requireAuth, requireRole, type Env } from "../auth.js";
+import { channelReads, channels, messages } from "../db/schema";
 import { validate } from "../validate.js";
 
 const app = new Hono<Env>();
@@ -44,7 +44,7 @@ app.get("/unreads", (c) => {
 
   const unreads: Record<string, number> = {};
   for (const ch of db.select().from(channels).all()) {
-    if (ch.type !== "text") continue;
+    if (ch.type !== ChannelType.Text) continue;
     const since = readMap.get(ch.id) ?? user.createdAt;
     const row = db
       .select({ n: count() })
@@ -53,6 +53,7 @@ app.get("/unreads", (c) => {
         and(
           eq(messages.channelId, ch.id),
           eq(messages.deleted, 0),
+          isNull(messages.systemEvent),
           ne(messages.authorId, user.id),
           gt(messages.createdAt, since),
         ),
@@ -76,21 +77,26 @@ app.post("/:id/read", (c) => {
   return c.json({ ok: true });
 });
 
-app.post("/", requireRole("admin"), validate("json", createChannelBody), async (c) => {
-  const { name, type } = c.req.valid("json");
+app.post(
+  "/",
+  requireCan("manageChannels"),
+  validate("json", createChannelBody),
+  async (c) => {
+    const { name, type } = c.req.valid("json");
 
-  const channel = {
-    id: newId(),
-    name,
-    type,
-    position: db.select().from(channels).all().length,
-    createdAt: Date.now(),
-  };
-  db.insert(channels).values(channel).run();
-  return c.json({ channel });
-});
+    const channel = {
+      id: newId(),
+      name,
+      type,
+      position: db.select().from(channels).all().length,
+      createdAt: Date.now(),
+    };
+    db.insert(channels).values(channel).run();
+    return c.json({ channel });
+  },
+);
 
-app.delete("/:id", requireRole("admin"), (c) => {
+app.delete("/:id", requireCan("manageChannels"), (c) => {
   const id = String(c.req.param("id"));
   db.delete(channels).where(eq(channels.id, id)).run();
   return c.json({ ok: true });

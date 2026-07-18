@@ -2,8 +2,9 @@ import { eq } from "drizzle-orm";
 import type { Context, Next } from "hono";
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { db } from "./db/index.js";
-import { sessions, users, type User } from "./db/schema.js";
+import { sessions, users, type User } from "./db/schema";
 import { SESSION_TTL_MS } from "./env.js";
+import { isAdmin, isOwner } from "./permissions.js";
 
 /** Password hashing with Node's built-in scrypt - no native modules to compile,
  *  works the same on every platform. Format: <saltHex>:<keyHex>. */
@@ -75,18 +76,29 @@ export async function requireAuth(c: Context<Env>, next: Next) {
   await next();
 }
 
-const RANK = { member: 0, admin: 1, owner: 2 } as const;
-export type Role = keyof typeof RANK;
+export type Capability =
+  | "manageChannels"
+  | "moderateMembers"
+  | "manageInvites"
+  | "manageRoles"
+  | "deleteAnyMessage"
+  | "manageCommunity";
 
-export function hasRole(user: User, min: Role): boolean {
-  return RANK[(user.role as Role) ?? "member"] >= RANK[min];
+const OWNER_ONLY = new Set<Capability>(["manageCommunity"]);
+
+export function can(user: User, cap: Capability): boolean {
+  if (OWNER_ONLY.has(cap)) return isOwner(user);
+  return isAdmin(user);
 }
 
-/** Require at least the given role (use after requireAuth). */
-export function requireRole(min: Role) {
+export function requireCan(cap: Capability) {
   return async (c: Context<Env>, next: Next) => {
-    const user = c.get("user");
-    if (!hasRole(user, min)) return c.json({ error: "forbidden" }, 403);
+    if (!can(c.get("user"), cap)) return c.json({ error: "forbidden" }, 403);
     await next();
   };
+}
+
+export async function requireOwner(c: Context<Env>, next: Next) {
+  if (!isOwner(c.get("user"))) return c.json({ error: "forbidden" }, 403);
+  await next();
 }

@@ -6,17 +6,14 @@ export type ConnectionStatus = "disconnected" | "connecting" | "connected";
 const BASE_DELAY = 1000;
 const MAX_DELAY = 30_000;
 
-/** Exponential backoff, then a random point in the back half of the window. A
- *  fixed delay means everyone who dropped when the server restarted comes back
- *  in the same instant, and keeps colliding on every retry after that. */
+/** Exponential backoff jittered across the back half of the window, so everyone
+ *  who dropped on a server restart doesn't stampede back in the same instant. */
 export function reconnectDelay(attempt: number, random = Math.random): number {
   const window = Math.min(MAX_DELAY, BASE_DELAY * 2 ** attempt);
   return window / 2 + random() * (window / 2);
 }
 
 function wsUrl(token: string): string {
-  // Local, stringified before it escapes: never reactive state, so SvelteURL
-  // would buy nothing.
   // eslint-disable-next-line svelte/prefer-svelte-reactivity
   const u = new URL(apiBase() || location.origin);
   u.protocol = u.protocol === "https:" ? "wss:" : "ws:";
@@ -27,14 +24,13 @@ function wsUrl(token: string): string {
 
 interface Handlers {
   event: (event: ServerEvent) => void;
-  /** Anything the server pushed while the socket was down was missed, and it
-   *  does not replay. Fires only after a gap, never on a clean first connect. */
+  /** Fires only after a reconnect gap: the server does not replay what it pushed
+   *  while the socket was down, so the caller has to refetch. */
   resync: () => void;
 }
 
-/** The socket, and only the socket: it owns the connection lifecycle and hands
- *  events off. Deciding what an event means belongs to the caller, which is
- *  what keeps this from growing back into the store that knew everything. */
+/** Owns the socket lifecycle and nothing else; what an event means is the
+ *  caller's decision, which keeps this from regrowing into a god-store. */
 class Realtime {
   status = $state<ConnectionStatus>("disconnected");
 
@@ -57,14 +53,14 @@ class Realtime {
     this.timer = null;
     this.token = null;
     const ws = this.ws;
-    // Cleared before close() so the onclose below sees it was superseded and
-    // doesn't schedule a reconnect for a session we just ended.
+    // Cleared before close() so onclose sees it was superseded and doesn't
+    // reconnect a session we just ended.
     this.ws = null;
     ws?.close();
     this.status = "disconnected";
   }
 
-  /** False when the socket isn't up, so the caller can say so rather than let
+  /** False when the socket is down, so the caller can surface it rather than let
    *  the message vanish. */
   send(event: ClientEvent): boolean {
     if (!this.ws || this.status !== "connected") return false;
@@ -79,9 +75,8 @@ class Realtime {
     this.ws = ws;
 
     ws.onopen = () => {
-      // A retry got us here, so there was a window where we were missing events.
-      // Counts as a gap even on the first connect: `attempts` only leaves zero
-      // after a failure.
+      // attempts only leaves zero after a failed retry, so a nonzero count means
+      // we were disconnected for a while and missed events.
       const gap = this.attempts > 0;
       this.status = "connected";
       this.attempts = 0;

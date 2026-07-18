@@ -1,3 +1,4 @@
+import { InviteStatus } from "@ccchat/shared";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Hono } from "hono";
 import {
@@ -38,7 +39,7 @@ describe("single-use invites", () => {
 
     const { invites } = await get(app, "/api/invites", token).then(json);
     const mine = invites.find((i: any) => i.code === invite.code);
-    expect(mine.status).toBe("used up");
+    expect(mine.status).toBe(InviteStatus.Used_Up);
     expect(mine.active).toBe(false);
     expect(mine.uses).toBe(1);
   });
@@ -67,7 +68,7 @@ describe("revoking", () => {
     ).then(json);
     expect(revoked.invite.revoked).toBe(true);
     expect(revoked.invite.active).toBe(false);
-    expect(revoked.invite.status).toBe("revoked");
+    expect(revoked.invite.status).toBe(InviteStatus.Revoked);
 
     expect((await register(app, invite.code, uniq())).status).toBe(400);
   });
@@ -94,7 +95,7 @@ describe("expiry", () => {
     const { invite } = await mkInvite(app, token, { maxUses: 0, expiresInHours: 1 });
     // Reach past the API to age it, rather than sleeping an hour.
     const { db } = await import("../src/db/index.js");
-    const { invites } = await import("../src/db/schema.js");
+    const { invites } = await import("../src/db/schema/index.js");
     const { eq } = await import("drizzle-orm");
     db.update(invites)
       .set({ expiresAt: Date.now() - 1000 })
@@ -104,7 +105,9 @@ describe("expiry", () => {
     expect((await register(app, invite.code, uniq())).status).toBe(400);
 
     const list = await get(app, "/api/invites", token).then(json);
-    expect(list.invites.find((i: any) => i.code === invite.code).status).toBe("expired");
+    expect(list.invites.find((i: any) => i.code === invite.code).status).toBe(
+      InviteStatus.Expired,
+    );
   });
 
   it("ignores a negative expiry rather than minting a dead link", async () => {

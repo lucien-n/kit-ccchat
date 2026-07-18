@@ -1,0 +1,39 @@
+<script lang="ts">
+  import { Button } from "$lib/components/ui/button";
+  import { community } from "$lib/stores/community.svelte";
+  import { realtime } from "$lib/stores/realtime.svelte";
+  import { session } from "$lib/stores/session.svelte";
+  import { cn } from "$lib/utils";
+  import SettingsIcon from "@lucide/svelte/icons/settings";
+
+  interface Props {
+    onOpenCommunitySettings: () => void;
+  }
+
+  const { onOpenCommunitySettings }: Props = $props();
+</script>
+
+<header class="flex h-12 shrink-0 items-center gap-2 border-b px-4 font-semibold">
+  <span class="truncate">{community.name}</span>
+  <div class="ml-auto flex shrink-0 items-center gap-1">
+    {#if session.isAdmin}
+      <Button
+        variant="ghost"
+        size="icon"
+        class="size-7"
+        title="Community settings"
+        onclick={() => onOpenCommunitySettings?.()}
+      >
+        <SettingsIcon class="size-4" />
+      </Button>
+    {/if}
+    <span
+      class={cn(
+        "bg-muted-foreground size-2 shrink-0 rounded-full",
+        realtime.status === "connected" && "bg-green-500",
+        realtime.status === "connecting" && "bg-amber-500",
+      )}
+      title={realtime.status}
+    ></span>
+  </div>
+</header>

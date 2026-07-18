@@ -8,6 +8,34 @@
       "when": 1784237237965,
       "tag": "0000_baseline",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1784286113592,
+      "tag": "0001_rich_talisman",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1784306338198,
+      "tag": "0002_broken_silver_samurai",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1784365167767,
+      "tag": "0003_ordinary_lady_bullseye",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1784365178096,
+      "tag": "0004_short_kid_colt",
+      "breakpoints": true
     }
   ]
 }
