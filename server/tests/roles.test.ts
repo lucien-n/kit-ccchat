@@ -159,7 +159,12 @@ describe("role management", () => {
     const blue = await mk("#0000ff");
 
     const { user, token } = await register(app, inviteCode, uniq()).then(json);
-    await put(app, `/api/roles/members/${user.id}`, { roleIds: [green.id, blue.id] }, ownerToken);
+    await put(
+      app,
+      `/api/roles/members/${user.id}`,
+      { roleIds: [green.id, blue.id] },
+      ownerToken,
+    );
 
     // Full list, blue on top: the client always sends the complete order.
     const allIds = () =>
@@ -168,7 +173,12 @@ describe("role management", () => {
         .then((r: any) => r.roles.map((x: any) => x.id));
     const withFront = async (front: string[]) => {
       const rest = (await allIds()).filter((id: string) => !front.includes(id));
-      return put(app, "/api/roles/order", { orderedIds: [...front, ...rest] }, ownerToken);
+      return put(
+        app,
+        "/api/roles/order",
+        { orderedIds: [...front, ...rest] },
+        ownerToken,
+      );
     };
 
     expect((await withFront([blue.id, green.id])).status).toBe(200);

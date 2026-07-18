@@ -52,11 +52,15 @@
     <div class="space-y-2 rounded-lg border p-4">
       <div class="flex items-baseline justify-between">
         <span class="text-sm font-medium">CPU</span>
-        <span class="tabular-nums text-sm">{s.cpu.usagePct}%</span>
+        <span class="text-sm tabular-nums">{s.cpu.usagePct}%</span>
       </div>
       <Sparkline points={s.history.map((h) => h.cpuPct)} />
       <div class="text-muted-foreground flex justify-between gap-2 text-xs">
-        <span>{s.cpu.cores} cores · load {s.cpu.loadAvg.map((l) => l.toFixed(2)).join(" ")}</span>
+        <span
+          >{s.cpu.cores} cores · load {s.cpu.loadAvg
+            .map((l) => l.toFixed(2))
+            .join(" ")}</span
+        >
         <span class="truncate">{s.cpu.model}</span>
       </div>
     </div>
@@ -64,7 +68,7 @@
     <div class="space-y-2 rounded-lg border p-4">
       <div class="flex items-baseline justify-between gap-2">
         <span class="text-sm font-medium">Memory</span>
-        <span class="text-muted-foreground tabular-nums text-xs">
+        <span class="text-muted-foreground text-xs tabular-nums">
           {formatBytes(s.memory.usedBytes)} / {formatBytes(s.memory.totalBytes)}
         </span>
       </div>

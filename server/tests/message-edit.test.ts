@@ -82,7 +82,9 @@ function postMessage(content: string): Promise<MessageView> {
     (e) => e.type === ServerEventType.Message_New && e.message.content === content,
     `message.new for "${content}"`,
   ).then((e) => e.message as MessageView);
-  ws.send(JSON.stringify({ type: ClientEventType.Message_Create, channelId: general, content }));
+  ws.send(
+    JSON.stringify({ type: ClientEventType.Message_Create, channelId: general, content }),
+  );
   return landed;
 }
 
@@ -95,7 +97,12 @@ it("lets the author edit and broadcasts the update", async () => {
     "message.edited",
   );
 
-  const res = await patch(app, `/api/messages/${msg.id}`, { content: newContent }, ownerToken);
+  const res = await patch(
+    app,
+    `/api/messages/${msg.id}`,
+    { content: newContent },
+    ownerToken,
+  );
   expect(res.status).toBe(200);
   const body = await json<{ message: MessageView }>(res);
   expect(body.message.content).toBe(newContent);
@@ -104,7 +111,9 @@ it("lets the author edit and broadcasts the update", async () => {
   expect((await broadcast).message.content).toBe(newContent);
 
   const list = (
-    await json<{ messages: MessageView[] }>(await get(app, `/api/messages/${general}`, ownerToken))
+    await json<{ messages: MessageView[] }>(
+      await get(app, `/api/messages/${general}`, ownerToken),
+    )
   ).messages;
   const found = list.find((m) => m.id === msg.id);
   expect(found?.content).toBe(newContent);

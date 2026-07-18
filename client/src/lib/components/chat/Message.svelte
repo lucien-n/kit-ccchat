@@ -178,7 +178,11 @@
             <button type="button" class="hover:text-foreground" onclick={saveEdit}>
               save
             </button>
-            <button type="button" class="hover:text-foreground" onclick={() => (editing = false)}>
+            <button
+              type="button"
+              class="hover:text-foreground"
+              onclick={() => (editing = false)}
+            >
               cancel
             </button>
             <span class="opacity-70">escape to cancel &middot; enter to save</span>

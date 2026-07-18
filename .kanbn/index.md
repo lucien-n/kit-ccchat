@@ -1,6 +1,6 @@
 ---
 startedColumns:
-  - 'In Progress'
+  - "In Progress"
 completedColumns:
   - Done
 ---
@@ -14,6 +14,7 @@ completedColumns:
 - [delete-channels](tasks/delete-channels.md)
 - [rename-channels](tasks/rename-channels.md)
 - [prevent-duplicate-channel-name](tasks/prevent-duplicate-channel-name.md)
+- [unify-channel-type-icons-and-labels](tasks/unify-channel-type-icons-and-labels.md)
 
 ## Todo
 
