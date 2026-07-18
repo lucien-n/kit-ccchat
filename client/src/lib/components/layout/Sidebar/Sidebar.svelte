@@ -1,20 +1,18 @@
 <script lang="ts">
   import { avatarUrl } from "$lib/api";
   import * as app from "$lib/app";
-  import { Badge } from "$lib/components/ui/badge";
+  import UserAvatar from "$lib/components/common/UserAvatar.svelte";
   import { Button } from "$lib/components/ui/button";
+  import VoiceBar from "$lib/components/voice/VoiceBar.svelte";
   import { channels } from "$lib/stores/channels.svelte";
   import { community } from "$lib/stores/community.svelte";
-  import { presence } from "$lib/stores/presence.svelte";
   import { realtime } from "$lib/stores/realtime.svelte";
   import { session } from "$lib/stores/session.svelte";
-  import { unread } from "$lib/stores/unread.svelte";
   import { voice } from "$lib/stores/voice.svelte";
   import { cn } from "$lib/utils";
   import { ChannelType } from "@ccchat/shared";
-  import { Hash, LogOut, Plus, Settings, Volume2 } from "@lucide/svelte";
-  import UserAvatar from "$lib/components/common/UserAvatar.svelte";
-  import VoiceBar from "$lib/components/voice/VoiceBar.svelte";
+  import { LogOut, Plus, Settings } from "@lucide/svelte";
+  import SingleChannelRow from "./SingleChannelRow.svelte";
 
   interface Props {
     withVoice?: boolean;
@@ -40,14 +38,14 @@
     session.user ? avatarUrl(session.user.id, session.user.avatarVersion) : null,
   );
 
-  function selectChannel(id: string) {
+  function handleSelectChannel(id: string) {
     app.selectChannel(id);
     onNavigate?.();
   }
 
-  function joinVoice(c: { id: string; name: string }) {
+  function handleJoinVoice(channel: { id: string; name: string }) {
     if (!session.token) return;
-    voice.join({ id: c.id, name: c.name }, session.token);
+    voice.join(channel, session.token);
     onNavigate?.();
   }
 
@@ -84,9 +82,9 @@
 
 <nav class="min-h-0 flex-1 overflow-y-auto p-2">
   <div class="flex items-center justify-between px-2 pt-2 pb-1">
-    <span class="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
-      >Text</span
-    >
+    <span class="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+      Text
+    </span>
     {#if session.isAdmin}
       <Button
         variant="ghost"
@@ -100,29 +98,14 @@
     {/if}
   </div>
 
-  {#each textChannels as c (c.id)}
-    <Button
-      variant="ghost"
-      class={cn(
-        "text-muted-foreground h-10 w-full justify-start gap-2 px-2 font-normal sm:h-8",
-        c.id === channels.currentId && "bg-sidebar-accent text-sidebar-accent-foreground",
-      )}
-      onclick={() => selectChannel(c.id)}
-    >
-      <Hash class="size-4 shrink-0" />
-      <span class="truncate">{c.name}</span>
-      {#if (unread.counts[c.id] ?? 0) > 0}
-        <Badge variant="destructive" class="ml-auto h-5 min-w-5 justify-center px-1.5">
-          {unread.counts[c.id]}
-        </Badge>
-      {/if}
-    </Button>
+  {#each textChannels as channel (channel.id)}
+    <SingleChannelRow {channel} onSelect={() => handleSelectChannel(channel.id)} />
   {/each}
 
   <div class="flex items-center justify-between px-2 pt-4 pb-1">
-    <span class="text-muted-foreground text-xs font-semibold tracking-wide uppercase"
-      >Voice</span
-    >
+    <span class="text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+      Voice
+    </span>
     {#if session.isAdmin}
       <Button
         variant="ghost"
@@ -136,47 +119,8 @@
     {/if}
   </div>
 
-  {#each voiceChannels as c (c.id)}
-    {@const members = presence.voice[c.id] ?? []}
-    <div>
-      <Button
-        variant="ghost"
-        class={cn(
-          "text-muted-foreground h-10 w-full justify-start gap-2 px-2 font-normal sm:h-8",
-          c.id === voice.channelId && "bg-sidebar-accent text-sidebar-accent-foreground",
-        )}
-        title="Join voice"
-        onclick={() => joinVoice(c)}
-      >
-        <Volume2 class="size-4 shrink-0" />
-        <span class="truncate">{c.name}</span>
-        {#if members.length > 0}
-          <Badge variant="secondary" class="ml-auto h-5 min-w-5 justify-center px-1.5">
-            {members.length}
-          </Badge>
-        {/if}
-      </Button>
-
-      {#if members.length > 0}
-        <div class="mt-0.5 mb-1 ml-4 flex flex-col gap-0.5">
-          {#each members as m (m.id)}
-            {@const av = avatarUrl(m.id, m.avatarVersion)}
-            {@const speaking =
-              c.id === voice.channelId &&
-              voice.participants.find((p) => p.identity === m.id)?.speaking}
-            <div class="flex items-center gap-2 px-2 py-1">
-              <UserAvatar
-                src={av}
-                name={m.name}
-                class={cn("size-5 shrink-0", speaking && "ring-2 ring-green-500")}
-                fallbackClass="bg-primary/70 text-[9px]"
-              />
-              <span class="text-muted-foreground truncate text-xs">{m.name}</span>
-            </div>
-          {/each}
-        </div>
-      {/if}
-    </div>
+  {#each voiceChannels as channel (channel.id)}
+    <SingleChannelRow {channel} onSelect={() => handleJoinVoice(channel)} />
   {/each}
 </nav>
 

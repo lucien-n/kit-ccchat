@@ -3,7 +3,7 @@
   import CreateChannelDialog from "$lib/components/channel/CreateChannelDialog.svelte";
   import CommunitySettings from "$lib/components/community/CommunitySettings.svelte";
   import MembersSidebar from "$lib/components/layout/MembersSidebar.svelte";
-  import Sidebar from "$lib/components/layout/Sidebar.svelte";
+  import Sidebar from "$lib/components/layout/Sidebar";
   import Settings from "$lib/components/settings/Settings.svelte";
   import { Button } from "$lib/components/ui/button";
   import * as Resizable from "$lib/components/ui/resizable";
