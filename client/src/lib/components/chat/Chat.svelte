@@ -213,7 +213,7 @@
 
     {#if voice.inCall}
       <div class="sm:hidden">
-        <VoiceBar compact />
+        <VoiceBar />
       </div>
     {/if}
 
