@@ -5,20 +5,16 @@
   let {
     ref = $bindable(null),
     class: className,
-    inset,
     children,
     ...restProps
-  }: WithElementRef<HTMLAttributes<HTMLDivElement>> & {
-    inset?: boolean;
-  } = $props();
+  }: WithElementRef<HTMLAttributes<HTMLDivElement>> = $props();
 </script>
 
 <div
   bind:this={ref}
-  data-slot="context-menu-label"
-  data-inset={inset}
+  data-slot="alert-dialog-footer"
   class={cn(
-    "text-muted-foreground px-2 py-1 text-xs data-inset:pl-7 data-inset:pl-8",
+    "cn-alert-dialog-footer flex flex-col-reverse gap-2 group-data-[size=sm]/alert-dialog-content:grid group-data-[size=sm]/alert-dialog-content:grid-cols-2 sm:flex-row sm:justify-end",
     className,
   )}
   {...restProps}

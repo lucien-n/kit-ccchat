@@ -12,6 +12,8 @@ export type {
   VoiceMember,
 } from "@ccchat/shared";
 
+export type ModAction = "kick" | "ban" | "unban" | "mute" | "unmute";
+
 import type {
   ChangePasswordBody,
   Channel,
@@ -175,12 +177,7 @@ export const api = {
   userProfile: (token: string, id: string) =>
     request<{ user: Member; roles: Role[] }>(`/api/users/${id}`, { token }),
 
-  mod: (
-    token: string,
-    id: string,
-    action: "kick" | "ban" | "unban" | "mute" | "unmute",
-    body?: unknown,
-  ) =>
+  mod: (token: string, id: string, action: ModAction, body?: unknown) =>
     request<{ ok: true }>(`/api/moderation/${id}/${action}`, {
       method: "POST",
       body,

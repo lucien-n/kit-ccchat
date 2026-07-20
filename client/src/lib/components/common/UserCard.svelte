@@ -1,10 +1,12 @@
 <script lang="ts">
-  import { api, type Member, type Role } from "$lib/api";
+  import { api, type Member, type ModAction, type Role } from "$lib/api";
   import UserAvatar from "$lib/components/common/UserAvatar.svelte";
+  import * as AlertDialog from "$lib/components/ui/alert-dialog";
   import * as ContextMenu from "$lib/components/ui/context-menu";
   import * as Popover from "$lib/components/ui/popover";
   import { ScrollArea } from "$lib/components/ui/scroll-area";
   import { apiErrorMessage } from "$lib/forms";
+  import { canModerate, isMuted } from "$lib/members";
   import { members } from "$lib/stores/members.svelte";
   import { presence } from "$lib/stores/presence.svelte";
   import { roles as rolesStore } from "$lib/stores/roles.svelte";
@@ -41,16 +43,41 @@
   );
 
   const target = $derived(members.byId(userId));
-  const isSelf = $derived(userId === session.user?.id);
-  const canModerate = $derived(
-    session.isAdmin && !isSelf && !!target && (session.isOwner || !target.isOwner),
-  );
+  const showModeration = $derived(canModerate(session.user, target));
+  const muted = $derived(!!target && isMuted(target));
 
-  // Blockout: the menu structure and gating are real, the actions are not wired
-  // to api.mod() yet. Ban and mute still need a confirm step and a duration picker.
-  function todo(action: string) {
-    toast.info(`${action} is not wired up yet`);
+  const MUTE_DURATIONS = [
+    { minutes: 5, label: "5 minutes" },
+    { minutes: 60, label: "1 hour" },
+    { minutes: 1440, label: "1 day" },
+    { minutes: 10080, label: "1 week" },
+  ];
+
+  let confirming = $state<"kick" | "ban" | null>(null);
+  let busy = $state(false);
+
+  const name = $derived(target?.displayName ?? "this member");
+
+  async function act(action: ModAction, body?: unknown) {
+    busy = true;
+    try {
+      await members.moderate(userId, action, body);
+      toast.success(`${name} was ${PAST_TENSE[action]}`);
+    } catch (e) {
+      toast.error(apiErrorMessage(e, "action failed"));
+    } finally {
+      busy = false;
+      confirming = null;
+    }
   }
+
+  const PAST_TENSE: Record<ModAction, string> = {
+    kick: "kicked",
+    ban: "banned",
+    unban: "unbanned",
+    mute: "muted",
+    unmute: "unmuted",
+  };
 
   async function copyId() {
     await navigator.clipboard.writeText(userId);
@@ -196,32 +223,46 @@
       </ContextMenu.Item>
     </ContextMenu.Group>
 
-    {#if canModerate}
+    {#if showModeration}
       <ContextMenu.Separator />
       <ContextMenu.Group>
         <ContextMenu.GroupHeading>Moderation</ContextMenu.GroupHeading>
-        {#if target?.mutedUntil}
-          <ContextMenu.Item onSelect={() => todo("unmute")}>
+        {#if muted}
+          <ContextMenu.Item disabled={busy} onSelect={() => act("unmute")}>
             <Volume2Icon />
             Unmute
           </ContextMenu.Item>
         {:else}
-          <ContextMenu.Item onSelect={() => todo("mute")}>
-            <VolumeXIcon />
-            Mute
-          </ContextMenu.Item>
+          <ContextMenu.Sub>
+            <!-- SubTrigger ships without the gap-2 that Item has. -->
+            <ContextMenu.SubTrigger class="gap-2" disabled={busy}>
+              <VolumeXIcon />
+              Mute
+            </ContextMenu.SubTrigger>
+            <ContextMenu.SubContent>
+              {#each MUTE_DURATIONS as d (d.minutes)}
+                <ContextMenu.Item onSelect={() => act("mute", { minutes: d.minutes })}>
+                  {d.label}
+                </ContextMenu.Item>
+              {/each}
+            </ContextMenu.SubContent>
+          </ContextMenu.Sub>
         {/if}
-        <ContextMenu.Item onSelect={() => todo("kick")}>
+        <ContextMenu.Item disabled={busy} onSelect={() => (confirming = "kick")}>
           <LogOutIcon />
           Kick
         </ContextMenu.Item>
         {#if target?.banned}
-          <ContextMenu.Item onSelect={() => todo("unban")}>
+          <ContextMenu.Item disabled={busy} onSelect={() => act("unban")}>
             <BanIcon />
             Unban
           </ContextMenu.Item>
         {:else}
-          <ContextMenu.Item variant="destructive" onSelect={() => todo("ban")}>
+          <ContextMenu.Item
+            variant="destructive"
+            disabled={busy}
+            onSelect={() => (confirming = "ban")}
+          >
             <BanIcon />
             Ban
           </ContextMenu.Item>
@@ -230,3 +271,31 @@
     {/if}
   </ContextMenu.Content>
 </ContextMenu.Root>
+
+<AlertDialog.Root
+  open={confirming !== null}
+  onOpenChange={(v) => {
+    if (!v) confirming = null;
+  }}
+>
+  <AlertDialog.Content>
+    <AlertDialog.Header>
+      <AlertDialog.Title>
+        {confirming === "ban" ? `Ban ${name}?` : `Kick ${name}?`}
+      </AlertDialog.Title>
+      <AlertDialog.Description>
+        {#if confirming === "ban"}
+          They lose every active session and cannot sign back in until unbanned.
+        {:else}
+          They lose every active session and need a fresh invite to return.
+        {/if}
+      </AlertDialog.Description>
+    </AlertDialog.Header>
+    <AlertDialog.Footer>
+      <AlertDialog.Cancel disabled={busy}>Cancel</AlertDialog.Cancel>
+      <AlertDialog.Action disabled={busy} onclick={() => confirming && act(confirming)}>
+        {confirming === "ban" ? "Ban" : "Kick"}
+      </AlertDialog.Action>
+    </AlertDialog.Footer>
+  </AlertDialog.Content>
+</AlertDialog.Root>

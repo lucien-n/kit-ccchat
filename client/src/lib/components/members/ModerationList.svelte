@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { api, type ModeratedMember } from "$lib/api";
+  import type { ModAction } from "$lib/api";
   import MemberIdentity from "$lib/components/common/MemberIdentity.svelte";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
@@ -7,7 +7,7 @@
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { apiErrorMessage } from "$lib/forms";
-  import { byRank } from "$lib/members";
+  import { byRank, isMuted } from "$lib/members";
   import { members } from "$lib/stores/members.svelte";
   import { presence } from "$lib/stores/presence.svelte";
   import { session } from "$lib/stores/session.svelte";
@@ -28,19 +28,13 @@
       .sort(byRank);
   });
 
-  async function act(id: string, action: "kick" | "ban" | "unban" | "mute" | "unmute") {
-    if (!session.token) return;
+  async function act(id: string, action: ModAction) {
     try {
-      const body = action === "mute" ? { minutes: 60 } : undefined;
-      await api.mod(session.token, id, action, body);
-      await members.load(true);
+      await members.moderate(id, action, action === "mute" ? { minutes: 60 } : undefined);
     } catch (e) {
       toast.error(apiErrorMessage(e, "action failed"));
     }
   }
-
-  const isMuted = (m: ModeratedMember) =>
-    m.mutedUntil != null && m.mutedUntil > Date.now();
 
   onMount(() => members.load());
 </script>
