@@ -1,14 +1,9 @@
-import { createInviteBody, InviteStatus, type Invite } from "@ccchat/shared";
+import { InviteStatus, type CreateInviteBody, type Invite } from "@ccchat/shared";
 import { desc, eq } from "drizzle-orm";
-import { Hono } from "hono";
-import { randomToken, requireAuth, requireCan, type Env } from "../auth.js";
-import { db } from "../db/index.js";
-import { invites, users } from "../db/schema";
-import { validate } from "../validate.js";
-
-const app = new Hono<Env>();
-
-app.use("*", requireAuth, requireCan("manageInvites"));
+import { randomToken } from "../../auth.js";
+import { db } from "../../db/index.js";
+import { invites, users } from "../../db/schema";
+import { httpError } from "../../http/errors.js";
 
 /** Derived state is resolved here so the client never re-implements the
  *  expiry/exhaustion rules that /api/auth/register enforces. */
@@ -35,14 +30,16 @@ function toInviteView(i: typeof invites.$inferSelect): Invite {
   };
 }
 
-app.post("/", validate("json", createInviteBody), async (c) => {
-  const { maxUses, expiresInHours } = c.req.valid("json");
+export function createInvite(
+  { maxUses, expiresInHours }: CreateInviteBody,
+  createdBy: string,
+): Invite {
   const expiresAt =
     expiresInHours && expiresInHours > 0 ? Date.now() + expiresInHours * 3600_000 : null;
 
   const invite = {
     code: randomToken(6),
-    createdBy: c.get("user").id,
+    createdBy,
     createdAt: Date.now(),
     maxUses,
     uses: 0,
@@ -50,22 +47,23 @@ app.post("/", validate("json", createInviteBody), async (c) => {
     revoked: 0,
   };
   db.insert(invites).values(invite).run();
-  return c.json({ invite: toInviteView(invite) });
-});
+  return toInviteView(invite);
+}
 
-app.get("/", (c) => {
-  const list = db.select().from(invites).orderBy(desc(invites.createdAt)).all();
-  return c.json({ invites: list.map(toInviteView) });
-});
+export function listInvites(): Invite[] {
+  return db
+    .select()
+    .from(invites)
+    .orderBy(desc(invites.createdAt))
+    .all()
+    .map(toInviteView);
+}
 
 /** The row is kept rather than deleted so the list stays an audit trail. */
-app.post("/:code/revoke", (c) => {
-  const code = String(c.req.param("code"));
+export function revokeInvite(code: string): Invite {
   const invite = db.select().from(invites).where(eq(invites.code, code)).get();
-  if (!invite) return c.json({ error: "no such invite" }, 404);
+  if (!invite) httpError(404, "no such invite");
 
   db.update(invites).set({ revoked: 1 }).where(eq(invites.code, code)).run();
-  return c.json({ invite: toInviteView({ ...invite, revoked: 1 }) });
-});
-
-export default app;
+  return toInviteView({ ...invite, revoked: 1 });
+}

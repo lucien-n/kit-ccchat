@@ -14,6 +14,11 @@
     appearance.init();
     await init();
     ready = true;
+
+    if (import.meta.env.DEV) {
+      const { installVoiceDevTools } = await import("$lib/dev/seedVoice");
+      installVoiceDevTools();
+    }
   });
 </script>
 

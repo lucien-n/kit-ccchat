@@ -1,14 +1,8 @@
-import { ChannelType, createChannelBody, type Channel } from "@ccchat/shared";
+import { ChannelType, type Channel, type CreateChannelBody } from "@ccchat/shared";
 import { and, asc, count, eq, gt, isNull, ne } from "drizzle-orm";
-import { Hono } from "hono";
-import { newId, requireAuth, requireCan, type Env } from "../auth.js";
-import { db } from "../db/index.js";
-import { channelReads, channels, messages } from "../db/schema";
-import { validate } from "../validate.js";
-
-const app = new Hono<Env>();
-
-app.use("*", requireAuth);
+import { newId } from "../../auth.js";
+import { db } from "../../db/index.js";
+import { channelReads, channels, messages, type User } from "../../db/schema";
 
 /** `type` is a plain TEXT column, so this cast is the boundary where a db string
  *  becomes the union the rest of the app relies on. */
@@ -21,20 +15,19 @@ function toChannelView(row: typeof channels.$inferSelect): Channel {
   };
 }
 
-app.get("/", (c) => {
-  const list = db
+export function listChannels(): Channel[] {
+  return db
     .select()
     .from(channels)
     .orderBy(asc(channels.position), asc(channels.createdAt))
-    .all();
-  return c.json({ channels: list.map(toChannelView) });
-});
+    .all()
+    .map(toChannelView);
+}
 
-/** Unread counts for the current user, keyed by channel id. A message counts as
+/** Unread counts for the given user, keyed by channel id. A message counts as
  *  unread if it's newer than the user's read marker (defaulting to when they
  *  joined) and wasn't sent by them. */
-app.get("/unreads", (c) => {
-  const user = c.get("user");
+export function unreadCounts(user: User): Record<string, number> {
   const reads = db
     .select()
     .from(channelReads)
@@ -61,45 +54,32 @@ app.get("/unreads", (c) => {
       .get();
     unreads[ch.id] = row?.n ?? 0;
   }
-  return c.json({ unreads });
-});
+  return unreads;
+}
 
-app.post("/:id/read", (c) => {
-  const channelId = c.req.param("id");
+export function markRead(userId: string, channelId: string) {
   const now = Date.now();
   db.insert(channelReads)
-    .values({ userId: c.get("user").id, channelId, lastReadAt: now })
+    .values({ userId, channelId, lastReadAt: now })
     .onConflictDoUpdate({
       target: [channelReads.userId, channelReads.channelId],
       set: { lastReadAt: now },
     })
     .run();
-  return c.json({ ok: true });
-});
+}
 
-app.post(
-  "/",
-  requireCan("manageChannels"),
-  validate("json", createChannelBody),
-  async (c) => {
-    const { name, type } = c.req.valid("json");
+export function createChannel({ name, type }: CreateChannelBody) {
+  const channel = {
+    id: newId(),
+    name,
+    type,
+    position: db.select().from(channels).all().length,
+    createdAt: Date.now(),
+  };
+  db.insert(channels).values(channel).run();
+  return channel;
+}
 
-    const channel = {
-      id: newId(),
-      name,
-      type,
-      position: db.select().from(channels).all().length,
-      createdAt: Date.now(),
-    };
-    db.insert(channels).values(channel).run();
-    return c.json({ channel });
-  },
-);
-
-app.delete("/:id", requireCan("manageChannels"), (c) => {
-  const id = String(c.req.param("id"));
+export function deleteChannel(id: string) {
   db.delete(channels).where(eq(channels.id, id)).run();
-  return c.json({ ok: true });
-});
-
-export default app;
+}

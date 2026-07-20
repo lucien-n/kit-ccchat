@@ -1,0 +1,14 @@
+import { voiceTokenBody } from "@ccchat/shared";
+import { Hono } from "hono";
+import { requireAuth, type Env } from "../../auth.js";
+import { validate } from "../../validate.js";
+import * as voiceController from "./voice.controller.js";
+
+const router = new Hono<Env>();
+
+router.use("*", requireAuth);
+
+router.get("/config", voiceController.config);
+router.post("/token", validate("json", voiceTokenBody), voiceController.token);
+
+export default router;

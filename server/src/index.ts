@@ -2,13 +2,13 @@ import { serve } from "@hono/node-server";
 import { PORT } from "./env.js";
 import { migrate } from "./db/index.js";
 import { bootstrap } from "./bootstrap.js";
-import { startSystemSampler } from "./system.js";
+import * as systemService from "./modules/system/system.service.js";
 import { attachWebSocket } from "./ws.js";
 import { app } from "./app.js";
 
 migrate();
 bootstrap();
-startSystemSampler();
+systemService.startSystemSampler();
 
 const server = serve({ fetch: app.fetch, port: PORT }, (info) => {
   console.log(`ccchat server listening on http://localhost:${info.port}`);

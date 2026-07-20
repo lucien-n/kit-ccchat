@@ -9,7 +9,7 @@ import {
   OWNER_USERNAME,
   RESET_OWNER_PASSWORD,
 } from "./env.js";
-import { setSetting } from "./settings.js";
+import * as settingsService from "./modules/settings/settings.service.js";
 
 /** A brand-new instance has no accounts. The client shows the setup wizard in
  *  that state, and POST /api/setup is only accepted while it is true. */
@@ -107,7 +107,10 @@ export function seedCommunity(input: {
       .run();
   });
 
-  setSetting("communityName", input.communityName.trim() || "My Community");
+  settingsService.setSetting(
+    settingsService.SettingKey.CommunityName,
+    input.communityName.trim() || "My Community",
+  );
 
   return { owner, inviteCode };
 }

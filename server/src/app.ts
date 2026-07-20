@@ -5,40 +5,45 @@ import { existsSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { CLIENT_DIR, IS_PROD } from "./env.js";
 import { needsSetup } from "./bootstrap.js";
-import { communityName } from "./settings.js";
+import { onError } from "./http/errors.js";
+import * as settingsService from "./modules/settings/settings.service.js";
 import type { Env } from "./auth.js";
 
-import setupRoutes from "./routes/setup.js";
-import settingsRoutes from "./routes/settings.js";
-import authRoutes from "./routes/auth.js";
-import inviteRoutes from "./routes/invites.js";
-import channelRoutes from "./routes/channels.js";
-import messageRoutes from "./routes/messages.js";
-import moderationRoutes from "./routes/moderation.js";
-import roleRoutes from "./routes/roles.js";
-import systemRoutes from "./routes/system.js";
-import voiceRoutes from "./routes/voice.js";
-import userRoutes from "./routes/users.js";
+import setupRouter from "./modules/setup/setup.router.js";
+import settingsRouter from "./modules/settings/settings.router.js";
+import authRouter from "./modules/auth/auth.router.js";
+import invitesRouter from "./modules/invites/invites.router.js";
+import channelsRouter from "./modules/channels/channels.router.js";
+import messagesRouter from "./modules/messages/messages.router.js";
+import moderationRouter from "./modules/moderation/moderation.router.js";
+import rolesRouter from "./modules/roles/roles.router.js";
+import systemRouter from "./modules/system/system.router.js";
+import voiceRouter from "./modules/voice/voice.router.js";
+import usersRouter from "./modules/users/users.router.js";
 
 export const app = new Hono<Env>();
+
+app.onError(onError);
 
 // Bearer-token auth (no cookies) means cross-origin requests are safe: a
 // permissive CORS policy lets the mobile app and dev client talk to the API.
 app.use("/api/*", cors());
 
-app.get("/api/info", (c) => c.json({ name: communityName(), needsSetup: needsSetup() }));
+app.get("/api/info", (c) =>
+  c.json({ name: settingsService.communityName(), needsSetup: needsSetup() }),
+);
 
-app.route("/api/setup", setupRoutes);
-app.route("/api/settings", settingsRoutes);
-app.route("/api/auth", authRoutes);
-app.route("/api/invites", inviteRoutes);
-app.route("/api/channels", channelRoutes);
-app.route("/api/messages", messageRoutes);
-app.route("/api/moderation", moderationRoutes);
-app.route("/api/roles", roleRoutes);
-app.route("/api/system", systemRoutes);
-app.route("/api/voice", voiceRoutes);
-app.route("/api/users", userRoutes);
+app.route("/api/setup", setupRouter);
+app.route("/api/settings", settingsRouter);
+app.route("/api/auth", authRouter);
+app.route("/api/invites", invitesRouter);
+app.route("/api/channels", channelsRouter);
+app.route("/api/messages", messagesRouter);
+app.route("/api/moderation", moderationRouter);
+app.route("/api/roles", rolesRouter);
+app.route("/api/system", systemRouter);
+app.route("/api/voice", voiceRouter);
+app.route("/api/users", usersRouter);
 
 // In production the server also serves the built SPA. In dev the client runs on
 // Vite (port 5173) and proxies /api + /ws here, so this branch is skipped.
