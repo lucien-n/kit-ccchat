@@ -65,7 +65,10 @@ export function login({ username, password }: LoginBody) {
     httpError(401, "invalid username or password");
   if (user.banned) httpError(403, "account banned");
   if (user.kickedAt)
-    httpError(403, "you were removed from this community, an invite is required to return");
+    httpError(
+      403,
+      "you were removed from this community, an invite is required to return",
+    );
 
   return { token: createSession(user.id), user: toMember(user) };
 }
