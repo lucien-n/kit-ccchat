@@ -1,5 +1,6 @@
 <script lang="ts">
   import { api } from "$lib/api";
+  import CommunityIconPicker from "$lib/components/community/CommunityIconPicker.svelte";
   import { community } from "$lib/stores/community.svelte";
   import { session } from "$lib/stores/session.svelte";
   import * as Form from "$lib/components/ui/form";
@@ -53,3 +54,8 @@
     <Form.FieldErrors />
   </Form.Field>
 </form>
+
+<div class="mt-6 space-y-2">
+  <p class="text-sm font-medium">Community icon</p>
+  <CommunityIconPicker />
+</div>

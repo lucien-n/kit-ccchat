@@ -81,6 +81,9 @@ export type MuteBody = z.infer<typeof muteBody>;
 export const avatarBody = z.object({ image: z.string().min(1) });
 export type AvatarBody = z.infer<typeof avatarBody>;
 
+export const communityIconBody = z.object({ image: z.string().min(1) });
+export type CommunityIconBody = z.infer<typeof communityIconBody>;
+
 export const createRoleBody = z.object({
   name: roleName,
   color: hexColor.nullable().default(null),

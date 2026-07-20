@@ -19,6 +19,6 @@ completedColumns:
 
 ## In Progress
 
-- [backend-routes-restructure](tasks/backend-routes-restructure.md)
-
 ## Done
+
+- [backend-routes-restructure](tasks/backend-routes-restructure.md)

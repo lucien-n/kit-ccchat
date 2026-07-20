@@ -114,6 +114,9 @@ function dispatch(event: ServerEvent) {
     case ServerEventType.Community_Renamed:
       community.name = event.name;
       break;
+    case ServerEventType.Community_Icon_Changed:
+      community.iconVersion = event.iconVersion;
+      break;
     case ServerEventType.Roles_Changed:
       void onRolesChanged();
       break;
