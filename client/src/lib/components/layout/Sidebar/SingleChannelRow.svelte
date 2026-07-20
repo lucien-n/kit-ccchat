@@ -1,6 +1,6 @@
 <script lang="ts">
   import UserAvatar from "$lib/components/common/UserAvatar.svelte";
-  import UserCard from "$lib/components/common/UserCard.svelte";
+  import { UserCard } from "$lib/components/common/UserCard";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
   import { channels } from "$lib/stores/channels.svelte";

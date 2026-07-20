@@ -1,11 +1,11 @@
 <script lang="ts">
   import MemberIdentity from "$lib/components/common/MemberIdentity.svelte";
-  import UserCard from "$lib/components/common/UserCard.svelte";
+  import { UserCard } from "$lib/components/common/UserCard";
   import { byRank } from "$lib/members";
   import { members } from "$lib/stores/members.svelte";
   import { onMount } from "svelte";
 
-  const shownMembers = $derived([...members.list].sort(byRank));
+  const shownMembers = $derived(members.list.filter((m) => !m.banned).sort(byRank));
 
   onMount(() => members.load());
 </script>

@@ -54,7 +54,7 @@ export function userForToken(token: string | undefined): User | null {
     return null;
   }
   const user = db.select().from(users).where(eq(users.id, session.userId)).get();
-  if (!user || user.banned) return null;
+  if (!user || user.banned || user.kickedAt) return null;
   return user;
 }
 
