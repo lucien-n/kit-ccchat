@@ -6,8 +6,8 @@
 # ── build ────────────────────────────────────────────────────────────────────
 FROM node:22-slim AS build
 
-# Fallback toolchain in case better-sqlite3 has no prebuilt binary for this
-# platform (notably linux/arm64); usually the prebuild is downloaded instead.
+# Fallback toolchain for the case where better-sqlite3 has no prebuilt binary to
+# download; on linux/amd64 the prebuild is used and this goes unexercised.
 RUN apt-get update \
   && apt-get install -y --no-install-recommends python3 make g++ \
   && rm -rf /var/lib/apt/lists/*
@@ -19,7 +19,7 @@ COPY package.json package-lock.json* ./
 COPY shared/package.json ./shared/
 COPY server/package.json ./server/
 COPY client/package.json ./client/
-RUN npm install
+RUN npm ci
 
 COPY . .
 RUN npm run build
