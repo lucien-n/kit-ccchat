@@ -1,30 +1,21 @@
 <script lang="ts">
   import { Button } from "$lib/components/ui/button";
   import { voice } from "$lib/stores/voice.svelte";
-  import { cn } from "$lib/utils";
   import { Mic, MicOff, PhoneOff, Volume2 } from "@lucide/svelte";
 </script>
 
 <div
   class="bg-sidebar-accent/40 flex shrink-0 items-center justify-between space-y-2 border-t p-2"
 >
-  <div class="flex items-center gap-2">
-    <span
-      class={cn(
-        "size-2 shrink-0 rounded-full bg-amber-500",
-        voice.status === "connected" && "bg-green-500",
-      )}
-    ></span>
-    <div class="min-w-0 flex-1">
-      <div class="flex items-center gap-1 truncate text-sm font-semibold">
-        <Volume2 class="size-3.5 shrink-0" />
-        <span class="truncate">{voice.channelName}</span>
-      </div>
-      <div class="text-xs text-green-500">
-        {voice.status === "connected"
-          ? `Connected · ${voice.participants.length}`
-          : "Connecting…"}
-      </div>
+  <div class="min-w-0 flex-1">
+    <div class="flex items-center gap-1 truncate text-sm font-semibold">
+      <Volume2 class="size-3.5 shrink-0" />
+      <span class="truncate">{voice.channelName}</span>
+    </div>
+    <div class="text-xs text-green-500">
+      {voice.status === "connected"
+        ? `Connected · ${voice.participants.length}`
+        : "Connecting…"}
     </div>
   </div>
 

@@ -6,12 +6,12 @@
     userId: string;
     class?: string;
   }
-  let { userId, class: className }: Props = $props();
+  const { userId, class: className }: Props = $props();
 </script>
 
 <span
   class={cn(
-    "bg-muted-foreground size-2 shrink-0 rounded-full",
+    "bg-muted-foreground outline-background size-2 shrink-0 rounded-full outline",
     presence.online.has(userId) && "bg-green-500",
     className,
   )}

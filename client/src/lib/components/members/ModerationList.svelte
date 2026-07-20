@@ -1,14 +1,13 @@
 <script lang="ts">
-  import { api, type ModeratedMember } from "$lib/api";
+  import type { ModAction } from "$lib/api";
   import MemberIdentity from "$lib/components/common/MemberIdentity.svelte";
-  import PresenceDot from "$lib/components/common/PresenceDot.svelte";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
   import { Checkbox } from "$lib/components/ui/checkbox";
   import { Input } from "$lib/components/ui/input";
   import { Label } from "$lib/components/ui/label";
   import { apiErrorMessage } from "$lib/forms";
-  import { byRank } from "$lib/members";
+  import { byRank, isMuted } from "$lib/members";
   import { members } from "$lib/stores/members.svelte";
   import { presence } from "$lib/stores/presence.svelte";
   import { session } from "$lib/stores/session.svelte";
@@ -29,19 +28,13 @@
       .sort(byRank);
   });
 
-  async function act(id: string, action: "kick" | "ban" | "unban" | "mute" | "unmute") {
-    if (!session.token) return;
+  async function act(id: string, action: ModAction) {
     try {
-      const body = action === "mute" ? { minutes: 60 } : undefined;
-      await api.mod(session.token, id, action, body);
-      await members.load(true);
+      await members.moderate(id, action, action === "mute" ? { minutes: 60 } : undefined);
     } catch (e) {
       toast.error(apiErrorMessage(e, "action failed"));
     }
   }
-
-  const isMuted = (m: ModeratedMember) =>
-    m.mutedUntil != null && m.mutedUntil > Date.now();
 
   onMount(() => members.load());
 </script>
@@ -59,14 +52,13 @@
   <div class="min-h-0 flex-1 space-y-1 overflow-y-auto">
     {#if shownMembers.length}
       {#each shownMembers as member (member.id)}
-        <div class="hover:bg-muted/50 rounded-md p-2">
-          <div class="flex items-center gap-2">
-            <PresenceDot userId={member.id} />
-            <MemberIdentity {member} showMemberRank>
-              {#if member.banned}<Badge variant="destructive">banned</Badge>{/if}
-              {#if isMuted(member)}<Badge variant="secondary">muted</Badge>{/if}
-            </MemberIdentity>
-          </div>
+        <div
+          class="hover:bg-muted/50 flex items-center justify-between gap-2 rounded-md p-2"
+        >
+          <MemberIdentity {member} showMemberRank>
+            {#if member.banned}<Badge variant="destructive">banned</Badge>{/if}
+            {#if isMuted(member)}<Badge variant="secondary">muted</Badge>{/if}
+          </MemberIdentity>
 
           {#if member.id !== session.user?.id && !member.isOwner}
             <div class="flex flex-wrap gap-1 pt-2 pl-9">

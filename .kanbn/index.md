@@ -1,6 +1,6 @@
 ---
 startedColumns:
-  - 'In Progress'
+  - "In Progress"
 completedColumns:
   - Done
 ---

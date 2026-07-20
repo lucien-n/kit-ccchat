@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { avatarUrl } from "$lib/api";
   import UserAvatar from "$lib/components/common/UserAvatar.svelte";
   import UserCard from "$lib/components/common/UserCard.svelte";
   import { Badge } from "$lib/components/ui/badge";
@@ -46,22 +45,22 @@
   {#if isVoiceChannel && members}
     <div class="mt-0.5 mb-1 ml-4 flex flex-col gap-0.5">
       {#each members as member (member.id)}
-        {@const av = avatarUrl(member.id, member.avatarVersion)}
         {@const speaking =
           channel.id === voice.channelId &&
           voice.participants.find((p) => p.identity === member.id)?.speaking}
         <UserCard
           userId={member.id}
-          class="hover:bg-sidebar-accent w-full min-w-0 rounded px-2 py-1"
+          class="hover:bg-sidebar-accent w-full min-w-0 rounded-2xl px-1.5 py-1"
         >
           <div class="flex min-w-0 items-center gap-2">
             <UserAvatar
-              src={av}
-              name={member.name}
+              user={member}
               class={cn("size-5 shrink-0", speaking && "ring-2 ring-green-500")}
               fallbackClass="bg-primary/70 text-[9px]"
             />
-            <span class="text-muted-foreground truncate text-xs">{member.name}</span>
+            <span class="text-muted-foreground truncate text-xs">
+              {member.displayName}
+            </span>
           </div>
         </UserCard>
       {/each}

@@ -111,7 +111,7 @@ function handleVoiceJoin(client: Client, channelId: string) {
   if (!u) return;
   hub.voiceJoin(channelId, {
     id: u.id,
-    name: u.displayName,
+    displayName: u.displayName,
     avatarVersion: u.avatarVersion ?? null,
   });
 }

@@ -1,16 +1,14 @@
 <script lang="ts">
-  import { api, avatarUrl } from "$lib/api";
-  import { session } from "$lib/stores/session.svelte";
-  import { Button } from "$lib/components/ui/button";
+  import { api } from "$lib/api";
   import UserAvatar from "$lib/components/common/UserAvatar.svelte";
+  import { Button } from "$lib/components/ui/button";
   import { apiErrorMessage } from "$lib/forms";
   import { resizeImage } from "$lib/image";
+  import { session } from "$lib/stores/session.svelte";
   import { Trash2, Upload } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
 
   let fileInput: HTMLInputElement | null = $state(null);
-
-  const avatar = $derived(avatarUrl(session.user?.id ?? "", session.user?.avatarVersion));
 
   async function onFile(e: Event) {
     const file = (e.currentTarget as HTMLInputElement).files?.[0];
@@ -34,12 +32,7 @@
 </script>
 
 <div class="flex items-center gap-4">
-  <UserAvatar
-    src={avatar}
-    name={session.user?.displayName}
-    class="size-20"
-    fallbackClass="text-xl"
-  />
+  <UserAvatar user={session.user} class="size-20" fallbackClass="text-xl" />
 
   <div class="space-y-2">
     <div class="flex gap-2">
