@@ -1,7 +1,7 @@
 <script lang="ts">
   import { type MessageView } from "$lib/api";
   import UserAvatar from "$lib/components/common/UserAvatar.svelte";
-  import UserCard from "$lib/components/common/UserCard.svelte";
+  import { UserCard } from "$lib/components/common/UserCard";
   import Markdown from "$lib/components/markdown/Markdown.svelte";
   import { Button } from "$lib/components/ui/button";
   import { Textarea } from "$lib/components/ui/textarea";
