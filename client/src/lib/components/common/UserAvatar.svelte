@@ -1,20 +1,29 @@
 <script lang="ts">
+  import { avatarUrl } from "$lib/api";
   import * as Avatar from "$lib/components/ui/avatar";
   import { cn, getInitials } from "$lib/utils";
+  import type { Member } from "@ccchat/shared";
+  import PresenceDot from "./PresenceDot.svelte";
 
   interface Props {
-    src?: string | null;
-    name: string | undefined;
+    user: Pick<Member, "id" | "displayName" | "avatarVersion"> | null;
     class?: string;
     fallbackClass?: string;
+    showPresenceDot?: boolean;
   }
 
-  let { src = null, name, class: className, fallbackClass }: Props = $props();
+  const { user, class: className, fallbackClass, showPresenceDot }: Props = $props();
+
+  const src = $derived(user ? avatarUrl(user.id, user.avatarVersion) : null);
 </script>
 
-<Avatar.Root class={className}>
+<Avatar.Root class={cn("relative", className)}>
   {#if src}<Avatar.Image {src} alt="" />{/if}
   <Avatar.Fallback class={cn("bg-primary text-primary-foreground", fallbackClass)}>
-    {getInitials(name)}
+    {getInitials(user?.displayName)}
   </Avatar.Fallback>
+
+  {#if showPresenceDot && user}
+    <PresenceDot userId={user.id} class="absolute right-0 bottom-0" />
+  {/if}
 </Avatar.Root>

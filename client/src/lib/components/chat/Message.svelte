@@ -1,5 +1,10 @@
 <script lang="ts">
-  import { avatarUrl, type MessageView } from "$lib/api";
+  import { type MessageView } from "$lib/api";
+  import UserAvatar from "$lib/components/common/UserAvatar.svelte";
+  import UserCard from "$lib/components/common/UserCard.svelte";
+  import Markdown from "$lib/components/markdown/Markdown.svelte";
+  import { Button } from "$lib/components/ui/button";
+  import { Textarea } from "$lib/components/ui/textarea";
   import { apiErrorMessage } from "$lib/forms";
   import { messages } from "$lib/stores/messages.svelte";
   import { session } from "$lib/stores/session.svelte";
@@ -9,11 +14,6 @@
   import ReplyIcon from "@lucide/svelte/icons/reply";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import UserRoundPlusIcon from "@lucide/svelte/icons/user-round-plus";
-  import Markdown from "$lib/components/markdown/Markdown.svelte";
-  import UserAvatar from "$lib/components/common/UserAvatar.svelte";
-  import UserCard from "$lib/components/common/UserCard.svelte";
-  import { Button } from "$lib/components/ui/button";
-  import { Textarea } from "$lib/components/ui/textarea";
   import { tick } from "svelte";
   import { toast } from "svelte-sonner";
 
@@ -25,9 +25,6 @@
   }
   const { message, flashId, onJumpTo, onStartReply }: Props = $props();
 
-  const avatar = $derived(
-    message.author ? avatarUrl(message.author.id, message.author.avatarVersion) : null,
-  );
   const isMine = $derived(message.author?.id === session.user?.id);
   const canDelete = $derived(session.isAdmin || isMine);
   const canEdit = $derived(!message.systemEvent && isMine);
@@ -102,26 +99,19 @@
         userId={message.author.id}
         class={cn("shrink-0", message.replyTo ? "mt-4.5" : "mt-0.5")}
       >
-        <UserAvatar
-          src={avatar}
-          name={message.author.displayName}
-          class="size-9"
-          fallbackClass="text-sm"
-        />
+        <UserAvatar user={message.author} class="size-9" fallbackClass="text-sm" />
       </UserCard>
     {:else}
       <UserAvatar
-        src={avatar}
-        name={undefined}
+        user={null}
         class={cn("size-9", message.replyTo ? "mt-4.5" : "mt-0.5")}
         fallbackClass="text-sm"
       />
     {/if}
     <div class="min-w-0">
       {#if message.replyTo}
-        {@const r = message.replyTo}
-        {@const rav = r.author ? avatarUrl(r.author.id, r.author.avatarVersion) : null}
-        {#if r.deleted}
+        {@const reply = message.replyTo}
+        {#if reply.deleted}
           <div class="text-muted-foreground flex items-center gap-1.5 text-xs italic">
             <ReplyIcon class="size-3 shrink-0" />
             Original message was deleted
@@ -130,19 +120,18 @@
           <button
             type="button"
             class="text-muted-foreground hover:text-foreground flex w-full min-w-0 items-center gap-1.5 text-left text-xs"
-            onclick={() => onJumpTo(r.id)}
+            onclick={() => onJumpTo(reply.id)}
           >
             <ReplyIcon class="size-3 shrink-0" />
             <UserAvatar
-              src={rav}
-              name={r.author?.displayName}
+              user={reply.author}
               class="size-4 shrink-0"
               fallbackClass="text-[0.5rem]"
             />
             <span class="shrink-0 font-medium">
-              {r.author?.displayName ?? "unknown"}
+              {reply.author?.displayName ?? "unknown"}
             </span>
-            <span class="text-foreground truncate">{r.content}</span>
+            <span class="text-foreground truncate">{reply.content}</span>
           </button>
         {/if}
       {/if}

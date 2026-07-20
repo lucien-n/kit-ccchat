@@ -31,7 +31,7 @@ export type Role = z.infer<typeof role>;
 
 export const voiceMember = z.object({
   id: z.string(),
-  name: z.string(),
+  displayName: z.string(),
   avatarVersion: z.number().nullable(),
 });
 export type VoiceMember = z.infer<typeof voiceMember>;

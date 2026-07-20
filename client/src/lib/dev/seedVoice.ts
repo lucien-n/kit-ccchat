@@ -52,9 +52,7 @@ export async function seedVoice(count = 6, opts: SeedOptions = {}) {
     const real = i === 0 ? me : others[i - 1];
     return {
       id: real?.id ?? `dev-voice-${i}`,
-      name: opts.longNames
-        ? nameFor(i, true)
-        : (real?.displayName ?? nameFor(i, false)),
+      name: opts.longNames ? nameFor(i, true) : (real?.displayName ?? nameFor(i, false)),
       avatarVersion: real?.avatarVersion ?? null,
       isLocal: i === 0,
       speaking: opts.allSpeaking ? true : i % 3 === 0,
@@ -78,7 +76,7 @@ export async function seedVoice(count = 6, opts: SeedOptions = {}) {
     ...presence.voice,
     [channel.id]: people.map((p) => ({
       id: p.id,
-      name: p.name,
+      displayName: p.name,
       avatarVersion: p.avatarVersion,
     })),
   });

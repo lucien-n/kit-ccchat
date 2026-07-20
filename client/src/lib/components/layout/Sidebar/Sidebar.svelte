@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { avatarUrl } from "$lib/api";
   import * as app from "$lib/app";
   import UserAvatar from "$lib/components/common/UserAvatar.svelte";
   import { Button } from "$lib/components/ui/button";
@@ -32,9 +31,6 @@
   const textChannels = $derived(channels.list.filter((c) => c.type === ChannelType.Text));
   const voiceChannels = $derived(
     channels.list.filter((c) => c.type === ChannelType.Voice),
-  );
-  const myAvatar = $derived(
-    session.user ? avatarUrl(session.user.id, session.user.avatarVersion) : null,
   );
 
   function handleSelectChannel(id: string) {
@@ -87,10 +83,10 @@
     onclick={() => onOpenSettings?.()}
   >
     <UserAvatar
-      src={myAvatar}
-      name={session.user?.displayName}
+      user={session.user}
       class="size-8 shrink-0"
       fallbackClass="text-xs"
+      showPresenceDot
     />
     <div class="min-w-0 flex-1 text-left">
       <div
