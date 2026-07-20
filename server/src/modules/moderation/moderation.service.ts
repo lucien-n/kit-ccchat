@@ -22,9 +22,10 @@ const endSessions = (userId: string) =>
 const patchUser = (userId: string, patch: Partial<User>) =>
   db.update(users).set(patch).where(eq(users.id, userId)).run();
 
-/** Kick ends every active session. With invite-only signup that forces a fresh
- *  invite to return. */
+/** Kick ends every active session and marks the account, so returning takes a
+ *  fresh invite rather than just signing back in. */
 export function kick(target: User) {
+  patchUser(target.id, { kickedAt: Date.now() });
   endSessions(target.id);
 }
 

@@ -5,7 +5,7 @@
   import { members } from "$lib/stores/members.svelte";
   import { onMount } from "svelte";
 
-  const shownMembers = $derived([...members.list].sort(byRank));
+  const shownMembers = $derived(members.list.filter((m) => !m.banned).sort(byRank));
 
   onMount(() => members.load());
 </script>

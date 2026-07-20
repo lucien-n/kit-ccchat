@@ -11,6 +11,10 @@ export const users = sqliteTable("users", {
   mutedUntil: integer("muted_until"),
   // 1 = banned (cannot log in or connect).
   banned: integer("banned").notNull().default(0),
+  // Epoch ms of the last kick; null = not kicked. Set, the account cannot log in
+  // until a fresh invite is redeemed, which is what makes a kick more than a
+  // forced logout. Cleared by rejoining.
+  kickedAt: integer("kicked_at"),
   // Epoch ms of the last avatar upload; null = no avatar. Doubles as a
   // cache-busting version for the avatar URL.
   avatarVersion: integer("avatar_version"),
