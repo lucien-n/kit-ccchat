@@ -78,7 +78,7 @@
 
 <div class="flex shrink-0 items-center gap-1 border-t p-2">
   <button
-    class="hover:bg-sidebar-accent flex min-w-0 flex-1 items-center gap-2 rounded p-1"
+    class="hover:bg-sidebar-accent flex min-w-0 flex-1 items-center gap-2 rounded-2xl p-1"
     title="Settings"
     onclick={() => onOpenSettings?.()}
   >
