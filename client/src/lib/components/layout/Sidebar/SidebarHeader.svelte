@@ -14,6 +14,9 @@
 </script>
 
 <header class="flex h-12 shrink-0 items-center gap-2 border-b px-4 font-semibold">
+  {#if community.iconUrl}
+    <img src={community.iconUrl} alt="" class="size-6 shrink-0 rounded-md object-cover" />
+  {/if}
   <span class="truncate">{community.name}</span>
   <div class="ml-auto flex shrink-0 items-center gap-1">
     {#if session.isAdmin}

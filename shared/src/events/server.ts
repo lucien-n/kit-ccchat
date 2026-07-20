@@ -8,6 +8,7 @@ export enum ServerEventType {
   Presence = "presence",
   Voice_Presence = "voice_presence",
   Community_Renamed = "community_renamed",
+  Community_Icon_Changed = "community_icon_changed",
   Roles_Changed = "roles_changed",
   Error = "error",
 }
@@ -37,6 +38,11 @@ export type ServerEvent =
   | {
       type: ServerEventType.Community_Renamed;
       name: string;
+    }
+  | {
+      type: ServerEventType.Community_Icon_Changed;
+      /** null once the icon is removed; doubles as a cache-busting version. */
+      iconVersion: number | null;
     }
   | {
       type: ServerEventType.Roles_Changed;

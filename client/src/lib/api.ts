@@ -53,6 +53,12 @@ export function avatarUrl(id: string, version: number | null | undefined): strin
   return `${apiBase()}/api/users/${id}/avatar?v=${version}`;
 }
 
+/** null when the community has no icon, so callers fall back to the bundled one. */
+export function communityIconUrl(version: number | null | undefined): string | null {
+  if (version == null) return null;
+  return `${apiBase()}/api/settings/icon?v=${version}`;
+}
+
 async function request<T>(
   path: string,
   opts: { method?: string; body?: unknown; token?: string | null } = {},
@@ -74,7 +80,20 @@ async function request<T>(
 }
 
 export const api = {
-  info: () => request<{ name: string; needsSetup: boolean }>("/api/info"),
+  info: () =>
+    request<{ name: string; needsSetup: boolean; iconVersion: number | null }>(
+      "/api/info",
+    ),
+
+  setCommunityIcon: (token: string, image: string) =>
+    request<{ iconVersion: number }>("/api/settings/icon", {
+      method: "POST",
+      body: { image },
+      token,
+    }),
+
+  removeCommunityIcon: (token: string) =>
+    request<{ ok: true }>("/api/settings/icon", { method: "DELETE", token }),
 
   /** Claim a brand-new instance. Only works while it has no accounts. */
   setup: (body: SetupBody) =>

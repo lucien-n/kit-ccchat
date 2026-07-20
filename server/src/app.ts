@@ -30,7 +30,11 @@ app.onError(onError);
 app.use("/api/*", cors());
 
 app.get("/api/info", (c) =>
-  c.json({ name: settingsService.communityName(), needsSetup: needsSetup() }),
+  c.json({
+    name: settingsService.communityName(),
+    needsSetup: needsSetup(),
+    iconVersion: settingsService.iconVersion(),
+  }),
 );
 
 app.route("/api/setup", setupRouter);

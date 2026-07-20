@@ -3,12 +3,15 @@
   import Chat from "$lib/components/chat/Chat.svelte";
   import Login from "$lib/components/auth/Login.svelte";
   import Setup from "$lib/components/setup/Setup.svelte";
+  import { setFavicon } from "$lib/favicon";
   import { appearance } from "$lib/stores/appearance.svelte";
   import { community } from "$lib/stores/community.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { onMount } from "svelte";
 
   let ready = $state(false);
+
+  $effect(() => setFavicon(community.iconUrl));
 
   onMount(async () => {
     appearance.init();

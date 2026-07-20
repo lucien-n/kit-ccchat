@@ -1,28 +1,17 @@
 import type { AvatarBody, ChangePasswordBody, Member, Role } from "@ccchat/shared";
 import { desc, eq } from "drizzle-orm";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { hashPassword, verifyPassword } from "../../auth.js";
 import { db } from "../../db/index.js";
 import { roles, userRoles, users, type User } from "../../db/schema";
 import { DATA_DIR } from "../../env.js";
 import { httpError } from "../../http/errors.js";
+import { decodeImageUpload, readImageFile, type StoredImage } from "../../images.js";
 import { toMember, toRoleView } from "../../views.js";
 
 const AVATAR_DIR = join(DATA_DIR, "avatars");
 mkdirSync(AVATAR_DIR, { recursive: true });
-
-const MAX_AVATAR_BYTES = 2_000_000;
-
-/** Content type from magic bytes so we serve avatars with the right header.
- *  null = these bytes are not an image we recognise. */
-function sniffMime(buf: Buffer): string | null {
-  if (buf[0] === 0xff && buf[1] === 0xd8) return "image/jpeg";
-  if (buf[0] === 0x89 && buf[1] === 0x50) return "image/png";
-  if (buf.subarray(0, 4).toString("ascii") === "RIFF") return "image/webp";
-  if (buf[0] === 0x47 && buf[1] === 0x49) return "image/gif";
-  return null;
-}
 
 /** Hono hands back the *decoded* param, so an id of `..%2Fccchat.sqlite` arrives
  *  as a relative path and join() would walk straight out of AVATAR_DIR. An
@@ -41,25 +30,15 @@ export function listMembers(): Member[] {
     .map(toMember);
 }
 
-export function readAvatar(id: string): { bytes: Uint8Array<ArrayBuffer>; mime: string } {
+export function readAvatar(id: string): StoredImage {
   const path = avatarPath(id);
-  if (!path || !existsSync(path)) httpError(404, "not found");
-  const buf = readFileSync(path);
-  const mime = sniffMime(buf);
-  if (!mime) httpError(404, "not found");
-  return { bytes: new Uint8Array(buf), mime };
+  const image = path ? readImageFile(path) : null;
+  if (!image) httpError(404, "not found");
+  return image;
 }
 
 export function saveAvatar(userId: string, { image }: AvatarBody): number {
-  const m = /^data:image\/(png|jpeg|webp|gif);base64,(.+)$/.exec(image);
-  if (!m) httpError(400, "invalid image");
-
-  const buf = Buffer.from(m[2], "base64");
-  if (buf.length > MAX_AVATAR_BYTES) httpError(400, "image too large (max 2MB)");
-  // The data: prefix is just a claim the uploader makes. Trust the bytes.
-  if (!sniffMime(buf)) httpError(400, "invalid image");
-
-  writeFileSync(join(AVATAR_DIR, userId), buf);
+  writeFileSync(join(AVATAR_DIR, userId), decodeImageUpload(image));
   const avatarVersion = Date.now();
   db.update(users).set({ avatarVersion }).where(eq(users.id, userId)).run();
   return avatarVersion;
