@@ -1,7 +1,7 @@
 import type { SystemStats } from "@ccchat/shared";
 import { statfs } from "node:fs/promises";
 import os from "node:os";
-import { DATA_DIR } from "./env.js";
+import { DATA_DIR } from "../../env.js";
 
 const SAMPLE_INTERVAL_SEC = 5;
 const HISTORY_SIZE = 180;
