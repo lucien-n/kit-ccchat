@@ -18,12 +18,11 @@ columnSorting:
 
 ## Todo
 
-- [fix-community-settings-mobile-layout](tasks/fix-community-settings-mobile-layout.md)
-
 ## In Progress
 
 ## Done
 
+- [fix-community-settings-mobile-layout](tasks/fix-community-settings-mobile-layout.md)
 - [rename-channels](tasks/rename-channels.md)
 - [fix-components-naming](tasks/fix-components-naming.md)
 - [use-context-classes](tasks/use-context-classes.md)

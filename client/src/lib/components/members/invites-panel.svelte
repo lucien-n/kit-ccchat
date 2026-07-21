@@ -94,7 +94,7 @@
 <div class="flex min-h-0 flex-1 flex-col">
   <div class="space-y-2 pb-4">
     <Label>New invite</Label>
-    <div class="grid grid-cols-3 gap-2">
+    <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
       {#each presets as p (p.label)}
         <Button
           variant="outline"

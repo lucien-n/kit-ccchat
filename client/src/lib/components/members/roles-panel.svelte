@@ -154,12 +154,12 @@
   }
 </script>
 
-<div class="grid h-full grid-cols-2 gap-4">
-  <div class="flex w-full flex-col gap-3">
+<div class="flex h-full min-h-0 flex-col gap-4 sm:grid sm:grid-cols-2">
+  <div class="flex min-h-0 w-full flex-1 flex-col gap-3">
     <div class="space-y-2">
       <Label>New role</Label>
       <Input placeholder="Role name" bind:value={name} class="w-full" />
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         <Input type="color" bind:value={color} aria-label="Role color" />
         <Select
           bind:value={permission}
@@ -204,7 +204,7 @@
             <Button
               variant="ghost"
               size="icon"
-              class="size-7 opacity-0 group-hover:opacity-100"
+              class="size-7 opacity-0 group-hover:opacity-100 max-sm:opacity-100"
               title="Move up"
               disabled={busy || i === 0}
               onclick={() => move(role.id, -1)}
@@ -214,7 +214,7 @@
             <Button
               variant="ghost"
               size="icon"
-              class="size-7 opacity-0 group-hover:opacity-100"
+              class="size-7 opacity-0 group-hover:opacity-100 max-sm:opacity-100"
               title="Move down"
               disabled={busy || i === rolesStore.list.length - 1}
               onclick={() => move(role.id, 1)}
@@ -224,7 +224,7 @@
             <Button
               variant="ghost"
               size="icon"
-              class="size-7 opacity-0 group-hover:opacity-100"
+              class="size-7 opacity-0 group-hover:opacity-100 max-sm:opacity-100"
               title="Delete role"
               onclick={() => remove(role.id)}
             >
@@ -240,12 +240,17 @@
     </ScrollArea>
   </div>
 
-  <div class="flex min-h-0 w-full flex-col border-l pl-4">
+  <div
+    class={cn(
+      "flex min-h-0 w-full flex-col sm:border-l sm:pl-4",
+      selected ? "max-sm:flex-1 max-sm:border-t max-sm:pt-4" : "max-sm:hidden",
+    )}
+  >
     {#if selected}
       <div class="space-y-2 pb-3">
         <Label>Edit role</Label>
         <Input placeholder="Role name" bind:value={editName} class="w-full" />
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
           <Input type="color" bind:value={editColor} aria-label="Role color" />
           <Select
             bind:value={editPermission}

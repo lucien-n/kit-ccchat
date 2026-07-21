@@ -40,8 +40,8 @@
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col">
-  <div class="flex gap-2 pb-2">
-    <Input placeholder="Search members" bind:value={search} class="flex-1" />
+  <div class="flex flex-wrap gap-2 pb-2">
+    <Input placeholder="Search members" bind:value={search} class="min-w-40 flex-1" />
 
     <section class="flex items-center gap-1">
       <Checkbox id="cb-mod-only-active" bind:checked={showOnlyActiveMembers} />
