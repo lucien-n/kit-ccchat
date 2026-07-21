@@ -15,6 +15,8 @@ columnSorting:
 ## Backlog
 
 - [unify-channel-type-icons-and-labels](tasks/unify-channel-type-icons-and-labels.md)
+- [user-mentions](tasks/user-mentions.md)
+- [mobile-app](tasks/mobile-app.md)
 
 ## Todo
 
