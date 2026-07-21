@@ -76,14 +76,14 @@ export function markRead(userId: string, channelId: string) {
 
 /** Scoped to the type: a text #general and a voice "General" are different rooms
  *  and read as such in the sidebar, so only a clash within one list is a clash. */
-export function isNameTaken(name: string, type: ChannelType): boolean {
+export function isNameTaken(name: string, type: ChannelType, exceptId?: string): boolean {
   const key = channelNameKey(name);
   return db
     .select()
     .from(channels)
     .where(eq(channels.type, type))
     .all()
-    .some((c) => channelNameKey(c.name) === key);
+    .some((c) => c.id !== exceptId && channelNameKey(c.name) === key);
 }
 
 export function createChannel({ name, type }: CreateChannelBody) {
@@ -101,6 +101,18 @@ export function createChannel({ name, type }: CreateChannelBody) {
   };
   db.insert(channels).values(channel).run();
   return channel;
+}
+
+export function renameChannel(id: string, name: string): Channel {
+  const existing = db.select().from(channels).where(eq(channels.id, id)).get();
+  if (!existing) httpError(404, "channel not found");
+
+  const type = existing.type as ChannelType;
+  if (isNameTaken(name, type, id))
+    httpError(409, `there's already a ${type} channel called "${name.trim()}"`);
+
+  db.update(channels).set({ name }).where(eq(channels.id, id)).run();
+  return toChannelView({ ...existing, name });
 }
 
 export function deleteChannel(id: string) {

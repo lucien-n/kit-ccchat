@@ -1,4 +1,4 @@
-import type { CreateChannelBody } from "@ccchat/shared";
+import type { CreateChannelBody, RenameChannelBody } from "@ccchat/shared";
 import { client } from "./http";
 
 export const channels = {
@@ -6,6 +6,9 @@ export const channels = {
 
   create: async (body: CreateChannelBody) =>
     (await client.api.channels.$post({ json: body })).json(),
+
+  rename: async (id: string, body: RenameChannelBody) =>
+    (await client.api.channels[":id"].$patch({ param: { id }, json: body })).json(),
 
   delete: async (id: string) =>
     (await client.api.channels[":id"].$delete({ param: { id } })).json(),

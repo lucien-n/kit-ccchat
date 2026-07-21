@@ -61,6 +61,9 @@ export const createChannelBody = z.object({
 });
 export type CreateChannelBody = z.infer<typeof createChannelBody>;
 
+export const renameChannelBody = z.object({ name: channelName });
+export type RenameChannelBody = z.infer<typeof renameChannelBody>;
+
 export const renameCommunityBody = z.object({ communityName });
 
 export const updateProfileBody = z.object({ displayName });

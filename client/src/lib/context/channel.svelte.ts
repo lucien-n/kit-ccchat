@@ -10,6 +10,7 @@ export class ChannelContext {
   #read: () => Channel;
 
   confirmingDeletion = $state(false);
+  renaming = $state(false);
   busy = $state(false);
 
   constructor(read: () => Channel) {
@@ -18,6 +19,12 @@ export class ChannelContext {
 
   get channel(): Channel {
     return this.#read();
+  }
+
+  async rename(name: string) {
+    await api.channels.rename(this.channel.id, { name });
+    await channels.load();
+    this.renaming = false;
   }
 
   async remove() {

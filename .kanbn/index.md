@@ -14,12 +14,13 @@ columnSorting:
 
 ## Backlog
 
-- [rename-channels](tasks/rename-channels.md)
 - [unify-channel-type-icons-and-labels](tasks/unify-channel-type-icons-and-labels.md)
 
 ## Todo
 
 ## In Progress
+
+- [rename-channels](tasks/rename-channels.md)
 
 ## Done
 

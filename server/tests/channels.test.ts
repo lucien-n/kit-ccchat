@@ -8,6 +8,7 @@ import {
   get,
   json,
   mkInvite,
+  patch,
   post,
   register,
   uniq,
@@ -108,4 +109,57 @@ it("frees the name again once the channel is deleted", async () => {
     headers: { authorization: `Bearer ${token}` },
   });
   expect((await create(name)).status).toBe(200);
+});
+
+const rename = (id: string, name: string, tok = token) =>
+  patch(app, `/api/channels/${id}`, { name }, tok);
+
+it("renames a channel and frees the old name", async () => {
+  const before = uniq();
+  const { channel } = await json<{ channel: Channel }>(await create(before));
+
+  const after = uniq();
+  const res = await rename(channel.id, after);
+  expect(res.status).toBe(200);
+  expect((await json<{ channel: Channel }>(res)).channel.name).toBe(after);
+
+  expect((await list()).find((c) => c.id === channel.id)?.name).toBe(after);
+  expect((await create(before)).status).toBe(200);
+});
+
+it("lets a channel keep its own name when only the casing changes", async () => {
+  const name = uniq();
+  const { channel } = await json<{ channel: Channel }>(await create(name));
+  expect((await rename(channel.id, name.toUpperCase())).status).toBe(200);
+});
+
+it("refuses a name another channel of the same type already has", async () => {
+  const taken = uniq();
+  await create(taken);
+  const { channel } = await json<{ channel: Channel }>(await create(uniq()));
+  expect((await rename(channel.id, taken)).status).toBe(409);
+});
+
+it("lets a voice channel take a text channel's name", async () => {
+  const name = uniq();
+  await create(name, ChannelType.Text);
+  const { channel } = await json<{ channel: Channel }>(
+    await create(uniq(), ChannelType.Voice),
+  );
+  expect((await rename(channel.id, name)).status).toBe(200);
+});
+
+it("404s renaming a channel that is not there", async () => {
+  expect((await rename("no-such-channel", uniq())).status).toBe(404);
+});
+
+it("rejects an invalid name and forbids a non-admin", async () => {
+  const { channel } = await json<{ channel: Channel }>(await create(uniq()));
+  expect((await rename(channel.id, "bad/name!")).status).toBe(400);
+
+  const { invite } = await mkInvite(app, token, { maxUses: 0 });
+  const { token: member } = await json<{ token: string }>(
+    await register(app, invite.code, uniq()),
+  );
+  expect((await rename(channel.id, uniq(), member)).status).toBe(403);
 });
