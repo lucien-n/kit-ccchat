@@ -1,19 +1,17 @@
 <script lang="ts">
   import CreateChannelDialog from "$lib/components/channel/create-channel-dialog.svelte";
   import CommunitySettings from "$lib/components/community/community-settings.svelte";
-  import MembersSidebar from "$lib/components/layout/members-sidebar.svelte";
-  import SearchSidebar from "$lib/components/layout/search-sidebar.svelte";
+  import SidePanel from "$lib/components/layout/side-panel.svelte";
   import Sidebar from "$lib/components/layout/sidebar";
   import Settings from "$lib/components/settings/settings.svelte";
   import VoiceBar from "$lib/components/voice/voice-bar.svelte";
-  import { setChatContext } from "$lib/context/chat.svelte";
+  import { setChatContext, type ChatPanel } from "$lib/context/chat.svelte";
   import { setBaseTitle, setTitleBadge } from "$lib/notify";
   import { channels } from "$lib/stores/channels.svelte";
   import { community } from "$lib/stores/community.svelte";
   import { messages } from "$lib/stores/messages.svelte";
   import { prefs } from "$lib/stores/prefs.svelte";
   import { presence } from "$lib/stores/presence.svelte";
-  import { search } from "$lib/stores/search.svelte";
   import { ui } from "$lib/stores/ui.svelte";
   import { unread } from "$lib/stores/unread.svelte";
   import { voice } from "$lib/stores/voice.svelte";
@@ -21,6 +19,7 @@
   import * as Resizable from "&/resizable";
   import { ScrollArea } from "&/scroll-area";
   import * as Sheet from "&/sheet";
+  import * as ToggleGroup from "&/toggle-group";
   import { ChannelType } from "@ccchat/shared";
   import { Bell, BellOff, Hash, Menu, Users } from "@lucide/svelte";
   import ArrowDownIcon from "@lucide/svelte/icons/arrow-down";
@@ -140,22 +139,19 @@
         <span class="text-muted-foreground hidden text-sm sm:inline"
           >{presence.online.size} online</span
         >
-        <Button
-          variant={search.open ? "secondary" : "outline"}
-          size="icon"
-          title="Search messages"
-          onclick={() => chat.toggleSearch()}
+        <ToggleGroup.Root
+          type="single"
+          variant="outline"
+          value={chat.panel}
+          onValueChange={(v) => (chat.panel = v as ChatPanel)}
         >
-          <SearchIcon class="size-4" />
-        </Button>
-        <Button
-          variant={chat.showMembers ? "secondary" : "outline"}
-          size="icon"
-          title="Members"
-          onclick={() => (chat.showMembers = !chat.showMembers)}
-        >
-          <Users class="size-4" />
-        </Button>
+          <ToggleGroup.Item value="search" title="Search messages">
+            <SearchIcon class="size-4" />
+          </ToggleGroup.Item>
+          <ToggleGroup.Item value="members" title="Members">
+            <Users class="size-4" />
+          </ToggleGroup.Item>
+        </ToggleGroup.Root>
       </div>
     </header>
 
@@ -220,8 +216,7 @@
         {@render mainView()}
       </Resizable.Pane>
 
-      <MembersSidebar />
-      <SearchSidebar />
+      <SidePanel />
     </Resizable.PaneGroup>
   </div>
 {:else}
@@ -238,8 +233,7 @@
     </Sheet.Content>
   </Sheet.Root>
 
-  <MembersSidebar />
-  <SearchSidebar />
+  <SidePanel />
 {/if}
 
 <CommunitySettings bind:open={ui.communitySettings} />

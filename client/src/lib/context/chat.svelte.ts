@@ -10,6 +10,8 @@ const KEY = Symbol("chat");
 
 const FLASH_MS = 1400;
 
+export type ChatPanel = "" | "search" | "members";
+
 export class ChatContext {
   isDesktop = $state(false);
   showMembers = $state(false);
@@ -24,6 +26,17 @@ export class ChatContext {
   constructor(isDesktop: boolean, showMembers: boolean) {
     this.isDesktop = isDesktop;
     this.showMembers = showMembers;
+  }
+
+  get panel(): ChatPanel {
+    if (search.open) return "search";
+    return this.showMembers ? "members" : "";
+  }
+
+  set panel(next: ChatPanel) {
+    if (next === "search") search.open = true;
+    else search.close();
+    this.showMembers = next === "members";
   }
 
   flash(id: string) {
@@ -84,11 +97,6 @@ export class ChatContext {
     }
     this.replyTo = null;
     return true;
-  }
-
-  toggleSearch() {
-    search.open = !search.open;
-    if (search.open && this.isDesktop) this.showMembers = false;
   }
 }
 
