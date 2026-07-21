@@ -19,14 +19,12 @@ columnSorting:
 
 ## Todo
 
-- [fix-components-naming](tasks/fix-components-naming.md)
-
 ## In Progress
-
-- [use-context-classes](tasks/use-context-classes.md)
 
 ## Done
 
+- [fix-components-naming](tasks/fix-components-naming.md)
+- [use-context-classes](tasks/use-context-classes.md)
 - [migrate-to-hono-rpc](tasks/migrate-to-hono-rpc.md)
 - [delete-channels](tasks/delete-channels.md)
 - [prevent-duplicate-channel-name](tasks/prevent-duplicate-channel-name.md)
