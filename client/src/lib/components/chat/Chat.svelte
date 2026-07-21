@@ -75,21 +75,18 @@
     return () => el.removeEventListener("scroll", onScroll);
   });
 
-  /** Skeletons, then the messages that replace them, both grow the list upward.
-   *  Nothing below the viewport changes, so distance from the bottom is the
-   *  invariant that holds the reader's spot across each of those two steps. */
   async function loadOlder() {
     if (!scroller || messages.loadingOlder || !messages.hasMore) return;
     const fromBottom = scroller.scrollHeight - scroller.scrollTop;
-    const restore = () => {
+    const holdReadersSpot = () => {
       if (scroller) scroller.scrollTop = scroller.scrollHeight - fromBottom;
     };
     const page = messages.loadOlder();
     await tick();
-    restore();
+    holdReadersSpot();
     await page;
     await tick();
-    restore();
+    holdReadersSpot();
   }
 
   // A draft reply belongs to the channel it was started in; a new channel opens

@@ -6,8 +6,6 @@
   }
   const { count = 3 }: Props = $props();
 
-  // Cycled rather than randomised: this block re-renders while a page is in
-  // flight, and line lengths that jitter on every render read as a glitch.
   const shapes = [
     { name: "w-24", body: ["w-3/5"] },
     { name: "w-16", body: ["w-4/5", "w-2/5"] },
