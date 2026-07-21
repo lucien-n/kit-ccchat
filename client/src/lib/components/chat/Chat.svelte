@@ -24,6 +24,7 @@
   import { toast } from "svelte-sonner";
   import Message from "./Message.svelte";
   import MessageComposer from "./MessageComposer.svelte";
+  import MessageSkeleton from "./MessageSkeleton.svelte";
 
   const desktopNow =
     typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
@@ -74,15 +75,21 @@
     return () => el.removeEventListener("scroll", onScroll);
   });
 
-  /** Prepending older messages grows the list upward, so hold the reader's spot
-   *  by nudging scrollTop down by exactly the height that appeared above. */
+  /** Skeletons, then the messages that replace them, both grow the list upward.
+   *  Nothing below the viewport changes, so distance from the bottom is the
+   *  invariant that holds the reader's spot across each of those two steps. */
   async function loadOlder() {
     if (!scroller || messages.loadingOlder || !messages.hasMore) return;
-    const prevHeight = scroller.scrollHeight;
-    const prevTop = scroller.scrollTop;
-    await messages.loadOlder();
+    const fromBottom = scroller.scrollHeight - scroller.scrollTop;
+    const restore = () => {
+      if (scroller) scroller.scrollTop = scroller.scrollHeight - fromBottom;
+    };
+    const page = messages.loadOlder();
     await tick();
-    if (scroller) scroller.scrollTop = prevTop + (scroller.scrollHeight - prevHeight);
+    restore();
+    await page;
+    await tick();
+    restore();
   }
 
   // A draft reply belongs to the channel it was started in; a new channel opens
@@ -193,21 +200,23 @@
 
     <ScrollArea class="min-h-0 flex-1" bind:viewportRef={scroller}>
       <div class="flex flex-col gap-0.5 p-2 sm:p-4">
-        {#if messages.loadingOlder}
-          <div class="text-muted-foreground py-2 text-center text-xs">
-            Loading older messages…
-          </div>
-        {/if}
-        {#each messages.list as message (message.id)}
-          <Message
-            {message}
-            {flashId}
-            onJumpTo={handleJumpTo}
-            onStartReply={() => handleStartReply(message)}
-          />
-        {:else}
+        {#if messages.loading}
+          <MessageSkeleton count={6} />
+        {:else if messages.list.length === 0}
           <div class="text-muted-foreground m-auto">No messages yet. Say hi 👋</div>
-        {/each}
+        {:else}
+          {#if messages.loadingOlder}
+            <MessageSkeleton />
+          {/if}
+          {#each messages.list as message (message.id)}
+            <Message
+              {message}
+              {flashId}
+              onJumpTo={handleJumpTo}
+              onStartReply={() => handleStartReply(message)}
+            />
+          {/each}
+        {/if}
       </div>
     </ScrollArea>
 

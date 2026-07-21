@@ -3,23 +3,37 @@ import { api, type MessageView } from "../api";
 import { realtime } from "./realtime.svelte";
 import { session } from "./session.svelte";
 
-const PAGE = 50;
+const PAGE = 20;
 
 /** Only ever the open channel's messages; switching channels refetches rather
  *  than caching, so there's no per-channel cache to invalidate on every delete. */
 class Messages {
   list = $state<MessageView[]>([]);
   hasMore = $state(false);
+  loading = $state(false);
   loadingOlder = $state(false);
   #channelId: string | null = null;
 
+  /** Only a channel switch blanks the list; a resync refetches the open channel
+   *  in place, and dropping its messages to show skeletons would be a flicker
+   *  for content that is about to come back identical. */
   async load(channelId: string) {
     if (!session.token) return;
+    const switching = this.#channelId !== channelId;
     this.#channelId = channelId;
     this.loadingOlder = false;
-    const { messages } = await api.history(session.token, channelId, undefined, PAGE);
-    this.list = messages;
-    this.hasMore = messages.length >= PAGE;
+    if (switching) {
+      this.list = [];
+      this.loading = true;
+    }
+    try {
+      const { messages } = await api.history(session.token, channelId, undefined, PAGE);
+      if (this.#channelId !== channelId) return;
+      this.list = messages;
+      this.hasMore = messages.length >= PAGE;
+    } finally {
+      if (this.#channelId === channelId) this.loading = false;
+    }
   }
 
   async loadOlder() {
@@ -89,6 +103,7 @@ class Messages {
   clear() {
     this.list = [];
     this.hasMore = false;
+    this.loading = false;
     this.loadingOlder = false;
     this.#channelId = null;
   }

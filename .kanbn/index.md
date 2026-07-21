@@ -1,6 +1,6 @@
 ---
 startedColumns:
-  - "In Progress"
+  - 'In Progress'
 completedColumns:
   - Done
 ---
@@ -9,7 +9,6 @@ completedColumns:
 
 ## Backlog
 
-- [messages-list-infinite-scroll](tasks/messages-list-infinite-scroll.md)
 - [delete-channels](tasks/delete-channels.md)
 - [rename-channels](tasks/rename-channels.md)
 - [prevent-duplicate-channel-name](tasks/prevent-duplicate-channel-name.md)
@@ -18,6 +17,8 @@ completedColumns:
 ## Todo
 
 ## In Progress
+
+- [messages-list-infinite-scroll](tasks/messages-list-infinite-scroll.md)
 
 ## Done
 
