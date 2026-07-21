@@ -3,14 +3,9 @@
   import { community } from "$lib/stores/community.svelte";
   import { realtime } from "$lib/stores/realtime.svelte";
   import { session } from "$lib/stores/session.svelte";
+  import { ui } from "$lib/stores/ui.svelte";
   import { cn } from "$lib/utils";
   import SettingsIcon from "@lucide/svelte/icons/settings";
-
-  interface Props {
-    onOpenCommunitySettings: () => void;
-  }
-
-  const { onOpenCommunitySettings }: Props = $props();
 </script>
 
 <header class="flex h-12 shrink-0 items-center gap-2 border-b px-4 font-semibold">
@@ -25,7 +20,7 @@
         size="icon"
         class="size-7"
         title="Community settings"
-        onclick={() => onOpenCommunitySettings?.()}
+        onclick={() => ui.openCommunitySettings()}
       >
         <SettingsIcon class="size-4" />
       </Button>

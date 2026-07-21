@@ -3,6 +3,7 @@
   import { UserCard } from "$lib/components/common/UserCard";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
+  import { setChannelContext } from "$lib/context/channel.svelte";
   import { channels } from "$lib/stores/channels.svelte";
   import { presence } from "$lib/stores/presence.svelte";
   import { unread } from "$lib/stores/unread.svelte";
@@ -18,12 +19,14 @@
   }
   const { channel, onSelect }: Props = $props();
 
+  setChannelContext(() => channel);
+
   const isVoiceChannel = $derived(channel.type === ChannelType.Voice);
   const Icon = $derived(CHANNEL_TYPE_ICON[channel.type]);
   const members = $derived(presence.voice[channel.id]);
 </script>
 
-<ChannelContextMenu {channel}>
+<ChannelContextMenu>
   <div class="flex flex-col">
     <Button
       variant="ghost"

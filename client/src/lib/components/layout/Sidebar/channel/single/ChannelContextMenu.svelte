@@ -1,18 +1,17 @@
 <script lang="ts">
   import * as ContextMenu from "$lib/components/ui/context-menu";
-  import type { Channel } from "@ccchat/shared";
+  import { getChannelContext } from "$lib/context/channel.svelte";
   import TrashIcon from "@lucide/svelte/icons/trash";
   import type { Snippet } from "svelte";
   import ConfirmChannelDeletionDialog from "./dialogs/ConfirmChannelDeletionDialog.svelte";
 
   interface Props {
-    channel: Channel;
     children: Snippet;
   }
 
-  const { channel, children }: Props = $props();
+  const { children }: Props = $props();
 
-  let isConfirmDeletionDialogOpen = $state(false);
+  const ctx = getChannelContext();
 </script>
 
 <ContextMenu.Root>
@@ -24,7 +23,7 @@
     <ContextMenu.Group>
       <ContextMenu.Item
         variant="destructive"
-        onclick={() => (isConfirmDeletionDialogOpen = true)}
+        onclick={() => (ctx.confirmingDeletion = true)}
       >
         <TrashIcon />
         Delete
@@ -33,4 +32,4 @@
   </ContextMenu.Content>
 </ContextMenu.Root>
 
-<ConfirmChannelDeletionDialog bind:isOpen={isConfirmDeletionDialogOpen} {channel} />
+<ConfirmChannelDeletionDialog />

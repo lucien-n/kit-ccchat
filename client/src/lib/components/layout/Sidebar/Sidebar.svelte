@@ -5,6 +5,7 @@
   import VoiceBar from "$lib/components/voice/VoiceBar.svelte";
   import { channels } from "$lib/stores/channels.svelte";
   import { session } from "$lib/stores/session.svelte";
+  import { ui } from "$lib/stores/ui.svelte";
   import { voice } from "$lib/stores/voice.svelte";
   import { ChannelType } from "@ccchat/shared";
   import { LogOut } from "@lucide/svelte";
@@ -13,19 +14,9 @@
 
   interface Props {
     withVoice?: boolean;
-    onNavigate?: () => void;
-    onOpenSettings: () => void;
-    onOpenCommunitySettings: () => void;
-    onCreateChannel: (type: ChannelType) => void;
   }
 
-  const {
-    withVoice = false,
-    onNavigate,
-    onOpenSettings,
-    onOpenCommunitySettings,
-    onCreateChannel,
-  }: Props = $props();
+  const { withVoice = false }: Props = $props();
 
   const textChannels = $derived(channels.list.filter((c) => c.type === ChannelType.Text));
   const voiceChannels = $derived(
@@ -34,26 +25,21 @@
 
   function handleSelectChannel(id: string) {
     app.selectChannel(id);
-    onNavigate?.();
+    ui.nav = false;
   }
 
   function handleJoinVoice(channel: { id: string; name: string }) {
     voice.join(channel);
-    onNavigate?.();
-  }
-
-  function handleCreateChannel(type: ChannelType) {
-    onCreateChannel?.(type);
-    onNavigate?.();
+    ui.nav = false;
   }
 </script>
 
-<SidebarHeader {onOpenCommunitySettings} />
+<SidebarHeader />
 
 <nav class="min-h-0 flex-1 overflow-y-auto p-2">
   <ChannelCategoryHeader
     title="Text"
-    onCreate={() => handleCreateChannel(ChannelType.Text)}
+    onCreate={() => ui.openCreateChannel(ChannelType.Text)}
   />
 
   {#each textChannels as channel (channel.id)}
@@ -62,7 +48,7 @@
 
   <ChannelCategoryHeader
     title="Voice"
-    onCreate={() => handleCreateChannel(ChannelType.Voice)}
+    onCreate={() => ui.openCreateChannel(ChannelType.Voice)}
   />
 
   {#each voiceChannels as channel (channel.id)}
@@ -76,9 +62,9 @@
 
 <div class="flex shrink-0 items-center gap-1 border-t p-2">
   <button
-    class="hover:bg-sidebar-accent flex min-w-0 flex-1 items-center gap-2 rounded-2xl p-1"
+    class="hover:bg-sidebar-accent flex min-w-0 flex-1 items-center gap-2 rounded-2xl p-1 pl-1.5"
     title="Settings"
-    onclick={() => onOpenSettings?.()}
+    onclick={() => ui.openSettings()}
   >
     <UserAvatar
       user={session.user}

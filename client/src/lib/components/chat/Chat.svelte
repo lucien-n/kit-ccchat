@@ -19,6 +19,7 @@
   import { prefs } from "$lib/stores/prefs.svelte";
   import { presence } from "$lib/stores/presence.svelte";
   import { search } from "$lib/stores/search.svelte";
+  import { ui } from "$lib/stores/ui.svelte";
   import { unread } from "$lib/stores/unread.svelte";
   import { voice } from "$lib/stores/voice.svelte";
   import { ChannelType } from "@ccchat/shared";
@@ -43,16 +44,11 @@
   });
 
   let showMembers = $state(desktopNow && prefs.membersPanel);
-  let showSettings = $state(false);
-  let showCommunitySettings = $state(false);
-  let showNav = $state(false);
 
   $effect(() => {
     if (isDesktop) prefs.setMembersPanel(showMembers);
   });
 
-  let showCreateChannel = $state(false);
-  let createChannelType = $state<ChannelType>(ChannelType.Text);
   let scroller: HTMLElement | null = $state(null);
   let composer = $state<MessageComposer | null>(null);
   let replyTo = $state<MessageView | null>(null);
@@ -178,11 +174,6 @@
     search.open = !search.open;
     if (search.open && isDesktop) showMembers = false;
   }
-
-  function openCreateChannel(type: ChannelType) {
-    createChannelType = type;
-    showCreateChannel = true;
-  }
 </script>
 
 {#snippet mainView()}
@@ -194,7 +185,7 @@
           size="icon"
           class="shrink-0 sm:hidden"
           title="Channels"
-          onclick={() => (showNav = true)}
+          onclick={() => (ui.nav = true)}
         >
           <Menu class="size-5" />
           {#if unread.total > 0}
@@ -297,12 +288,7 @@
         maxSize={28}
         class="bg-sidebar text-sidebar-foreground flex min-h-0 flex-col border-r"
       >
-        <Sidebar
-          withVoice
-          onOpenSettings={() => (showSettings = true)}
-          onOpenCommunitySettings={() => (showCommunitySettings = true)}
-          onCreateChannel={openCreateChannel}
-        />
+        <Sidebar withVoice />
       </Resizable.Pane>
 
       <Resizable.Handle />
@@ -320,23 +306,12 @@
     {@render mainView()}
   </div>
 
-  <Sheet.Root bind:open={showNav}>
+  <Sheet.Root bind:open={ui.nav}>
     <Sheet.Content
       side="left"
       class="bg-sidebar text-sidebar-foreground flex w-72 flex-col p-0 sm:max-w-xs"
     >
-      <Sidebar
-        onNavigate={() => (showNav = false)}
-        onOpenSettings={() => {
-          showNav = false;
-          showSettings = true;
-        }}
-        onOpenCommunitySettings={() => {
-          showNav = false;
-          showCommunitySettings = true;
-        }}
-        onCreateChannel={openCreateChannel}
-      />
+      <Sidebar />
     </Sheet.Content>
   </Sheet.Root>
 
@@ -344,6 +319,6 @@
   <SearchSidebar onJump={handleSearchJump} />
 {/if}
 
-<CommunitySettings bind:open={showCommunitySettings} />
-<Settings bind:open={showSettings} />
-<CreateChannelDialog bind:open={showCreateChannel} initialType={createChannelType} />
+<CommunitySettings bind:open={ui.communitySettings} />
+<Settings bind:open={ui.settings} />
+<CreateChannelDialog bind:open={ui.createChannel} initialType={ui.createChannelType} />

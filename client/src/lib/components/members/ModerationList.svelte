@@ -1,5 +1,5 @@
 <script lang="ts">
-  import type { ModAction } from "$lib/api";
+  import { ModAction } from "$lib/api";
   import MemberIdentity from "$lib/components/common/MemberIdentity.svelte";
   import { Badge } from "$lib/components/ui/badge";
   import { Button } from "$lib/components/ui/button";
@@ -30,7 +30,7 @@
 
   async function act(id: string, action: ModAction) {
     try {
-      await members.moderate(id, action, action === "mute" ? 60 : undefined);
+      await members.moderate(id, action, action === ModAction.Mute ? 60 : undefined);
     } catch (e) {
       toast.error(apiErrorMessage(e, "action failed"));
     }
@@ -67,35 +67,35 @@
                   variant="outline"
                   size="sm"
                   class="h-7"
-                  onclick={() => act(member.id, "unmute")}>unmute</Button
+                  onclick={() => act(member.id, ModAction.Unmute)}>unmute</Button
                 >
               {:else}
                 <Button
                   variant="outline"
                   size="sm"
                   class="h-7"
-                  onclick={() => act(member.id, "mute")}>mute</Button
+                  onclick={() => act(member.id, ModAction.Mute)}>mute</Button
                 >
               {/if}
               <Button
                 variant="outline"
                 size="sm"
                 class="h-7"
-                onclick={() => act(member.id, "kick")}>kick</Button
+                onclick={() => act(member.id, ModAction.Kick)}>kick</Button
               >
               {#if member.banned}
                 <Button
                   variant="outline"
                   size="sm"
                   class="h-7"
-                  onclick={() => act(member.id, "unban")}>unban</Button
+                  onclick={() => act(member.id, ModAction.Unban)}>unban</Button
                 >
               {:else}
                 <Button
                   variant="destructive"
                   size="sm"
                   class="h-7"
-                  onclick={() => act(member.id, "ban")}>ban</Button
+                  onclick={() => act(member.id, ModAction.Ban)}>ban</Button
                 >
               {/if}
             </div>
