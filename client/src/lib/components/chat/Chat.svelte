@@ -1,8 +1,10 @@
 <script lang="ts">
   import { type MessageView } from "$lib/api";
+  import { jumpToPresent, openMessage } from "$lib/app";
   import CreateChannelDialog from "$lib/components/channel/CreateChannelDialog.svelte";
   import CommunitySettings from "$lib/components/community/CommunitySettings.svelte";
   import MembersSidebar from "$lib/components/layout/MembersSidebar.svelte";
+  import SearchSidebar from "$lib/components/layout/SearchSidebar.svelte";
   import Sidebar from "$lib/components/layout/Sidebar";
   import Settings from "$lib/components/settings/Settings.svelte";
   import { Button } from "$lib/components/ui/button";
@@ -16,10 +18,13 @@
   import { messages } from "$lib/stores/messages.svelte";
   import { prefs } from "$lib/stores/prefs.svelte";
   import { presence } from "$lib/stores/presence.svelte";
+  import { search } from "$lib/stores/search.svelte";
   import { unread } from "$lib/stores/unread.svelte";
   import { voice } from "$lib/stores/voice.svelte";
   import { ChannelType } from "@ccchat/shared";
   import { Bell, BellOff, Hash, Menu, Users } from "@lucide/svelte";
+  import ArrowDownIcon from "@lucide/svelte/icons/arrow-down";
+  import SearchIcon from "@lucide/svelte/icons/search";
   import { tick } from "svelte";
   import { toast } from "svelte-sonner";
   import Message from "./Message.svelte";
@@ -64,8 +69,10 @@
 
   const onScroll = () => {
     if (!scroller) return;
-    stick = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 80;
+    const fromBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
+    stick = !messages.hasMoreAfter && fromBottom < 80;
     if (scroller.scrollTop < 150) void loadOlder();
+    if (fromBottom < 150) void messages.loadNewer();
   };
 
   $effect(() => {
@@ -76,7 +83,7 @@
   });
 
   async function loadOlder() {
-    if (!scroller || messages.loadingOlder || !messages.hasMore) return;
+    if (!scroller || messages.loadingOlder || !messages.hasMoreBefore) return;
     const fromBottom = scroller.scrollHeight - scroller.scrollTop;
     const holdReadersSpot = () => {
       if (scroller) scroller.scrollTop = scroller.scrollHeight - fromBottom;
@@ -128,18 +135,48 @@
     composer?.focus();
   }
 
-  /** Only messages already on screen: history stops at the first page, so an
-   *  older original has nothing to scroll to. */
-  function handleJumpTo(id: string) {
-    const el = document.getElementById(`msg-${id}`);
-    if (!el) {
-      toast.info("That message is too far back to jump to.");
-      return;
-    }
-    el.scrollIntoView({ block: "center", behavior: "smooth" });
+  function flash(id: string) {
     flashId = id;
     clearTimeout(flashTimer);
     flashTimer = setTimeout(() => (flashId = null), 1400);
+  }
+
+  function scrollToMessage(id: string): boolean {
+    const el = document.getElementById(`msg-${id}`);
+    if (!el) return false;
+    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    flash(id);
+    return true;
+  }
+
+  /** Anything already rendered is just a scroll; anything older means refetching
+   *  the channel around it, which also resets `stick` so the view stays put. */
+  async function handleJumpTo(id: string) {
+    if (scrollToMessage(id)) return;
+    const channelId = channels.currentId;
+    if (!channelId) return;
+    stick = false;
+    await openMessage(channelId, id);
+    await tick();
+    if (!scrollToMessage(id)) toast.info("That message is no longer available.");
+  }
+
+  async function handleSearchJump(channelId: string, messageId: string) {
+    stick = false;
+    await openMessage(channelId, messageId);
+    await tick();
+    if (!scrollToMessage(messageId)) toast.info("That message is no longer available.");
+    if (!isDesktop) search.open = false;
+  }
+
+  async function backToPresent() {
+    stick = true;
+    await jumpToPresent();
+  }
+
+  function toggleSearch() {
+    search.open = !search.open;
+    if (search.open && isDesktop) showMembers = false;
   }
 
   function openCreateChannel(type: ChannelType) {
@@ -185,6 +222,14 @@
           >{presence.online.size} online</span
         >
         <Button
+          variant={search.open ? "secondary" : "outline"}
+          size="icon"
+          title="Search messages"
+          onclick={toggleSearch}
+        >
+          <SearchIcon class="size-4" />
+        </Button>
+        <Button
           variant={showMembers ? "secondary" : "outline"}
           size="icon"
           title="Members"
@@ -216,6 +261,15 @@
         {/if}
       </div>
     </ScrollArea>
+
+    {#if messages.hasMoreAfter}
+      <div class="flex justify-center border-t px-2 py-1.5">
+        <Button variant="secondary" size="sm" onclick={backToPresent}>
+          <ArrowDownIcon data-icon="inline-start" />
+          Jump to present
+        </Button>
+      </div>
+    {/if}
 
     {#if voice.inCall}
       <div class="sm:hidden">
@@ -258,6 +312,7 @@
       </Resizable.Pane>
 
       <MembersSidebar bind:open={showMembers} isDesktop />
+      <SearchSidebar isDesktop onJump={handleSearchJump} />
     </Resizable.PaneGroup>
   </div>
 {:else}
@@ -286,6 +341,7 @@
   </Sheet.Root>
 
   <MembersSidebar bind:open={showMembers} />
+  <SearchSidebar onJump={handleSearchJump} />
 {/if}
 
 <CommunitySettings bind:open={showCommunitySettings} />

@@ -6,8 +6,11 @@ export type {
   Invite,
   Member,
   MessageView,
+  MessageWindow,
   ModeratedMember,
   Role,
+  SearchHit,
+  SearchResults,
   SystemStats,
   VoiceMember,
 } from "@ccchat/shared";
@@ -24,9 +27,12 @@ import type {
   LoginBody,
   Member,
   MessageView,
+  MessageWindow,
   ModeratedMember,
   RegisterBody,
   Role,
+  SearchResults,
+  SearchSort,
   SetupBody,
   SystemStats,
   UpdateProfileBody,
@@ -149,15 +155,52 @@ export const api = {
       token,
     }),
 
-  history: (token: string, channelId: string, before?: number, limit?: number) => {
+  history: (
+    token: string,
+    channelId: string,
+    opts: { before?: number; after?: number; limit?: number } = {},
+  ) => {
     const q = new URLSearchParams();
-    if (before) q.set("before", String(before));
-    if (limit) q.set("limit", String(limit));
+    if (opts.before) q.set("before", String(opts.before));
+    if (opts.after) q.set("after", String(opts.after));
+    if (opts.limit) q.set("limit", String(opts.limit));
     const qs = q.toString();
     return request<{ messages: MessageView[] }>(
       `/api/messages/${channelId}${qs ? `?${qs}` : ""}`,
       { token },
     );
+  },
+
+  messagesAround: (
+    token: string,
+    channelId: string,
+    messageId: string,
+    limit?: number,
+  ) => {
+    const qs = limit ? `?limit=${limit}` : "";
+    return request<MessageWindow>(`/api/messages/${channelId}/around/${messageId}${qs}`, {
+      token,
+    });
+  },
+
+  searchMessages: (
+    token: string,
+    params: {
+      q: string;
+      channelId?: string;
+      authorId?: string;
+      sort?: SearchSort;
+      limit?: number;
+      offset?: number;
+    },
+  ) => {
+    const q = new URLSearchParams({ q: params.q });
+    if (params.channelId) q.set("channelId", params.channelId);
+    if (params.authorId) q.set("authorId", params.authorId);
+    if (params.sort) q.set("sort", params.sort);
+    if (params.limit) q.set("limit", String(params.limit));
+    if (params.offset) q.set("offset", String(params.offset));
+    return request<SearchResults>(`/api/search?${q}`, { token });
   },
 
   editMessage: (token: string, id: string, content: string) =>

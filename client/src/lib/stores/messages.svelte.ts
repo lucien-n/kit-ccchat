@@ -7,27 +7,34 @@ const PAGE = 20;
 
 class Messages {
   list = $state<MessageView[]>([]);
-  hasMore = $state(false);
+  hasMoreBefore = $state(false);
+  hasMoreAfter = $state(false);
   loading = $state(false);
   loadingOlder = $state(false);
+  loadingNewer = $state(false);
   #channelId: string | null = null;
   #arrivedDuringLoad: MessageView[] | null = null;
 
-  async #pageIfStillCurrent(before?: number): Promise<MessageView[] | null> {
+  get detached() {
+    return this.hasMoreAfter;
+  }
+
+  async #pageIfStillCurrent(
+    opts: { before?: number; after?: number } = {},
+  ): Promise<MessageView[] | null> {
     const token = session.token;
     const channelId = this.#channelId;
     if (!token || !channelId) return null;
 
-    const { messages } = await api.history(token, channelId, before, PAGE);
-    if (this.#channelId !== channelId) return null;
-    this.hasMore = messages.length >= PAGE;
-    return messages;
+    const { messages } = await api.history(token, channelId, { ...opts, limit: PAGE });
+    return this.#channelId === channelId ? messages : null;
   }
 
   async load(channelId: string) {
     const switchingChannel = this.#channelId !== channelId;
     this.#channelId = channelId;
     this.loadingOlder = false;
+    this.loadingNewer = false;
     if (switchingChannel) {
       this.list = [];
       this.loading = true;
@@ -39,6 +46,8 @@ class Messages {
       if (page) {
         const ids = new Set(page.map((m) => m.id));
         this.list = [...page, ...this.#arrivedDuringLoad.filter((m) => !ids.has(m.id))];
+        this.hasMoreBefore = page.length >= PAGE;
+        this.hasMoreAfter = false;
       }
     } finally {
       this.#arrivedDuringLoad = null;
@@ -46,40 +55,79 @@ class Messages {
     }
   }
 
+  async loadAround(channelId: string, messageId: string): Promise<boolean> {
+    const token = session.token;
+    if (!token) return false;
+
+    const switchingChannel = this.#channelId !== channelId;
+    this.#channelId = channelId;
+    this.loadingOlder = false;
+    this.loadingNewer = false;
+    if (switchingChannel) this.list = [];
+    this.loading = true;
+    this.#arrivedDuringLoad = [];
+
+    try {
+      const window = await api.messagesAround(token, channelId, messageId, PAGE);
+      if (this.#channelId !== channelId) return false;
+
+      const ids = new Set(window.messages.map((m) => m.id));
+      const live = window.hasMoreAfter
+        ? []
+        : this.#arrivedDuringLoad.filter((m) => !ids.has(m.id));
+
+      this.list = [...window.messages, ...live];
+      this.hasMoreBefore = window.hasMoreBefore;
+      this.hasMoreAfter = window.hasMoreAfter;
+      return true;
+    } catch {
+      return false;
+    } finally {
+      this.#arrivedDuringLoad = null;
+      if (this.#channelId === channelId) this.loading = false;
+    }
+  }
+
+  async jumpToPresent() {
+    if (this.#channelId) await this.load(this.#channelId);
+  }
+
   async loadOlder() {
-    if (this.loading || this.loadingOlder || !this.hasMore) return;
+    if (this.loading || this.loadingOlder || !this.hasMoreBefore) return;
     const oldest = this.list[0]?.createdAt;
     if (!oldest) return;
 
     this.loadingOlder = true;
     try {
-      const page = await this.#pageIfStillCurrent(oldest);
-      if (page?.length) this.list = [...page, ...this.list];
+      const page = await this.#pageIfStillCurrent({ before: oldest });
+      if (page) {
+        this.hasMoreBefore = page.length >= PAGE;
+        if (page.length) this.list = [...page, ...this.list];
+      }
     } finally {
       this.loadingOlder = false;
     }
   }
 
-  send(channelId: string, content: string, replyToId?: string): boolean {
-    return realtime.send({
-      type: ClientEventType.Message_Create,
-      channelId,
-      content,
-      replyToId,
-    });
-  }
+  async loadNewer() {
+    if (this.loading || this.loadingNewer || !this.hasMoreAfter) return;
+    const newest = this.list.at(-1)?.createdAt;
+    if (!newest) return;
 
-  async edit(id: string, content: string) {
-    if (!session.token) return;
-    await api.editMessage(session.token, id, content);
-  }
-
-  async delete(id: string) {
-    if (!session.token) return;
-    await api.deleteMessage(session.token, id);
+    this.loadingNewer = true;
+    try {
+      const page = await this.#pageIfStillCurrent({ after: newest });
+      if (page) {
+        this.hasMoreAfter = page.length >= PAGE;
+        if (page.length) this.list = [...this.list, ...page];
+      }
+    } finally {
+      this.loadingNewer = false;
+    }
   }
 
   append(message: MessageView) {
+    if (this.hasMoreAfter) return;
     this.list = [...this.list, message];
     this.#arrivedDuringLoad?.push(message);
   }
@@ -107,11 +155,32 @@ class Messages {
     }
   }
 
+  send(channelId: string, content: string, replyToId?: string): boolean {
+    return realtime.send({
+      type: ClientEventType.Message_Create,
+      channelId,
+      content,
+      replyToId,
+    });
+  }
+
+  async edit(id: string, content: string) {
+    if (!session.token) return;
+    await api.editMessage(session.token, id, content);
+  }
+
+  async delete(id: string) {
+    if (!session.token) return;
+    await api.deleteMessage(session.token, id);
+  }
+
   clear() {
     this.list = [];
-    this.hasMore = false;
+    this.hasMoreBefore = false;
+    this.hasMoreAfter = false;
     this.loading = false;
     this.loadingOlder = false;
+    this.loadingNewer = false;
     this.#channelId = null;
     this.#arrivedDuringLoad = null;
   }

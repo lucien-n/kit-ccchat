@@ -18,8 +18,9 @@ completedColumns:
 
 ## In Progress
 
-- [messages-list-infinite-scroll](tasks/messages-list-infinite-scroll.md)
+- [search-messages-in-every-specific-channels](tasks/search-messages-in-every-specific-channels.md)
 
 ## Done
 
 - [backend-routes-restructure](tasks/backend-routes-restructure.md)
+- [messages-list-infinite-scroll](tasks/messages-list-infinite-scroll.md)

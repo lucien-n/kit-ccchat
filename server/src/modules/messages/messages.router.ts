@@ -9,6 +9,7 @@ const router = new Hono<Env>();
 router.use("*", requireAuth);
 
 router.get("/:channelId", messagesController.history);
+router.get("/:channelId/around/:messageId", messagesController.around);
 router.patch("/:id", validate("json", editMessageBody), messagesController.edit);
 router.delete("/:id", messagesController.remove);
 

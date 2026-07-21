@@ -68,10 +68,10 @@ function authorOf(userId: string): MemberRef | null {
 }
 
 /** Spread across code points, not UTF-16 units, so the cut never lands inside an
- *  emoji. The quote is rendered as one line, so newlines collapse to spaces. */
-function snippet(content: string) {
+ *  emoji. Rendered as one line, so newlines collapse to spaces. */
+export function excerpt(content: string, max = REPLY_SNIPPET_MAX) {
   const flat = content.replace(/\s+/g, " ").trim();
-  return Array.from(flat).slice(0, REPLY_SNIPPET_MAX).join("");
+  return Array.from(flat).slice(0, max).join("");
 }
 
 /** A deleted original still holds its place in the conversation, but gives up
@@ -82,7 +82,7 @@ function toReplyRef(id: string): ReplyRef | null {
   if (m.deleted) return { id: m.id, content: "", author: null, deleted: true };
   return {
     id: m.id,
-    content: snippet(m.content),
+    content: excerpt(m.content),
     author: authorOf(m.authorId),
     deleted: false,
   };
