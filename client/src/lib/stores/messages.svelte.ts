@@ -1,7 +1,6 @@
 import { ClientEventType } from "@ccchat/shared";
 import { api, type MessageView } from "../api";
 import { realtime } from "./realtime.svelte";
-import { session } from "./session.svelte";
 
 const PAGE = 20;
 
@@ -22,11 +21,10 @@ class Messages {
   async #pageIfStillCurrent(
     opts: { before?: number; after?: number } = {},
   ): Promise<MessageView[] | null> {
-    const token = session.token;
     const channelId = this.#channelId;
-    if (!token || !channelId) return null;
+    if (!channelId) return null;
 
-    const { messages } = await api.history(token, channelId, { ...opts, limit: PAGE });
+    const { messages } = await api.messages.history(channelId, { ...opts, limit: PAGE });
     return this.#channelId === channelId ? messages : null;
   }
 
@@ -56,9 +54,6 @@ class Messages {
   }
 
   async loadAround(channelId: string, messageId: string): Promise<boolean> {
-    const token = session.token;
-    if (!token) return false;
-
     const switchingChannel = this.#channelId !== channelId;
     this.#channelId = channelId;
     this.loadingOlder = false;
@@ -68,7 +63,7 @@ class Messages {
     this.#arrivedDuringLoad = [];
 
     try {
-      const window = await api.messagesAround(token, channelId, messageId, PAGE);
+      const window = await api.messages.around(channelId, messageId, PAGE);
       if (this.#channelId !== channelId) return false;
 
       const ids = new Set(window.messages.map((m) => m.id));
@@ -165,13 +160,11 @@ class Messages {
   }
 
   async edit(id: string, content: string) {
-    if (!session.token) return;
-    await api.editMessage(session.token, id, content);
+    await api.messages.edit(id, content);
   }
 
   async delete(id: string) {
-    if (!session.token) return;
-    await api.deleteMessage(session.token, id);
+    await api.messages.delete(id);
   }
 
   clear() {

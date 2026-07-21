@@ -7,7 +7,6 @@
   import { Input } from "$lib/components/ui/input";
   import { apiErrorMessage, fail } from "$lib/forms";
   import { channels } from "$lib/stores/channels.svelte";
-  import { session } from "$lib/stores/session.svelte";
   import { cn } from "$lib/utils";
   import { ChannelType, channelNameKey, createChannelBody } from "@ccchat/shared";
   import { Hash, Volume2 } from "@lucide/svelte";
@@ -34,9 +33,9 @@
       validators: zod4Client(createChannelBody),
       resetForm: false,
       onUpdate: async ({ form }) => {
-        if (!form.valid || !session.token) return;
+        if (!form.valid) return;
         try {
-          const { channel } = await api.createChannel(session.token, form.data);
+          const { channel } = await api.channels.create(form.data);
           await channels.load();
           if (channel.type === ChannelType.Text) app.selectChannel(channel.id);
           open = false;

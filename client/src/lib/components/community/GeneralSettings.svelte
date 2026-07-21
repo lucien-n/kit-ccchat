@@ -2,7 +2,6 @@
   import { api } from "$lib/api";
   import CommunityIconPicker from "$lib/components/community/CommunityIconPicker.svelte";
   import { community } from "$lib/stores/community.svelte";
-  import { session } from "$lib/stores/session.svelte";
   import * as Form from "$lib/components/ui/form";
   import { Input } from "$lib/components/ui/input";
   import { apiErrorMessage, fail, ok, toastMessage } from "$lib/forms";
@@ -17,9 +16,9 @@
       validators: zod4Client(renameCommunityBody),
       resetForm: false,
       onUpdate: async ({ form }) => {
-        if (!form.valid || !session.token) return;
+        if (!form.valid) return;
         try {
-          await api.renameCommunity(session.token, form.data.communityName);
+          await api.community.rename(form.data.communityName);
           setMessage(form, ok("Community renamed."));
         } catch (err) {
           setMessage(form, fail(apiErrorMessage(err, "failed to save")));

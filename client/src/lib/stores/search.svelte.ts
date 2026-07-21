@@ -1,6 +1,5 @@
 import { SEARCH_PAGE, SearchSort } from "@ccchat/shared";
 import { api, type SearchHit } from "../api";
-import { session } from "./session.svelte";
 
 export interface SearchFilters {
   q: string;
@@ -51,11 +50,10 @@ class Search {
   }
 
   async #run(filters: SearchFilters) {
-    if (!session.token) return;
     const seq = ++this.#seq;
     this.loading = true;
     try {
-      const res = await api.searchMessages(session.token, {
+      const res = await api.search.messages({
         ...filters,
         sort: this.sort,
         limit: SEARCH_PAGE,
@@ -72,11 +70,11 @@ class Search {
 
   async more() {
     const filters = this.#lastFilters;
-    if (!filters || !session.token || this.loading || !this.hasMore) return;
+    if (!filters || this.loading || !this.hasMore) return;
     const seq = this.#seq;
     this.loading = true;
     try {
-      const res = await api.searchMessages(session.token, {
+      const res = await api.search.messages({
         ...filters,
         sort: this.sort,
         limit: SEARCH_PAGE,

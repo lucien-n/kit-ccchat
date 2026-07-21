@@ -73,10 +73,10 @@
   });
 
   async function create() {
-    if (!session.token || !name.trim()) return;
+    if (!name.trim()) return;
     busy = true;
     try {
-      const { role } = await api.createRole(session.token, {
+      const { role } = await api.roles.create({
         name: name.trim(),
         color,
         permission,
@@ -92,10 +92,10 @@
   }
 
   async function saveEdit() {
-    if (!session.token || !selected || !editName.trim()) return;
+    if (!selected || !editName.trim()) return;
     busy = true;
     try {
-      await api.updateRole(session.token, selected.id, {
+      await api.roles.update(selected.id, {
         name: editName.trim(),
         color: editColor,
         permission: editPermission,
@@ -111,7 +111,6 @@
   /** Swap a role with its neighbour and send the whole new order; dir -1 is up
    *  the list (higher precedence), +1 is down. */
   async function move(id: string, dir: -1 | 1) {
-    if (!session.token) return;
     const order = rolesStore.list.map((r) => r.id);
     const i = order.indexOf(id);
     const j = i + dir;
@@ -119,7 +118,7 @@
     [order[i], order[j]] = [order[j], order[i]];
     busy = true;
     try {
-      await api.reorderRoles(session.token, order);
+      await api.roles.reorder(order);
       await rolesStore.load(true);
     } catch (e) {
       toast.error(apiErrorMessage(e, "failed to reorder roles"));
@@ -129,9 +128,8 @@
   }
 
   async function remove(id: string) {
-    if (!session.token) return;
     try {
-      await api.deleteRole(session.token, id);
+      await api.roles.delete(id);
       if (selectedId === id) selectedId = null;
       await rolesStore.load(true);
       await members.load(true);

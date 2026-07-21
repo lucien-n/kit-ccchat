@@ -35,9 +35,8 @@
   );
 
   async function loadProfile() {
-    if (!session.token) return;
     try {
-      const res = await api.userProfile(session.token, userId);
+      const res = await api.users.profile(userId);
       user = res.user;
       assigned = res.roles;
     } catch (e) {
@@ -52,7 +51,7 @@
   });
 
   async function toggle(roleId: string) {
-    if (!session.token || !user) return;
+    if (!user) return;
     const next = assignedIds.has(roleId)
       ? [...assignedIds].filter((id) => id !== roleId)
       : [...assignedIds, roleId];

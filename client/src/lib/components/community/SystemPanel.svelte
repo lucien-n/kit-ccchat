@@ -2,7 +2,6 @@
   import { api, type SystemStats } from "$lib/api";
   import { apiErrorMessage } from "$lib/forms";
   import { formatBytes, formatDuration } from "$lib/format";
-  import { session } from "$lib/stores/session.svelte";
   import { Progress } from "$lib/components/ui/progress";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
@@ -12,9 +11,8 @@
   let failed = $state(false);
 
   async function load() {
-    if (!session.token) return;
     try {
-      stats = (await api.system(session.token)).stats;
+      stats = (await api.system.stats()).stats;
       failed = false;
     } catch (e) {
       if (!failed) toast.error(apiErrorMessage(e, "failed to load system stats"));

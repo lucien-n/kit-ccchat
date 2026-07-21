@@ -16,7 +16,7 @@ class Community {
 
   async load() {
     try {
-      const info = await api.info();
+      const info = await api.community.info();
       this.name = info.name;
       this.needsSetup = info.needsSetup;
       this.iconVersion = info.iconVersion;

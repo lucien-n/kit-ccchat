@@ -12,12 +12,11 @@ class Members {
   #loaded = false;
 
   async load(force = false) {
-    if (!session.token) return;
     if (this.#loaded && !force) return;
     try {
       this.list = session.isAdmin
-        ? (await api.members(session.token)).members
-        : (await api.roster(session.token)).members.map(widen);
+        ? (await api.moderation.members()).members
+        : (await api.users.list()).members.map(widen);
       this.#loaded = true;
     } catch {
       /* empty */
@@ -29,14 +28,12 @@ class Members {
   }
 
   async setRoles(userId: string, roleIds: string[]) {
-    if (!session.token) return;
-    await api.setUserRoles(session.token, userId, roleIds);
+    await api.roles.setForUser(userId, roleIds);
     await this.load(true);
   }
 
   async moderate(userId: string, action: ModAction, body?: unknown) {
-    if (!session.token) return;
-    await api.mod(session.token, userId, action, body);
+    await api.moderation.act(userId, action, body);
     await this.load(true);
   }
 

@@ -38,8 +38,7 @@
   }
 
   function handleJoinVoice(channel: { id: string; name: string }) {
-    if (!session.token) return;
-    voice.join(channel, session.token);
+    voice.join(channel);
     onNavigate?.();
   }
 

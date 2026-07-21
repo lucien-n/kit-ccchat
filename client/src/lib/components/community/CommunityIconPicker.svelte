@@ -4,7 +4,6 @@
   import { apiErrorMessage } from "$lib/forms";
   import { resizeImage } from "$lib/image";
   import { community } from "$lib/stores/community.svelte";
-  import { session } from "$lib/stores/session.svelte";
   import ImageIcon from "@lucide/svelte/icons/image";
   import Trash2 from "@lucide/svelte/icons/trash-2";
   import Upload from "@lucide/svelte/icons/upload";
@@ -15,11 +14,11 @@
 
   async function onFile(e: Event) {
     const file = (e.currentTarget as HTMLInputElement).files?.[0];
-    if (!file || !session.token) return;
+    if (!file) return;
     busy = true;
     try {
       const dataUrl = await resizeImage(file, 256);
-      const { iconVersion } = await api.setCommunityIcon(session.token, dataUrl);
+      const { iconVersion } = await api.community.setIcon(dataUrl);
       community.iconVersion = iconVersion;
       toast.success("Community icon updated.");
     } catch (err) {
@@ -31,10 +30,9 @@
   }
 
   async function remove() {
-    if (!session.token) return;
     busy = true;
     try {
-      await api.removeCommunityIcon(session.token);
+      await api.community.removeIcon();
       community.iconVersion = null;
     } catch (err) {
       toast.error(apiErrorMessage(err, "failed to remove"));

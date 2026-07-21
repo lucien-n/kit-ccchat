@@ -13,10 +13,7 @@
           "icon": "server",
           "color": "terminal.ansiGreen",
           "joinOperator": ";",
-          "commands": [
-            "cd server",
-            "npm run dev"
-          ]
+          "commands": ["cd server", "npm run dev"]
         },
         {
           "name": "client",
@@ -24,10 +21,7 @@
           "icon": "device-desktop",
           "color": "terminal.ansiBlue",
           "joinOperator": ";",
-          "commands": [
-            "cd client",
-            "npm run dev"
-          ]
+          "commands": ["cd client", "npm run dev"]
         }
       ]
     ]

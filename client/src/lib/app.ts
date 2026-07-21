@@ -49,7 +49,7 @@ export async function register(body: RegisterBody) {
 /** Returns the invite code to share. `needsSetup` stays true so the wizard can
  *  show that code; it clears when the owner dismisses the screen. */
 export async function setup(body: SetupBody): Promise<string> {
-  const { token, user, inviteCode, communityName } = await api.setup(body);
+  const { token, user, inviteCode, communityName } = await api.auth.setup(body);
   community.name = communityName;
   session.start(token, user);
   await afterLogin();

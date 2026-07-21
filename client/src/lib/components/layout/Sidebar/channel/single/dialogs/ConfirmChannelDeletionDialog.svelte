@@ -3,7 +3,6 @@
   import * as AlertDialog from "$lib/components/ui/alert-dialog";
   import { apiErrorMessage } from "$lib/forms";
   import { channels } from "$lib/stores/channels.svelte";
-  import { session } from "$lib/stores/session.svelte";
   import type { Channel } from "@ccchat/shared";
   import { toast } from "svelte-sonner";
 
@@ -17,12 +16,10 @@
   let isBusy = $state(false);
 
   async function handleDelete() {
-    if (!session.token) return;
-
     isBusy = true;
 
     try {
-      await api.deleteChannel(session.token, channel.id);
+      await api.channels.delete(channel.id);
       await channels.load();
     } catch (e) {
       toast.error(apiErrorMessage(e, "failed to delete channel"));

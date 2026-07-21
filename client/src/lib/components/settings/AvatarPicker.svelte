@@ -12,10 +12,10 @@
 
   async function onFile(e: Event) {
     const file = (e.currentTarget as HTMLInputElement).files?.[0];
-    if (!file || !session.token) return;
+    if (!file) return;
     try {
       const dataUrl = await resizeImage(file, 256);
-      const { avatarVersion } = await api.uploadAvatar(session.token, dataUrl);
+      const { avatarVersion } = await api.users.setAvatar(dataUrl);
       session.patchUser({ avatarVersion });
     } catch (err) {
       toast.error(apiErrorMessage(err, "upload failed"));
@@ -25,8 +25,7 @@
   }
 
   async function remove() {
-    if (!session.token) return;
-    await api.removeAvatar(session.token).catch(() => {});
+    await api.users.removeAvatar().catch(() => {});
     session.patchUser({ avatarVersion: null });
   }
 </script>

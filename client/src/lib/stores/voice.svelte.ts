@@ -45,7 +45,7 @@ class VoiceStore {
     return this.status !== "idle";
   }
 
-  async join(channel: { id: string; name: string }, authToken: string) {
+  async join(channel: { id: string; name: string }) {
     if (this.channelId === channel.id && this.inCall) return;
     if (this.room) await this.leave();
 
@@ -57,7 +57,7 @@ class VoiceStore {
 
     let url = "";
     try {
-      const res = await api.voiceToken(authToken, channel.id);
+      const res = await api.voice.token(channel.id);
       url = res.url;
       this.canPublish = res.canPublish;
 

@@ -17,9 +17,9 @@
       validators: zod4Client(updateProfileBody),
       resetForm: false,
       onUpdate: async ({ form }) => {
-        if (!form.valid || !session.token) return;
+        if (!form.valid) return;
         try {
-          const { user } = await api.updateProfile(session.token, form.data);
+          const { user } = await api.users.updateMe(form.data);
           session.patchUser({ displayName: user.displayName });
           setMessage(form, ok("Display name saved."));
         } catch (err) {
@@ -38,9 +38,9 @@
       validators: zod4Client(changePasswordBody),
       resetForm: true,
       onUpdate: async ({ form }) => {
-        if (!form.valid || !session.token) return;
+        if (!form.valid) return;
         try {
-          await api.changePassword(session.token, form.data);
+          await api.users.changePassword(form.data);
           setMessage(form, ok("Password changed."));
         } catch (err) {
           // Stays inline rather than becoming a toast: this one names a field,

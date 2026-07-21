@@ -1,6 +1,6 @@
 ---
 startedColumns:
-  - 'In Progress'
+  - "In Progress"
 completedColumns:
   - Done
 ---
@@ -14,13 +14,14 @@ completedColumns:
 
 ## Todo
 
-## In Progress
+- [use-context-classes](tasks/use-context-classes.md)
 
-- [delete-channels](tasks/delete-channels.md)
+## In Progress
 
 ## Done
 
 - [backend-routes-restructure](tasks/backend-routes-restructure.md)
+- [delete-channels](tasks/delete-channels.md)
 - [prevent-duplicate-channel-name](tasks/prevent-duplicate-channel-name.md)
 - [search-messages-in-every-specific-channels](tasks/search-messages-in-every-specific-channels.md)
 - [messages-list-infinite-scroll](tasks/messages-list-infinite-scroll.md)
