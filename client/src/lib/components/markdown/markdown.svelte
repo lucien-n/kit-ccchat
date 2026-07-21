@@ -1,10 +1,11 @@
 <script lang="ts">
   import { isEmojiOnly, render } from "$lib/markdown";
+  import { mentionResolver } from "$lib/mentions";
   import { externalLink } from "$lib/stores/externalLink.svelte";
 
   let { content, class: className = "" }: { content: string; class?: string } = $props();
 
-  const html = $derived(render(content));
+  const html = $derived(render(content, { mentions: mentionResolver() }));
   const jumbo = $derived(isEmojiOnly(content));
 
   // {@html} output cannot carry Svelte handlers, so reveal is delegated.
@@ -131,6 +132,20 @@
   .md :global(td) {
     border: 1px solid var(--border);
     padding: 0.25rem 0.5rem;
+  }
+  /* --mention is the role or member colour when there is one; the primary
+     accent stands in when there isn't. */
+  .md :global(.mention) {
+    --mention: var(--primary);
+    color: var(--mention);
+    background: color-mix(in oklab, var(--mention) 16%, transparent);
+    border-radius: 0.25rem;
+    padding: 0 0.2rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .md :global(.mention[data-self]) {
+    background: color-mix(in oklab, var(--mention) 28%, transparent);
   }
   .md :global(.spoiler) {
     background: color-mix(in oklab, var(--foreground) 85%, transparent);

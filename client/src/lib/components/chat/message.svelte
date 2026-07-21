@@ -5,6 +5,7 @@
   import Markdown from "$lib/components/markdown/markdown.svelte";
   import { getChatContext } from "$lib/context/chat.svelte";
   import { apiErrorMessage } from "$lib/forms";
+  import { pingsMe } from "$lib/mentions";
   import { messages } from "$lib/stores/messages.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { cn } from "$lib/utils";
@@ -26,6 +27,7 @@
   const chat = getChatContext();
 
   const isMine = $derived(message.author?.id === session.user?.id);
+  const mentionsMe = $derived(!message.systemEvent && !isMine && pingsMe(message));
   const canDelete = $derived(session.isAdmin || isMine);
   const canEdit = $derived(!message.systemEvent && isMine);
   const subject = $derived(message.author?.displayName ?? "someone");
@@ -89,10 +91,12 @@
 {:else}
   <div
     id="msg-{message.id}"
-    class="group hover:bg-muted/40 relative flex gap-3 rounded-md px-2 py-1 transition-colors duration-700 {chat.flashId ===
-    message.id
-      ? 'bg-primary/15'
-      : ''}"
+    class={cn(
+      "group hover:bg-muted/40 relative flex gap-3 rounded-md px-2 py-1 transition-colors duration-700",
+      mentionsMe &&
+        "bg-primary/8 hover:bg-primary/12 border-primary/70 rounded-l-none border-l-2",
+      chat.flashId === message.id && "bg-primary/15",
+    )}
   >
     {#if message.author}
       <UserCard

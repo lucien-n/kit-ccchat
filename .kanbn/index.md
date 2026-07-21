@@ -15,7 +15,6 @@ columnSorting:
 ## Backlog
 
 - [unify-channel-type-icons-and-labels](tasks/unify-channel-type-icons-and-labels.md)
-- [user-mentions](tasks/user-mentions.md)
 - [mobile-app](tasks/mobile-app.md)
 
 ## Todo
@@ -24,6 +23,7 @@ columnSorting:
 
 ## Done
 
+- [user-mentions](tasks/user-mentions.md)
 - [fix-community-settings-mobile-layout](tasks/fix-community-settings-mobile-layout.md)
 - [rename-channels](tasks/rename-channels.md)
 - [fix-components-naming](tasks/fix-components-naming.md)

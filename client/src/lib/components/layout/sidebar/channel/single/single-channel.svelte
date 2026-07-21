@@ -41,8 +41,13 @@
       <Icon class="size-4 shrink-0" />
       <span class="truncate">{channel.name}</span>
       {#if (unread.counts[channel.id] ?? 0) > 0}
-        <Badge variant="destructive" class="ml-auto h-5 min-w-5 justify-center px-1.5">
-          {unread.counts[channel.id]}
+        {@const mentioned = (unread.mentions[channel.id] ?? 0) > 0}
+        <Badge
+          variant={mentioned ? "destructive" : "secondary"}
+          class="ml-auto h-5 min-w-5 justify-center px-1.5"
+          title={mentioned ? "You were mentioned" : undefined}
+        >
+          {mentioned ? unread.mentions[channel.id] : unread.counts[channel.id]}
         </Badge>
       {/if}
     </Button>

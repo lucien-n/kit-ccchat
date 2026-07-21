@@ -13,10 +13,8 @@ import { channels, messages, type User } from "../../db/schema";
 import { httpError } from "../../http/errors.js";
 import { hub } from "../../hub.js";
 import { toMessageView } from "../../views.js";
+import { resolveMentions, saveMentions } from "./mentions.js";
 
-/** Post a system line (e.g. "member joined") to the first text channel and push
- *  it to everyone. `subjectId` is the user the event is about; the client reads
- *  it off the message author. No-op if there is no text channel to post to. */
 export function postSystemMessage(event: SystemEvent, subjectId: string) {
   const channel = db
     .select()
@@ -36,15 +34,12 @@ export function postSystemMessage(event: SystemEvent, subjectId: string) {
     deleted: 0,
     replyToId: null,
     systemEvent: event,
+    mentionsEveryone: 0,
   };
   db.insert(messages).values(row).run();
   hub.broadcast({ type: ServerEventType.Message_New, message: toMessageView(row) });
 }
 
-/** Message history for a channel, always returned oldest-first, keyset-paginated
- *  by a createdAt timestamp. `after` pages forward, which only matters once a
- *  reader has jumped into the middle of history; `before` pages back, which is
- *  the ordinary scroll-up. Deleted messages are omitted. */
 export function history(
   channelId: string,
   { before, after, limit }: { before?: number; after?: number; limit: number },
@@ -68,9 +63,6 @@ export function history(
   return (after ? rows : rows.reverse()).map(toMessageView);
 }
 
-/** A window of history centred on one message, so a search result can be opened
- *  where it was said. `limit` is per side, and the target itself always comes
- *  back in the older half. */
 export function around(
   channelId: string,
   messageId: string,
@@ -106,8 +98,6 @@ export function around(
   };
 }
 
-/** Author only: an admin may remove someone's words but never rewrite them.
- *  `editedAt` marks it so the client can show "(edited)". */
 export function editMessage(id: string, user: User, { content }: EditMessageBody) {
   const msg = db.select().from(messages).where(eq(messages.id, id)).get();
   if (!msg || msg.deleted) httpError(404, "not found");
@@ -115,14 +105,18 @@ export function editMessage(id: string, user: User, { content }: EditMessageBody
   if (msg.authorId !== user.id) httpError(403, "forbidden");
 
   const editedAt = Date.now();
-  db.update(messages).set({ content, editedAt }).where(eq(messages.id, id)).run();
-  const view = toMessageView({ ...msg, content, editedAt });
+  const { userIds, everyone } = resolveMentions(content, user.id);
+  const mentionsEveryone = everyone ? 1 : 0;
+  db.update(messages)
+    .set({ content, editedAt, mentionsEveryone })
+    .where(eq(messages.id, id))
+    .run();
+  saveMentions(id, userIds);
+  const view = toMessageView({ ...msg, content, editedAt, mentionsEveryone });
   hub.broadcast({ type: ServerEventType.Message_Edited, message: view });
   return view;
 }
 
-/** Allowed for the author or any admin/owner. Soft delete so moderation stays
- *  auditable. Broadcasts the removal to everyone live. */
 export function deleteMessage(id: string, user: User) {
   const msg = db.select().from(messages).where(eq(messages.id, id)).get();
   if (!msg || msg.deleted) httpError(404, "not found");

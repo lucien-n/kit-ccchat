@@ -9,6 +9,7 @@
     type EmojiEntry,
     type EmojiIndex,
   } from "$lib/emoji";
+  import { mentionQuery, searchMentions, type MentionSuggestion } from "$lib/mentions";
   import { Button } from "&/button";
   import { Textarea } from "&/textarea";
   import { MESSAGE_MAX_LENGTH } from "@ccchat/shared";
@@ -41,7 +42,10 @@
   let index = $state<EmojiIndex | null>(null);
   let preview = $state(false);
 
-  let matches = $state<readonly EmojiEntry[]>([]);
+  type Suggestion =
+    { kind: "emoji"; entry: EmojiEntry } | { kind: "mention"; entry: MentionSuggestion };
+
+  let matches = $state<readonly Suggestion[]>([]);
   let active = $state(0);
   let anchor = $state(-1);
 
@@ -65,20 +69,38 @@
     });
   }
 
+  function show(start: number, list: Suggestion[]) {
+    if (!list.length) return close();
+    anchor = start;
+    matches = list;
+    active = 0;
+  }
+
   function refresh() {
     if (!el) return;
     const caret = el.selectionStart ?? 0;
-    const found = shortcodeQuery(draft.slice(0, caret));
+    const before = draft.slice(0, caret);
+
+    const at = mentionQuery(before);
+    if (at) {
+      const hits = searchMentions(at.query);
+      return show(
+        at.start,
+        hits.map((entry) => ({ kind: "mention", entry })),
+      );
+    }
+
+    const found = shortcodeQuery(before);
     if (!found) return close();
     if (!index) {
       ensureIndex();
       return close();
     }
     const hits = searchEmoji(index, found.query, 10);
-    if (!hits.length) return close();
-    anchor = found.start;
-    matches = hits;
-    active = 0;
+    return show(
+      found.start,
+      hits.map((entry) => ({ kind: "emoji", entry })),
+    );
   }
 
   async function insert(text: string, from: number, to: number) {
@@ -90,9 +112,10 @@
     el?.setSelectionRange(pos, pos);
   }
 
-  function accept(entry: EmojiEntry) {
+  function accept(match: Suggestion) {
     const caret = el?.selectionStart ?? draft.length;
-    void insert(`${entry[0]} `, anchor, caret);
+    const text = match.kind === "emoji" ? match.entry[0] : match.entry.token;
+    void insert(`${text} `, anchor, caret);
   }
 
   function insertAtCaret(emoji: string) {
@@ -152,9 +175,9 @@
     <div
       class="bg-popover text-popover-foreground ring-foreground/10 absolute bottom-full left-2 z-20 mb-1 w-72 overflow-hidden rounded-xl shadow-lg ring-1 sm:left-4"
       role="listbox"
-      aria-label="Emoji suggestions"
+      aria-label="Suggestions"
     >
-      {#each matches as entry, i (entry[1])}
+      {#each matches as match, i (match.kind === "emoji" ? match.entry[1] : match.entry.key)}
         <button
           type="button"
           role="option"
@@ -165,13 +188,29 @@
             : ''}"
           onmousemove={() => (active = i)}
           onmousedown={(e) => e.preventDefault()}
-          onclick={() => accept(entry)}
+          onclick={() => accept(match)}
         >
-          <span class="text-lg leading-none">{entry[0]}</span>
-          <span class="truncate">:{entry[1]}:</span>
-          <span class="text-muted-foreground ml-auto truncate text-xs">
-            {emojiLabel(entry[1])}
-          </span>
+          {#if match.kind === "emoji"}
+            <span class="text-lg leading-none">{match.entry[0]}</span>
+            <span class="truncate">:{match.entry[1]}:</span>
+            <span class="text-muted-foreground ml-auto truncate text-xs">
+              {emojiLabel(match.entry[1])}
+            </span>
+          {:else}
+            <span
+              class="size-2 shrink-0 rounded-full"
+              style="background:{match.entry.color ?? 'var(--muted-foreground)'}"
+            ></span>
+            <span
+              class="truncate font-medium"
+              style={match.entry.color ? `color:${match.entry.color}` : undefined}
+            >
+              {match.entry.label}
+            </span>
+            <span class="text-muted-foreground ml-auto truncate text-xs">
+              {match.entry.detail}
+            </span>
+          {/if}
         </button>
       {/each}
     </div>

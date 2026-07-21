@@ -13,6 +13,7 @@ import { newId, userForToken } from "./auth.js";
 import { db } from "./db/index.js";
 import { channels, messages, users } from "./db/schema";
 import { hub, type Client } from "./hub.js";
+import { resolveMentions, saveMentions } from "./modules/messages/mentions.js";
 import { toMessageView } from "./views.js";
 
 const wss = new WebSocketServer({ noServer: true });
@@ -139,6 +140,7 @@ function handleCreate(
   const channel = db.select().from(channels).where(eq(channels.id, channelId)).get();
   if (!channel || channel.type !== ChannelType.Text) return;
 
+  const { userIds, everyone } = resolveMentions(content, client.userId);
   const row = {
     id: newId(),
     channelId,
@@ -149,7 +151,9 @@ function handleCreate(
     deleted: 0,
     replyToId: replyTarget(msg.replyToId, channelId),
     systemEvent: null,
+    mentionsEveryone: everyone ? 1 : 0,
   };
   db.insert(messages).values(row).run();
+  saveMentions(row.id, userIds);
   hub.broadcast({ type: ServerEventType.Message_New, message: toMessageView(row) });
 }

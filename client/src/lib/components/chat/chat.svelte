@@ -1,9 +1,9 @@
 <script lang="ts">
   import CreateChannelDialog from "$lib/components/channel/create-channel-dialog.svelte";
-  import CommunitySettings from "$lib/components/community/community-settings.svelte";
+  import CommunitySettingsDialog from "$lib/components/community/community-settings-dialog.svelte";
   import SidePanel from "$lib/components/layout/side-panel.svelte";
   import Sidebar from "$lib/components/layout/sidebar";
-  import Settings from "$lib/components/settings/settings.svelte";
+  import SettingsDialog from "$lib/components/settings/settings-dialog.svelte";
   import VoiceBar from "$lib/components/voice/voice-bar.svelte";
   import { setChatContext, type ChatPanel } from "$lib/context/chat.svelte";
   import { setBaseTitle, setTitleBadge } from "$lib/notify";
@@ -236,6 +236,9 @@
   <SidePanel />
 {/if}
 
-<CommunitySettings bind:open={ui.communitySettings} />
-<Settings bind:open={ui.settings} />
-<CreateChannelDialog bind:open={ui.createChannel} initialType={ui.createChannelType} />
+<CommunitySettingsDialog bind:open={ui.isCommunitySettingsDialogOpen} />
+<SettingsDialog bind:open={ui.isSettingsDialogOpen} />
+<CreateChannelDialog
+  bind:open={ui.isCreateChannelDialogOpen}
+  initialType={ui.createChannelType}
+/>

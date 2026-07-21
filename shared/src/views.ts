@@ -66,6 +66,11 @@ export const messageView = z.object({
   /** null for an ordinary message; the event kind for a system line, whose
    *  `author` is the subject (e.g. the member who joined). */
   systemEvent: systemEvent.nullable(),
+  /** User ids this message pings, resolved when it was sent: a role mention is
+   *  already expanded to whoever held the role at that moment, so gaining a role
+   *  later never retroactively pings you. */
+  mentions: z.array(z.string()),
+  mentionsEveryone: z.boolean(),
 });
 export type MessageView = z.infer<typeof messageView>;
 

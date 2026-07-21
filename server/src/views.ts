@@ -12,6 +12,7 @@ import {
 import { eq } from "drizzle-orm";
 import { db } from "./db/index.js";
 import { messages, roles, users, type Message, type User } from "./db/schema";
+import { mentionsOf } from "./modules/messages/mentions.js";
 import { colorFor, isAdmin, isOwner, roleIdsOf } from "./permissions.js";
 
 export function toMember(u: {
@@ -98,5 +99,7 @@ export function toMessageView(m: Message): MessageView {
     author: authorOf(m.authorId),
     replyTo: m.replyToId ? toReplyRef(m.replyToId) : null,
     systemEvent: (m.systemEvent as SystemEvent | null) ?? null,
+    mentions: mentionsOf(m.id),
+    mentionsEveryone: m.mentionsEveryone === 1,
   };
 }

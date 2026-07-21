@@ -12,6 +12,9 @@ export const messages = sqliteTable(
     deleted: integer("deleted").notNull().default(0),
     replyToId: text("reply_to_id"),
     systemEvent: text("system_event"),
+    // 1 = pings every member. Kept as a flag rather than a row per member in
+    // message_mentions, which would be one write per member per @everyone.
+    mentionsEveryone: integer("mentions_everyone").notNull().default(0),
   },
   (t) => ({ byChannel: index("idx_messages_channel").on(t.channelId, t.createdAt) }),
 );

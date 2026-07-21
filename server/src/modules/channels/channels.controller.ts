@@ -7,7 +7,7 @@ export function list(c: AppContext) {
 }
 
 export function unreads(c: AppContext) {
-  return c.json({ unreads: channelsService.unreadCounts(c.get("user")) });
+  return c.json(channelsService.unreadCounts(c.get("user")));
 }
 
 export function markRead(c: AppContext<"/:id">) {

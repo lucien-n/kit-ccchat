@@ -4,14 +4,18 @@ import {
   type Channel,
   type CreateChannelBody,
 } from "@ccchat/shared";
-import { and, asc, count, eq, gt, isNull, ne } from "drizzle-orm";
+import { and, asc, count, eq, gt, isNull, ne, sql } from "drizzle-orm";
 import { newId } from "../../auth.js";
 import { db } from "../../db/index.js";
-import { channelReads, channels, messages, type User } from "../../db/schema";
+import {
+  channelReads,
+  channels,
+  messageMentions,
+  messages,
+  type User,
+} from "../../db/schema";
 import { httpError } from "../../http/errors.js";
 
-/** `type` is a plain TEXT column, so this cast is the boundary where a db string
- *  becomes the union the rest of the app relies on. */
 function toChannelView(row: typeof channels.$inferSelect): Channel {
   return {
     id: row.id,
@@ -30,10 +34,10 @@ export function listChannels(): Channel[] {
     .map(toChannelView);
 }
 
-/** Unread counts for the given user, keyed by channel id. A message counts as
- *  unread if it's newer than the user's read marker (defaulting to when they
- *  joined) and wasn't sent by them. */
-export function unreadCounts(user: User): Record<string, number> {
+export function unreadCounts(user: User): {
+  unreads: Record<string, number>;
+  mentions: Record<string, number>;
+} {
   const reads = db
     .select()
     .from(channelReads)
@@ -42,25 +46,41 @@ export function unreadCounts(user: User): Record<string, number> {
   const readMap = new Map(reads.map((r) => [r.channelId, r.lastReadAt]));
 
   const unreads: Record<string, number> = {};
+  const mentions: Record<string, number> = {};
   for (const ch of db.select().from(channels).all()) {
     if (ch.type !== ChannelType.Text) continue;
     const since = readMap.get(ch.id) ?? user.createdAt;
+    const visible = and(
+      eq(messages.channelId, ch.id),
+      eq(messages.deleted, 0),
+      isNull(messages.systemEvent),
+      ne(messages.authorId, user.id),
+      gt(messages.createdAt, since),
+    );
+
+    // One scan of the visible rows: the join matches at most one mention row per
+    // message (PK is messageId+userId), so count() stays the plain unread total
+    // while the conditional sum picks out the ones that ping this user.
     const row = db
-      .select({ n: count() })
+      .select({
+        unread: count(),
+        mentions: sql<number>`sum(case when ${messages.mentionsEveryone} = 1 or ${messageMentions.userId} is not null then 1 else 0 end)`,
+      })
       .from(messages)
-      .where(
+      .leftJoin(
+        messageMentions,
         and(
-          eq(messages.channelId, ch.id),
-          eq(messages.deleted, 0),
-          isNull(messages.systemEvent),
-          ne(messages.authorId, user.id),
-          gt(messages.createdAt, since),
+          eq(messageMentions.messageId, messages.id),
+          eq(messageMentions.userId, user.id),
         ),
       )
+      .where(visible)
       .get();
-    unreads[ch.id] = row?.n ?? 0;
+
+    unreads[ch.id] = row?.unread ?? 0;
+    mentions[ch.id] = Number(row?.mentions ?? 0);
   }
-  return unreads;
+  return { unreads, mentions };
 }
 
 export function markRead(userId: string, channelId: string) {
@@ -74,8 +94,6 @@ export function markRead(userId: string, channelId: string) {
     .run();
 }
 
-/** Scoped to the type: a text #general and a voice "General" are different rooms
- *  and read as such in the sidebar, so only a clash within one list is a clash. */
 export function isNameTaken(name: string, type: ChannelType, exceptId?: string): boolean {
   const key = channelNameKey(name);
   return db
