@@ -9,7 +9,7 @@
   import { channels } from "$lib/stores/channels.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { cn } from "$lib/utils";
-  import { ChannelType, createChannelBody } from "@ccchat/shared";
+  import { ChannelType, channelNameKey, createChannelBody } from "@ccchat/shared";
   import { Hash, Volume2 } from "@lucide/svelte";
   import { defaults, setMessage, superForm } from "sveltekit-superforms";
   import { zod4, zod4Client } from "sveltekit-superforms/adapters";
@@ -48,6 +48,16 @@
   );
 
   const { form: formData, enhance, submitting } = form;
+
+  // Checked against the channel list the client already holds, so it answers on
+  // every keystroke without asking the server. The server checks again on submit.
+  const taken = $derived.by(() => {
+    const key = channelNameKey($formData.name);
+    if (!key) return false;
+    return channels.list.some(
+      (c) => c.type === $formData.type && channelNameKey(c.name) === key,
+    );
+  });
 
   // One instance, reused for both the text and voice buttons, so reseed each
   // time it opens from whichever button was clicked.
@@ -95,17 +105,23 @@
                 ? "General Voice"
                 : "general"}
               autocomplete="off"
+              aria-invalid={taken || undefined}
             />
           {/snippet}
         </Form.Control>
         <Form.FieldErrors />
+        {#if taken}
+          <p class="text-destructive text-sm">
+            There's already a {$formData.type} channel with that name.
+          </p>
+        {/if}
       </Form.Field>
 
       <Dialog.Footer>
         <Button type="button" variant="ghost" onclick={() => (open = false)}
           >Cancel</Button
         >
-        <Form.Button disabled={$submitting}>Create</Form.Button>
+        <Form.Button disabled={$submitting || taken}>Create</Form.Button>
       </Dialog.Footer>
     </form>
   </Dialog.Content>

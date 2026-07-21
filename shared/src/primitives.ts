@@ -39,6 +39,8 @@ export const channelName = z
   .string()
   .trim()
   .regex(/^[\w\- ]{1,32}$/, "invalid channel name");
+
+export const channelNameKey = (name: string) => name.trim().toLowerCase();
 export const communityName = z.string().trim().min(1).max(60);
 export const inviteCode = z.string().trim().min(1, "invite code required");
 

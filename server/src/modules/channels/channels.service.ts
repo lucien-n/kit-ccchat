@@ -1,8 +1,14 @@
-import { ChannelType, type Channel, type CreateChannelBody } from "@ccchat/shared";
+import {
+  ChannelType,
+  channelNameKey,
+  type Channel,
+  type CreateChannelBody,
+} from "@ccchat/shared";
 import { and, asc, count, eq, gt, isNull, ne } from "drizzle-orm";
 import { newId } from "../../auth.js";
 import { db } from "../../db/index.js";
 import { channelReads, channels, messages, type User } from "../../db/schema";
+import { httpError } from "../../http/errors.js";
 
 /** `type` is a plain TEXT column, so this cast is the boundary where a db string
  *  becomes the union the rest of the app relies on. */
@@ -68,7 +74,24 @@ export function markRead(userId: string, channelId: string) {
     .run();
 }
 
+/** Scoped to the type: a text #general and a voice "General" are different rooms
+ *  and read as such in the sidebar, so only a clash within one list is a clash. */
+export function isNameTaken(name: string, type: ChannelType): boolean {
+  const key = channelNameKey(name);
+  return db
+    .select()
+    .from(channels)
+    .where(eq(channels.type, type))
+    .all()
+    .some((c) => channelNameKey(c.name) === key);
+}
+
 export function createChannel({ name, type }: CreateChannelBody) {
+  // better-sqlite3 is synchronous and the server is one process, so nothing can
+  // interleave between this check and the insert below.
+  if (isNameTaken(name, type))
+    httpError(409, `there's already a ${type} channel called "${name.trim()}"`);
+
   const channel = {
     id: newId(),
     name,
