@@ -18,12 +18,13 @@ columnSorting:
 
 ## Todo
 
-## In Progress
+- [fix-community-settings-mobile-layout](tasks/fix-community-settings-mobile-layout.md)
 
-- [rename-channels](tasks/rename-channels.md)
+## In Progress
 
 ## Done
 
+- [rename-channels](tasks/rename-channels.md)
 - [fix-components-naming](tasks/fix-components-naming.md)
 - [use-context-classes](tasks/use-context-classes.md)
 - [migrate-to-hono-rpc](tasks/migrate-to-hono-rpc.md)
