@@ -1,7 +1,4 @@
 <script lang="ts">
-  import { Badge } from "$lib/components/ui/badge";
-  import { Button } from "$lib/components/ui/button";
-  import { Input } from "$lib/components/ui/input";
   import {
     completeToken,
     parseQuery,
@@ -12,6 +9,9 @@
   import { channels } from "$lib/stores/channels.svelte";
   import { members } from "$lib/stores/members.svelte";
   import { search } from "$lib/stores/search.svelte";
+  import { Badge } from "&/badge";
+  import { Button } from "&/button";
+  import { Input } from "&/input";
   import { ChannelType } from "@ccchat/shared";
   import AtSignIcon from "@lucide/svelte/icons/at-sign";
   import HashIcon from "@lucide/svelte/icons/hash";

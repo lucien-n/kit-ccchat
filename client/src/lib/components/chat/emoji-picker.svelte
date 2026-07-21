@@ -1,8 +1,4 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
-  import { Input } from "$lib/components/ui/input";
-  import * as Popover from "$lib/components/ui/popover";
-  import { ScrollArea } from "$lib/components/ui/scroll-area";
   import {
     emojiLabel,
     loadEmoji,
@@ -10,6 +6,10 @@
     type EmojiEntry,
     type EmojiIndex,
   } from "$lib/emoji";
+  import { Button } from "&/button";
+  import { Input } from "&/input";
+  import * as Popover from "&/popover";
+  import { ScrollArea } from "&/scroll-area";
   import { Smile } from "@lucide/svelte";
 
   let {

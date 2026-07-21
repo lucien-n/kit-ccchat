@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
   import { community } from "$lib/stores/community.svelte";
   import { realtime } from "$lib/stores/realtime.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { ui } from "$lib/stores/ui.svelte";
   import { cn } from "$lib/utils";
+  import { Button } from "&/button";
   import SettingsIcon from "@lucide/svelte/icons/settings";
 </script>
 

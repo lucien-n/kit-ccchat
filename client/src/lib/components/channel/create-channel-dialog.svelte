@@ -1,13 +1,13 @@
 <script lang="ts">
   import { api } from "$lib/api";
   import * as app from "$lib/app";
-  import { Button } from "$lib/components/ui/button";
-  import * as Dialog from "$lib/components/ui/dialog";
-  import * as Form from "$lib/components/ui/form";
-  import { Input } from "$lib/components/ui/input";
   import { apiErrorMessage, fail } from "$lib/forms";
   import { channels } from "$lib/stores/channels.svelte";
   import { cn } from "$lib/utils";
+  import { Button } from "&/button";
+  import * as Dialog from "&/dialog";
+  import * as Form from "&/form";
+  import { Input } from "&/input";
   import { ChannelType, channelNameKey, createChannelBody } from "@ccchat/shared";
   import { Hash, Volume2 } from "@lucide/svelte";
   import { defaults, setMessage, superForm } from "sveltekit-superforms";

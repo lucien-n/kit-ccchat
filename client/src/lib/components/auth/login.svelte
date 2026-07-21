@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
-  import * as Card from "$lib/components/ui/card";
   import { clearInviteFromUrl, readInviteFromUrl } from "$lib/invite";
   import { community } from "$lib/stores/community.svelte";
+  import { Button } from "&/button";
+  import * as Card from "&/card";
   import { onMount } from "svelte";
   import LoginForm from "./login-form.svelte";
   import RegisterForm from "./register-form.svelte";

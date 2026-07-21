@@ -1,9 +1,9 @@
 <script lang="ts">
   import { login } from "$lib/app";
-  import * as Card from "$lib/components/ui/card";
-  import * as Form from "$lib/components/ui/form";
-  import { Input } from "$lib/components/ui/input";
   import { apiErrorMessage, fail, toastMessage } from "$lib/forms";
+  import * as Card from "&/card";
+  import * as Form from "&/form";
+  import { Input } from "&/input";
   import { loginBody } from "@ccchat/shared";
   import { defaults, setMessage, superForm } from "sveltekit-superforms";
   import { zod4, zod4Client } from "sveltekit-superforms/adapters";

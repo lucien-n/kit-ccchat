@@ -3,13 +3,13 @@
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { UserCard } from "$lib/components/common/user-card";
   import Markdown from "$lib/components/markdown/markdown.svelte";
-  import { Button } from "$lib/components/ui/button";
-  import { Textarea } from "$lib/components/ui/textarea";
   import { getChatContext } from "$lib/context/chat.svelte";
   import { apiErrorMessage } from "$lib/forms";
   import { messages } from "$lib/stores/messages.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { cn } from "$lib/utils";
+  import { Button } from "&/button";
+  import { Textarea } from "&/textarea";
   import { MESSAGE_MAX_LENGTH, SystemEvent } from "@ccchat/shared";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import ReplyIcon from "@lucide/svelte/icons/reply";

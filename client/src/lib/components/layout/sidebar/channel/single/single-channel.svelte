@@ -1,14 +1,14 @@
 <script lang="ts">
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { UserCard } from "$lib/components/common/user-card";
-  import { Badge } from "$lib/components/ui/badge";
-  import { Button } from "$lib/components/ui/button";
   import { setChannelContext } from "$lib/context/channel.svelte";
   import { channels } from "$lib/stores/channels.svelte";
   import { presence } from "$lib/stores/presence.svelte";
   import { unread } from "$lib/stores/unread.svelte";
   import { voice } from "$lib/stores/voice.svelte";
   import { cn } from "$lib/utils";
+  import { Badge } from "&/badge";
+  import { Button } from "&/button";
   import { ChannelType, type Channel } from "@ccchat/shared";
   import { CHANNEL_TYPE_ICON } from "../helpers";
   import ChannelContextMenu from "./channel-context-menu.svelte";

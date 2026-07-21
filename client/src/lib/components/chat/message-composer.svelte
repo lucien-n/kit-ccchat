@@ -1,8 +1,6 @@
 <script lang="ts">
   import type { MessageView } from "$lib/api";
   import Markdown from "$lib/components/markdown/markdown.svelte";
-  import { Button } from "$lib/components/ui/button";
-  import { Textarea } from "$lib/components/ui/textarea";
   import {
     emojiLabel,
     loadEmoji,
@@ -11,6 +9,8 @@
     type EmojiEntry,
     type EmojiIndex,
   } from "$lib/emoji";
+  import { Button } from "&/button";
+  import { Textarea } from "&/textarea";
   import { MESSAGE_MAX_LENGTH } from "@ccchat/shared";
   import { Eye, EyeOff, Reply, Send, X } from "@lucide/svelte";
   import { tick } from "svelte";

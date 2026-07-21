@@ -1,10 +1,10 @@
 <script lang="ts">
   import { api } from "$lib/api";
   import CommunityIconPicker from "$lib/components/community/community-icon-picker.svelte";
-  import { community } from "$lib/stores/community.svelte";
-  import * as Form from "$lib/components/ui/form";
-  import { Input } from "$lib/components/ui/input";
   import { apiErrorMessage, fail, ok, toastMessage } from "$lib/forms";
+  import { community } from "$lib/stores/community.svelte";
+  import * as Form from "&/form";
+  import { Input } from "&/input";
   import { renameCommunityBody } from "@ccchat/shared";
   import { defaults, setMessage, superForm } from "sveltekit-superforms";
   import { zod4, zod4Client } from "sveltekit-superforms/adapters";

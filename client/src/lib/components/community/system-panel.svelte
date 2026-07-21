@@ -1,8 +1,8 @@
 <script lang="ts">
   import { api, type SystemStats } from "$lib/api";
-  import { apiErrorMessage } from "$lib/forms";
   import { formatBytes, formatDuration } from "$lib/format";
-  import { Progress } from "$lib/components/ui/progress";
+  import { apiErrorMessage } from "$lib/forms";
+  import { Progress } from "&/progress";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
   import Sparkline from "./sparkline.svelte";

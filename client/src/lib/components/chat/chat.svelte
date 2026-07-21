@@ -5,10 +5,6 @@
   import SearchSidebar from "$lib/components/layout/search-sidebar.svelte";
   import Sidebar from "$lib/components/layout/sidebar";
   import Settings from "$lib/components/settings/settings.svelte";
-  import { Button } from "$lib/components/ui/button";
-  import * as Resizable from "$lib/components/ui/resizable";
-  import { ScrollArea } from "$lib/components/ui/scroll-area";
-  import * as Sheet from "$lib/components/ui/sheet";
   import VoiceBar from "$lib/components/voice/voice-bar.svelte";
   import { setChatContext } from "$lib/context/chat.svelte";
   import { setBaseTitle, setTitleBadge } from "$lib/notify";
@@ -21,15 +17,19 @@
   import { ui } from "$lib/stores/ui.svelte";
   import { unread } from "$lib/stores/unread.svelte";
   import { voice } from "$lib/stores/voice.svelte";
+  import { Button } from "&/button";
+  import * as Resizable from "&/resizable";
+  import { ScrollArea } from "&/scroll-area";
+  import * as Sheet from "&/sheet";
   import { ChannelType } from "@ccchat/shared";
   import { Bell, BellOff, Hash, Menu, Users } from "@lucide/svelte";
   import ArrowDownIcon from "@lucide/svelte/icons/arrow-down";
   import SearchIcon from "@lucide/svelte/icons/search";
   import { tick } from "svelte";
   import { toast } from "svelte-sonner";
-  import Message from "./message.svelte";
   import MessageComposer from "./message-composer.svelte";
   import MessageSkeleton from "./message-skeleton.svelte";
+  import Message from "./message.svelte";
 
   const desktopNow =
     typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;

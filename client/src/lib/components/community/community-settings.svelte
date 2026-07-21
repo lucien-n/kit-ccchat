@@ -1,9 +1,9 @@
 <script lang="ts">
   import InvitesPanel from "$lib/components/members/invites-panel.svelte";
   import ModerationList from "$lib/components/members/moderation-list.svelte";
-  import * as Dialog from "$lib/components/ui/dialog";
-  import * as Tabs from "$lib/components/ui/tabs";
   import { session } from "$lib/stores/session.svelte";
+  import * as Dialog from "&/dialog";
+  import * as Tabs from "&/tabs";
   import type { Component } from "svelte";
   import RolesPanel from "../members/roles-panel.svelte";
   import GeneralSettings from "./general-settings.svelte";

@@ -1,12 +1,12 @@
 <script lang="ts">
   import { setup } from "$lib/app";
-  import { community } from "$lib/stores/community.svelte";
-  import { Button } from "$lib/components/ui/button";
-  import * as Card from "$lib/components/ui/card";
-  import * as Form from "$lib/components/ui/form";
-  import { Input } from "$lib/components/ui/input";
   import { apiErrorMessage, fail, toastMessage } from "$lib/forms";
   import { inviteLink } from "$lib/invite";
+  import { community } from "$lib/stores/community.svelte";
+  import { Button } from "&/button";
+  import * as Card from "&/card";
+  import * as Form from "&/form";
+  import { Input } from "&/input";
   import { setupBody } from "@ccchat/shared";
   import { Check, Copy } from "@lucide/svelte";
   import { defaults, setMessage, superForm } from "sveltekit-superforms";

@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
-  import { Label } from "$lib/components/ui/label";
-  import { Switch } from "$lib/components/ui/switch";
   import { appearance, type ThemeMode } from "$lib/stores/appearance.svelte";
+  import { Button } from "&/button";
+  import { Label } from "&/label";
+  import { Switch } from "&/switch";
   import { Monitor, Moon, Sun } from "@lucide/svelte";
 
   const modes: { value: ThemeMode; label: string; icon: typeof Sun }[] = [

@@ -1,16 +1,16 @@
 <script lang="ts">
   import { ModAction } from "$lib/api";
   import MemberIdentity from "$lib/components/common/member-identity.svelte";
-  import { Badge } from "$lib/components/ui/badge";
-  import { Button } from "$lib/components/ui/button";
-  import { Checkbox } from "$lib/components/ui/checkbox";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
   import { apiErrorMessage } from "$lib/forms";
   import { byRank, isMuted } from "$lib/members";
   import { members } from "$lib/stores/members.svelte";
   import { presence } from "$lib/stores/presence.svelte";
   import { session } from "$lib/stores/session.svelte";
+  import { Badge } from "&/badge";
+  import { Button } from "&/button";
+  import { Checkbox } from "&/checkbox";
+  import { Input } from "&/input";
+  import { Label } from "&/label";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
 

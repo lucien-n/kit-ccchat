@@ -1,14 +1,14 @@
 <script lang="ts">
   import { api, type Invite } from "$lib/api";
-  import { Badge } from "$lib/components/ui/badge";
-  import { Button } from "$lib/components/ui/button";
-  import { Label } from "$lib/components/ui/label";
+  import { apiErrorMessage } from "$lib/forms";
   import { inviteLink } from "$lib/invite";
   import { cn } from "$lib/utils";
+  import { Badge } from "&/badge";
+  import { Button } from "&/button";
+  import { Label } from "&/label";
   import { Check, Copy, Link2, Trash2 } from "@lucide/svelte";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
-  import { apiErrorMessage } from "$lib/forms";
 
   let invites = $state<Invite[]>([]);
   let busy = $state(false);

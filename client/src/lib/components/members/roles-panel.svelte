@@ -1,17 +1,17 @@
 <script lang="ts">
   import { api, type ModeratedMember, type Role } from "$lib/api";
-  import { Select } from "$lib/components/common/select";
   import MemberIdentity from "$lib/components/common/member-identity.svelte";
-  import { Button } from "$lib/components/ui/button";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
-  import { ScrollArea } from "$lib/components/ui/scroll-area";
+  import { Select } from "$lib/components/common/select";
   import { apiErrorMessage } from "$lib/forms";
   import { permissionSpecs } from "$lib/specs";
   import { members } from "$lib/stores/members.svelte";
   import { roles as rolesStore } from "$lib/stores/roles.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { cn } from "$lib/utils";
+  import { Button } from "&/button";
+  import { Input } from "&/input";
+  import { Label } from "&/label";
+  import { ScrollArea } from "&/scroll-area";
   import { Permission } from "@ccchat/shared";
   import CheckIcon from "@lucide/svelte/icons/check";
   import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";

@@ -1,17 +1,17 @@
 <script lang="ts">
   import MessageSkeleton from "$lib/components/chat/message-skeleton.svelte";
-  import { Button } from "$lib/components/ui/button";
-  import * as Empty from "$lib/components/ui/empty";
-  import { ScrollArea } from "$lib/components/ui/scroll-area";
-  import * as ToggleGroup from "$lib/components/ui/toggle-group";
   import { getChatContext } from "$lib/context/chat.svelte";
   import { parseQuery } from "$lib/search-query";
   import { channels } from "$lib/stores/channels.svelte";
   import { members } from "$lib/stores/members.svelte";
   import { search } from "$lib/stores/search.svelte";
+  import { Button } from "&/button";
+  import * as Empty from "&/empty";
+  import { ScrollArea } from "&/scroll-area";
+  import * as ToggleGroup from "&/toggle-group";
   import { SearchSort } from "@ccchat/shared";
-  import SearchXIcon from "@lucide/svelte/icons/search-x";
   import SearchIcon from "@lucide/svelte/icons/search";
+  import SearchXIcon from "@lucide/svelte/icons/search-x";
   import SearchInput from "./search-input.svelte";
   import SearchResult from "./search-result.svelte";
 

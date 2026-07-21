@@ -1,8 +1,8 @@
 <script lang="ts">
   import { ModAction } from "$lib/api";
-  import * as AlertDialog from "$lib/components/ui/alert-dialog";
-  import * as ContextMenu from "$lib/components/ui/context-menu";
   import { getUserContext } from "$lib/context/user.svelte";
+  import * as AlertDialog from "&/alert-dialog";
+  import * as ContextMenu from "&/context-menu";
   import BanIcon from "@lucide/svelte/icons/ban";
   import CopyIcon from "@lucide/svelte/icons/copy";
   import LogOutIcon from "@lucide/svelte/icons/log-out";

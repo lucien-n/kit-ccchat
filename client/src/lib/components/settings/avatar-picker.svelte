@@ -1,10 +1,10 @@
 <script lang="ts">
   import { api } from "$lib/api";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
-  import { Button } from "$lib/components/ui/button";
   import { apiErrorMessage } from "$lib/forms";
   import { resizeImage } from "$lib/image";
   import { session } from "$lib/stores/session.svelte";
+  import { Button } from "&/button";
   import { Trash2, Upload } from "@lucide/svelte";
   import { toast } from "svelte-sonner";
 

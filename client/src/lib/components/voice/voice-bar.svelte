@@ -1,6 +1,6 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
   import { voice } from "$lib/stores/voice.svelte";
+  import { Button } from "&/button";
   import { Mic, MicOff, PhoneOff, Volume2 } from "@lucide/svelte";
 </script>
 

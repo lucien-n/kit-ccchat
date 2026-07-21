@@ -1,16 +1,16 @@
 <script lang="ts">
   import * as app from "$lib/app";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
-  import { Button } from "$lib/components/ui/button";
   import VoiceBar from "$lib/components/voice/voice-bar.svelte";
   import { channels } from "$lib/stores/channels.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { ui } from "$lib/stores/ui.svelte";
   import { voice } from "$lib/stores/voice.svelte";
+  import { Button } from "&/button";
   import { ChannelType } from "@ccchat/shared";
   import { LogOut } from "@lucide/svelte";
-  import SidebarHeader from "./sidebar-header.svelte";
   import { ChannelCategoryHeader, SingleChannel } from "./channel";
+  import SidebarHeader from "./sidebar-header.svelte";
 
   interface Props {
     withVoice?: boolean;

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import * as ContextMenu from "$lib/components/ui/context-menu";
   import { getChannelContext } from "$lib/context/channel.svelte";
+  import * as ContextMenu from "&/context-menu";
   import TrashIcon from "@lucide/svelte/icons/trash";
   import type { Snippet } from "svelte";
   import ConfirmChannelDeletionDialog from "./dialogs/confirm-channel-deletion-dialog.svelte";

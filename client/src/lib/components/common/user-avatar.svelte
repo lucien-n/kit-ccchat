@@ -1,7 +1,7 @@
 <script lang="ts">
   import { avatarUrl } from "$lib/api";
-  import * as Avatar from "$lib/components/ui/avatar";
   import { cn, getInitials } from "$lib/utils";
+  import * as Avatar from "&/avatar";
   import type { Member } from "@ccchat/shared";
   import PresenceDot from "./presence-dot.svelte";
 

@@ -1,6 +1,6 @@
 <script lang="ts">
-  import * as Dialog from "$lib/components/ui/dialog";
-  import * as Tabs from "$lib/components/ui/tabs";
+  import * as Dialog from "&/dialog";
+  import * as Tabs from "&/tabs";
   import AppearanceTab from "./appearance-tab.svelte";
   import ProfileTab from "./profile-tab.svelte";
 

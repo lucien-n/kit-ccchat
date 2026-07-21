@@ -1,6 +1,6 @@
 <script lang="ts" generics="OptionValue extends SelectOptionValue">
-  import * as Select from "$lib/components/ui/select";
   import type { WithoutChild } from "$lib/utils";
+  import * as Select from "&/select";
   import { Select as SelectPrimitive } from "bits-ui";
   import type { SelectOption, SelectOptionValue } from "./types";
 

@@ -1,9 +1,9 @@
 <script lang="ts">
   import MembersPanel from "$lib/components/members/members-panel.svelte";
-  import { Button } from "$lib/components/ui/button";
-  import * as Resizable from "$lib/components/ui/resizable";
-  import * as Sheet from "$lib/components/ui/sheet";
   import { getChatContext } from "$lib/context/chat.svelte";
+  import { Button } from "&/button";
+  import * as Resizable from "&/resizable";
+  import * as Sheet from "&/sheet";
   import { X } from "@lucide/svelte";
 
   const chat = getChatContext();

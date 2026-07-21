@@ -1,6 +1,6 @@
 <script lang="ts">
-  import * as AlertDialog from "$lib/components/ui/alert-dialog";
   import { getChannelContext } from "$lib/context/channel.svelte";
+  import * as AlertDialog from "&/alert-dialog";
 
   const ctx = getChannelContext();
 </script>

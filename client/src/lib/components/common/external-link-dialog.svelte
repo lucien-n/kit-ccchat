@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { Button } from "$lib/components/ui/button";
-  import * as Dialog from "$lib/components/ui/dialog";
   import { externalLink } from "$lib/stores/externalLink.svelte";
+  import { Button } from "&/button";
+  import * as Dialog from "&/dialog";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";
 
   const url = $derived(externalLink.url);

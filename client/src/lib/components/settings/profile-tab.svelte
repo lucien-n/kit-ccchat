@@ -1,10 +1,10 @@
 <script lang="ts">
   import { api } from "$lib/api";
-  import { session } from "$lib/stores/session.svelte";
-  import * as Form from "$lib/components/ui/form";
-  import { Input } from "$lib/components/ui/input";
-  import { Label } from "$lib/components/ui/label";
   import { apiErrorMessage, fail, ok, toastMessage } from "$lib/forms";
+  import { session } from "$lib/stores/session.svelte";
+  import * as Form from "&/form";
+  import { Input } from "&/input";
+  import { Label } from "&/label";
   import { changePasswordBody, updateProfileBody } from "@ccchat/shared";
   import { defaults, setError, setMessage, superForm } from "sveltekit-superforms";
   import { zod4, zod4Client } from "sveltekit-superforms/adapters";

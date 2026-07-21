@@ -1,11 +1,11 @@
 <script lang="ts">
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
-  import * as Popover from "$lib/components/ui/popover";
-  import { ScrollArea } from "$lib/components/ui/scroll-area";
   import { setUserContext } from "$lib/context/user.svelte";
   import { presence } from "$lib/stores/presence.svelte";
   import { roles as rolesStore } from "$lib/stores/roles.svelte";
   import { cn } from "$lib/utils";
+  import * as Popover from "&/popover";
+  import { ScrollArea } from "&/scroll-area";
   import CheckIcon from "@lucide/svelte/icons/check";
   import type { Snippet } from "svelte";
   import UserCardActions from "./user-card-actions.svelte";

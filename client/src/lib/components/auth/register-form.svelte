@@ -1,9 +1,9 @@
 <script lang="ts">
   import { register } from "$lib/app";
-  import * as Card from "$lib/components/ui/card";
-  import * as Form from "$lib/components/ui/form";
-  import { Input } from "$lib/components/ui/input";
   import { apiErrorMessage, fail, toastMessage } from "$lib/forms";
+  import * as Card from "&/card";
+  import * as Form from "&/form";
+  import { Input } from "&/input";
   import { registerBody } from "@ccchat/shared";
   import { untrack } from "svelte";
   import { defaults, setError, setMessage, superForm } from "sveltekit-superforms";
