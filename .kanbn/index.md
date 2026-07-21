@@ -1,6 +1,6 @@
 ---
 startedColumns:
-  - "In Progress"
+  - 'In Progress'
 completedColumns:
   - Done
 ---
@@ -18,11 +18,10 @@ completedColumns:
 
 ## In Progress
 
-- [migrate-to-hono-rpc](tasks/migrate-to-hono-rpc.md)
-
 ## Done
 
 - [backend-routes-restructure](tasks/backend-routes-restructure.md)
+- [migrate-to-hono-rpc](tasks/migrate-to-hono-rpc.md)
 - [delete-channels](tasks/delete-channels.md)
 - [prevent-duplicate-channel-name](tasks/prevent-duplicate-channel-name.md)
 - [search-messages-in-every-specific-channels](tasks/search-messages-in-every-specific-channels.md)
