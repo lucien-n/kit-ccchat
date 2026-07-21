@@ -5,6 +5,7 @@
   import Markdown from "$lib/components/markdown/Markdown.svelte";
   import { Button } from "$lib/components/ui/button";
   import { Textarea } from "$lib/components/ui/textarea";
+  import { getChatContext } from "$lib/context/chat.svelte";
   import { apiErrorMessage } from "$lib/forms";
   import { messages } from "$lib/stores/messages.svelte";
   import { session } from "$lib/stores/session.svelte";
@@ -19,11 +20,10 @@
 
   interface Props {
     message: MessageView;
-    flashId: string | null;
-    onJumpTo: (messageId: string) => void;
-    onStartReply: () => void;
   }
-  const { message, flashId, onJumpTo, onStartReply }: Props = $props();
+  const { message }: Props = $props();
+
+  const chat = getChatContext();
 
   const isMine = $derived(message.author?.id === session.user?.id);
   const canDelete = $derived(session.isAdmin || isMine);
@@ -89,7 +89,7 @@
 {:else}
   <div
     id="msg-{message.id}"
-    class="group hover:bg-muted/40 relative flex gap-3 rounded-md px-2 py-1 transition-colors duration-700 {flashId ===
+    class="group hover:bg-muted/40 relative flex gap-3 rounded-md px-2 py-1 transition-colors duration-700 {chat.flashId ===
     message.id
       ? 'bg-primary/15'
       : ''}"
@@ -120,7 +120,7 @@
           <button
             type="button"
             class="text-muted-foreground hover:text-foreground flex w-full min-w-0 items-center gap-1.5 text-left text-xs"
-            onclick={() => onJumpTo(reply.id)}
+            onclick={() => chat.jumpTo(reply.id)}
           >
             <ReplyIcon class="size-3 shrink-0" />
             <UserAvatar
@@ -189,7 +189,7 @@
         size="icon"
         class="size-7"
         title="Reply"
-        onclick={onStartReply}
+        onclick={() => chat.startReply(message)}
       >
         <ReplyIcon class="size-4" />
       </Button>

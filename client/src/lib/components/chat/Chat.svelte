@@ -1,6 +1,4 @@
 <script lang="ts">
-  import { type MessageView } from "$lib/api";
-  import { jumpToPresent, openMessage } from "$lib/app";
   import CreateChannelDialog from "$lib/components/channel/CreateChannelDialog.svelte";
   import CommunitySettings from "$lib/components/community/CommunitySettings.svelte";
   import MembersSidebar from "$lib/components/layout/MembersSidebar.svelte";
@@ -12,6 +10,7 @@
   import { ScrollArea } from "$lib/components/ui/scroll-area";
   import * as Sheet from "$lib/components/ui/sheet";
   import VoiceBar from "$lib/components/voice/VoiceBar.svelte";
+  import { setChatContext } from "$lib/context/chat.svelte";
   import { setBaseTitle, setTitleBadge } from "$lib/notify";
   import { channels } from "$lib/stores/channels.svelte";
   import { community } from "$lib/stores/community.svelte";
@@ -34,39 +33,32 @@
 
   const desktopNow =
     typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
-  let isDesktop = $state(desktopNow);
+
+  const chat = setChatContext(desktopNow, desktopNow && prefs.membersPanel);
+
   $effect(() => {
     const mq = window.matchMedia("(min-width: 640px)");
-    const update = () => (isDesktop = mq.matches);
+    const update = () => (chat.isDesktop = mq.matches);
     update();
     mq.addEventListener("change", update);
     return () => mq.removeEventListener("change", update);
   });
 
-  let showMembers = $state(desktopNow && prefs.membersPanel);
-
   $effect(() => {
-    if (isDesktop) prefs.setMembersPanel(showMembers);
+    if (chat.isDesktop) prefs.setMembersPanel(chat.showMembers);
   });
 
   let scroller: HTMLElement | null = $state(null);
-  let composer = $state<MessageComposer | null>(null);
-  let replyTo = $state<MessageView | null>(null);
-  let flashId = $state<string | null>(null);
-  let flashTimer: ReturnType<typeof setTimeout>;
-  // Whether the view is pinned to the newest message. False once the reader
-  // scrolls up, so incoming messages and paging don't yank them back down.
-  let stick = $state(true);
 
   $effect(() => {
     void messages.list.length;
-    if (scroller && stick) scroller.scrollTop = scroller.scrollHeight;
+    if (scroller && chat.stick) scroller.scrollTop = scroller.scrollHeight;
   });
 
   const onScroll = () => {
     if (!scroller) return;
     const fromBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
-    stick = !messages.hasMoreAfter && fromBottom < 80;
+    chat.stick = !messages.hasMoreAfter && fromBottom < 80;
     if (scroller.scrollTop < 150) void loadOlder();
     if (fromBottom < 150) void messages.loadNewer();
   };
@@ -92,12 +84,10 @@
     holdReadersSpot();
   }
 
-  // A draft reply belongs to the channel it was started in; a new channel opens
-  // pinned to its newest message.
   $effect(() => {
     void channels.currentId;
-    replyTo = null;
-    stick = true;
+    chat.replyTo = null;
+    chat.stick = true;
   });
 
   $effect(() => {
@@ -112,68 +102,6 @@
     toast.error(voice.error);
     voice.error = "";
   });
-
-  function sendDraft(text: string) {
-    const channelId = channels.currentId;
-    if (!channelId) return false;
-    // Keep the draft if the socket is down rather than clear it for a message
-    // that went nowhere.
-    if (!messages.send(channelId, text, replyTo?.id)) {
-      toast.error("Not connected, your message wasn't sent.");
-      return false;
-    }
-    replyTo = null;
-    return true;
-  }
-
-  function handleStartReply(message: MessageView) {
-    replyTo = message;
-    composer?.focus();
-  }
-
-  function flash(id: string) {
-    flashId = id;
-    clearTimeout(flashTimer);
-    flashTimer = setTimeout(() => (flashId = null), 1400);
-  }
-
-  function scrollToMessage(id: string): boolean {
-    const el = document.getElementById(`msg-${id}`);
-    if (!el) return false;
-    el.scrollIntoView({ block: "center", behavior: "smooth" });
-    flash(id);
-    return true;
-  }
-
-  /** Anything already rendered is just a scroll; anything older means refetching
-   *  the channel around it, which also resets `stick` so the view stays put. */
-  async function handleJumpTo(id: string) {
-    if (scrollToMessage(id)) return;
-    const channelId = channels.currentId;
-    if (!channelId) return;
-    stick = false;
-    await openMessage(channelId, id);
-    await tick();
-    if (!scrollToMessage(id)) toast.info("That message is no longer available.");
-  }
-
-  async function handleSearchJump(channelId: string, messageId: string) {
-    stick = false;
-    await openMessage(channelId, messageId);
-    await tick();
-    if (!scrollToMessage(messageId)) toast.info("That message is no longer available.");
-    if (!isDesktop) search.open = false;
-  }
-
-  async function backToPresent() {
-    stick = true;
-    await jumpToPresent();
-  }
-
-  function toggleSearch() {
-    search.open = !search.open;
-    if (search.open && isDesktop) showMembers = false;
-  }
 </script>
 
 {#snippet mainView()}
@@ -216,15 +144,15 @@
           variant={search.open ? "secondary" : "outline"}
           size="icon"
           title="Search messages"
-          onclick={toggleSearch}
+          onclick={() => chat.toggleSearch()}
         >
           <SearchIcon class="size-4" />
         </Button>
         <Button
-          variant={showMembers ? "secondary" : "outline"}
+          variant={chat.showMembers ? "secondary" : "outline"}
           size="icon"
           title="Members"
-          onclick={() => (showMembers = !showMembers)}
+          onclick={() => (chat.showMembers = !chat.showMembers)}
         >
           <Users class="size-4" />
         </Button>
@@ -242,12 +170,7 @@
             <MessageSkeleton />
           {/if}
           {#each messages.list as message (message.id)}
-            <Message
-              {message}
-              {flashId}
-              onJumpTo={handleJumpTo}
-              onStartReply={() => handleStartReply(message)}
-            />
+            <Message {message} />
           {/each}
         {/if}
       </div>
@@ -255,7 +178,7 @@
 
     {#if messages.hasMoreAfter}
       <div class="flex justify-center border-t px-2 py-1.5">
-        <Button variant="secondary" size="sm" onclick={backToPresent}>
+        <Button variant="secondary" size="sm" onclick={() => chat.backToPresent()}>
           <ArrowDownIcon data-icon="inline-start" />
           Jump to present
         </Button>
@@ -269,17 +192,17 @@
     {/if}
 
     <MessageComposer
-      bind:this={composer}
+      bind:this={chat.composer}
       placeholder={`Message #${channels.current?.name ?? ""}`}
       disabled={channels.current?.type !== ChannelType.Text}
-      onsend={sendDraft}
-      replyingTo={replyTo}
-      oncancelreply={() => (replyTo = null)}
+      onsend={(text) => chat.send(text)}
+      replyingTo={chat.replyTo}
+      oncancelreply={() => (chat.replyTo = null)}
     />
   </main>
 {/snippet}
 
-{#if isDesktop}
+{#if chat.isDesktop}
   <div class="h-dvh">
     <Resizable.PaneGroup direction="horizontal" autoSaveId="app-layout">
       <Resizable.Pane
@@ -297,8 +220,8 @@
         {@render mainView()}
       </Resizable.Pane>
 
-      <MembersSidebar bind:open={showMembers} isDesktop />
-      <SearchSidebar isDesktop onJump={handleSearchJump} />
+      <MembersSidebar />
+      <SearchSidebar />
     </Resizable.PaneGroup>
   </div>
 {:else}
@@ -315,8 +238,8 @@
     </Sheet.Content>
   </Sheet.Root>
 
-  <MembersSidebar bind:open={showMembers} />
-  <SearchSidebar onJump={handleSearchJump} />
+  <MembersSidebar />
+  <SearchSidebar />
 {/if}
 
 <CommunitySettings bind:open={ui.communitySettings} />

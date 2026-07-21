@@ -3,18 +3,14 @@
   import { Button } from "$lib/components/ui/button";
   import * as Resizable from "$lib/components/ui/resizable";
   import * as Sheet from "$lib/components/ui/sheet";
+  import { getChatContext } from "$lib/context/chat.svelte";
   import { X } from "@lucide/svelte";
 
-  interface Props {
-    open?: boolean;
-    isDesktop?: boolean;
-  }
-
-  let { open = $bindable(false), isDesktop = false }: Props = $props();
+  const chat = getChatContext();
 </script>
 
-{#if isDesktop}
-  {#if open}
+{#if chat.isDesktop}
+  {#if chat.showMembers}
     <Resizable.Handle />
 
     <Resizable.Pane
@@ -29,7 +25,7 @@
           variant="ghost"
           size="icon"
           title="Close members"
-          onclick={() => (open = false)}
+          onclick={() => (chat.showMembers = false)}
         >
           <X class="size-4" />
         </Button>
@@ -38,7 +34,7 @@
     </Resizable.Pane>
   {/if}
 {:else}
-  <Sheet.Root bind:open>
+  <Sheet.Root bind:open={chat.showMembers}>
     <Sheet.Content side="right" class="flex w-80 flex-col gap-0 p-0 sm:max-w-sm">
       <Sheet.Header>
         <Sheet.Title>Members</Sheet.Title>

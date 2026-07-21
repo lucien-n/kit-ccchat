@@ -4,6 +4,7 @@
   import * as Empty from "$lib/components/ui/empty";
   import { ScrollArea } from "$lib/components/ui/scroll-area";
   import * as ToggleGroup from "$lib/components/ui/toggle-group";
+  import { getChatContext } from "$lib/context/chat.svelte";
   import { parseQuery } from "$lib/search-query";
   import { channels } from "$lib/stores/channels.svelte";
   import { members } from "$lib/stores/members.svelte";
@@ -14,10 +15,7 @@
   import SearchInput from "./SearchInput.svelte";
   import SearchResult from "./SearchResult.svelte";
 
-  interface Props {
-    onJump: (channelId: string, messageId: string) => void;
-  }
-  const { onJump }: Props = $props();
+  const chat = getChatContext();
 
   const parsed = $derived(parseQuery(search.raw));
 
@@ -120,7 +118,7 @@
         {#each search.hits as hit (hit.message.id)}
           <SearchResult
             {hit}
-            onJump={() => onJump(hit.message.channelId, hit.message.id)}
+            onJump={() => chat.jumpToHit(hit.message.channelId, hit.message.id)}
           />
         {/each}
         {#if search.hasMore}

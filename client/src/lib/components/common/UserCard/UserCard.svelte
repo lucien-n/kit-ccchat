@@ -1,17 +1,13 @@
 <script lang="ts">
-  import { api, type Member, type Role } from "$lib/api";
   import UserAvatar from "$lib/components/common/UserAvatar.svelte";
   import * as Popover from "$lib/components/ui/popover";
   import { ScrollArea } from "$lib/components/ui/scroll-area";
-  import { apiErrorMessage } from "$lib/forms";
-  import { members } from "$lib/stores/members.svelte";
+  import { setUserContext } from "$lib/context/user.svelte";
   import { presence } from "$lib/stores/presence.svelte";
   import { roles as rolesStore } from "$lib/stores/roles.svelte";
-  import { session } from "$lib/stores/session.svelte";
   import { cn } from "$lib/utils";
   import CheckIcon from "@lucide/svelte/icons/check";
   import type { Snippet } from "svelte";
-  import { toast } from "svelte-sonner";
   import UserCardActions from "./UserCardActions.svelte";
 
   interface Props {
@@ -19,61 +15,25 @@
     children: Snippet;
     class?: string;
   }
-  let { userId, children, class: className }: Props = $props();
+  const { userId, children, class: className }: Props = $props();
 
-  let open = $state(false);
-  let user = $state<Member | null>(null);
-  let assigned = $state<Role[]>([]);
-  let busyId = $state<string | null>(null);
-
-  const assignedIds = $derived(new Set(assigned.map((r) => r.id)));
-  const canManage = $derived(
-    session.isAdmin && (session.isOwner || !user?.isOwner) && user !== null,
-  );
-  const permissionLabel = $derived(
-    user?.isOwner ? "owner" : user?.isAdmin ? "admin" : "member",
-  );
-
-  async function loadProfile() {
-    try {
-      const res = await api.users.profile(userId);
-      user = res.user;
-      assigned = res.roles;
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to load profile"));
-    }
-  }
+  const ctx = setUserContext(() => userId);
 
   $effect(() => {
-    if (!open) return;
-    loadProfile();
-    if (session.isAdmin) rolesStore.load();
+    if (!ctx.open) return;
+    ctx.loadProfile();
+    ctx.loadRoles();
   });
-
-  async function toggle(roleId: string) {
-    if (!user) return;
-    const next = assignedIds.has(roleId)
-      ? [...assignedIds].filter((id) => id !== roleId)
-      : [...assignedIds, roleId];
-    busyId = roleId;
-    try {
-      await members.setRoles(user.id, next);
-      await loadProfile();
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to update roles"));
-    } finally {
-      busyId = null;
-    }
-  }
 </script>
 
-<UserCardActions {userId}>
-  <Popover.Root bind:open>
+<UserCardActions>
+  <Popover.Root bind:open={ctx.open}>
     <Popover.Trigger class={cn("cursor-pointer text-left", className)}>
       {@render children()}
     </Popover.Trigger>
     <Popover.Content class="w-72 p-0" align="start">
-      {#if user}
+      {#if ctx.profile}
+        {@const user = ctx.profile}
         <div class="flex items-center gap-3 p-4">
           <div class="relative shrink-0">
             <UserAvatar {user} class="size-12" />
@@ -93,7 +53,7 @@
             </div>
             <div class="text-muted-foreground truncate text-xs">@{user.username}</div>
             <div class="text-muted-foreground text-[10px] uppercase">
-              {permissionLabel}
+              {ctx.permissionLabel}
             </div>
           </div>
         </div>
@@ -101,17 +61,17 @@
         <div class="border-t p-3">
           <div class="text-muted-foreground mb-2 text-xs font-medium">Roles</div>
 
-          {#if canManage}
+          {#if ctx.canManageRoles}
             {#if rolesStore.list.length}
               <ScrollArea class="max-h-52">
                 <div class="space-y-0.5 pr-2">
                   {#each rolesStore.list as role (role.id)}
-                    {@const on = assignedIds.has(role.id)}
+                    {@const on = ctx.assignedIds.has(role.id)}
                     <button
                       type="button"
                       class="hover:bg-muted flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm disabled:opacity-50"
-                      disabled={busyId !== null}
-                      onclick={() => toggle(role.id)}
+                      disabled={ctx.busyRoleId !== null}
+                      onclick={() => ctx.toggleRole(role.id)}
                     >
                       <span
                         class="size-3 shrink-0 rounded-full border"
@@ -133,9 +93,9 @@
                 No roles exist yet. Create some in Community settings.
               </p>
             {/if}
-          {:else if assigned.length}
+          {:else if ctx.assigned.length}
             <div class="flex flex-wrap gap-1">
-              {#each assigned as role (role.id)}
+              {#each ctx.assigned as role (role.id)}
                 <span
                   class="rounded-full border px-2 py-0.5 text-xs"
                   style={role.color

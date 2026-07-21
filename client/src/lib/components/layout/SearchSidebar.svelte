@@ -3,18 +3,14 @@
   import { Button } from "$lib/components/ui/button";
   import * as Resizable from "$lib/components/ui/resizable";
   import * as Sheet from "$lib/components/ui/sheet";
+  import { getChatContext } from "$lib/context/chat.svelte";
   import { search } from "$lib/stores/search.svelte";
   import { X } from "@lucide/svelte";
 
-  interface Props {
-    isDesktop?: boolean;
-    onJump: (channelId: string, messageId: string) => void;
-  }
-
-  const { isDesktop = false, onJump }: Props = $props();
+  const chat = getChatContext();
 </script>
 
-{#if isDesktop}
+{#if chat.isDesktop}
   {#if search.open}
     <Resizable.Handle />
 
@@ -35,7 +31,7 @@
           <X class="size-4" />
         </Button>
       </div>
-      <SearchPanel {onJump} />
+      <SearchPanel />
     </Resizable.Pane>
   {/if}
 {:else}
@@ -49,7 +45,7 @@
       <Sheet.Header>
         <Sheet.Title>Search</Sheet.Title>
       </Sheet.Header>
-      <SearchPanel {onJump} />
+      <SearchPanel />
     </Sheet.Content>
   </Sheet.Root>
 {/if}
