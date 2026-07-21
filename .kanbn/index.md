@@ -18,6 +18,8 @@ columnSorting:
 - [mobile-app](tasks/mobile-app.md)
 - [video-streaming](tasks/video-streaming.md)
 - [rework-emoji-picker-to-use-custom-emojis-not-the-system-os-ones](tasks/rework-emoji-picker-to-use-custom-emojis-not-the-system-os-ones.md)
+- [user-typing-indicators](tasks/user-typing-indicators.md)
+- [upload-images-files](tasks/upload-images-files.md)
 
 ## Todo
 
