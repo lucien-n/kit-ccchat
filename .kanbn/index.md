@@ -16,6 +16,8 @@ columnSorting:
 
 - [unify-channel-type-icons-and-labels](tasks/unify-channel-type-icons-and-labels.md)
 - [mobile-app](tasks/mobile-app.md)
+- [video-streaming](tasks/video-streaming.md)
+- [rework-emoji-picker-to-use-custom-emojis-not-the-system-os-ones](tasks/rework-emoji-picker-to-use-custom-emojis-not-the-system-os-ones.md)
 
 ## Todo
 
