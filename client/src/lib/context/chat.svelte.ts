@@ -1,11 +1,10 @@
-import { getContext, setContext } from "svelte";
-import { tick } from "svelte";
-import { toast } from "svelte-sonner";
 import type { MessageView } from "$lib/api";
 import { jumpToPresent, openMessage } from "$lib/app";
 import { channels } from "$lib/stores/channels.svelte";
 import { messages } from "$lib/stores/messages.svelte";
 import { search } from "$lib/stores/search.svelte";
+import { getContext, setContext, tick } from "svelte";
+import { toast } from "svelte-sonner";
 
 const KEY = Symbol("chat");
 
@@ -18,6 +17,7 @@ export class ChatContext {
   flashId = $state<string | null>(null);
   replyTo = $state<MessageView | null>(null);
   composer = $state<{ focus: () => void } | null>(null);
+  scroller = $state<HTMLElement | null>(null);
 
   #flashTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -30,6 +30,11 @@ export class ChatContext {
     this.flashId = id;
     clearTimeout(this.#flashTimer);
     this.#flashTimer = setTimeout(() => (this.flashId = null), FLASH_MS);
+  }
+
+  toBottom() {
+    const el = this.scroller;
+    if (el) el.scrollTop = el.scrollHeight;
   }
 
   scrollTo(id: string): boolean {
@@ -61,6 +66,8 @@ export class ChatContext {
   async backToPresent() {
     this.stick = true;
     await jumpToPresent();
+    await tick();
+    this.toBottom();
   }
 
   startReply(message: MessageView) {

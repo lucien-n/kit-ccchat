@@ -48,33 +48,33 @@
     if (chat.isDesktop) prefs.setMembersPanel(chat.showMembers);
   });
 
-  let scroller: HTMLElement | null = $state(null);
-
   $effect(() => {
     void messages.list.length;
-    if (scroller && chat.stick) scroller.scrollTop = scroller.scrollHeight;
+    if (chat.stick) chat.toBottom();
   });
 
   const onScroll = () => {
-    if (!scroller) return;
-    const fromBottom = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
+    const el = chat.scroller;
+    if (!el) return;
+    const fromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
     chat.stick = !messages.hasMoreAfter && fromBottom < 80;
-    if (scroller.scrollTop < 150) void loadOlder();
+    if (el.scrollTop < 150) void loadOlder();
     if (fromBottom < 150) void messages.loadNewer();
   };
 
   $effect(() => {
-    const el = scroller;
+    const el = chat.scroller;
     if (!el) return;
     el.addEventListener("scroll", onScroll, { passive: true });
     return () => el.removeEventListener("scroll", onScroll);
   });
 
   async function loadOlder() {
-    if (!scroller || messages.loadingOlder || !messages.hasMoreBefore) return;
-    const fromBottom = scroller.scrollHeight - scroller.scrollTop;
+    const el = chat.scroller;
+    if (!el || messages.loadingOlder || !messages.hasMoreBefore) return;
+    const fromBottom = el.scrollHeight - el.scrollTop;
     const holdReadersSpot = () => {
-      if (scroller) scroller.scrollTop = scroller.scrollHeight - fromBottom;
+      el.scrollTop = el.scrollHeight - fromBottom;
     };
     const page = messages.loadOlder();
     await tick();
@@ -159,7 +159,7 @@
       </div>
     </header>
 
-    <ScrollArea class="min-h-0 flex-1" bind:viewportRef={scroller}>
+    <ScrollArea class="min-h-0 flex-1" bind:viewportRef={chat.scroller}>
       <div class="flex flex-col gap-0.5 p-2 sm:p-4">
         {#if messages.loading}
           <MessageSkeleton count={6} />
