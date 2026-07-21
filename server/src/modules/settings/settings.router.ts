@@ -4,33 +4,29 @@ import { requireAuth, requireCan, type Env } from "../../auth.js";
 import { validate } from "../../validate.js";
 import * as settingsController from "./settings.controller.js";
 
-const router = new Hono<Env>();
-
 // Auth is per-route rather than on "*": the icon is served to <img> tags and to
 // the login screen's favicon, neither of which can present a token.
-router.get("/icon", settingsController.icon);
-
-router.patch(
-  "/",
-  requireAuth,
-  requireCan("manageCommunity"),
-  validate("json", renameCommunityBody),
-  settingsController.rename,
-);
-
-router.post(
-  "/icon",
-  requireAuth,
-  requireCan("manageCommunity"),
-  validate("json", communityIconBody),
-  settingsController.setIcon,
-);
-
-router.delete(
-  "/icon",
-  requireAuth,
-  requireCan("manageCommunity"),
-  settingsController.removeIcon,
-);
+const router = new Hono<Env>()
+  .get("/icon", settingsController.icon)
+  .patch(
+    "/",
+    requireAuth,
+    requireCan("manageCommunity"),
+    validate("json", renameCommunityBody),
+    settingsController.rename,
+  )
+  .post(
+    "/icon",
+    requireAuth,
+    requireCan("manageCommunity"),
+    validate("json", communityIconBody),
+    settingsController.setIcon,
+  )
+  .delete(
+    "/icon",
+    requireAuth,
+    requireCan("manageCommunity"),
+    settingsController.removeIcon,
+  );
 
 export default router;

@@ -1,5 +1,4 @@
 import { api } from "../api";
-import { session } from "./session.svelte";
 
 class Unread {
   counts = $state<Record<string, number>>({});
@@ -11,9 +10,8 @@ class Unread {
   }
 
   async load() {
-    if (!session.token) return;
     try {
-      this.counts = (await api.unreads(session.token)).unreads ?? {};
+      this.counts = (await api.channels.unreads()).unreads ?? {};
     } catch {
       /* leave badges empty if it fails */
     }
@@ -25,7 +23,7 @@ class Unread {
 
   async markRead(channelId: string) {
     this.counts[channelId] = 0;
-    if (session.token) await api.markRead(session.token, channelId).catch(() => {});
+    await api.channels.markRead(channelId).catch(() => {});
   }
 
   /** Used while actively reading a channel, so a burst of messages costs one

@@ -16,6 +16,7 @@ import { prefs } from "./stores/prefs.svelte";
 import { presence } from "./stores/presence.svelte";
 import { realtime } from "./stores/realtime.svelte";
 import { roles } from "./stores/roles.svelte";
+import { search } from "./stores/search.svelte";
 import { session } from "./stores/session.svelte";
 import { unread } from "./stores/unread.svelte";
 
@@ -48,7 +49,7 @@ export async function register(body: RegisterBody) {
 /** Returns the invite code to share. `needsSetup` stays true so the wizard can
  *  show that code; it clears when the owner dismisses the screen. */
 export async function setup(body: SetupBody): Promise<string> {
-  const { token, user, inviteCode, communityName } = await api.setup(body);
+  const { token, user, inviteCode, communityName } = await api.auth.setup(body);
   community.name = communityName;
   session.start(token, user);
   await afterLogin();
@@ -66,6 +67,22 @@ export async function selectChannel(id: string) {
   await messages.load(id);
 }
 
+/** Opens a channel centred on one message rather than on its newest, which is how
+ *  a search result and a reply quote are reached. Falls back to the newest page
+ *  when the target is gone. */
+export async function openMessage(channelId: string, messageId: string) {
+  channels.currentId = channelId;
+  void unread.markRead(channelId);
+  if (!(await messages.loadAround(channelId, messageId))) await messages.load(channelId);
+}
+
+export async function jumpToPresent() {
+  const id = channels.currentId;
+  if (!id) return;
+  await messages.jumpToPresent();
+  void unread.markRead(id);
+}
+
 export async function logout() {
   realtime.stop();
   unread.clear();
@@ -74,6 +91,7 @@ export async function logout() {
   presence.clear();
   members.clear();
   roles.clear();
+  search.close();
   await session.end();
 }
 
@@ -135,7 +153,9 @@ async function onRolesChanged() {
 }
 
 function onMessage(m: MessageView) {
-  const isCurrent = m.channelId === channels.currentId;
+  // A reader sitting in old history has the channel open but cannot see its
+  // newest messages, so those badge and ping like any other channel's would.
+  const isCurrent = m.channelId === channels.currentId && !messages.detached;
   if (isCurrent) messages.append(m);
 
   if (m.systemEvent) return; // ambient status: never ping or badge

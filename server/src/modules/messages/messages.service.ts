@@ -3,9 +3,10 @@ import {
   ServerEventType,
   type EditMessageBody,
   type MessageView,
+  type MessageWindow,
   type SystemEvent,
 } from "@ccchat/shared";
-import { and, asc, desc, eq, lt } from "drizzle-orm";
+import { and, asc, desc, eq, gt, lt, lte } from "drizzle-orm";
 import { can, newId } from "../../auth.js";
 import { db } from "../../db/index.js";
 import { channels, messages, type User } from "../../db/schema";
@@ -40,27 +41,69 @@ export function postSystemMessage(event: SystemEvent, subjectId: string) {
   hub.broadcast({ type: ServerEventType.Message_New, message: toMessageView(row) });
 }
 
-/** Message history for a channel, oldest-first, keyset-paginated by `before`
- *  (a message createdAt timestamp). Deleted messages are omitted. */
-export function history(channelId: string, before: number, limit: number): MessageView[] {
+/** Message history for a channel, always returned oldest-first, keyset-paginated
+ *  by a createdAt timestamp. `after` pages forward, which only matters once a
+ *  reader has jumped into the middle of history; `before` pages back, which is
+ *  the ordinary scroll-up. Deleted messages are omitted. */
+export function history(
+  channelId: string,
+  { before, after, limit }: { before?: number; after?: number; limit: number },
+): MessageView[] {
+  const bound = after
+    ? gt(messages.createdAt, after)
+    : before
+      ? lt(messages.createdAt, before)
+      : undefined;
+
   const rows = db
     .select()
     .from(messages)
-    .where(
-      and(
-        eq(messages.channelId, channelId),
-        eq(messages.deleted, 0),
-        Number.isFinite(before) && before > 0
-          ? lt(messages.createdAt, before)
-          : undefined,
-      ),
-    )
-    .orderBy(desc(messages.createdAt))
+    .where(and(eq(messages.channelId, channelId), eq(messages.deleted, 0), bound))
+    // Paging back is queried newest-first so `limit` takes the latest page, then
+    // reversed; paging forward already runs in the direction it is read.
+    .orderBy(after ? asc(messages.createdAt) : desc(messages.createdAt))
     .limit(limit)
     .all();
 
-  // Queried newest-first so `limit` takes the latest; the client wants oldest-first.
-  return rows.reverse().map(toMessageView);
+  return (after ? rows : rows.reverse()).map(toMessageView);
+}
+
+/** A window of history centred on one message, so a search result can be opened
+ *  where it was said. `limit` is per side, and the target itself always comes
+ *  back in the older half. */
+export function around(
+  channelId: string,
+  messageId: string,
+  limit: number,
+): MessageWindow | null {
+  const target = db.select().from(messages).where(eq(messages.id, messageId)).get();
+  if (!target || target.channelId !== channelId || target.deleted) return null;
+
+  const visible = and(eq(messages.channelId, channelId), eq(messages.deleted, 0));
+
+  // One extra each way answers "is there more?" without a second count query.
+  const older = db
+    .select()
+    .from(messages)
+    .where(and(visible, lte(messages.createdAt, target.createdAt)))
+    .orderBy(desc(messages.createdAt))
+    .limit(limit + 1)
+    .all();
+  const newer = db
+    .select()
+    .from(messages)
+    .where(and(visible, gt(messages.createdAt, target.createdAt)))
+    .orderBy(asc(messages.createdAt))
+    .limit(limit + 1)
+    .all();
+
+  return {
+    messages: [...older.slice(0, limit).reverse(), ...newer.slice(0, limit)].map(
+      toMessageView,
+    ),
+    hasMoreBefore: older.length > limit,
+    hasMoreAfter: newer.length > limit,
+  };
 }
 
 /** Author only: an admin may remove someone's words but never rewrite them.

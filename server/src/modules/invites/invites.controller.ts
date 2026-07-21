@@ -1,8 +1,8 @@
-import type { CreateInviteBody } from "@ccchat/shared";
+import { createInviteBody } from "@ccchat/shared";
 import type { AppContext, JsonContext } from "../../http/context.js";
 import * as invitesService from "./invites.service.js";
 
-export function create(c: JsonContext<CreateInviteBody>) {
+export function create(c: JsonContext<typeof createInviteBody>) {
   const invite = invitesService.createInvite(c.req.valid("json"), c.get("user").id);
   return c.json({ invite });
 }

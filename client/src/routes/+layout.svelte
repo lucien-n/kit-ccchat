@@ -1,6 +1,6 @@
 <script lang="ts">
-  import ExternalLinkDialog from "$lib/components/common/ExternalLinkDialog.svelte";
-  import { Toaster } from "$lib/components/ui/sonner";
+  import ExternalLinkDialog from "$lib/components/common/external-link-dialog.svelte";
+  import { Toaster } from "&/sonner";
   import "../app.css";
 
   let { children } = $props();

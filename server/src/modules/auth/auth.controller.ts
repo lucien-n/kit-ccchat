@@ -1,14 +1,14 @@
-import type { LoginBody, RegisterBody } from "@ccchat/shared";
+import { loginBody, registerBody } from "@ccchat/shared";
 import { destroySession } from "../../auth.js";
 import type { AppContext, JsonContext } from "../../http/context.js";
 import { toMember } from "../../views.js";
 import * as authService from "./auth.service.js";
 
-export function register(c: JsonContext<RegisterBody>) {
+export function register(c: JsonContext<typeof registerBody>) {
   return c.json(authService.register(c.req.valid("json")));
 }
 
-export function login(c: JsonContext<LoginBody>) {
+export function login(c: JsonContext<typeof loginBody>) {
   return c.json(authService.login(c.req.valid("json")));
 }
 

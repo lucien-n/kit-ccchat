@@ -1,4 +1,4 @@
-import type { VoiceTokenBody } from "@ccchat/shared";
+import { voiceTokenBody } from "@ccchat/shared";
 import type { Context } from "hono";
 import { LIVEKIT_PATH, LIVEKIT_URL } from "../../env.js";
 import type { AppContext, JsonContext } from "../../http/context.js";
@@ -23,7 +23,7 @@ export function config(c: AppContext) {
   return c.json({ url: livekitUrl(c) });
 }
 
-export async function token(c: JsonContext<VoiceTokenBody>) {
+export async function token(c: JsonContext<typeof voiceTokenBody>) {
   const issued = await voiceService.issueVoiceToken(
     c.req.valid("json").channelId,
     c.get("user"),

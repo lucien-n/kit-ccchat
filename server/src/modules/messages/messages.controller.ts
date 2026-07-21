@@ -1,16 +1,27 @@
-import type { EditMessageBody } from "@ccchat/shared";
-import type { AppContext, JsonContext } from "../../http/context.js";
+import { editMessageBody, messageAroundQuery, messageHistoryQuery } from "@ccchat/shared";
+import type { AppContext, JsonContext, QueryContext } from "../../http/context.js";
+import { httpError } from "../../http/errors.js";
 import * as messagesService from "./messages.service.js";
 
-export function history(c: AppContext<"/:channelId">) {
-  const before = Number(c.req.query("before"));
-  const limit = Math.min(Number(c.req.query("limit")) || 50, 100);
+export function history(c: QueryContext<typeof messageHistoryQuery, "/:channelId">) {
   return c.json({
-    messages: messagesService.history(c.req.param("channelId"), before, limit),
+    messages: messagesService.history(c.req.param("channelId"), c.req.valid("query")),
   });
 }
 
-export function edit(c: JsonContext<EditMessageBody, "/:id">) {
+export function around(
+  c: QueryContext<typeof messageAroundQuery, "/:channelId/around/:messageId">,
+) {
+  const window = messagesService.around(
+    c.req.param("channelId"),
+    c.req.param("messageId"),
+    c.req.valid("query").limit,
+  );
+  if (!window) return httpError(404, "not found");
+  return c.json(window);
+}
+
+export function edit(c: JsonContext<typeof editMessageBody, "/:id">) {
   const message = messagesService.editMessage(
     c.req.param("id"),
     c.get("user"),

@@ -132,3 +132,28 @@ export const systemStats = z.object({
   sampleIntervalSec: z.number(),
 });
 export type SystemStats = z.infer<typeof systemStats>;
+
+/** One search result: the message as the chat would render it, plus the excerpt
+ *  the index matched on, with MATCH_OPEN/MATCH_CLOSE bracketing each hit. */
+export const searchHit = z.object({
+  message: messageView,
+  snippet: z.string(),
+});
+export type SearchHit = z.infer<typeof searchHit>;
+
+export const searchResults = z.object({
+  hits: z.array(searchHit),
+  total: z.number(),
+  hasMore: z.boolean(),
+});
+export type SearchResults = z.infer<typeof searchResults>;
+
+/** A window of history centred on one message, for opening a search result in
+ *  place. Unlike plain history it can be detached from the newest message, so it
+ *  reports what remains in both directions. */
+export const messageWindow = z.object({
+  messages: z.array(messageView),
+  hasMoreBefore: z.boolean(),
+  hasMoreAfter: z.boolean(),
+});
+export type MessageWindow = z.infer<typeof messageWindow>;

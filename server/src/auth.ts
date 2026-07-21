@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import type { Context, Next } from "hono";
+import type { Context, MiddlewareHandler } from "hono";
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { db } from "./db/index.js";
 import { sessions, users, type User } from "./db/schema";
@@ -68,13 +68,15 @@ function bearer(c: Context): string | undefined {
   return undefined;
 }
 
-/** Require a valid session; attaches the user to the context. */
-export async function requireAuth(c: Context<Env>, next: Next) {
+/** Require a valid session; attaches the user to the context. These three are
+ *  typed as MiddlewareHandler so their rejections stay out of the route types
+ *  the rpc client reads. */
+export const requireAuth: MiddlewareHandler<Env> = async (c, next) => {
   const user = userForToken(bearer(c));
   if (!user) return c.json({ error: "unauthorized" }, 401);
   c.set("user", user);
   await next();
-}
+};
 
 export type Capability =
   | "manageChannels"
@@ -91,14 +93,14 @@ export function can(user: User, cap: Capability): boolean {
   return isAdmin(user);
 }
 
-export function requireCan(cap: Capability) {
-  return async (c: Context<Env>, next: Next) => {
+export function requireCan(cap: Capability): MiddlewareHandler<Env> {
+  return async (c, next) => {
     if (!can(c.get("user"), cap)) return c.json({ error: "forbidden" }, 403);
     await next();
   };
 }
 
-export async function requireOwner(c: Context<Env>, next: Next) {
+export const requireOwner: MiddlewareHandler<Env> = async (c, next) => {
   if (!isOwner(c.get("user"))) return c.json({ error: "forbidden" }, 403);
   await next();
-}
+};

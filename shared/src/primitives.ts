@@ -39,6 +39,8 @@ export const channelName = z
   .string()
   .trim()
   .regex(/^[\w\- ]{1,32}$/, "invalid channel name");
+
+export const channelNameKey = (name: string) => name.trim().toLowerCase();
 export const communityName = z.string().trim().min(1).max(60);
 export const inviteCode = z.string().trim().min(1, "invite code required");
 
@@ -47,3 +49,17 @@ export const maxUses = z.number().int().min(0).max(1000);
 export const MESSAGE_MAX_LENGTH = 4000;
 
 export const REPLY_SNIPPET_MAX = 200;
+
+export enum SearchSort {
+  Newest = "newest",
+  Relevance = "relevance",
+}
+export const searchSort = z.enum(SearchSort);
+
+export const SEARCH_PAGE = 25;
+
+/** Bracket every matched run inside a search snippet. Control characters, so
+ *  they survive JSON, never collide with anything someone can type, and carry no
+ *  meaning to a renderer that forgets to split on them. */
+export const MATCH_OPEN = String.fromCharCode(1);
+export const MATCH_CLOSE = String.fromCharCode(2);

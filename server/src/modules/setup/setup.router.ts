@@ -5,11 +5,9 @@ import { rateLimit } from "../../ratelimit.js";
 import { validate } from "../../validate.js";
 import * as setupController from "./setup.controller.js";
 
-const router = new Hono<Env>();
-
 // Open to the internet on a fresh box until someone claims it. Limited so that
 // window can't be ground on, and so the 409 afterwards is cheap to serve.
-router.post(
+const router = new Hono<Env>().post(
   "/",
   rateLimit({ limit: 5, windowMs: 60_000 }),
   validate("json", setupBody),

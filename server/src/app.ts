@@ -17,37 +17,38 @@ import channelsRouter from "./modules/channels/channels.router.js";
 import messagesRouter from "./modules/messages/messages.router.js";
 import moderationRouter from "./modules/moderation/moderation.router.js";
 import rolesRouter from "./modules/roles/roles.router.js";
+import searchRouter from "./modules/search/search.router.js";
 import systemRouter from "./modules/system/system.router.js";
 import voiceRouter from "./modules/voice/voice.router.js";
 import usersRouter from "./modules/users/users.router.js";
 
-export const app = new Hono<Env>();
+// Chained so the schema accumulates into `AppType`.
+export const app = new Hono<Env>()
+  .onError(onError)
+  // Bearer-token auth (no cookies) means cross-origin requests are safe: a
+  // permissive CORS policy lets the mobile app and dev client talk to the API.
+  .use("/api/*", cors())
+  .get("/api/info", (c) =>
+    c.json({
+      name: settingsService.communityName(),
+      needsSetup: needsSetup(),
+      iconVersion: settingsService.iconVersion(),
+    }),
+  )
+  .route("/api/setup", setupRouter)
+  .route("/api/settings", settingsRouter)
+  .route("/api/auth", authRouter)
+  .route("/api/invites", invitesRouter)
+  .route("/api/channels", channelsRouter)
+  .route("/api/messages", messagesRouter)
+  .route("/api/moderation", moderationRouter)
+  .route("/api/roles", rolesRouter)
+  .route("/api/search", searchRouter)
+  .route("/api/system", systemRouter)
+  .route("/api/voice", voiceRouter)
+  .route("/api/users", usersRouter);
 
-app.onError(onError);
-
-// Bearer-token auth (no cookies) means cross-origin requests are safe: a
-// permissive CORS policy lets the mobile app and dev client talk to the API.
-app.use("/api/*", cors());
-
-app.get("/api/info", (c) =>
-  c.json({
-    name: settingsService.communityName(),
-    needsSetup: needsSetup(),
-    iconVersion: settingsService.iconVersion(),
-  }),
-);
-
-app.route("/api/setup", setupRouter);
-app.route("/api/settings", settingsRouter);
-app.route("/api/auth", authRouter);
-app.route("/api/invites", invitesRouter);
-app.route("/api/channels", channelsRouter);
-app.route("/api/messages", messagesRouter);
-app.route("/api/moderation", moderationRouter);
-app.route("/api/roles", rolesRouter);
-app.route("/api/system", systemRouter);
-app.route("/api/voice", voiceRouter);
-app.route("/api/users", usersRouter);
+export type AppType = typeof app;
 
 // In production the server also serves the built SPA. In dev the client runs on
 // Vite (port 5173) and proxies /api + /ws here, so this branch is skipped.

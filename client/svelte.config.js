@@ -8,6 +8,10 @@ const config = {
     // Static SPA: a single index.html fallback so the app runs as a pure
     // client. This is what makes it wrappable with Capacitor for mobile.
     adapter: adapter({ fallback: "index.html" }),
+
+    alias: {
+      "&": "./src/lib/components/ui/",
+    },
   },
 };
 

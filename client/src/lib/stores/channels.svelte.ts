@@ -1,5 +1,4 @@
 import { api, type Channel } from "../api";
-import { session } from "./session.svelte";
 
 class Channels {
   list = $state<Channel[]>([]);
@@ -10,8 +9,7 @@ class Channels {
   }
 
   async load() {
-    if (!session.token) return;
-    this.list = (await api.channels(session.token)).channels;
+    this.list = (await api.channels.list()).channels;
   }
 
   clear() {

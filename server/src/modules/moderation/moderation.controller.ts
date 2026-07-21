@@ -1,4 +1,4 @@
-import type { MuteBody } from "@ccchat/shared";
+import { muteBody } from "@ccchat/shared";
 import type { Context, Next } from "hono";
 import type { Env } from "../../auth.js";
 import type { User } from "../../db/schema";
@@ -34,7 +34,7 @@ export function unban(c: Context<ModEnv>) {
   return c.json({ ok: true });
 }
 
-export function mute(c: JsonContext<MuteBody, "/:id", ModEnv>) {
+export function mute(c: JsonContext<typeof muteBody, "/:id", ModEnv>) {
   const mutedUntil = moderationService.mute(c.get("target"), c.req.valid("json").minutes);
   return c.json({ ok: true, mutedUntil });
 }

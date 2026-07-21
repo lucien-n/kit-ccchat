@@ -8,6 +8,7 @@ import {
   get,
   json,
   mkInvite,
+  patch,
   post,
   put,
   register,
@@ -196,5 +197,56 @@ describe("role management", () => {
     const { token } = await register(app, inviteCode, uniq()).then(json);
     const res = await put(app, "/api/roles/order", { orderedIds: ["whatever"] }, token);
     expect(res.status).toBe(403);
+  });
+
+  it("edits a role in place, leaving the fields it was not given alone", async () => {
+    const { role } = await createRole(ownerToken, {
+      name: uniq(),
+      color: "#ff0000",
+      permission: Permission.Admin,
+    }).then(json);
+
+    const res = await patch(
+      app,
+      `/api/roles/${role.id}`,
+      { name: "Renamed" },
+      ownerToken,
+    );
+    expect(res.status).toBe(200);
+
+    const { roles } = await get(app, "/api/roles", ownerToken).then(json);
+    const after = roles.find((r: any) => r.id === role.id);
+    expect(after.name).toBe("Renamed");
+    expect(after.color).toBe("#ff0000");
+    expect(after.permission).toBe(Permission.Admin);
+  });
+
+  it("404s when editing a role that is not there", async () => {
+    const res = await patch(app, "/api/roles/no-such-role", { name: "x" }, ownerToken);
+    expect(res.status).toBe(404);
+  });
+
+  it("deleting a role takes it off the members who held it", async () => {
+    const { user, token } = await register(app, inviteCode, uniq()).then(json);
+    const { role } = await createRole(ownerToken, {
+      name: uniq(),
+      color: "#ff00ff",
+      permission: Permission.Admin,
+    }).then(json);
+    await put(app, `/api/roles/members/${user.id}`, { roleIds: [role.id] }, ownerToken);
+    expect((await get(app, `/api/users/${user.id}`, token).then(json)).user.isAdmin).toBe(
+      true,
+    );
+
+    const res = await app.request(`/api/roles/${role.id}`, {
+      method: "DELETE",
+      headers: { authorization: `Bearer ${ownerToken}` },
+    });
+    expect(res.status).toBe(200);
+
+    const profile = await get(app, `/api/users/${user.id}`, token).then(json);
+    expect(profile.roles).toHaveLength(0);
+    expect(profile.user.isAdmin).toBe(false);
+    expect(profile.user.color).toBe(null);
   });
 });

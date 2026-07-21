@@ -83,9 +83,6 @@ cp .env.example .env         # set CCCHAT_DOMAIN + LIVEKIT_API_SECRET
 docker compose up -d
 ```
 
-There's a Windows installer too (`install.ps1`), but voice won't connect on
-Docker Desktop, so Linux is the real target.
-
 ## Roadmap
 
 - Harden voice for unreliable networks (TURN for strict NATs); maybe video.
