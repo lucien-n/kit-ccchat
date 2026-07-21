@@ -57,6 +57,13 @@
       "when": 1784667115271,
       "tag": "0007_true_princess_powerful",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1784672589947,
+      "tag": "0008_sour_saracen",
+      "breakpoints": true
     }
   ]
 }
