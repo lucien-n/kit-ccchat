@@ -11,16 +11,7 @@ import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import { WebSocket, type WebSocket as WsClient } from "ws";
-import {
-  boot,
-  claim,
-  cleanup,
-  json,
-  mkInvite,
-  post,
-  register,
-  uniq,
-} from "./harness.js";
+import { boot, claim, cleanup, json, mkInvite, post, register, uniq } from "./harness.js";
 
 let app: Hono<any>;
 let server: Server;
@@ -84,7 +75,11 @@ it("deleting a channel takes its messages and mentions with it", async () => {
   const inChannel = () =>
     db.select().from(messages).where(eq(messages.channelId, channel.id)).all();
   const mentionRows = () =>
-    db.select().from(messageMentions).where(eq(messageMentions.messageId, message.id)).all();
+    db
+      .select()
+      .from(messageMentions)
+      .where(eq(messageMentions.messageId, message.id))
+      .all();
 
   expect(inChannel()).toHaveLength(1);
   expect(mentionRows()).toHaveLength(1);

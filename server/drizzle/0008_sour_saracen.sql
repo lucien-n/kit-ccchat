@@ -39,4 +39,15 @@ CREATE TABLE `__new_messages` (
 INSERT INTO `__new_messages`("id", "channel_id", "author_id", "content", "created_at", "edited_at", "deleted", "reply_to_id", "system_event", "mentions_everyone") SELECT "id", "channel_id", "author_id", "content", "created_at", "edited_at", "deleted", "reply_to_id", "system_event", "mentions_everyone" FROM `messages`;--> statement-breakpoint
 DROP TABLE `messages`;--> statement-breakpoint
 ALTER TABLE `__new_messages` RENAME TO `messages`;--> statement-breakpoint
-CREATE INDEX `idx_messages_channel` ON `messages` (`channel_id`,`created_at`);
+CREATE INDEX `idx_messages_channel` ON `messages` (`channel_id`,`created_at`);--> statement-breakpoint
+CREATE TRIGGER messages_fts_insert AFTER INSERT ON messages BEGIN
+  INSERT INTO messages_fts(rowid, content) VALUES (new.rowid, new.content);
+END;--> statement-breakpoint
+CREATE TRIGGER messages_fts_delete AFTER DELETE ON messages BEGIN
+  INSERT INTO messages_fts(messages_fts, rowid, content) VALUES ('delete', old.rowid, old.content);
+END;--> statement-breakpoint
+CREATE TRIGGER messages_fts_update AFTER UPDATE OF content ON messages BEGIN
+  INSERT INTO messages_fts(messages_fts, rowid, content) VALUES ('delete', old.rowid, old.content);
+  INSERT INTO messages_fts(rowid, content) VALUES (new.rowid, new.content);
+END;--> statement-breakpoint
+INSERT INTO messages_fts(messages_fts) VALUES ('rebuild');
