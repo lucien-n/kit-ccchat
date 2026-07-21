@@ -69,7 +69,9 @@
       value={isOwner ? "general" : "moderation"}
       class="flex min-w-0 flex-col gap-4 sm:flex-row"
     >
-      <Tabs.List class="max-sm:h-auto! max-sm:w-full max-sm:flex-wrap sm:w-40 sm:shrink-0">
+      <Tabs.List
+        class="max-sm:h-auto! max-sm:w-full max-sm:flex-wrap sm:w-40 sm:shrink-0"
+      >
         {#each TABS as tab (tab.value)}
           {#if !tab.isHidden}
             <Tabs.Trigger value={tab.value} class="max-sm:flex-auto">
