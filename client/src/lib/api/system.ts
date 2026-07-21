@@ -1,7 +1,6 @@
-import type { SystemStats } from "@ccchat/shared";
-import { request } from "./http";
+import { client } from "./http";
 
 export const system = {
   /** Host machine snapshot (owner only). */
-  stats: () => request<{ stats: SystemStats }>("/api/system"),
+  stats: async () => (await client.api.system.$get()).json(),
 };

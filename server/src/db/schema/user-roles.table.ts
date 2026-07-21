@@ -8,5 +8,3 @@ export const userRoles = sqliteTable(
   },
   (t) => ({ pk: primaryKey({ columns: [t.userId, t.roleId] }) }),
 );
-
-export type UserRole = typeof userRoles.$inferSelect;

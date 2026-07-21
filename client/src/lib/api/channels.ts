@@ -1,17 +1,17 @@
-import type { Channel, CreateChannelBody } from "@ccchat/shared";
-import { request } from "./http";
+import type { CreateChannelBody } from "@ccchat/shared";
+import { client } from "./http";
 
 export const channels = {
-  list: () => request<{ channels: Channel[] }>("/api/channels"),
+  list: async () => (await client.api.channels.$get()).json(),
 
-  create: (body: CreateChannelBody) =>
-    request<{ channel: Channel }>("/api/channels", { method: "POST", body }),
+  create: async (body: CreateChannelBody) =>
+    (await client.api.channels.$post({ json: body })).json(),
 
-  delete: (id: string) =>
-    request<{ ok: true }>(`/api/channels/${id}`, { method: "DELETE" }),
+  delete: async (id: string) =>
+    (await client.api.channels[":id"].$delete({ param: { id } })).json(),
 
-  unreads: () => request<{ unreads: Record<string, number> }>("/api/channels/unreads"),
+  unreads: async () => (await client.api.channels.unreads.$get()).json(),
 
-  markRead: (id: string) =>
-    request<{ ok: true }>(`/api/channels/${id}/read`, { method: "POST" }),
+  markRead: async (id: string) =>
+    (await client.api.channels[":id"].read.$post({ param: { id } })).json(),
 };

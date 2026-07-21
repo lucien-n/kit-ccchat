@@ -4,20 +4,18 @@ import { requireAuth, requireCan } from "../../auth.js";
 import { validate } from "../../validate.js";
 import * as moderationController from "./moderation.controller.js";
 
-const router = new Hono<moderationController.ModEnv>();
-
-router.use("*", requireAuth, requireCan("moderateMembers"));
-
-router.post("/:id/kick", moderationController.loadTarget, moderationController.kick);
-router.post("/:id/ban", moderationController.loadTarget, moderationController.ban);
-router.post("/:id/unban", moderationController.loadTarget, moderationController.unban);
-router.post(
-  "/:id/mute",
-  moderationController.loadTarget,
-  validate("json", muteBody),
-  moderationController.mute,
-);
-router.post("/:id/unmute", moderationController.loadTarget, moderationController.unmute);
-router.get("/members", moderationController.members);
+const router = new Hono<moderationController.ModEnv>()
+  .use("*", requireAuth, requireCan("moderateMembers"))
+  .post("/:id/kick", moderationController.loadTarget, moderationController.kick)
+  .post("/:id/ban", moderationController.loadTarget, moderationController.ban)
+  .post("/:id/unban", moderationController.loadTarget, moderationController.unban)
+  .post(
+    "/:id/mute",
+    moderationController.loadTarget,
+    validate("json", muteBody),
+    moderationController.mute,
+  )
+  .post("/:id/unmute", moderationController.loadTarget, moderationController.unmute)
+  .get("/members", moderationController.members);
 
 export default router;

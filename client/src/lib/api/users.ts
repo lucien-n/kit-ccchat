@@ -1,5 +1,5 @@
-import type { ChangePasswordBody, Member, Role, UpdateProfileBody } from "@ccchat/shared";
-import { apiBase, request } from "./http";
+import type { ChangePasswordBody, UpdateProfileBody } from "@ccchat/shared";
+import { apiBase, client } from "./http";
 
 /** `version` doubles as a cache-buster. */
 export function avatarUrl(id: string, version: number | null | undefined): string | null {
@@ -9,22 +9,20 @@ export function avatarUrl(id: string, version: number | null | undefined): strin
 
 export const users = {
   /** Full community roster, readable by any member (no moderation state). */
-  list: () => request<{ members: Member[] }>("/api/users"),
+  list: async () => (await client.api.users.$get()).json(),
 
   /** A single user's profile card: public identity + the roles they hold. */
-  profile: (id: string) => request<{ user: Member; roles: Role[] }>(`/api/users/${id}`),
+  profile: async (id: string) =>
+    (await client.api.users[":id"].$get({ param: { id } })).json(),
 
-  updateMe: (body: UpdateProfileBody) =>
-    request<{ user: Member }>("/api/users/me", { method: "PATCH", body }),
+  updateMe: async (body: UpdateProfileBody) =>
+    (await client.api.users.me.$patch({ json: body })).json(),
 
-  changePassword: (body: ChangePasswordBody) =>
-    request<{ ok: true }>("/api/users/me/password", { method: "POST", body }),
+  changePassword: async (body: ChangePasswordBody) =>
+    (await client.api.users.me.password.$post({ json: body })).json(),
 
-  setAvatar: (image: string) =>
-    request<{ avatarVersion: number }>("/api/users/me/avatar", {
-      method: "POST",
-      body: { image },
-    }),
+  setAvatar: async (image: string) =>
+    (await client.api.users.me.avatar.$post({ json: { image } })).json(),
 
-  removeAvatar: () => request<{ ok: true }>("/api/users/me/avatar", { method: "DELETE" }),
+  removeAvatar: async () => (await client.api.users.me.avatar.$delete()).json(),
 };

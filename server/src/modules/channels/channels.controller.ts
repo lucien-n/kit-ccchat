@@ -1,4 +1,4 @@
-import type { CreateChannelBody } from "@ccchat/shared";
+import { createChannelBody } from "@ccchat/shared";
 import type { AppContext, JsonContext } from "../../http/context.js";
 import * as channelsService from "./channels.service.js";
 
@@ -15,7 +15,7 @@ export function markRead(c: AppContext<"/:id">) {
   return c.json({ ok: true });
 }
 
-export function create(c: JsonContext<CreateChannelBody>) {
+export function create(c: JsonContext<typeof createChannelBody>) {
   return c.json({ channel: channelsService.createChannel(c.req.valid("json")) });
 }
 

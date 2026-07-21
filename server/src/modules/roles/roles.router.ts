@@ -9,35 +9,33 @@ import { requireAuth, requireCan, type Env } from "../../auth.js";
 import { validate } from "../../validate.js";
 import * as rolesController from "./roles.controller.js";
 
-const router = new Hono<Env>();
-
-router.use("*", requireAuth);
-
-router.get("/", rolesController.list);
-router.post(
-  "/",
-  requireCan("manageRoles"),
-  validate("json", createRoleBody),
-  rolesController.create,
-);
-router.patch(
-  "/:id",
-  requireCan("manageRoles"),
-  validate("json", updateRoleBody),
-  rolesController.update,
-);
-router.put(
-  "/order",
-  requireCan("manageRoles"),
-  validate("json", reorderRolesBody),
-  rolesController.reorder,
-);
-router.delete("/:id", requireCan("manageRoles"), rolesController.remove);
-router.put(
-  "/members/:userId",
-  requireCan("manageRoles"),
-  validate("json", setUserRolesBody),
-  rolesController.setForUser,
-);
+const router = new Hono<Env>()
+  .use("*", requireAuth)
+  .get("/", rolesController.list)
+  .post(
+    "/",
+    requireCan("manageRoles"),
+    validate("json", createRoleBody),
+    rolesController.create,
+  )
+  .patch(
+    "/:id",
+    requireCan("manageRoles"),
+    validate("json", updateRoleBody),
+    rolesController.update,
+  )
+  .put(
+    "/order",
+    requireCan("manageRoles"),
+    validate("json", reorderRolesBody),
+    rolesController.reorder,
+  )
+  .delete("/:id", requireCan("manageRoles"), rolesController.remove)
+  .put(
+    "/members/:userId",
+    requireCan("manageRoles"),
+    validate("json", setUserRolesBody),
+    rolesController.setForUser,
+  );
 
 export default router;

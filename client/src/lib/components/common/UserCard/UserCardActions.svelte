@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { type ModAction } from "$lib/api";
+  import { ModAction } from "$lib/api";
   import * as AlertDialog from "$lib/components/ui/alert-dialog";
   import * as ContextMenu from "$lib/components/ui/context-menu";
   import { apiErrorMessage } from "$lib/forms";
@@ -21,7 +21,9 @@
 
   const { userId, children }: Props = $props();
 
-  let confirming = $state<"kick" | "ban" | null>(null);
+  let confirming = $state<Extract<ModAction, ModAction.Kick | ModAction.Ban> | null>(
+    null,
+  );
   let busy = $state(false);
 
   const target = $derived(members.byId(userId));
@@ -29,10 +31,10 @@
   const showModeration = $derived(canModerate(session.user, target));
   const muted = $derived(!!target && isMuted(target));
 
-  async function act(action: ModAction, body?: unknown) {
+  async function act(action: ModAction, minutes?: number) {
     busy = true;
     try {
-      await members.moderate(userId, action, body);
+      await members.moderate(userId, action, minutes);
       toast.success(`${name} was ${PAST_TENSE[action]}`);
     } catch (e) {
       toast.error(apiErrorMessage(e, "action failed"));
@@ -48,11 +50,11 @@
   }
 
   const PAST_TENSE: Record<ModAction, string> = {
-    kick: "kicked",
-    ban: "banned",
-    unban: "unbanned",
-    mute: "muted",
-    unmute: "unmuted",
+    [ModAction.Kick]: "kicked",
+    [ModAction.Ban]: "banned",
+    [ModAction.Unban]: "unbanned",
+    [ModAction.Mute]: "muted",
+    [ModAction.Unmute]: "unmuted",
   };
 
   const MUTE_DURATIONS = [
@@ -81,7 +83,7 @@
       <ContextMenu.Group>
         <ContextMenu.GroupHeading>Moderation</ContextMenu.GroupHeading>
         {#if muted}
-          <ContextMenu.Item disabled={busy} onSelect={() => act("unmute")}>
+          <ContextMenu.Item disabled={busy} onSelect={() => act(ModAction.Unmute)}>
             <Volume2Icon />
             Unmute
           </ContextMenu.Item>
@@ -93,19 +95,19 @@
             </ContextMenu.SubTrigger>
             <ContextMenu.SubContent class="z-100">
               {#each MUTE_DURATIONS as d (d.minutes)}
-                <ContextMenu.Item onSelect={() => act("mute", { minutes: d.minutes })}>
+                <ContextMenu.Item onSelect={() => act(ModAction.Mute, d.minutes)}>
                   {d.label}
                 </ContextMenu.Item>
               {/each}
             </ContextMenu.SubContent>
           </ContextMenu.Sub>
         {/if}
-        <ContextMenu.Item disabled={busy} onSelect={() => (confirming = "kick")}>
+        <ContextMenu.Item disabled={busy} onSelect={() => (confirming = ModAction.Kick)}>
           <LogOutIcon />
           Kick
         </ContextMenu.Item>
         {#if target?.banned}
-          <ContextMenu.Item disabled={busy} onSelect={() => act("unban")}>
+          <ContextMenu.Item disabled={busy} onSelect={() => act(ModAction.Unban)}>
             <BanIcon />
             Unban
           </ContextMenu.Item>
@@ -113,7 +115,7 @@
           <ContextMenu.Item
             variant="destructive"
             disabled={busy}
-            onSelect={() => (confirming = "ban")}
+            onSelect={() => (confirming = ModAction.Ban)}
           >
             <BanIcon />
             Ban
@@ -133,10 +135,10 @@
   <AlertDialog.Content>
     <AlertDialog.Header>
       <AlertDialog.Title>
-        {confirming === "ban" ? `Ban ${name}?` : `Kick ${name}?`}
+        {confirming === ModAction.Ban ? `Ban ${name}?` : `Kick ${name}?`}
       </AlertDialog.Title>
       <AlertDialog.Description>
-        {#if confirming === "ban"}
+        {#if confirming === ModAction.Ban}
           They lose every active session and cannot sign back in until unbanned.
         {:else}
           They lose every active session and need a fresh invite to return.
@@ -146,7 +148,7 @@
     <AlertDialog.Footer>
       <AlertDialog.Cancel disabled={busy}>Cancel</AlertDialog.Cancel>
       <AlertDialog.Action disabled={busy} onclick={() => confirming && act(confirming)}>
-        {confirming === "ban" ? "Ban" : "Kick"}
+        {confirming === ModAction.Ban ? "Ban" : "Kick"}
       </AlertDialog.Action>
     </AlertDialog.Footer>
   </AlertDialog.Content>

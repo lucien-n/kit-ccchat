@@ -1,13 +1,7 @@
-import type { SearchResults, SearchSort } from "@ccchat/shared";
-import { request } from "./http";
+import type { SearchQuery } from "@ccchat/shared";
+import { client } from "./http";
 
 export const search = {
-  messages: (query: {
-    q: string;
-    channelId?: string;
-    authorId?: string;
-    sort?: SearchSort;
-    limit?: number;
-    offset?: number;
-  }) => request<SearchResults>("/api/search", { query }),
+  messages: async (query: Partial<SearchQuery> & Pick<SearchQuery, "q">) =>
+    (await client.api.search.$get({ query })).json(),
 };

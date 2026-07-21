@@ -1,17 +1,14 @@
-import { MATCH_CLOSE, MATCH_OPEN, SearchSort, type SearchResults } from "@ccchat/shared";
+import {
+  MATCH_CLOSE,
+  MATCH_OPEN,
+  SearchSort,
+  type SearchQuery,
+  type SearchResults,
+} from "@ccchat/shared";
 import { and, count, desc, eq, isNull, sql, type SQL } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { messages, type Message } from "../../db/schema";
 import { excerpt, toMessageView } from "../../views.js";
-
-export interface SearchParams {
-  q: string;
-  channelId?: string;
-  authorId?: string;
-  sort: SearchSort;
-  limit: number;
-  offset: number;
-}
 
 const MIN_TERM_LENGTH = 2;
 const EMPTY: SearchResults = { hits: [], total: 0, hasMore: false };
@@ -33,7 +30,7 @@ function matchExpression(q: string): string | null {
 /** Text is optional: filtering to one person, or to one person in one channel,
  *  is a search in its own right. Without text there is nothing to rank or to
  *  highlight, so those results are always newest-first with a plain excerpt. */
-export function search(params: SearchParams): SearchResults {
+export function search(params: SearchQuery): SearchResults {
   const match =
     params.q.trim().length >= MIN_TERM_LENGTH ? matchExpression(params.q) : null;
   if (!match) {
@@ -42,7 +39,7 @@ export function search(params: SearchParams): SearchResults {
   return byText(params, match);
 }
 
-function byFilter(params: SearchParams): SearchResults {
+function byFilter(params: SearchQuery): SearchResults {
   const where = and(
     eq(messages.deleted, 0),
     isNull(messages.systemEvent),
@@ -69,7 +66,7 @@ function byFilter(params: SearchParams): SearchResults {
   };
 }
 
-function textConditions({ channelId, authorId }: SearchParams, match: string): SQL {
+function textConditions({ channelId, authorId }: SearchQuery, match: string): SQL {
   const parts = [
     sql`messages_fts MATCH ${match}`,
     sql`m.deleted = 0`,
@@ -82,7 +79,7 @@ function textConditions({ channelId, authorId }: SearchParams, match: string): S
 
 type Row = Message & { snippet: string };
 
-function byText(params: SearchParams, match: string): SearchResults {
+function byText(params: SearchQuery, match: string): SearchResults {
   const where = textConditions(params, match);
   // Two messages can share a millisecond, so rowid (insertion order) breaks the
   // tie. Without it "newest first" is whatever SQLite feels like that day.

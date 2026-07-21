@@ -24,22 +24,20 @@ export const api = {
   voice,
 };
 
-export { ApiError, apiBase } from "./http";
 export { communityIconUrl } from "./community";
-export { avatarUrl } from "./users";
+export { apiBase, ApiError } from "./http";
+export { ModAction } from "./moderation";
 export { authToken } from "./token.svelte";
-export type { ModAction } from "./moderation";
+export { avatarUrl } from "./users";
 
 export type {
   Channel,
   Invite,
   Member,
   MessageView,
-  MessageWindow,
   ModeratedMember,
   Role,
   SearchHit,
-  SearchResults,
   SystemStats,
   VoiceMember,
 } from "@ccchat/shared";

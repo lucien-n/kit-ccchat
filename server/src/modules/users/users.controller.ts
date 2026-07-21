@@ -1,4 +1,4 @@
-import type { AvatarBody, ChangePasswordBody, UpdateProfileBody } from "@ccchat/shared";
+import { avatarBody, changePasswordBody, updateProfileBody } from "@ccchat/shared";
 import type { AppContext, JsonContext } from "../../http/context.js";
 import * as usersService from "./users.service.js";
 
@@ -18,7 +18,7 @@ export function avatar(c: AppContext<"/:id/avatar">) {
   return c.body(bytes);
 }
 
-export function uploadAvatar(c: JsonContext<AvatarBody>) {
+export function uploadAvatar(c: JsonContext<typeof avatarBody>) {
   const avatarVersion = usersService.saveAvatar(c.get("user").id, c.req.valid("json"));
   return c.json({ avatarVersion });
 }
@@ -28,12 +28,12 @@ export function removeAvatar(c: AppContext) {
   return c.json({ ok: true });
 }
 
-export function updateProfile(c: JsonContext<UpdateProfileBody>) {
+export function updateProfile(c: JsonContext<typeof updateProfileBody>) {
   const user = usersService.updateProfile(c.get("user"), c.req.valid("json").displayName);
   return c.json({ user });
 }
 
-export function changePassword(c: JsonContext<ChangePasswordBody>) {
+export function changePassword(c: JsonContext<typeof changePasswordBody>) {
   usersService.changePassword(c.get("user"), c.req.valid("json"));
   return c.json({ ok: true });
 }

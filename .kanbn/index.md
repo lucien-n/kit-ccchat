@@ -18,6 +18,8 @@ completedColumns:
 
 ## In Progress
 
+- [migrate-to-hono-rpc](tasks/migrate-to-hono-rpc.md)
+
 ## Done
 
 - [backend-routes-restructure](tasks/backend-routes-restructure.md)

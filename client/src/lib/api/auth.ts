@@ -1,34 +1,24 @@
-import type { LoginBody, Member, RegisterBody, SetupBody } from "@ccchat/shared";
-import { publicRequest, request } from "./http";
+import type { LoginBody, RegisterBody, SetupBody } from "@ccchat/shared";
+import { asToken, client, publicClient } from "./http";
 
 export const auth = {
   /** Claim a brand-new instance. Only works while it has no accounts. */
-  setup: (body: SetupBody) =>
-    publicRequest<{
-      token: string;
-      user: Member;
-      inviteCode: string;
-      communityName: string;
-    }>("/api/setup", { method: "POST", body }),
+  setup: async (body: SetupBody) =>
+    (await publicClient.api.setup.$post({ json: body })).json(),
 
-  register: (body: RegisterBody) =>
-    publicRequest<{ token: string; user: Member }>("/api/auth/register", {
-      method: "POST",
-      body,
-    }),
+  register: async (body: RegisterBody) =>
+    (await publicClient.api.auth.register.$post({ json: body })).json(),
 
-  login: (body: LoginBody) =>
-    publicRequest<{ token: string; user: Member }>("/api/auth/login", {
-      method: "POST",
-      body,
-    }),
+  login: async (body: LoginBody) =>
+    (await publicClient.api.auth.login.$post({ json: body })).json(),
 
   /** `token` is passed only while restoring a saved one, before the session
    *  adopts it. */
-  me: (token?: string) => request<{ user: Member }>("/api/auth/me", { token }),
+  me: async (token?: string) =>
+    (await client.api.auth.me.$get(undefined, asToken(token))).json(),
 
   /** `token` is passed because the session is cleared first: a failing logout
    *  must not leave you stuck in a session you asked to leave. */
-  logout: (token?: string) =>
-    request<{ ok: true }>("/api/auth/logout", { method: "POST", token }),
+  logout: async (token?: string) =>
+    (await client.api.auth.logout.$post(undefined, asToken(token))).json(),
 };

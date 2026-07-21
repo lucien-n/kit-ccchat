@@ -7,6 +7,7 @@ import {
   get,
   json,
   mkInvite,
+  patch,
   post,
   register,
   uniq,
@@ -78,5 +79,28 @@ describe("community icon", () => {
 
     expect((await get(app, iconUrl)).status).toBe(404);
     expect((await json(await get(app, "/api/info"))).iconVersion).toBeNull();
+  });
+});
+
+describe("community name", () => {
+  it("renames for everyone, including the sign-in screen", async () => {
+    const res = await patch(app, "/api/settings", { communityName: "Renamed HQ" }, owner);
+    expect(res.status).toBe(200);
+    expect((await json<{ communityName: string }>(res)).communityName).toBe("Renamed HQ");
+
+    // /api/info answers before sign-in, so this is what a stranger sees.
+    expect((await json(await get(app, "/api/info"))).name).toBe("Renamed HQ");
+  });
+
+  it("is owner-only, like the icon", async () => {
+    const res = await patch(app, "/api/settings", { communityName: "Nope" }, member);
+    expect(res.status).toBe(403);
+    expect((await json(await get(app, "/api/info"))).name).not.toBe("Nope");
+  });
+
+  it("rejects a blank name", async () => {
+    expect((await patch(app, "/api/settings", { communityName: "" }, owner)).status).toBe(
+      400,
+    );
   });
 });

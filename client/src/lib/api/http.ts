@@ -1,3 +1,5 @@
+import type { AppType } from "ccchat-server";
+import { hc } from "hono/client";
 import { authToken } from "./token.svelte";
 
 export class ApiError extends Error {
@@ -16,58 +18,36 @@ export function apiBase(): string {
   return "";
 }
 
-export interface RequestOptions {
-  method?: string;
-  body?: unknown;
-  query?: Record<string, string | number | undefined>;
-  /** Overrides the session token. Only for calls made outside a signed-in
-   *  session: verifying a saved token before adopting it, and logging out after
-   *  it has been cleared. */
-  token?: string;
+async function orThrow(res: Response): Promise<Response> {
+  if (res.ok) return res;
+  const data = await res.json().catch(() => null);
+  throw new ApiError(res.status, data?.error ?? `request failed (${res.status})`);
 }
 
-function url(path: string, query: RequestOptions["query"]): string {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(query ?? {}))
-    if (value !== undefined) params.set(key, String(value));
-  const qs = params.toString();
-  return `${apiBase()}${path}${qs ? `?${qs}` : ""}`;
-}
+/** Rejects before reaching the network when nothing signed the request, so a
+ *  signed-out caller fails the same way the server would have failed it. */
+const signedFetch: typeof fetch = async (input, init) => {
+  if (!new Headers(init?.headers).has("Authorization"))
+    throw new ApiError(401, "not signed in");
+  return orThrow(await fetch(input, init));
+};
 
-async function send<T>(
-  path: string,
-  token: string | null,
-  opts: RequestOptions,
-): Promise<T> {
-  const headers: Record<string, string> = {};
-  if (opts.body !== undefined) headers["Content-Type"] = "application/json";
-  if (token) headers["Authorization"] = `Bearer ${token}`;
+const publicFetch: typeof fetch = async (input, init) =>
+  orThrow(await fetch(input, init));
 
-  const res = await fetch(url(path, opts.query), {
-    method: opts.method ?? "GET",
-    headers,
-    body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-  });
+const authorization = (): Record<string, string> => {
+  const token = authToken.value;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+};
 
-  const data = res.status === 204 ? null : await res.json().catch(() => null);
-  if (!res.ok)
-    throw new ApiError(res.status, data?.error ?? `request failed (${res.status})`);
-  return data as T;
-}
-
-/** Signs the request with the current session. Rejects before reaching the
- *  network when there is none, so a signed-out caller gets the same failure it
- *  would have got back from the server. */
-export async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
-  const token = opts.token ?? authToken.value;
-  if (!token) throw new ApiError(401, "not signed in");
-  return send<T>(path, token, opts);
-}
+export const client = hc<AppType>(apiBase(), {
+  fetch: signedFetch,
+  headers: authorization,
+});
 
 /** The handful of endpoints that answer before sign-in. */
-export async function publicRequest<T>(
-  path: string,
-  opts: RequestOptions = {},
-): Promise<T> {
-  return send<T>(path, null, opts);
-}
+export const publicClient = hc<AppType>(apiBase(), { fetch: publicFetch });
+
+/** Only for the two calls made outside a signed-in session. */
+export const asToken = (token?: string) =>
+  token ? { headers: { Authorization: `Bearer ${token}` } } : undefined;

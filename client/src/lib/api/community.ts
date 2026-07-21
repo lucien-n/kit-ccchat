@@ -1,4 +1,4 @@
-import { apiBase, publicRequest, request } from "./http";
+import { apiBase, client, publicClient } from "./http";
 
 /** null when the community has no icon, so callers fall back to the bundled one. */
 export function communityIconUrl(version: number | null | undefined): string | null {
@@ -7,22 +7,13 @@ export function communityIconUrl(version: number | null | undefined): string | n
 }
 
 export const community = {
-  info: () =>
-    publicRequest<{ name: string; needsSetup: boolean; iconVersion: number | null }>(
-      "/api/info",
-    ),
+  info: async () => (await publicClient.api.info.$get()).json(),
 
-  rename: (communityName: string) =>
-    request<{ communityName: string }>("/api/settings", {
-      method: "PATCH",
-      body: { communityName },
-    }),
+  rename: async (communityName: string) =>
+    (await client.api.settings.$patch({ json: { communityName } })).json(),
 
-  setIcon: (image: string) =>
-    request<{ iconVersion: number }>("/api/settings/icon", {
-      method: "POST",
-      body: { image },
-    }),
+  setIcon: async (image: string) =>
+    (await client.api.settings.icon.$post({ json: { image } })).json(),
 
-  removeIcon: () => request<{ ok: true }>("/api/settings/icon", { method: "DELETE" }),
+  removeIcon: async () => (await client.api.settings.icon.$delete()).json(),
 };

@@ -1,23 +1,25 @@
-import type { MessageView, MessageWindow } from "@ccchat/shared";
-import { request } from "./http";
+import type { MessageHistoryQuery } from "@ccchat/shared";
+import { client } from "./http";
 
 export const messages = {
-  history: (
-    channelId: string,
-    query: { before?: number; after?: number; limit?: number } = {},
-  ) => request<{ messages: MessageView[] }>(`/api/messages/${channelId}`, { query }),
+  history: async (channelId: string, query: Partial<MessageHistoryQuery> = {}) =>
+    (
+      await client.api.messages[":channelId"].$get({ param: { channelId }, query })
+    ).json(),
 
-  around: (channelId: string, messageId: string, limit?: number) =>
-    request<MessageWindow>(`/api/messages/${channelId}/around/${messageId}`, {
-      query: { limit },
-    }),
+  around: async (channelId: string, messageId: string, limit?: number) =>
+    (
+      await client.api.messages[":channelId"].around[":messageId"].$get({
+        param: { channelId, messageId },
+        query: { limit },
+      })
+    ).json(),
 
-  edit: (id: string, content: string) =>
-    request<{ message: MessageView }>(`/api/messages/${id}`, {
-      method: "PATCH",
-      body: { content },
-    }),
+  edit: async (id: string, content: string) =>
+    (
+      await client.api.messages[":id"].$patch({ param: { id }, json: { content } })
+    ).json(),
 
-  delete: (id: string) =>
-    request<{ ok: true }>(`/api/messages/${id}`, { method: "DELETE" }),
+  delete: async (id: string) =>
+    (await client.api.messages[":id"].$delete({ param: { id } })).json(),
 };

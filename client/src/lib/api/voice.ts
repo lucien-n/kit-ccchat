@@ -1,9 +1,6 @@
-import { request } from "./http";
+import { client } from "./http";
 
 export const voice = {
-  token: (channelId: string) =>
-    request<{ token: string; url: string; room: string; canPublish: boolean }>(
-      "/api/voice/token",
-      { method: "POST", body: { channelId } },
-    ),
+  token: async (channelId: string) =>
+    (await client.api.voice.token.$post({ json: { channelId } })).json(),
 };
