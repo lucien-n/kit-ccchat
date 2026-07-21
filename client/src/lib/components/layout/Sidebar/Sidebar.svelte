@@ -8,9 +8,8 @@
   import { voice } from "$lib/stores/voice.svelte";
   import { ChannelType } from "@ccchat/shared";
   import { LogOut } from "@lucide/svelte";
-  import ChannelCategoryHeader from "./ChannelCategoryHeader.svelte";
   import SidebarHeader from "./SidebarHeader.svelte";
-  import SingleChannelRow from "./SingleChannelRow.svelte";
+  import { ChannelCategoryHeader, SingleChannel } from "./channel";
 
   interface Props {
     withVoice?: boolean;
@@ -59,7 +58,7 @@
   />
 
   {#each textChannels as channel (channel.id)}
-    <SingleChannelRow {channel} onSelect={() => handleSelectChannel(channel.id)} />
+    <SingleChannel {channel} onSelect={() => handleSelectChannel(channel.id)} />
   {/each}
 
   <ChannelCategoryHeader
@@ -68,7 +67,7 @@
   />
 
   {#each voiceChannels as channel (channel.id)}
-    <SingleChannelRow {channel} onSelect={() => handleJoinVoice(channel)} />
+    <SingleChannel {channel} onSelect={() => handleJoinVoice(channel)} />
   {/each}
 </nav>
 

@@ -144,6 +144,9 @@ export const api = {
       token,
     }),
 
+  deleteChannel: (token: string, channelId: string) =>
+    request<void>(`/api/channels/${channelId}`, { method: "DELETE", token }),
+
   unreads: (token: string) =>
     request<{ unreads: Record<string, number> }>("/api/channels/unreads", {
       token,

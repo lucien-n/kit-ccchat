@@ -9,13 +9,14 @@ completedColumns:
 
 ## Backlog
 
-- [delete-channels](tasks/delete-channels.md)
 - [rename-channels](tasks/rename-channels.md)
 - [unify-channel-type-icons-and-labels](tasks/unify-channel-type-icons-and-labels.md)
 
 ## Todo
 
 ## In Progress
+
+- [delete-channels](tasks/delete-channels.md)
 
 ## Done
 
