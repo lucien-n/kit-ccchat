@@ -18,11 +18,13 @@ columnSorting:
 - [mobile-app](tasks/mobile-app.md)
 - [video-streaming](tasks/video-streaming.md)
 - [upload-images-files](tasks/upload-images-files.md)
-- [message-reactions](tasks/message-reactions.md)
+- [use-channel-type-enum-values-in-channels-table](tasks/use-channel-type-enum-values-in-channels-table.md)
 
 ## Todo
 
 ## In Progress
+
+- [message-reactions](tasks/message-reactions.md)
 
 ## Done
 
