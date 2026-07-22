@@ -1,7 +1,14 @@
 <script lang="ts">
   import { voice } from "$lib/stores/voice.svelte";
   import { Button } from "&/button";
-  import { Mic, MicOff, PhoneOff, ScreenShare, ScreenShareOff, Volume2 } from "@lucide/svelte";
+  import {
+    Mic,
+    MicOff,
+    PhoneOff,
+    ScreenShare,
+    ScreenShareOff,
+    Volume2,
+  } from "@lucide/svelte";
 
   // getDisplayMedia does not exist on iOS Safari or Android Chrome, so the
   // button would only ever throw there.
