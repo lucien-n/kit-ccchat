@@ -12,26 +12,38 @@
 
   interface Props {
     userId: string;
-    children: Snippet;
+    /** Omitted when the card has no trigger of its own and is positioned with
+     *  `anchor` instead, e.g. opened from a mention inside markdown output. */
+    children?: Snippet;
+    anchor?: HTMLElement | null;
+    open?: boolean;
     class?: string;
   }
-  const { userId, children, class: className }: Props = $props();
+  let {
+    userId,
+    children,
+    anchor = null,
+    open = $bindable(false),
+    class: className,
+  }: Props = $props();
 
   const ctx = setUserContext(() => userId);
 
   $effect(() => {
-    if (!ctx.open) return;
+    if (!open) return;
     ctx.loadProfile();
     ctx.loadRoles();
   });
 </script>
 
 <UserCardActions>
-  <Popover.Root bind:open={ctx.open}>
-    <Popover.Trigger class={cn("cursor-pointer text-left", className)}>
-      {@render children()}
-    </Popover.Trigger>
-    <Popover.Content class="w-72 p-0" align="start">
+  <Popover.Root bind:open>
+    {#if children}
+      <Popover.Trigger class={cn("cursor-pointer text-left", className)}>
+        {@render children()}
+      </Popover.Trigger>
+    {/if}
+    <Popover.Content class="w-72 p-0" align="start" customAnchor={anchor}>
       {#if ctx.profile}
         {@const user = ctx.profile}
         <div class="flex items-center gap-3 p-4">

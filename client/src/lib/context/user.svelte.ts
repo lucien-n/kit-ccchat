@@ -21,7 +21,6 @@ const PAST_TENSE: Record<ModAction, string> = {
 export class UserContext {
   #read: () => string;
 
-  open = $state(false);
   profile = $state<Member | null>(null);
   assigned = $state<Role[]>([]);
   busyRoleId = $state<string | null>(null);

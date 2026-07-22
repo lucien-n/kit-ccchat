@@ -9,6 +9,9 @@ import type { PluginSimple } from "markdown-it";
 
 export interface ResolvedMention {
   label: string;
+  /** Users only. Roles and @everyone have no card to open, so they stay inert
+   *  text rather than becoming buttons that do nothing. */
+  id?: string;
   color?: string | null;
   self?: boolean;
 }
@@ -87,14 +90,21 @@ export const mentions: PluginSimple = (md) => {
     // Nobody by that name, or no resolver at all: show what was typed.
     if (!resolved) return md.utils.escapeHtml(meta.raw);
 
+    // A button rather than a span when there is a card behind it, so the mention
+    // is reachable by keyboard. The click itself is delegated: {@html} output
+    // cannot carry Svelte handlers.
+    const tag = resolved.id ? "button" : "span";
     const attrs = [
       'class="mention"',
+      resolved.id
+        ? `type="button" data-user-id="${md.utils.escapeHtml(resolved.id)}"`
+        : "",
       resolved.self ? "data-self" : "",
       resolved.color ? `style="--mention:${md.utils.escapeHtml(resolved.color)}"` : "",
     ]
       .filter(Boolean)
       .join(" ");
 
-    return `<span ${attrs}>@${md.utils.escapeHtml(resolved.label)}</span>`;
+    return `<${tag} ${attrs}>@${md.utils.escapeHtml(resolved.label)}</${tag}>`;
   };
 };

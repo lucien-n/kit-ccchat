@@ -19,17 +19,17 @@ columnSorting:
 - [video-streaming](tasks/video-streaming.md)
 - [upload-images-files](tasks/upload-images-files.md)
 - [use-channel-type-enum-values-in-channels-table](tasks/use-channel-type-enum-values-in-channels-table.md)
-- [make-user-mentions-clickable](tasks/make-user-mentions-clickable.md)
 - [backend-validation-cleaning](tasks/backend-validation-cleaning.md)
 
 ## Todo
 
 ## In Progress
 
-- [message-reactions](tasks/message-reactions.md)
+- [make-user-mentions-clickable](tasks/make-user-mentions-clickable.md)
 
 ## Done
 
+- [message-reactions](tasks/message-reactions.md)
 - [user-typing-indicators](tasks/user-typing-indicators.md)
 - [db-seeder-script](tasks/db-seeder-script.md)
 - [rework-emoji-picker-to-use-custom-emojis-not-the-system-os-ones](tasks/rework-emoji-picker-to-use-custom-emojis-not-the-system-os-ones.md)

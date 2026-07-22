@@ -10,7 +10,7 @@ export function mentionResolver(): MentionResolver {
     user(username) {
       const m = members.list.find((x) => x.username === username);
       if (!m) return null;
-      return { label: m.displayName, color: m.color, self: m.id === meId };
+      return { id: m.id, label: m.displayName, color: m.color, self: m.id === meId };
     },
     role(roleId) {
       const r = roles.byId(roleId);

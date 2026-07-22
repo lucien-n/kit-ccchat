@@ -1,6 +1,7 @@
 <script lang="ts">
   import CreateChannelDialog from "$lib/components/channel/create-channel-dialog.svelte";
   import CommunitySettingsDialog from "$lib/components/community/community-settings-dialog.svelte";
+  import { UserCard } from "$lib/components/common/user-card";
   import SidePanel from "$lib/components/layout/side-panel.svelte";
   import Sidebar from "$lib/components/layout/sidebar";
   import SettingsDialog from "$lib/components/settings/settings-dialog.svelte";
@@ -9,6 +10,7 @@
   import { setBaseTitle, setTitleBadge } from "$lib/notify";
   import { channels } from "$lib/stores/channels.svelte";
   import { community } from "$lib/stores/community.svelte";
+  import { mentionCard } from "$lib/stores/mention-card.svelte";
   import { messages } from "$lib/stores/messages.svelte";
   import { prefs } from "$lib/stores/prefs.svelte";
   import { presence } from "$lib/stores/presence.svelte";
@@ -252,3 +254,11 @@
   bind:open={ui.isCreateChannelDialogOpen}
   initialType={ui.createChannelType}
 />
+
+{#if mentionCard.userId}
+  <UserCard
+    userId={mentionCard.userId}
+    anchor={mentionCard.anchor}
+    bind:open={mentionCard.open}
+  />
+{/if}
