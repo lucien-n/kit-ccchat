@@ -4,8 +4,8 @@ import { messagesTable } from "./messages.table";
 export const messageReactionsTable = sqliteTable(
   "message_reactions",
   {
-    id: text("id").primaryKey(),
-    emoji: text("emojiname").notNull(),
+    id: text("id"),
+    emoji: text("emoji").notNull(),
     messageId: text("message_id")
       .notNull()
       .references(() => messagesTable.id, { onDelete: "cascade" }),
