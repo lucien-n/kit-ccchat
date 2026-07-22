@@ -17,12 +17,13 @@ columnSorting:
 - [unify-channel-type-icons-and-labels](tasks/unify-channel-type-icons-and-labels.md)
 - [mobile-app](tasks/mobile-app.md)
 - [video-streaming](tasks/video-streaming.md)
-- [user-typing-indicators](tasks/user-typing-indicators.md)
 - [upload-images-files](tasks/upload-images-files.md)
 
 ## Todo
 
 ## In Progress
+
+- [user-typing-indicators](tasks/user-typing-indicators.md)
 
 ## Done
 

@@ -6,6 +6,7 @@ export enum ServerEventType {
   Message_Edited = "message_edited",
   Message_Deleted = "message_deleted",
   Presence = "presence",
+  Typing_Started = "typing_started",
   Voice_Presence = "voice_presence",
   Community_Renamed = "community_renamed",
   Community_Icon_Changed = "community_icon_changed",
@@ -30,6 +31,11 @@ export type ServerEvent =
   | {
       type: ServerEventType.Presence;
       online: string[];
+    }
+  | {
+      type: ServerEventType.Typing_Started;
+      channelId: string;
+      userId: string;
     }
   | {
       type: ServerEventType.Voice_Presence;

@@ -19,6 +19,7 @@ import { realtime } from "./stores/realtime.svelte";
 import { roles } from "./stores/roles.svelte";
 import { search } from "./stores/search.svelte";
 import { session } from "./stores/session.svelte";
+import { typing } from "./stores/typing.svelte";
 import { unread } from "./stores/unread.svelte";
 
 export async function init() {
@@ -82,6 +83,7 @@ export async function logout() {
   messages.clear();
   channels.clear();
   presence.clear();
+  typing.clear();
   members.clear();
   roles.clear();
   search.close();
@@ -102,6 +104,8 @@ async function afterLogin() {
 }
 
 async function resync() {
+  // Whatever was on screen when the socket dropped is long stale by now.
+  typing.clear();
   await channels.load();
   await unread.load();
   if (channels.currentId) await messages.load(channels.currentId);
@@ -120,6 +124,10 @@ function dispatch(event: ServerEvent) {
       break;
     case ServerEventType.Presence:
       presence.setOnline(event.online);
+      typing.keepOnly(event.online);
+      break;
+    case ServerEventType.Typing_Started:
+      typing.started(event.channelId, event.userId);
       break;
     case ServerEventType.Voice_Presence:
       presence.setVoice(event.presence);
@@ -146,6 +154,10 @@ async function onRolesChanged() {
 }
 
 function onMessage(m: MessageView) {
+  // The message is the proof that they finished, and it beats waiting out the
+  // typing timeout to say so.
+  if (m.author) typing.stopped(m.channelId, m.author.id);
+
   // A reader sitting in old history has the channel open but cannot see its
   // newest messages, so those badge and ping like any other channel's would.
   const isCurrent = m.channelId === channels.currentId && !messages.detached;

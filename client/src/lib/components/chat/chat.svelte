@@ -29,6 +29,7 @@
   import MessageComposer from "./message-composer.svelte";
   import MessageSkeleton from "./message-skeleton.svelte";
   import Message from "./message.svelte";
+  import TypingIndicator from "./typing-indicator.svelte";
 
   const desktopNow =
     typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
@@ -156,7 +157,7 @@
     </header>
 
     <ScrollArea class="min-h-0 flex-1" bind:viewportRef={chat.scroller}>
-      <div class="flex flex-col gap-0.5 p-2 sm:p-4">
+      <div class="flex flex-col gap-0.5 p-3 sm:p-5">
         {#if messages.loading}
           <MessageSkeleton count={6} />
         {:else if messages.list.length === 0}
@@ -187,14 +188,19 @@
       </div>
     {/if}
 
-    <MessageComposer
-      bind:this={chat.composer}
-      placeholder={`Message #${channels.current?.name ?? ""}`}
-      disabled={channels.current?.type !== ChannelType.Text}
-      onsend={(text) => chat.send(text)}
-      replyingTo={chat.replyTo}
-      oncancelreply={() => (chat.replyTo = null)}
-    />
+    <div class="relative shrink-0">
+      <TypingIndicator channelId={channels.currentId} />
+
+      <MessageComposer
+        bind:this={chat.composer}
+        placeholder={`Message #${channels.current?.name ?? ""}`}
+        disabled={channels.current?.type !== ChannelType.Text}
+        onsend={(text) => chat.send(text)}
+        ontyping={() => chat.typing()}
+        replyingTo={chat.replyTo}
+        oncancelreply={() => (chat.replyTo = null)}
+      />
+    </div>
   </main>
 {/snippet}
 

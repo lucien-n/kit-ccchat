@@ -21,6 +21,7 @@
     placeholder: string;
     disabled?: boolean;
     onsend: (text: string) => boolean;
+    ontyping?: () => void;
     replyingTo?: MessageView | null;
     oncancelreply?: () => void;
   }
@@ -29,6 +30,7 @@
     placeholder,
     disabled = false,
     onsend,
+    ontyping,
     replyingTo = null,
     oncancelreply,
   }: Props = $props();
@@ -124,6 +126,14 @@
     void insert(emoji, from, to);
   }
 
+  // Content changing is the only honest signal that someone is writing: focus
+  // alone can sit on an empty box all day, and an emptied box is a change of
+  // mind, not a message on its way.
+  function changed() {
+    refresh();
+    if (draft.trim()) ontyping?.();
+  }
+
   function submit() {
     const text = draft.trim();
     if (!text) return;
@@ -170,7 +180,7 @@
   }
 </script>
 
-<div class="relative shrink-0 p-2 sm:p-4">
+<div class="relative shrink-0 p-2 pt-0 sm:p-4 sm:pt-0">
   {#if open}
     <div
       class="bg-popover text-popover-foreground ring-foreground/10 absolute bottom-full left-2 z-20 mb-1 w-72 overflow-hidden rounded-xl shadow-lg ring-1 sm:left-4"
@@ -256,8 +266,6 @@
     </div>
   {/if}
 
-  <!-- The box owns the border and focus ring so the textarea and buttons read
-       as one control; the textarea's own ring is turned off below. -->
   <div
     class="bg-input/50 focus-within:border-ring focus-within:ring-ring/30 flex items-end gap-0.5 rounded-2xl border border-transparent p-1 transition-[color,box-shadow] duration-200 focus-within:ring-3"
   >
@@ -271,7 +279,7 @@
       class="thin-scrollbar field-sizing-content max-h-60 min-h-8 flex-1 rounded-none border-0 bg-transparent py-1.5 pl-2 focus-visible:border-transparent focus-visible:ring-0"
       autocomplete="off"
       onkeydown={disabled ? undefined : onkeydown}
-      oninput={refresh}
+      oninput={changed}
       onclick={refresh}
       onfocus={ensureIndex}
       onblur={close}

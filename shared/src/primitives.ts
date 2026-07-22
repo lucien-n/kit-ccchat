@@ -50,6 +50,9 @@ export const MESSAGE_MAX_LENGTH = 4000;
 
 export const REPLY_SNIPPET_MAX = 200;
 
+export const TYPING_THROTTLE_MS = 1500;
+export const TYPING_TIMEOUT_MS = 3000;
+
 export enum SearchSort {
   Newest = "newest",
   Relevance = "relevance",

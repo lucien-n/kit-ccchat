@@ -3,6 +3,7 @@ import {
   clientEvent,
   ClientEventType,
   ServerEventType,
+  TYPING_THROTTLE_MS,
   type ClientEvent,
 } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
@@ -91,6 +92,9 @@ function onConnection(ws: WebSocket, userId: string) {
       case ClientEventType.Message_Create:
         handleCreate(client, msg);
         break;
+      case ClientEventType.Typing_Start:
+        handleTyping(client, msg.channelId);
+        break;
       case ClientEventType.Voice_Join:
         handleVoiceJoin(client, msg.channelId);
         break;
@@ -102,6 +106,38 @@ function onConnection(ws: WebSocket, userId: string) {
 
   ws.on("close", () => hub.remove(client));
   ws.on("error", () => hub.remove(client));
+}
+
+/** Last relayed typing event per socket, for the flood guard below. */
+const lastTyping = new WeakMap<WebSocket, number>();
+
+// The client throttles to TYPING_THROTTLE_MS, so anything arriving much faster
+// than that is a client we did not write. The slack keeps a heartbeat that was
+// merely delayed in flight from being mistaken for one.
+const TYPING_MIN_GAP_MS = TYPING_THROTTLE_MS - 500;
+
+/** Pure relay: who is typing is never stored here. Receivers expire what they
+ *  are shown after TYPING_TIMEOUT_MS, which is what makes a client that vanishes
+ *  mid-sentence self-healing rather than a stuck indicator for everyone else. */
+function handleTyping(client: Client, channelId: string) {
+  const now = Date.now();
+  if (now - (lastTyping.get(client.ws) ?? 0) < TYPING_MIN_GAP_MS) return;
+
+  // Same gate as posting: someone who cannot send a message must not be
+  // advertised as about to send one.
+  const u = db.select().from(users).where(eq(users.id, client.userId)).get();
+  if (!u || u.banned) return;
+  if (u.mutedUntil && u.mutedUntil > now) return;
+
+  const channel = db.select().from(channels).where(eq(channels.id, channelId)).get();
+  if (!channel || channel.type !== ChannelType.Text) return;
+
+  lastTyping.set(client.ws, now);
+  hub.broadcast({
+    type: ServerEventType.Typing_Started,
+    channelId,
+    userId: client.userId,
+  });
 }
 
 function handleVoiceJoin(client: Client, channelId: string) {

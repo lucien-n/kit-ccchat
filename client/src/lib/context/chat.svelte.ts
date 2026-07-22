@@ -3,6 +3,7 @@ import { jumpToPresent, openMessage } from "$lib/app";
 import { channels } from "$lib/stores/channels.svelte";
 import { messages } from "$lib/stores/messages.svelte";
 import { search } from "$lib/stores/search.svelte";
+import { typing } from "$lib/stores/typing.svelte";
 import { getContext, setContext, tick } from "svelte";
 import { toast } from "svelte-sonner";
 
@@ -88,6 +89,11 @@ export class ChatContext {
     this.composer?.focus();
   }
 
+  typing() {
+    const channelId = channels.currentId;
+    if (channelId) typing.signal(channelId);
+  }
+
   send(text: string): boolean {
     const channelId = channels.currentId;
     if (!channelId) return false;
@@ -96,6 +102,7 @@ export class ChatContext {
       return false;
     }
     this.replyTo = null;
+    typing.resetSignal();
     return true;
   }
 }
