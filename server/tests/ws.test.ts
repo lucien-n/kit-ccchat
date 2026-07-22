@@ -151,7 +151,9 @@ it("tells everyone who is screen sharing, including people outside the channel",
   await joined;
 
   const shared = voiceWhere(watcher, (p) => sharingOf(p, ownerId) === true);
-  streamer.send(JSON.stringify({ type: ClientEventType.Screen_Share_Set, sharing: true }));
+  streamer.send(
+    JSON.stringify({ type: ClientEventType.Screen_Share_Set, sharing: true }),
+  );
   expect(sharingOf(await shared, ownerId)).toBe(true);
 
   const stopped = voiceWhere(watcher, (p) => sharingOf(p, ownerId) === false);
@@ -175,7 +177,9 @@ it("drops the sharing flag when the streamer leaves voice", async () => {
   await joined;
 
   const shared = voiceWhere(watcher, (p) => sharingOf(p, ownerId) === true);
-  streamer.send(JSON.stringify({ type: ClientEventType.Screen_Share_Set, sharing: true }));
+  streamer.send(
+    JSON.stringify({ type: ClientEventType.Screen_Share_Set, sharing: true }),
+  );
   await shared;
 
   const gone = voiceWhere(watcher, (p) => sharingOf(p, ownerId) === undefined);
