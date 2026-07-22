@@ -16,7 +16,6 @@ columnSorting:
 
 - [unify-channel-type-icons-and-labels](tasks/unify-channel-type-icons-and-labels.md)
 - [mobile-app](tasks/mobile-app.md)
-- [video-streaming](tasks/video-streaming.md)
 - [use-channel-type-enum-values-in-channels-table](tasks/use-channel-type-enum-values-in-channels-table.md)
 - [backend-validation-cleaning](tasks/backend-validation-cleaning.md)
 - [push-notifications-for-messages](tasks/push-notifications-for-messages.md)
@@ -33,6 +32,7 @@ columnSorting:
 
 ## Done
 
+- [video-streaming](tasks/video-streaming.md)
 - [upload-images-files](tasks/upload-images-files.md)
 - [make-user-mentions-clickable](tasks/make-user-mentions-clickable.md)
 - [message-reactions](tasks/message-reactions.md)
