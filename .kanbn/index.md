@@ -24,6 +24,8 @@ columnSorting:
 
 ## In Progress
 
+- [db-seeder-script](tasks/db-seeder-script.md)
+
 ## Done
 
 - [rework-emoji-picker-to-use-custom-emojis-not-the-system-os-ones](tasks/rework-emoji-picker-to-use-custom-emojis-not-the-system-os-ones.md)
