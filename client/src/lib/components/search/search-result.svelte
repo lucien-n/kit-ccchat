@@ -66,7 +66,7 @@
       >
         {hit.message.author?.displayName ?? "unknown"}
       </div>
-      <p class="text-muted-foreground text-sm break-words whitespace-pre-wrap">
+      <p class="text-muted-foreground text-sm wrap-break-word whitespace-pre-wrap">
         {#each segments(hit.snippet) as segment, i (i)}
           {#if segment.match}
             <mark class="bg-primary/25 text-foreground rounded-sm px-0.5"
