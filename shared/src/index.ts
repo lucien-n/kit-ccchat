@@ -1,3 +1,4 @@
+export * from "./emoji.js";
 export * from "./events";
 export * from "./mentions.js";
 export * from "./primitives.js";
