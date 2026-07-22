@@ -1,5 +1,7 @@
 import {
   ChannelType,
+  isMuted,
+  MAX_REACTIONS_PER_MESSAGE,
   ServerEventType,
   type EditMessageBody,
   type MessageView,
@@ -9,22 +11,29 @@ import {
 import { and, asc, desc, eq, gt, lt, lte } from "drizzle-orm";
 import { can, newId } from "../../auth.js";
 import { db } from "../../db/index.js";
-import { channels, messages, type User } from "../../db/schema";
+import {
+  channelsTable,
+  messageReactionsTable,
+  messagesTable,
+  type User,
+} from "../../db/schema";
 import { httpError } from "../../http/errors.js";
 import { hub } from "../../hub.js";
 import { toMessageView } from "../../views.js";
+import { deleteImagesOf } from "../images/images.service.js";
+import { resolveMentions, saveMentions } from "./mentions.js";
+import { emojiOn, reactionsOf } from "./reactions.js";
 
-/** Post a system line (e.g. "member joined") to the first text channel and push
- *  it to everyone. `subjectId` is the user the event is about; the client reads
- *  it off the message author. No-op if there is no text channel to post to. */
 export function postSystemMessage(event: SystemEvent, subjectId: string) {
   const channel = db
     .select()
-    .from(channels)
-    .where(eq(channels.type, ChannelType.Text))
-    .orderBy(asc(channels.position), asc(channels.createdAt))
+    .from(channelsTable)
+    .where(eq(channelsTable.type, ChannelType.Text))
+    .orderBy(asc(channelsTable.position), asc(channelsTable.createdAt))
     .get();
-  if (!channel) return;
+  if (!channel) {
+    return;
+  }
 
   const row = {
     id: newId(),
@@ -36,64 +45,69 @@ export function postSystemMessage(event: SystemEvent, subjectId: string) {
     deleted: 0,
     replyToId: null,
     systemEvent: event,
+    mentionsEveryone: 0,
   };
-  db.insert(messages).values(row).run();
+  db.insert(messagesTable).values(row).run();
   hub.broadcast({ type: ServerEventType.Message_New, message: toMessageView(row) });
 }
 
-/** Message history for a channel, always returned oldest-first, keyset-paginated
- *  by a createdAt timestamp. `after` pages forward, which only matters once a
- *  reader has jumped into the middle of history; `before` pages back, which is
- *  the ordinary scroll-up. Deleted messages are omitted. */
 export function history(
   channelId: string,
   { before, after, limit }: { before?: number; after?: number; limit: number },
 ): MessageView[] {
   const bound = after
-    ? gt(messages.createdAt, after)
+    ? gt(messagesTable.createdAt, after)
     : before
-      ? lt(messages.createdAt, before)
+      ? lt(messagesTable.createdAt, before)
       : undefined;
 
   const rows = db
     .select()
-    .from(messages)
-    .where(and(eq(messages.channelId, channelId), eq(messages.deleted, 0), bound))
+    .from(messagesTable)
+    .where(
+      and(eq(messagesTable.channelId, channelId), eq(messagesTable.deleted, 0), bound),
+    )
     // Paging back is queried newest-first so `limit` takes the latest page, then
     // reversed; paging forward already runs in the direction it is read.
-    .orderBy(after ? asc(messages.createdAt) : desc(messages.createdAt))
+    .orderBy(after ? asc(messagesTable.createdAt) : desc(messagesTable.createdAt))
     .limit(limit)
     .all();
 
   return (after ? rows : rows.reverse()).map(toMessageView);
 }
 
-/** A window of history centred on one message, so a search result can be opened
- *  where it was said. `limit` is per side, and the target itself always comes
- *  back in the older half. */
 export function around(
   channelId: string,
   messageId: string,
   limit: number,
 ): MessageWindow | null {
-  const target = db.select().from(messages).where(eq(messages.id, messageId)).get();
-  if (!target || target.channelId !== channelId || target.deleted) return null;
+  const target = db
+    .select()
+    .from(messagesTable)
+    .where(eq(messagesTable.id, messageId))
+    .get();
+  if (!target || target.channelId !== channelId || target.deleted) {
+    return null;
+  }
 
-  const visible = and(eq(messages.channelId, channelId), eq(messages.deleted, 0));
+  const visible = and(
+    eq(messagesTable.channelId, channelId),
+    eq(messagesTable.deleted, 0),
+  );
 
   // One extra each way answers "is there more?" without a second count query.
   const older = db
     .select()
-    .from(messages)
-    .where(and(visible, lte(messages.createdAt, target.createdAt)))
-    .orderBy(desc(messages.createdAt))
+    .from(messagesTable)
+    .where(and(visible, lte(messagesTable.createdAt, target.createdAt)))
+    .orderBy(desc(messagesTable.createdAt))
     .limit(limit + 1)
     .all();
   const newer = db
     .select()
-    .from(messages)
-    .where(and(visible, gt(messages.createdAt, target.createdAt)))
-    .orderBy(asc(messages.createdAt))
+    .from(messagesTable)
+    .where(and(visible, gt(messagesTable.createdAt, target.createdAt)))
+    .orderBy(asc(messagesTable.createdAt))
     .limit(limit + 1)
     .all();
 
@@ -106,29 +120,109 @@ export function around(
   };
 }
 
-/** Author only: an admin may remove someone's words but never rewrite them.
- *  `editedAt` marks it so the client can show "(edited)". */
 export function editMessage(id: string, user: User, { content }: EditMessageBody) {
-  const msg = db.select().from(messages).where(eq(messages.id, id)).get();
-  if (!msg || msg.deleted) httpError(404, "not found");
-  if (msg.systemEvent) httpError(400, "cannot edit a system message");
-  if (msg.authorId !== user.id) httpError(403, "forbidden");
+  const msg = db.select().from(messagesTable).where(eq(messagesTable.id, id)).get();
+  if (!msg || msg.deleted) {
+    httpError(404, "not found");
+  }
+  if (msg.systemEvent) {
+    httpError(400, "cannot edit a system message");
+  }
+  if (msg.authorId !== user.id) {
+    httpError(403, "forbidden");
+  }
 
   const editedAt = Date.now();
-  db.update(messages).set({ content, editedAt }).where(eq(messages.id, id)).run();
-  const view = toMessageView({ ...msg, content, editedAt });
+  const { userIds, everyone } = resolveMentions(content, user.id);
+  const mentionsEveryone = everyone ? 1 : 0;
+  db.update(messagesTable)
+    .set({ content, editedAt, mentionsEveryone })
+    .where(eq(messagesTable.id, id))
+    .run();
+  saveMentions(id, userIds);
+  const view = toMessageView({ ...msg, content, editedAt, mentionsEveryone });
   hub.broadcast({ type: ServerEventType.Message_Edited, message: view });
   return view;
 }
 
-/** Allowed for the author or any admin/owner. Soft delete so moderation stays
- *  auditable. Broadcasts the removal to everyone live. */
 export function deleteMessage(id: string, user: User) {
-  const msg = db.select().from(messages).where(eq(messages.id, id)).get();
-  if (!msg || msg.deleted) httpError(404, "not found");
-  if (msg.authorId !== user.id && !can(user, "deleteAnyMessage"))
+  const msg = db.select().from(messagesTable).where(eq(messagesTable.id, id)).get();
+  if (!msg || msg.deleted) {
+    httpError(404, "not found");
+  }
+  if (msg.authorId !== user.id && !can(user, "deleteAnyMessage")) {
     httpError(403, "forbidden");
+  }
 
-  db.update(messages).set({ deleted: 1 }).where(eq(messages.id, id)).run();
+  db.update(messagesTable).set({ deleted: 1 }).where(eq(messagesTable.id, id)).run();
+  deleteImagesOf(id);
   hub.broadcast({ type: ServerEventType.Message_Deleted, id, channelId: msg.channelId });
+}
+
+export function reactMessage(id: string, user: User, emoji: string) {
+  if (isMuted(user)) {
+    httpError(403, "you are muted");
+  }
+
+  const msg = db.select().from(messagesTable).where(eq(messagesTable.id, id)).get();
+  if (!msg || msg.deleted) {
+    httpError(404, "not found");
+  }
+  if (msg.systemEvent) {
+    httpError(400, "cannot react to a system message");
+  }
+
+  const taken = emojiOn(id);
+  if (taken.length >= MAX_REACTIONS_PER_MESSAGE && !taken.includes(emoji)) {
+    httpError(409, `a message can only carry ${MAX_REACTIONS_PER_MESSAGE} reactions`);
+  }
+
+  db.insert(messageReactionsTable)
+    .values({
+      id: crypto.randomUUID(),
+      messageId: id,
+      emoji,
+      userId: user.id,
+      createdAt: Date.now(),
+    })
+    .onConflictDoNothing()
+    .run();
+  hub.broadcast({
+    type: ServerEventType.Message_Reacted,
+    id,
+    channelId: msg.channelId,
+    reactions: reactionsOf(id),
+  });
+}
+
+export function unreactMessage(id: string, user: User, emoji: string) {
+  if (isMuted(user)) {
+    httpError(403, "you are muted");
+  }
+
+  const msg = db.select().from(messagesTable).where(eq(messagesTable.id, id)).get();
+  if (!msg || msg.deleted) {
+    httpError(404, "not found");
+  }
+
+  const deleted = db
+    .delete(messageReactionsTable)
+    .where(
+      and(
+        eq(messageReactionsTable.messageId, id),
+        eq(messageReactionsTable.userId, user.id),
+        eq(messageReactionsTable.emoji, emoji),
+      ),
+    )
+    .run();
+  if (deleted.changes === 0) {
+    return;
+  }
+
+  hub.broadcast({
+    type: ServerEventType.Message_Reacted,
+    id,
+    channelId: msg.channelId,
+    reactions: reactionsOf(id),
+  });
 }

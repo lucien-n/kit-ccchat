@@ -1,11 +1,13 @@
 import z from "zod";
-import { messageView, voiceMember } from "../views";
+import { messageView, reaction, voiceMember } from "../views";
 
 export enum ServerEventType {
   Message_New = "message_new",
   Message_Edited = "message_edited",
   Message_Deleted = "message_deleted",
+  Message_Reacted = "message_reacted",
   Presence = "presence",
+  Typing_Started = "typing_started",
   Voice_Presence = "voice_presence",
   Community_Renamed = "community_renamed",
   Community_Icon_Changed = "community_icon_changed",
@@ -28,8 +30,19 @@ export type ServerEvent =
       channelId: string;
     }
   | {
+      type: ServerEventType.Message_Reacted;
+      id: string;
+      channelId: string;
+      reactions: z.infer<typeof reaction>[];
+    }
+  | {
       type: ServerEventType.Presence;
       online: string[];
+    }
+  | {
+      type: ServerEventType.Typing_Started;
+      channelId: string;
+      userId: string;
     }
   | {
       type: ServerEventType.Voice_Presence;

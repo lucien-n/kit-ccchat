@@ -1,6 +1,6 @@
 import { primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-export const userRoles = sqliteTable(
+export const userRolesTable = sqliteTable(
   "user_roles",
   {
     userId: text("user_id").notNull(),

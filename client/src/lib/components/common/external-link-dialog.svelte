@@ -27,7 +27,7 @@
     </Dialog.Header>
 
     {#if parts}
-      <p class="bg-muted rounded-md p-3 font-mono text-xs wrap-break-word">
+      <p class="bg-muted rounded-2xl p-3 font-mono text-xs wrap-break-word">
         <span class="text-muted-foreground">{parts.scheme}</span><span
           class="text-foreground font-semibold">{parts.host}</span
         ><span class="text-muted-foreground">{parts.rest}</span>

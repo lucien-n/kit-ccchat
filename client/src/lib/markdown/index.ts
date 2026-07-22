@@ -1,6 +1,9 @@
 import { spoiler } from "@mdit/plugin-spoiler";
 import MarkdownIt from "markdown-it";
 import { full as emoji } from "markdown-it-emoji";
+import { mentions, type MentionEnv } from "./mentions.js";
+
+export type { MentionResolver, ResolvedMention } from "./mentions.js";
 
 // html:false escapes every tag in the source, so message text cannot inject
 // markup and there is no sanitiser in the loop to get wrong. markdown-it also
@@ -12,6 +15,7 @@ const md = new MarkdownIt({
   typographer: false,
 })
   .use(emoji)
+  .use(mentions)
   .use(spoiler, {
     attrs: [
       ["class", "spoiler"],
@@ -34,7 +38,7 @@ md.renderer.rules.link_open = (tokens, i, opts, env, self) => {
   return link ? link(tokens, i, opts, env, self) : self.renderToken(tokens, i, opts);
 };
 
-export const render = (src: string) => md.render(src);
+export const render = (src: string, env: MentionEnv = {}) => md.render(src, env);
 
 const EMOJI_ONLY = /^(?:\p{RGI_Emoji}|\s)+$/v;
 

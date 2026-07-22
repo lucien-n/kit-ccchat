@@ -125,7 +125,7 @@
 
   {#if typing && suggestions.length > 0}
     <ul
-      class="bg-popover text-popover-foreground absolute top-11 z-20 w-full overflow-hidden rounded-md border shadow-md"
+      class="bg-popover text-popover-foreground absolute top-11 z-20 w-full overflow-hidden rounded-2xl border shadow-md"
     >
       {#each suggestions as suggestion (suggestion.value)}
         <li>

@@ -1,14 +1,16 @@
 <script lang="ts">
   import CreateChannelDialog from "$lib/components/channel/create-channel-dialog.svelte";
-  import CommunitySettings from "$lib/components/community/community-settings.svelte";
+  import CommunitySettingsDialog from "$lib/components/community/community-settings-dialog.svelte";
+  import { UserCard } from "$lib/components/common/user-card";
   import SidePanel from "$lib/components/layout/side-panel.svelte";
   import Sidebar from "$lib/components/layout/sidebar";
-  import Settings from "$lib/components/settings/settings.svelte";
+  import SettingsDialog from "$lib/components/settings/settings-dialog.svelte";
   import VoiceBar from "$lib/components/voice/voice-bar.svelte";
   import { setChatContext, type ChatPanel } from "$lib/context/chat.svelte";
   import { setBaseTitle, setTitleBadge } from "$lib/notify";
   import { channels } from "$lib/stores/channels.svelte";
   import { community } from "$lib/stores/community.svelte";
+  import { mentionCard } from "$lib/stores/mention-card.svelte";
   import { messages } from "$lib/stores/messages.svelte";
   import { prefs } from "$lib/stores/prefs.svelte";
   import { presence } from "$lib/stores/presence.svelte";
@@ -26,9 +28,11 @@
   import SearchIcon from "@lucide/svelte/icons/search";
   import { tick } from "svelte";
   import { toast } from "svelte-sonner";
+  import { Message } from "./message";
   import MessageComposer from "./message-composer.svelte";
   import MessageSkeleton from "./message-skeleton.svelte";
-  import Message from "./message.svelte";
+  import TypingIndicator from "./typing-indicator.svelte";
+  import StreamView from "$lib/components/voice/stream-view.svelte";
 
   const desktopNow =
     typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
@@ -47,8 +51,10 @@
     if (chat.isDesktop) prefs.setMembersPanel(chat.showMembers);
   });
 
+  // voice.watching: closing a stream remounts the scroller at the top.
   $effect(() => {
     void messages.list.length;
+    void voice.watching;
     if (chat.stick) chat.toBottom();
   });
 
@@ -136,9 +142,7 @@
               class="size-4"
             />{/if}
         </Button>
-        <span class="text-muted-foreground hidden text-sm sm:inline"
-          >{presence.online.size} online</span
-        >
+
         <ToggleGroup.Root
           type="single"
           variant="outline"
@@ -148,31 +152,41 @@
           <ToggleGroup.Item value="search" title="Search messages">
             <SearchIcon class="size-4" />
           </ToggleGroup.Item>
-          <ToggleGroup.Item value="members" title="Members">
+          <ToggleGroup.Item
+            value="members"
+            title="Members, {presence.online.size} online"
+          >
             <Users class="size-4" />
+            <span class="text-xs">
+              {presence.online.size} online
+            </span>
           </ToggleGroup.Item>
         </ToggleGroup.Root>
       </div>
     </header>
 
-    <ScrollArea class="min-h-0 flex-1" bind:viewportRef={chat.scroller}>
-      <div class="flex flex-col gap-0.5 p-2 sm:p-4">
-        {#if messages.loading}
-          <MessageSkeleton count={6} />
-        {:else if messages.list.length === 0}
-          <div class="text-muted-foreground m-auto">No messages yet. Say hi 👋</div>
-        {:else}
-          {#if messages.loadingOlder}
-            <MessageSkeleton />
+    {#if voice.watching}
+      <StreamView />
+    {:else}
+      <ScrollArea class="min-h-0 flex-1" bind:viewportRef={chat.scroller}>
+        <div class="flex flex-col gap-0.5 p-3 sm:p-5">
+          {#if messages.loading}
+            <MessageSkeleton count={6} />
+          {:else if messages.list.length === 0}
+            <div class="text-muted-foreground m-auto">No messages yet. Say hi 👋</div>
+          {:else}
+            {#if messages.loadingOlder}
+              <MessageSkeleton />
+            {/if}
+            {#each messages.list as message (message.id)}
+              <Message {message} />
+            {/each}
           {/if}
-          {#each messages.list as message (message.id)}
-            <Message {message} />
-          {/each}
-        {/if}
-      </div>
-    </ScrollArea>
+        </div>
+      </ScrollArea>
+    {/if}
 
-    {#if messages.hasMoreAfter}
+    {#if messages.hasMoreAfter && !voice.watching}
       <div class="flex justify-center border-t px-2 py-1.5">
         <Button variant="secondary" size="sm" onclick={() => chat.backToPresent()}>
           <ArrowDownIcon data-icon="inline-start" />
@@ -187,14 +201,19 @@
       </div>
     {/if}
 
-    <MessageComposer
-      bind:this={chat.composer}
-      placeholder={`Message #${channels.current?.name ?? ""}`}
-      disabled={channels.current?.type !== ChannelType.Text}
-      onsend={(text) => chat.send(text)}
-      replyingTo={chat.replyTo}
-      oncancelreply={() => (chat.replyTo = null)}
-    />
+    <div class="relative shrink-0">
+      <TypingIndicator channelId={channels.currentId} />
+
+      <MessageComposer
+        bind:this={chat.composer}
+        placeholder={`Message #${channels.current?.name ?? ""}`}
+        disabled={channels.current?.type !== ChannelType.Text}
+        onsend={(text, imageIds) => chat.send(text, imageIds)}
+        ontyping={() => chat.typing()}
+        replyingTo={chat.replyTo}
+        oncancelreply={() => (chat.replyTo = null)}
+      />
+    </div>
   </main>
 {/snippet}
 
@@ -236,6 +255,17 @@
   <SidePanel />
 {/if}
 
-<CommunitySettings bind:open={ui.communitySettings} />
-<Settings bind:open={ui.settings} />
-<CreateChannelDialog bind:open={ui.createChannel} initialType={ui.createChannelType} />
+<CommunitySettingsDialog bind:open={ui.isCommunitySettingsDialogOpen} />
+<SettingsDialog bind:open={ui.isSettingsDialogOpen} />
+<CreateChannelDialog
+  bind:open={ui.isCreateChannelDialogOpen}
+  initialType={ui.createChannelType}
+/>
+
+{#if mentionCard.userId}
+  <UserCard
+    userId={mentionCard.userId}
+    anchor={mentionCard.anchor}
+    bind:open={mentionCard.open}
+  />
+{/if}

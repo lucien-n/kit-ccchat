@@ -1,15 +1,23 @@
 <script lang="ts">
   import { isEmojiOnly, render } from "$lib/markdown";
+  import { mentionResolver } from "$lib/mentions";
   import { externalLink } from "$lib/stores/externalLink.svelte";
+  import { mentionCard } from "$lib/stores/mention-card.svelte";
 
   let { content, class: className = "" }: { content: string; class?: string } = $props();
 
-  const html = $derived(render(content));
+  const html = $derived(render(content, { mentions: mentionResolver() }));
   const jumbo = $derived(isEmojiOnly(content));
 
   // {@html} output cannot carry Svelte handlers, so reveal is delegated.
   function reveal(e: Event) {
     (e.target as HTMLElement).closest(".spoiler")?.classList.add("revealed");
+  }
+
+  function openMentionCard(e: MouseEvent) {
+    const el = (e.target as HTMLElement).closest<HTMLElement>(".mention[data-user-id]");
+    if (!el?.dataset.userId) return;
+    mentionCard.show(el.dataset.userId, el);
   }
 
   function confirmLink(e: MouseEvent) {
@@ -28,6 +36,7 @@
   onclick={(e) => {
     confirmLink(e);
     reveal(e);
+    openMentionCard(e);
   }}
   onkeydown={(e) => {
     if (e.key === "Enter" || e.key === " ") reveal(e);
@@ -131,6 +140,33 @@
   .md :global(td) {
     border: 1px solid var(--border);
     padding: 0.25rem 0.5rem;
+  }
+  /* --mention is the role or member colour when there is one; the primary
+     accent stands in when there isn't. */
+  .md :global(.mention) {
+    --mention: var(--primary);
+    color: var(--mention);
+    background: color-mix(in oklab, var(--mention) 16%, transparent);
+    border-radius: 0.25rem;
+    padding: 0 0.2rem;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+  .md :global(.mention[data-self]) {
+    background: color-mix(in oklab, var(--mention) 28%, transparent);
+  }
+  /* User mentions render as buttons so they are focusable. Tailwind's preflight
+     gives buttons `cursor: default` and their own font metrics, which would
+     otherwise make one mid-sentence look pasted in. */
+  .md :global(button.mention) {
+    font: inherit;
+    line-height: inherit;
+    vertical-align: baseline;
+    border: 0;
+    cursor: pointer;
+  }
+  .md :global(button.mention:hover) {
+    background: color-mix(in oklab, var(--mention) 32%, transparent);
   }
   .md :global(.spoiler) {
     background: color-mix(in oklab, var(--foreground) 85%, transparent);

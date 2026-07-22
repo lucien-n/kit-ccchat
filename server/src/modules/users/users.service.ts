@@ -1,57 +1,51 @@
-import type { AvatarBody, ChangePasswordBody, Member, Role } from "@ccchat/shared";
+import {
+  MAX_AVATAR_IMAGE_BYTES,
+  type AvatarBody,
+  type ChangePasswordBody,
+  type Member,
+  type Role,
+} from "@ccchat/shared";
 import { desc, eq } from "drizzle-orm";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
 import { hashPassword, verifyPassword } from "../../auth.js";
 import { db } from "../../db/index.js";
-import { roles, userRoles, users, type User } from "../../db/schema";
-import { DATA_DIR } from "../../env.js";
+import { rolesTable, userRolesTable, usersTable, type User } from "../../db/schema";
+import { AVATARS_DIR } from "../../env.js";
 import { httpError } from "../../http/errors.js";
-import { decodeImageUpload, readImageFile, type StoredImage } from "../../images.js";
+import { decodeImageUpload, imageStore, type StoredImage } from "../../images.js";
 import { toMember, toRoleView } from "../../views.js";
 
-const AVATAR_DIR = join(DATA_DIR, "avatars");
-mkdirSync(AVATAR_DIR, { recursive: true });
-
-/** Hono hands back the *decoded* param, so an id of `..%2Fccchat.sqlite` arrives
- *  as a relative path and join() would walk straight out of AVATAR_DIR. An
- *  avatar is always a direct child of it; anything else is someone probing. */
-function avatarPath(id: string): string | null {
-  const path = resolve(AVATAR_DIR, id);
-  return dirname(path) === AVATAR_DIR ? path : null;
-}
+const avatars = imageStore(AVATARS_DIR);
 
 export function listMembers(): Member[] {
   return db
     .select()
-    .from(users)
+    .from(usersTable)
     .all()
     .filter((u) => !u.banned)
     .map(toMember);
 }
 
 export function readAvatar(id: string): StoredImage {
-  const path = avatarPath(id);
-  const image = path ? readImageFile(path) : null;
-  if (!image) httpError(404, "not found");
-  return image;
+  return avatars.read(id);
 }
 
 export function saveAvatar(userId: string, { image }: AvatarBody): number {
-  writeFileSync(join(AVATAR_DIR, userId), decodeImageUpload(image));
+  avatars.write(userId, decodeImageUpload(image, MAX_AVATAR_IMAGE_BYTES));
   const avatarVersion = Date.now();
-  db.update(users).set({ avatarVersion }).where(eq(users.id, userId)).run();
+  db.update(usersTable).set({ avatarVersion }).where(eq(usersTable.id, userId)).run();
   return avatarVersion;
 }
 
 export function deleteAvatar(userId: string) {
-  const path = join(AVATAR_DIR, userId);
-  if (existsSync(path)) rmSync(path);
-  db.update(users).set({ avatarVersion: null }).where(eq(users.id, userId)).run();
+  avatars.remove(userId);
+  db.update(usersTable)
+    .set({ avatarVersion: null })
+    .where(eq(usersTable.id, userId))
+    .run();
 }
 
 export function updateProfile(user: User, displayName: string): Member {
-  db.update(users).set({ displayName }).where(eq(users.id, user.id)).run();
+  db.update(usersTable).set({ displayName }).where(eq(usersTable.id, user.id)).run();
   return toMember({ ...user, displayName });
 }
 
@@ -62,29 +56,29 @@ export function changePassword(
   if (!verifyPassword(currentPassword, user.passwordHash))
     httpError(403, "current password is incorrect");
 
-  db.update(users)
+  db.update(usersTable)
     .set({ passwordHash: hashPassword(newPassword) })
-    .where(eq(users.id, user.id))
+    .where(eq(usersTable.id, user.id))
     .run();
 }
 
 export function getUser(id: string): { user: Member; roles: Role[] } {
-  const u = db.select().from(users).where(eq(users.id, id)).get();
+  const u = db.select().from(usersTable).where(eq(usersTable.id, id)).get();
   if (!u) httpError(404, "user not found");
 
   const assigned = db
     .select({
-      id: roles.id,
-      name: roles.name,
-      color: roles.color,
-      permission: roles.permission,
-      position: roles.position,
-      createdAt: roles.createdAt,
+      id: rolesTable.id,
+      name: rolesTable.name,
+      color: rolesTable.color,
+      permission: rolesTable.permission,
+      position: rolesTable.position,
+      createdAt: rolesTable.createdAt,
     })
-    .from(userRoles)
-    .innerJoin(roles, eq(userRoles.roleId, roles.id))
-    .where(eq(userRoles.userId, id))
-    .orderBy(desc(roles.position))
+    .from(userRolesTable)
+    .innerJoin(rolesTable, eq(userRolesTable.roleId, rolesTable.id))
+    .where(eq(userRolesTable.userId, id))
+    .orderBy(desc(rolesTable.position))
     .all();
 
   return { user: toMember(u), roles: assigned.map(toRoleView) };

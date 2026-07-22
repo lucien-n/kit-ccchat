@@ -2,7 +2,9 @@ import {
   ChannelType,
   clientEvent,
   ClientEventType,
+  isMuted,
   ServerEventType,
+  TYPING_THROTTLE_MS,
   type ClientEvent,
 } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
@@ -11,8 +13,10 @@ import type { Duplex } from "node:stream";
 import { WebSocketServer, type WebSocket } from "ws";
 import { newId, userForToken } from "./auth.js";
 import { db } from "./db/index.js";
-import { channels, messages, users } from "./db/schema";
+import { channelsTable, messagesTable, usersTable } from "./db/schema";
 import { hub, type Client } from "./hub.js";
+import { attachImages } from "./modules/images/images.service.js";
+import { resolveMentions, saveMentions } from "./modules/messages/mentions.js";
 import { toMessageView } from "./views.js";
 
 const wss = new WebSocketServer({ noServer: true });
@@ -90,6 +94,9 @@ function onConnection(ws: WebSocket, userId: string) {
       case ClientEventType.Message_Create:
         handleCreate(client, msg);
         break;
+      case ClientEventType.Typing_Start:
+        handleTyping(client, msg.channelId);
+        break;
       case ClientEventType.Voice_Join:
         handleVoiceJoin(client, msg.channelId);
         break;
@@ -103,11 +110,51 @@ function onConnection(ws: WebSocket, userId: string) {
   ws.on("error", () => hub.remove(client));
 }
 
+/** Last relayed typing event per socket, for the flood guard below. */
+const lastTyping = new WeakMap<WebSocket, number>();
+
+// The client throttles to TYPING_THROTTLE_MS, so anything arriving much faster
+// than that is a client we did not write. The slack keeps a heartbeat that was
+// merely delayed in flight from being mistaken for one.
+const TYPING_MIN_GAP_MS = TYPING_THROTTLE_MS - 500;
+
+/** Pure relay: who is typing is never stored here. Receivers expire what they
+ *  are shown after TYPING_TIMEOUT_MS, which is what makes a client that vanishes
+ *  mid-sentence self-healing rather than a stuck indicator for everyone else. */
+function handleTyping(client: Client, channelId: string) {
+  const now = Date.now();
+  if (now - (lastTyping.get(client.ws) ?? 0) < TYPING_MIN_GAP_MS) return;
+
+  // Same gate as posting: someone who cannot send a message must not be
+  // advertised as about to send one.
+  const u = db.select().from(usersTable).where(eq(usersTable.id, client.userId)).get();
+  if (!u || u.banned) return;
+  if (u.mutedUntil && u.mutedUntil > now) return;
+
+  const channel = db
+    .select()
+    .from(channelsTable)
+    .where(eq(channelsTable.id, channelId))
+    .get();
+  if (!channel || channel.type !== ChannelType.Text) return;
+
+  lastTyping.set(client.ws, now);
+  hub.broadcast({
+    type: ServerEventType.Typing_Started,
+    channelId,
+    userId: client.userId,
+  });
+}
+
 function handleVoiceJoin(client: Client, channelId: string) {
-  const channel = db.select().from(channels).where(eq(channels.id, channelId)).get();
+  const channel = db
+    .select()
+    .from(channelsTable)
+    .where(eq(channelsTable.id, channelId))
+    .get();
   if (!channel || channel.type !== ChannelType.Voice) return;
 
-  const u = db.select().from(users).where(eq(users.id, client.userId)).get();
+  const u = db.select().from(usersTable).where(eq(usersTable.id, client.userId)).get();
   if (!u) return;
   hub.voiceJoin(channelId, {
     id: u.id,
@@ -118,7 +165,11 @@ function handleVoiceJoin(client: Client, channelId: string) {
 
 function replyTarget(replyToId: string | undefined, channelId: string): string | null {
   if (!replyToId) return null;
-  const target = db.select().from(messages).where(eq(messages.id, replyToId)).get();
+  const target = db
+    .select()
+    .from(messagesTable)
+    .where(eq(messagesTable.id, replyToId))
+    .get();
   if (!target || target.deleted || target.channelId !== channelId) return null;
   return target.id;
 }
@@ -127,18 +178,29 @@ function handleCreate(
   client: Client,
   msg: Extract<ClientEvent, { type: ClientEventType.Message_Create }>,
 ) {
-  const u = db.select().from(users).where(eq(users.id, client.userId)).get();
-  if (!u) return;
-  if (u.banned)
+  const user = db.select().from(usersTable).where(eq(usersTable.id, client.userId)).get();
+  if (!user) {
+    return;
+  }
+  if (user.banned) {
     return hub.send(client, { type: ServerEventType.Error, message: "you are banned" });
-  if (u.mutedUntil && u.mutedUntil > Date.now())
+  }
+  if (isMuted(user)) {
     return hub.send(client, { type: ServerEventType.Error, message: "you are muted" });
+  }
 
   const { channelId, content } = msg;
+  const imageIds = msg.imageIds ?? [];
+  if (!content && !imageIds.length) return;
 
-  const channel = db.select().from(channels).where(eq(channels.id, channelId)).get();
+  const channel = db
+    .select()
+    .from(channelsTable)
+    .where(eq(channelsTable.id, channelId))
+    .get();
   if (!channel || channel.type !== ChannelType.Text) return;
 
+  const { userIds, everyone } = resolveMentions(content, client.userId);
   const row = {
     id: newId(),
     channelId,
@@ -149,7 +211,10 @@ function handleCreate(
     deleted: 0,
     replyToId: replyTarget(msg.replyToId, channelId),
     systemEvent: null,
+    mentionsEveryone: everyone ? 1 : 0,
   };
-  db.insert(messages).values(row).run();
+  db.insert(messagesTable).values(row).run();
+  saveMentions(row.id, userIds);
+  attachImages(row.id, client.userId, imageIds);
   hub.broadcast({ type: ServerEventType.Message_New, message: toMessageView(row) });
 }

@@ -2,7 +2,7 @@ import { ChannelType } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import { hashPassword, newId, randomToken } from "./auth.js";
 import { db } from "./db/index.js";
-import { channels, invites, users } from "./db/schema";
+import { channelsTable, invitesTable, usersTable } from "./db/schema";
 import {
   COMMUNITY_NAME,
   OWNER_PASSWORD,
@@ -14,7 +14,7 @@ import * as settingsService from "./modules/settings/settings.service.js";
 /** A brand-new instance has no accounts. The client shows the setup wizard in
  *  that state, and POST /api/setup is only accepted while it is true. */
 export function needsSetup(): boolean {
-  return db.select().from(users).all().length === 0;
+  return db.select().from(usersTable).all().length === 0;
 }
 
 /** Startup hook. Normally there is nothing to do: a fresh instance stays empty
@@ -68,8 +68,8 @@ export function seedCommunity(input: {
   // One transaction: either the whole community exists or none of it does, so a
   // crash mid-setup can't leave an instance that can never be claimed.
   db.transaction((tx) => {
-    tx.insert(users).values(owner).run();
-    tx.insert(channels)
+    tx.insert(usersTable).values(owner).run();
+    tx.insert(channelsTable)
       .values([
         {
           id: newId(),
@@ -94,7 +94,7 @@ export function seedCommunity(input: {
         },
       ])
       .run();
-    tx.insert(invites)
+    tx.insert(invitesTable)
       .values({
         code: inviteCode,
         createdBy: owner.id,
@@ -126,19 +126,23 @@ function resetOwnerPassword() {
   }
 
   const username = OWNER_USERNAME.toLowerCase();
-  const owner = db.select().from(users).where(eq(users.username, username)).get();
+  const owner = db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.username, username))
+    .get();
   if (!owner) {
     console.warn(`RESET_OWNER_PASSWORD=1 but no user "${username}" exists - skipping.`);
     return;
   }
 
-  db.update(users)
+  db.update(usersTable)
     .set({
       passwordHash: hashPassword(OWNER_PASSWORD),
       isOwner: 1,
       banned: 0,
     })
-    .where(eq(users.id, owner.id))
+    .where(eq(usersTable.id, owner.id))
     .run();
 
   console.log("\n" + "=".repeat(60));

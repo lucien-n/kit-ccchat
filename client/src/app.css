@@ -3,6 +3,12 @@
 @import "shadcn-svelte/tailwind.css";
 @import "@fontsource-variable/figtree";
 
+@font-face {
+  font-family: "Twemoji";
+  src: url("twemoji-colr-font/twemoji.woff2") format("woff2");
+  font-display: swap;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 :root {
@@ -75,8 +81,8 @@
 }
 
 @theme inline {
-  --font-sans: "Figtree Variable", sans-serif;
-  --font-heading: "Figtree Variable", sans-serif;
+  --font-sans: "Figtree Variable", "Twemoji", sans-serif;
+  --font-heading: "Figtree Variable", "Twemoji", sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);

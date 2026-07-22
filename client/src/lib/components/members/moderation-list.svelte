@@ -53,7 +53,7 @@
     {#if shownMembers.length}
       {#each shownMembers as member (member.id)}
         <div
-          class="hover:bg-muted/50 flex items-center justify-between gap-2 rounded-md p-2"
+          class="hover:bg-muted/50 flex items-center justify-between gap-2 rounded-2xl p-2"
         >
           <MemberIdentity {member} showMemberRank>
             {#if member.banned}<Badge variant="destructive">banned</Badge>{/if}

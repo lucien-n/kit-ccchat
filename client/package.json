@@ -16,7 +16,8 @@
     "@mdit/plugin-spoiler": "^2.0.0",
     "livekit-client": "^2.7.5",
     "markdown-it": "^14.3.0",
-    "markdown-it-emoji": "^3.0.0"
+    "markdown-it-emoji": "^3.0.0",
+    "twemoji-colr-font": "^15.0.3"
   },
   "devDependencies": {
     "@ccchat/shared": "*",
@@ -33,6 +34,7 @@
     "ccchat-server": "*",
     "clsx": "^2.1.1",
     "emojibase-data": "^17.0.0",
+    "fontkit": "^2.0.4",
     "formsnap": "^2.0.1",
     "hono": "^4.12.30",
     "paneforge": "^1.0.2",

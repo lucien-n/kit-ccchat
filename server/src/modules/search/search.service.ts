@@ -7,7 +7,7 @@ import {
 } from "@ccchat/shared";
 import { and, count, desc, eq, isNull, sql, type SQL } from "drizzle-orm";
 import { db } from "../../db/index.js";
-import { messages, type Message } from "../../db/schema";
+import { messagesTable, type Message } from "../../db/schema";
 import { excerpt, toMessageView } from "../../views.js";
 
 const MIN_TERM_LENGTH = 2;
@@ -41,23 +41,23 @@ export function search(params: SearchQuery): SearchResults {
 
 function byFilter(params: SearchQuery): SearchResults {
   const where = and(
-    eq(messages.deleted, 0),
-    isNull(messages.systemEvent),
-    params.channelId ? eq(messages.channelId, params.channelId) : undefined,
-    params.authorId ? eq(messages.authorId, params.authorId) : undefined,
+    eq(messagesTable.deleted, 0),
+    isNull(messagesTable.systemEvent),
+    params.channelId ? eq(messagesTable.channelId, params.channelId) : undefined,
+    params.authorId ? eq(messagesTable.authorId, params.authorId) : undefined,
   );
 
   const rows = db
     .select()
-    .from(messages)
+    .from(messagesTable)
     .where(where)
-    .orderBy(desc(messages.createdAt), sql`rowid DESC`)
+    .orderBy(desc(messagesTable.createdAt), sql`rowid DESC`)
     .limit(params.limit)
     .offset(params.offset)
     .all();
 
   const total =
-    db.select({ total: count() }).from(messages).where(where).get()?.total ?? 0;
+    db.select({ total: count() }).from(messagesTable).where(where).get()?.total ?? 0;
 
   return {
     hits: rows.map((m) => ({ message: toMessageView(m), snippet: excerpt(m.content) })),

@@ -1,6 +1,6 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-export const channels = sqliteTable("channels", {
+export const channelsTable = sqliteTable("channels", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   type: text("type").notNull().default("text"), // 'text' | 'voice'
@@ -8,4 +8,4 @@ export const channels = sqliteTable("channels", {
   createdAt: integer("created_at").notNull(),
 });
 
-export type Channel = typeof channels.$inferSelect;
+export type Channel = typeof channelsTable.$inferSelect;

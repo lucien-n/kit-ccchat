@@ -5,7 +5,7 @@ import { channelType, hexColor, permission, systemEvent } from "./primitives.js"
  *  wherever a person is referenced (message author, reply, role list). Never
  *  carries passwordHash - that omission is why this exists over the db row. */
 export const memberRef = z.object({
-  id: z.string(),
+  id: z.uuid(),
   username: z.string(),
   displayName: z.string(),
   color: z.string().nullable(),
@@ -21,7 +21,7 @@ export const member = memberRef.extend({
 export type Member = z.infer<typeof member>;
 
 export const role = z.object({
-  id: z.string(),
+  id: z.uuid(),
   name: z.string(),
   color: hexColor.nullable(),
   permission,
@@ -30,14 +30,14 @@ export const role = z.object({
 export type Role = z.infer<typeof role>;
 
 export const voiceMember = z.object({
-  id: z.string(),
+  id: z.uuid(),
   displayName: z.string(),
   avatarVersion: z.number().nullable(),
 });
 export type VoiceMember = z.infer<typeof voiceMember>;
 
 export const channel = z.object({
-  id: z.string(),
+  id: z.uuid(),
   name: z.string(),
   type: channelType,
   position: z.number(),
@@ -48,16 +48,29 @@ export type Channel = z.infer<typeof channel>;
  *  snapshotted at send time, so an edit or a delete is reflected in the quote.
  *  A deleted original keeps its id but surrenders its content and author. */
 export const replyRef = z.object({
-  id: z.string(),
+  id: z.uuid(),
   content: z.string(),
   author: memberRef.nullable(),
   deleted: z.boolean(),
 });
 export type ReplyRef = z.infer<typeof replyRef>;
 
+export const messageImage = z.object({
+  id: z.uuid(),
+  width: z.number(),
+  height: z.number(),
+});
+export type MessageImage = z.infer<typeof messageImage>;
+
+export const reaction = z.object({
+  emoji: z.string(),
+  userIds: z.array(z.string()),
+});
+export type Reaction = z.infer<typeof reaction>;
+
 export const messageView = z.object({
-  id: z.string(),
-  channelId: z.string(),
+  id: z.uuid(),
+  channelId: z.uuid(),
   content: z.string(),
   createdAt: z.number(),
   editedAt: z.number().nullable(),
@@ -66,6 +79,10 @@ export const messageView = z.object({
   /** null for an ordinary message; the event kind for a system line, whose
    *  `author` is the subject (e.g. the member who joined). */
   systemEvent: systemEvent.nullable(),
+  mentions: z.array(z.string()),
+  mentionsEveryone: z.boolean(),
+  reactions: z.array(reaction),
+  images: z.array(messageImage),
 });
 export type MessageView = z.infer<typeof messageView>;
 
@@ -101,6 +118,19 @@ export const moderatedMember = member.extend({
 });
 export type ModeratedMember = z.infer<typeof moderatedMember>;
 
+export enum DiskItem {
+  AvatarDir = "AvatarDir",
+  ImagesDir = "ImagesDir",
+  DatabaseFile = "DatabaseFile",
+}
+
+const diskStats = z.object({
+  totalBytes: z.number(),
+  freeBytes: z.number(),
+  usedBytes: z.number(),
+  usedByItem: z.record(z.enum(DiskItem), z.number()),
+});
+
 /** Host machine snapshot, owner-only. Whole-box figures; disk is the filesystem
  *  the data dir lives on. */
 export const systemStats = z.object({
@@ -119,11 +149,7 @@ export const systemStats = z.object({
     usedBytes: z.number(),
     freeBytes: z.number(),
   }),
-  disk: z.object({
-    totalBytes: z.number(),
-    usedBytes: z.number(),
-    freeBytes: z.number(),
-  }),
+  disk: diskStats,
   app: z.object({
     uptimeSec: z.number(),
     rssBytes: z.number(),

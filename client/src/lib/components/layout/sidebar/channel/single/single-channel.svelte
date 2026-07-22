@@ -10,6 +10,7 @@
   import { Badge } from "&/badge";
   import { Button } from "&/button";
   import { ChannelType, type Channel } from "@ccchat/shared";
+  import { MonitorPlay } from "@lucide/svelte";
   import { CHANNEL_TYPE_ICON } from "../helpers";
   import ChannelContextMenu from "./channel-context-menu.svelte";
 
@@ -41,8 +42,13 @@
       <Icon class="size-4 shrink-0" />
       <span class="truncate">{channel.name}</span>
       {#if (unread.counts[channel.id] ?? 0) > 0}
-        <Badge variant="destructive" class="ml-auto h-5 min-w-5 justify-center px-1.5">
-          {unread.counts[channel.id]}
+        {@const mentioned = (unread.mentions[channel.id] ?? 0) > 0}
+        <Badge
+          variant={mentioned ? "destructive" : "secondary"}
+          class="ml-auto h-5 min-w-5 justify-center px-1.5"
+          title={mentioned ? "You were mentioned" : undefined}
+        >
+          {mentioned ? unread.mentions[channel.id] : unread.counts[channel.id]}
         </Badge>
       {/if}
     </Button>
@@ -50,24 +56,43 @@
     {#if isVoiceChannel && members}
       <div class="mt-0.5 mb-1 ml-4 flex flex-col gap-0.5">
         {#each members as member (member.id)}
-          {@const speaking =
-            channel.id === voice.channelId &&
-            voice.participants.find((p) => p.identity === member.id)?.speaking}
-          <UserCard
-            userId={member.id}
-            class="hover:bg-sidebar-accent w-full min-w-0 rounded-2xl px-1.5 py-1"
-          >
-            <div class="flex min-w-0 items-center gap-2">
-              <UserAvatar
-                user={member}
-                class={cn("size-5 shrink-0", speaking && "ring-2 ring-green-500")}
-                fallbackClass="bg-primary/70 text-[9px]"
-              />
-              <span class="text-muted-foreground truncate text-xs">
-                {member.displayName}
-              </span>
-            </div>
-          </UserCard>
+          {@const participant =
+            channel.id === voice.channelId
+              ? voice.participants.find((p) => p.identity === member.id)
+              : undefined}
+          <div class="flex min-w-0 items-center gap-0.5">
+            <UserCard
+              userId={member.id}
+              class="hover:bg-sidebar-accent min-w-0 flex-1 rounded-2xl px-1.5 py-1"
+            >
+              <div class="flex min-w-0 items-center gap-2">
+                <UserAvatar
+                  user={member}
+                  class={cn(
+                    "size-5 shrink-0",
+                    participant?.speaking && "ring-2 ring-green-500",
+                  )}
+                  fallbackClass="bg-primary/70 text-[9px]"
+                />
+                <span class="text-muted-foreground truncate text-xs">
+                  {member.displayName}
+                </span>
+              </div>
+            </UserCard>
+
+            {#if participant?.sharing}
+              <Button
+                variant="ghost"
+                size="icon-xs"
+                class="shrink-0 text-red-500 hover:text-red-500"
+                title="{member.displayName} is streaming - click to watch"
+                onclick={() => voice.watch(member.id)}
+              >
+                <MonitorPlay class="size-3.5" />
+                <span class="sr-only">Watch {member.displayName}'s stream</span>
+              </Button>
+            {/if}
+          </div>
         {/each}
       </div>
     {/if}

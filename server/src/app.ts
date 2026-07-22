@@ -12,6 +12,7 @@ import type { Env } from "./auth.js";
 import setupRouter from "./modules/setup/setup.router.js";
 import settingsRouter from "./modules/settings/settings.router.js";
 import authRouter from "./modules/auth/auth.router.js";
+import imagesRouter from "./modules/images/images.router.js";
 import invitesRouter from "./modules/invites/invites.router.js";
 import channelsRouter from "./modules/channels/channels.router.js";
 import messagesRouter from "./modules/messages/messages.router.js";
@@ -40,6 +41,7 @@ export const app = new Hono<Env>()
   .route("/api/auth", authRouter)
   .route("/api/invites", invitesRouter)
   .route("/api/channels", channelsRouter)
+  .route("/api/images", imagesRouter)
   .route("/api/messages", messagesRouter)
   .route("/api/moderation", moderationRouter)
   .route("/api/roles", rolesRouter)

@@ -11,7 +11,16 @@ import {
 } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import { db } from "./db/index.js";
-import { messages, roles, users, type Message, type User } from "./db/schema";
+import {
+  messagesTable,
+  rolesTable,
+  usersTable,
+  type Message,
+  type User,
+} from "./db/schema";
+import { imagesOf } from "./modules/images/images.service.js";
+import { mentionsOf } from "./modules/messages/mentions.js";
+import { reactionsOf } from "./modules/messages/reactions.js";
 import { colorFor, isAdmin, isOwner, roleIdsOf } from "./permissions.js";
 
 export function toMember(u: {
@@ -41,7 +50,7 @@ export function toModeratedMember(u: User): ModeratedMember {
   };
 }
 
-export function toRoleView(r: typeof roles.$inferSelect): Role {
+export function toRoleView(r: typeof rolesTable.$inferSelect): Role {
   return {
     id: r.id,
     name: r.name,
@@ -54,13 +63,13 @@ export function toRoleView(r: typeof roles.$inferSelect): Role {
 function authorOf(userId: string): MemberRef | null {
   const a = db
     .select({
-      id: users.id,
-      username: users.username,
-      displayName: users.displayName,
-      avatarVersion: users.avatarVersion,
+      id: usersTable.id,
+      username: usersTable.username,
+      displayName: usersTable.displayName,
+      avatarVersion: usersTable.avatarVersion,
     })
-    .from(users)
-    .where(eq(users.id, userId))
+    .from(usersTable)
+    .where(eq(usersTable.id, userId))
     .get();
   return a
     ? { ...a, color: colorFor(a.id), avatarVersion: a.avatarVersion ?? null }
@@ -77,7 +86,7 @@ export function excerpt(content: string, max = REPLY_SNIPPET_MAX) {
 /** A deleted original still holds its place in the conversation, but gives up
  *  its content and its author: the client renders a tombstone instead. */
 function toReplyRef(id: string): ReplyRef | null {
-  const m = db.select().from(messages).where(eq(messages.id, id)).get();
+  const m = db.select().from(messagesTable).where(eq(messagesTable.id, id)).get();
   if (!m) return null;
   if (m.deleted) return { id: m.id, content: "", author: null, deleted: true };
   return {
@@ -98,5 +107,9 @@ export function toMessageView(m: Message): MessageView {
     author: authorOf(m.authorId),
     replyTo: m.replyToId ? toReplyRef(m.replyToId) : null,
     systemEvent: (m.systemEvent as SystemEvent | null) ?? null,
+    mentions: mentionsOf(m.id),
+    mentionsEveryone: m.mentionsEveryone === 1,
+    reactions: reactionsOf(m.id),
+    images: imagesOf(m.id),
   };
 }

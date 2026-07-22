@@ -92,3 +92,17 @@ it("does not count what you sent yourself", async () => {
   await say(uniq());
   expect(await unread(owner)).toBe(0);
 });
+
+it("shrugs off marking a channel that no longer exists", async () => {
+  const { channel } = await json<{ channel: { id: string } }>(
+    await post(app, "/api/channels", { name: uniq(), type: "text" }, owner),
+  );
+  await app.request(`/api/channels/${channel.id}`, {
+    method: "DELETE",
+    headers: { authorization: `Bearer ${owner}` },
+  });
+
+  expect((await post(app, `/api/channels/${channel.id}/read`, {}, member)).status).toBe(
+    200,
+  );
+});

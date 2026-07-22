@@ -3,6 +3,7 @@ import { jumpToPresent, openMessage } from "$lib/app";
 import { channels } from "$lib/stores/channels.svelte";
 import { messages } from "$lib/stores/messages.svelte";
 import { search } from "$lib/stores/search.svelte";
+import { typing } from "$lib/stores/typing.svelte";
 import { getContext, setContext, tick } from "svelte";
 import { toast } from "svelte-sonner";
 
@@ -88,14 +89,20 @@ export class ChatContext {
     this.composer?.focus();
   }
 
-  send(text: string): boolean {
+  typing() {
+    const channelId = channels.currentId;
+    if (channelId) typing.signal(channelId);
+  }
+
+  send(text: string, imageIds?: string[]): boolean {
     const channelId = channels.currentId;
     if (!channelId) return false;
-    if (!messages.send(channelId, text, this.replyTo?.id)) {
+    if (!messages.send(channelId, text, this.replyTo?.id, imageIds)) {
       toast.error("Not connected, your message wasn't sent.");
       return false;
     }
     this.replyTo = null;
+    typing.resetSignal();
     return true;
   }
 }

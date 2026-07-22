@@ -34,3 +34,15 @@ export function remove(c: AppContext<"/:id">) {
   messagesService.deleteMessage(c.req.param("id"), c.get("user"));
   return c.json({ ok: true });
 }
+
+export function react(c: AppContext<"/:id/reactions/:emoji">) {
+  messagesService.reactMessage(c.req.param("id"), c.get("user"), c.req.param("emoji"));
+
+  return c.json({ ok: true });
+}
+
+export function unreact(c: AppContext<"/:id/reactions/:emoji">) {
+  messagesService.unreactMessage(c.req.param("id"), c.get("user"), c.req.param("emoji"));
+
+  return c.json({ ok: true });
+}

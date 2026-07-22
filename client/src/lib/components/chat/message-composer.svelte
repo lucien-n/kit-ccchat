@@ -1,6 +1,8 @@
 <script lang="ts">
-  import type { MessageView } from "$lib/api";
+  import { api, imageUrl, type MessageImage, type MessageView } from "$lib/api";
   import Markdown from "$lib/components/markdown/markdown.svelte";
+  import { apiErrorMessage } from "$lib/forms";
+  import { prepareImage } from "$lib/image";
   import {
     emojiLabel,
     loadEmoji,
@@ -9,17 +11,24 @@
     type EmojiEntry,
     type EmojiIndex,
   } from "$lib/emoji";
+  import { mentionQuery, searchMentions, type MentionSuggestion } from "$lib/mentions";
   import { Button } from "&/button";
   import { Textarea } from "&/textarea";
-  import { MESSAGE_MAX_LENGTH } from "@ccchat/shared";
-  import { Eye, EyeOff, Reply, Send, X } from "@lucide/svelte";
+  import {
+    IMAGE_MIME_TYPES,
+    MAX_IMAGES_PER_MESSAGE,
+    MESSAGE_MAX_LENGTH,
+  } from "@ccchat/shared";
+  import { Eye, EyeOff, ImagePlus, Reply, Send, X } from "@lucide/svelte";
   import { tick } from "svelte";
+  import { toast } from "svelte-sonner";
   import EmojiPicker from "./emoji-picker.svelte";
 
   interface Props {
     placeholder: string;
     disabled?: boolean;
-    onsend: (text: string) => boolean;
+    onsend: (text: string, imageIds?: string[]) => boolean;
+    ontyping?: () => void;
     replyingTo?: MessageView | null;
     oncancelreply?: () => void;
   }
@@ -28,6 +37,7 @@
     placeholder,
     disabled = false,
     onsend,
+    ontyping,
     replyingTo = null,
     oncancelreply,
   }: Props = $props();
@@ -40,8 +50,14 @@
   let el = $state<HTMLTextAreaElement | null>(null);
   let index = $state<EmojiIndex | null>(null);
   let preview = $state(false);
+  let pending = $state<MessageImage[]>([]);
+  let uploading = $state(false);
+  let fileEl = $state<HTMLInputElement | null>(null);
 
-  let matches = $state<readonly EmojiEntry[]>([]);
+  type Suggestion =
+    { kind: "emoji"; entry: EmojiEntry } | { kind: "mention"; entry: MentionSuggestion };
+
+  let matches = $state<readonly Suggestion[]>([]);
   let active = $state(0);
   let anchor = $state(-1);
 
@@ -65,20 +81,38 @@
     });
   }
 
+  function show(start: number, list: Suggestion[]) {
+    if (!list.length) return close();
+    anchor = start;
+    matches = list;
+    active = 0;
+  }
+
   function refresh() {
     if (!el) return;
     const caret = el.selectionStart ?? 0;
-    const found = shortcodeQuery(draft.slice(0, caret));
+    const before = draft.slice(0, caret);
+
+    const at = mentionQuery(before);
+    if (at) {
+      const hits = searchMentions(at.query);
+      return show(
+        at.start,
+        hits.map((entry) => ({ kind: "mention", entry })),
+      );
+    }
+
+    const found = shortcodeQuery(before);
     if (!found) return close();
     if (!index) {
       ensureIndex();
       return close();
     }
     const hits = searchEmoji(index, found.query, 10);
-    if (!hits.length) return close();
-    anchor = found.start;
-    matches = hits;
-    active = 0;
+    return show(
+      found.start,
+      hits.map((entry) => ({ kind: "emoji", entry })),
+    );
   }
 
   async function insert(text: string, from: number, to: number) {
@@ -90,9 +124,10 @@
     el?.setSelectionRange(pos, pos);
   }
 
-  function accept(entry: EmojiEntry) {
+  function accept(match: Suggestion) {
     const caret = el?.selectionStart ?? draft.length;
-    void insert(`${entry[0]} `, anchor, caret);
+    const text = match.kind === "emoji" ? match.entry[0] : match.entry.token;
+    void insert(`${text} `, anchor, caret);
   }
 
   function insertAtCaret(emoji: string) {
@@ -101,11 +136,63 @@
     void insert(emoji, from, to);
   }
 
+  // Content changing is the only honest signal that someone is writing: focus
+  // alone can sit on an empty box all day, and an emptied box is a change of
+  // mind, not a message on its way.
+  function changed() {
+    refresh();
+    if (draft.trim()) ontyping?.();
+  }
+
+  async function addFiles(files: Iterable<File>) {
+    const room = MAX_IMAGES_PER_MESSAGE - pending.length;
+    const picked = [...files]
+      .filter((f) => IMAGE_MIME_TYPES.includes(f.type))
+      .slice(0, room);
+    if (!picked.length) return;
+
+    uploading = true;
+    try {
+      const uploaded = await Promise.all(
+        picked.map(
+          async (file) => (await api.images.upload(await prepareImage(file))).image,
+        ),
+      );
+      pending = [...pending, ...uploaded];
+    } catch (e) {
+      toast.error(apiErrorMessage(e, "failed to upload image"));
+    } finally {
+      uploading = false;
+    }
+  }
+
+  function onpaste(e: ClipboardEvent) {
+    const files = [...(e.clipboardData?.items ?? [])]
+      .filter((i) => i.kind === "file")
+      .map((i) => i.getAsFile())
+      .filter((f) => f !== null);
+    if (!files.length) return;
+    e.preventDefault();
+    void addFiles(files);
+  }
+
+  function onpick(e: Event) {
+    const input = e.currentTarget as HTMLInputElement;
+    void addFiles(input.files ?? []);
+    input.value = "";
+  }
+
   function submit() {
     const text = draft.trim();
-    if (!text) return;
-    if (onsend(text)) {
+    if (!text && !pending.length) return;
+    if (
+      onsend(
+        text,
+        pending.map((p) => p.id),
+      )
+    ) {
       draft = "";
+      pending = [];
       close();
     }
   }
@@ -147,14 +234,14 @@
   }
 </script>
 
-<div class="relative shrink-0 p-2 sm:p-4">
+<div class="relative shrink-0 p-2 pt-0 sm:p-4 sm:pt-0">
   {#if open}
     <div
       class="bg-popover text-popover-foreground ring-foreground/10 absolute bottom-full left-2 z-20 mb-1 w-72 overflow-hidden rounded-xl shadow-lg ring-1 sm:left-4"
       role="listbox"
-      aria-label="Emoji suggestions"
+      aria-label="Suggestions"
     >
-      {#each matches as entry, i (entry[1])}
+      {#each matches as match, i (match.kind === "emoji" ? match.entry[1] : match.entry.key)}
         <button
           type="button"
           role="option"
@@ -165,13 +252,29 @@
             : ''}"
           onmousemove={() => (active = i)}
           onmousedown={(e) => e.preventDefault()}
-          onclick={() => accept(entry)}
+          onclick={() => accept(match)}
         >
-          <span class="text-lg leading-none">{entry[0]}</span>
-          <span class="truncate">:{entry[1]}:</span>
-          <span class="text-muted-foreground ml-auto truncate text-xs">
-            {emojiLabel(entry[1])}
-          </span>
+          {#if match.kind === "emoji"}
+            <span class="text-lg leading-none">{match.entry[0]}</span>
+            <span class="truncate">:{match.entry[1]}:</span>
+            <span class="text-muted-foreground ml-auto truncate text-xs">
+              {emojiLabel(match.entry[1])}
+            </span>
+          {:else}
+            <span
+              class="size-2 shrink-0 rounded-full"
+              style="background:{match.entry.color ?? 'var(--muted-foreground)'}"
+            ></span>
+            <span
+              class="truncate font-medium"
+              style={match.entry.color ? `color:${match.entry.color}` : undefined}
+            >
+              {match.entry.label}
+            </span>
+            <span class="text-muted-foreground ml-auto truncate text-xs">
+              {match.entry.detail}
+            </span>
+          {/if}
         </button>
       {/each}
     </div>
@@ -183,6 +286,36 @@
     >
       <div class="text-muted-foreground mb-1 text-xs font-medium">Preview</div>
       <Markdown content={draft} class="text-sm" />
+    </div>
+  {/if}
+
+  {#if pending.length || uploading}
+    <div class="mb-2 flex flex-wrap gap-2">
+      {#each pending as image (image.id)}
+        <div class="relative">
+          <img
+            src={imageUrl(image.id)}
+            alt=""
+            class="h-20 w-20 rounded-xl border object-cover"
+          />
+          <Button
+            variant="secondary"
+            size="icon-xs"
+            class="absolute -top-1.5 -right-1.5 rounded-full"
+            title="Remove image"
+            onclick={() => (pending = pending.filter((p) => p.id !== image.id))}
+          >
+            <X class="size-3" />
+          </Button>
+        </div>
+      {/each}
+      {#if uploading}
+        <div
+          class="bg-muted/40 text-muted-foreground flex h-20 w-20 items-center justify-center rounded-xl border text-xs"
+        >
+          Uploading
+        </div>
+      {/if}
     </div>
   {/if}
 
@@ -217,8 +350,6 @@
     </div>
   {/if}
 
-  <!-- The box owns the border and focus ring so the textarea and buttons read
-       as one control; the textarea's own ring is turned off below. -->
   <div
     class="bg-input/50 focus-within:border-ring focus-within:ring-ring/30 flex items-end gap-0.5 rounded-2xl border border-transparent p-1 transition-[color,box-shadow] duration-200 focus-within:ring-3"
   >
@@ -232,11 +363,29 @@
       class="thin-scrollbar field-sizing-content max-h-60 min-h-8 flex-1 rounded-none border-0 bg-transparent py-1.5 pl-2 focus-visible:border-transparent focus-visible:ring-0"
       autocomplete="off"
       onkeydown={disabled ? undefined : onkeydown}
-      oninput={refresh}
+      onpaste={disabled ? undefined : onpaste}
+      oninput={changed}
       onclick={refresh}
       onfocus={ensureIndex}
       onblur={close}
     />
+    <input
+      bind:this={fileEl}
+      type="file"
+      accept={IMAGE_MIME_TYPES.join(",")}
+      multiple
+      class="hidden"
+      onchange={onpick}
+    />
+    <Button
+      variant="ghost"
+      size="icon"
+      disabled={disabled || pending.length >= MAX_IMAGES_PER_MESSAGE}
+      title="Attach images"
+      onclick={() => fileEl?.click()}
+    >
+      <ImagePlus class="size-4" />
+    </Button>
     <Button
       variant="ghost"
       size="icon"

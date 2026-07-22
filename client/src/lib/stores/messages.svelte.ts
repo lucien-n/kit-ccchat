@@ -1,4 +1,4 @@
-import { ClientEventType } from "@ccchat/shared";
+import { ClientEventType, type Reaction } from "@ccchat/shared";
 import { api, type MessageView } from "../api";
 import { realtime } from "./realtime.svelte";
 
@@ -49,7 +49,9 @@ class Messages {
       }
     } finally {
       this.#arrivedDuringLoad = null;
-      if (this.#channelId === channelId) this.loading = false;
+      if (this.#channelId === channelId) {
+        this.loading = false;
+      }
     }
   }
 
@@ -150,11 +152,21 @@ class Messages {
     }
   }
 
-  send(channelId: string, content: string, replyToId?: string): boolean {
+  applyReactions(id: string, reactions: Reaction[]) {
+    this.list = this.list.map((m) => (m.id === id ? { ...m, reactions } : m));
+  }
+
+  send(
+    channelId: string,
+    content: string,
+    replyToId?: string,
+    imageIds?: string[],
+  ): boolean {
     return realtime.send({
       type: ClientEventType.Message_Create,
       channelId,
       content,
+      imageIds,
       replyToId,
     });
   }
@@ -165,6 +177,14 @@ class Messages {
 
   async delete(id: string) {
     await api.messages.delete(id);
+  }
+
+  async react(id: string, emoji: string) {
+    await api.messages.react(id, emoji);
+  }
+
+  async unreact(id: string, emoji: string) {
+    await api.messages.unreact(id, emoji);
   }
 
   clear() {

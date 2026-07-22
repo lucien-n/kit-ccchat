@@ -9,6 +9,9 @@ export interface SeedOptions {
   longNames?: boolean;
   allSpeaking?: boolean;
   canPublish?: boolean;
+  /** Flags a participant as streaming so the sidebar indicator can be styled.
+   *  There is no track behind it, so clicking through to watch will not work. */
+  sharing?: boolean;
 }
 
 const NAMES = [
@@ -57,6 +60,7 @@ export async function seedVoice(count = 6, opts: SeedOptions = {}) {
       isLocal: i === 0,
       speaking: opts.allSpeaking ? true : i % 3 === 0,
       muted: i % 4 === 0,
+      sharing: opts.sharing ? i === 1 : false,
     };
   });
 
@@ -70,6 +74,7 @@ export async function seedVoice(count = 6, opts: SeedOptions = {}) {
     name: p.name,
     speaking: p.speaking,
     muted: p.muted,
+    sharing: p.sharing,
     isLocal: p.isLocal,
   }));
   presence.setVoice({

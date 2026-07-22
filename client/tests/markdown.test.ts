@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { isEmojiOnly, render } from "../src/lib/markdown";
+import { isEmojiOnly, render, type MentionResolver } from "../src/lib/markdown";
+
+const resolver: MentionResolver = {
+  user: (name) =>
+    name === "lucien" ? { label: "Lucien", color: "#ff0000", self: true } : null,
+  role: (id) => (id === "r1" ? { label: "Mods", color: "#00ff00" } : null),
+  everyone: () => ({ label: "everyone", self: true }),
+};
+const withMentions = (src: string) => render(src, { mentions: resolver });
 
 // markdown-it tests its own dialect. These cover the parts that are ours: the
 // options that make it safe, the Discord-flavoured overrides, and the plugins.
@@ -41,6 +49,53 @@ describe("discord flavour", () => {
 
   it("treats a single newline as a line break", () => {
     expect(render("a\nb")).toContain("<br>");
+  });
+});
+
+describe("mentions", () => {
+  it("renders a known user as a chip showing the display name", () => {
+    const html = withMentions("hi @lucien");
+    expect(html).toContain('class="mention"');
+    expect(html).toContain("@Lucien");
+    expect(html).toContain("--mention:#ff0000");
+    expect(html).toContain("data-self");
+  });
+
+  it("renders a role token as its name", () => {
+    const html = withMentions("ping <@&r1>");
+    expect(html).toContain("@Mods");
+    expect(html).toContain("--mention:#00ff00");
+    expect(html).not.toContain("data-self");
+  });
+
+  it("renders everyone", () => {
+    expect(withMentions("@everyone hi")).toContain("@everyone");
+  });
+
+  it("leaves an unknown handle as plain text", () => {
+    const html = withMentions("@nobody there");
+    expect(html).not.toContain('class="mention"');
+    expect(html).toContain("@nobody");
+  });
+
+  it("does not treat an email address as a mention", () => {
+    const html = withMentions("mail lucien@example.com");
+    expect(html).not.toContain('class="mention"');
+  });
+
+  it("keeps a mention out of a code span", () => {
+    expect(withMentions("`@lucien`")).toContain("<code>@lucien</code>");
+  });
+
+  it("escapes a resolved label so a crafted name cannot inject markup", () => {
+    const html = render("@x", {
+      mentions: {
+        user: () => ({ label: "<img src=x>", color: null }),
+        role: () => null,
+        everyone: () => ({ label: "everyone" }),
+      },
+    });
+    expect(html).not.toContain("<img");
   });
 });
 
