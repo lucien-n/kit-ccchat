@@ -26,6 +26,7 @@ columnSorting:
 - [show-mute-deafen-status-in-the-voice-channel](tasks/show-mute-deafen-status-in-the-voice-channel.md)
 - [control-mute-stream-volume](tasks/control-mute-stream-volume.md)
 - [allow-changing-input-output-devices](tasks/allow-changing-input-output-devices.md)
+- [webcams](tasks/webcams.md)
 
 ## Todo
 
