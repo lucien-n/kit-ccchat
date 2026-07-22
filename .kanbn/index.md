@@ -24,10 +24,9 @@ columnSorting:
 
 ## In Progress
 
-- [upload-images-files](tasks/upload-images-files.md)
-
 ## Done
 
+- [upload-images-files](tasks/upload-images-files.md)
 - [make-user-mentions-clickable](tasks/make-user-mentions-clickable.md)
 - [message-reactions](tasks/message-reactions.md)
 - [user-typing-indicators](tasks/user-typing-indicators.md)
