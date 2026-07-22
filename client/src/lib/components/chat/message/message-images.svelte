@@ -24,7 +24,7 @@
           width={image.width}
           height={image.height}
           loading="lazy"
-          class="max-h-80 w-fit max-w-full object-contain"
+          class="max-h-80 w-auto max-w-full"
         />
       </button>
     {/each}
