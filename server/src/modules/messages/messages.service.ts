@@ -1,5 +1,6 @@
 import {
   ChannelType,
+  isMuted,
   ServerEventType,
   type EditMessageBody,
   type MessageView,
@@ -9,11 +10,17 @@ import {
 import { and, asc, desc, eq, gt, lt, lte } from "drizzle-orm";
 import { can, newId } from "../../auth.js";
 import { db } from "../../db/index.js";
-import { channelsTable, messagesTable, type User } from "../../db/schema";
+import {
+  channelsTable,
+  messageReactionsTable,
+  messagesTable,
+  type User,
+} from "../../db/schema";
 import { httpError } from "../../http/errors.js";
 import { hub } from "../../hub.js";
 import { toMessageView } from "../../views.js";
 import { resolveMentions, saveMentions } from "./mentions.js";
+import { reactionsOf } from "./reactions.js";
 
 export function postSystemMessage(event: SystemEvent, subjectId: string) {
   const channel = db
@@ -22,7 +29,9 @@ export function postSystemMessage(event: SystemEvent, subjectId: string) {
     .where(eq(channelsTable.type, ChannelType.Text))
     .orderBy(asc(channelsTable.position), asc(channelsTable.createdAt))
     .get();
-  if (!channel) return;
+  if (!channel) {
+    return;
+  }
 
   const row = {
     id: newId(),
@@ -75,7 +84,9 @@ export function around(
     .from(messagesTable)
     .where(eq(messagesTable.id, messageId))
     .get();
-  if (!target || target.channelId !== channelId || target.deleted) return null;
+  if (!target || target.channelId !== channelId || target.deleted) {
+    return null;
+  }
 
   const visible = and(
     eq(messagesTable.channelId, channelId),
@@ -109,9 +120,15 @@ export function around(
 
 export function editMessage(id: string, user: User, { content }: EditMessageBody) {
   const msg = db.select().from(messagesTable).where(eq(messagesTable.id, id)).get();
-  if (!msg || msg.deleted) httpError(404, "not found");
-  if (msg.systemEvent) httpError(400, "cannot edit a system message");
-  if (msg.authorId !== user.id) httpError(403, "forbidden");
+  if (!msg || msg.deleted) {
+    httpError(404, "not found");
+  }
+  if (msg.systemEvent) {
+    httpError(400, "cannot edit a system message");
+  }
+  if (msg.authorId !== user.id) {
+    httpError(403, "forbidden");
+  }
 
   const editedAt = Date.now();
   const { userIds, everyone } = resolveMentions(content, user.id);
@@ -128,10 +145,75 @@ export function editMessage(id: string, user: User, { content }: EditMessageBody
 
 export function deleteMessage(id: string, user: User) {
   const msg = db.select().from(messagesTable).where(eq(messagesTable.id, id)).get();
-  if (!msg || msg.deleted) httpError(404, "not found");
-  if (msg.authorId !== user.id && !can(user, "deleteAnyMessage"))
+  if (!msg || msg.deleted) {
+    httpError(404, "not found");
+  }
+  if (msg.authorId !== user.id && !can(user, "deleteAnyMessage")) {
     httpError(403, "forbidden");
+  }
 
   db.update(messagesTable).set({ deleted: 1 }).where(eq(messagesTable.id, id)).run();
   hub.broadcast({ type: ServerEventType.Message_Deleted, id, channelId: msg.channelId });
+}
+
+export function reactMessage(id: string, user: User, emoji: string) {
+  if (isMuted(user)) {
+    httpError(403, "you are muted");
+  }
+
+  const msg = db.select().from(messagesTable).where(eq(messagesTable.id, id)).get();
+  if (!msg || msg.deleted) {
+    httpError(404, "not found");
+  }
+  if (msg.systemEvent) {
+    httpError(400, "cannot react to a system message");
+  }
+
+  db.insert(messageReactionsTable)
+    .values({
+      messageId: id,
+      emoji,
+      userId: user.id,
+      createdAt: Date.now(),
+    })
+    .onConflictDoNothing()
+    .run();
+  hub.broadcast({
+    type: ServerEventType.Message_Reacted,
+    id,
+    channelId: msg.channelId,
+    reactions: reactionsOf(id),
+  });
+}
+
+export function unreactMessage(id: string, user: User, emoji: string) {
+  if (isMuted(user)) {
+    httpError(403, "you are muted");
+  }
+
+  const msg = db.select().from(messagesTable).where(eq(messagesTable.id, id)).get();
+  if (!msg || msg.deleted) {
+    httpError(404, "not found");
+  }
+
+  const deleted = db
+    .delete(messageReactionsTable)
+    .where(
+      and(
+        eq(messageReactionsTable.messageId, id),
+        eq(messageReactionsTable.userId, user.id),
+        eq(messageReactionsTable.emoji, emoji),
+      ),
+    )
+    .run();
+  if (deleted.changes === 0) {
+    return;
+  }
+
+  hub.broadcast({
+    type: ServerEventType.Message_Reacted,
+    id,
+    channelId: msg.channelId,
+    reactions: reactionsOf(id),
+  });
 }

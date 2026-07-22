@@ -2,6 +2,7 @@ import {
   ChannelType,
   clientEvent,
   ClientEventType,
+  isMuted,
   ServerEventType,
   TYPING_THROTTLE_MS,
   type ClientEvent,
@@ -176,12 +177,16 @@ function handleCreate(
   client: Client,
   msg: Extract<ClientEvent, { type: ClientEventType.Message_Create }>,
 ) {
-  const u = db.select().from(usersTable).where(eq(usersTable.id, client.userId)).get();
-  if (!u) return;
-  if (u.banned)
+  const user = db.select().from(usersTable).where(eq(usersTable.id, client.userId)).get();
+  if (!user) {
+    return;
+  }
+  if (user.banned) {
     return hub.send(client, { type: ServerEventType.Error, message: "you are banned" });
-  if (u.mutedUntil && u.mutedUntil > Date.now())
+  }
+  if (isMuted(user)) {
     return hub.send(client, { type: ServerEventType.Error, message: "you are muted" });
+  }
 
   const { channelId, content } = msg;
 

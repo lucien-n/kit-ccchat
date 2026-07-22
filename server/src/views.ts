@@ -19,6 +19,7 @@ import {
   type User,
 } from "./db/schema";
 import { mentionsOf } from "./modules/messages/mentions.js";
+import { reactionsOf } from "./modules/messages/reactions.js";
 import { colorFor, isAdmin, isOwner, roleIdsOf } from "./permissions.js";
 
 export function toMember(u: {
@@ -107,5 +108,6 @@ export function toMessageView(m: Message): MessageView {
     systemEvent: (m.systemEvent as SystemEvent | null) ?? null,
     mentions: mentionsOf(m.id),
     mentionsEveryone: m.mentionsEveryone === 1,
+    reactions: reactionsOf(m.id),
   };
 }
