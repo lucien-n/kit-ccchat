@@ -80,13 +80,13 @@
               </div>
             </UserCard>
 
-            {#if participant?.sharing}
+            {#if member.sharing}
               <Button
                 variant="ghost"
                 size="icon-xs"
                 class="shrink-0 text-red-500 hover:text-red-500"
                 title="{member.displayName} is streaming - click to watch"
-                onclick={() => voice.watch(member.id)}
+                onclick={() => voice.watch(channel, member.id)}
               >
                 <MonitorPlay class="size-3.5" />
                 <span class="sr-only">Watch {member.displayName}'s stream</span>

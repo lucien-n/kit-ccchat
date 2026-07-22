@@ -57,6 +57,18 @@ class Hub {
     if (this.removeFromVoice(userId)) this.broadcast(this.voiceEvent());
   }
 
+  /** Screen share state rides along with voice presence so everyone sees who is
+   *  streaming, including people who never joined the channel. */
+  setSharing(userId: string, sharing: boolean) {
+    for (const members of this.voice.values()) {
+      const member = members.get(userId);
+      if (!member || member.sharing === sharing) continue;
+      members.set(userId, { ...member, sharing });
+      this.broadcast(this.voiceEvent());
+      return;
+    }
+  }
+
   private removeFromVoice(userId: string): boolean {
     let changed = false;
     for (const [channelId, members] of this.voice) {

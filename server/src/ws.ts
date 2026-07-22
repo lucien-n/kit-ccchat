@@ -103,6 +103,9 @@ function onConnection(ws: WebSocket, userId: string) {
       case ClientEventType.Voice_Leave:
         hub.voiceLeaveAll(client.userId);
         break;
+      case ClientEventType.Screen_Share_Set:
+        hub.setSharing(client.userId, msg.sharing);
+        break;
     }
   });
 
@@ -160,6 +163,7 @@ function handleVoiceJoin(client: Client, channelId: string) {
     id: u.id,
     displayName: u.displayName,
     avatarVersion: u.avatarVersion ?? null,
+    sharing: false,
   });
 }
 

@@ -33,6 +33,7 @@ export const voiceMember = z.object({
   id: z.uuid(),
   displayName: z.string(),
   avatarVersion: z.number().nullable(),
+  sharing: z.boolean(),
 });
 export type VoiceMember = z.infer<typeof voiceMember>;
 
