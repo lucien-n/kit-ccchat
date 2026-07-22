@@ -122,7 +122,7 @@ async function seedMessages(channel: Channel, count: number, authors: User[]) {
 }
 
 async function main() {
-  const owner = await db.query.users.findFirst({ where: eq(usersTable.isOwner, 1) });
+  const owner = await db.query.usersTable.findFirst({ where: eq(usersTable.isOwner, 1) });
   if (!owner) {
     console.error("No owner yet. Open the app and finish the setup wizard first.");
     process.exit(1);
