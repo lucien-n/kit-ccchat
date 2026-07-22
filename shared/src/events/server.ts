@@ -1,10 +1,11 @@
 import z from "zod";
-import { messageView, voiceMember } from "../views";
+import { messageView, reaction, voiceMember } from "../views";
 
 export enum ServerEventType {
   Message_New = "message_new",
   Message_Edited = "message_edited",
   Message_Deleted = "message_deleted",
+  Message_Reacted = "message_reacted",
   Presence = "presence",
   Typing_Started = "typing_started",
   Voice_Presence = "voice_presence",
@@ -27,6 +28,12 @@ export type ServerEvent =
       type: ServerEventType.Message_Deleted;
       id: string;
       channelId: string;
+    }
+  | {
+      type: ServerEventType.Message_Reacted;
+      id: string;
+      channelId: string;
+      reactions: z.infer<typeof reaction>[];
     }
   | {
       type: ServerEventType.Presence;
