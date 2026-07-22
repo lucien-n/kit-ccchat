@@ -18,15 +18,15 @@ columnSorting:
 - [mobile-app](tasks/mobile-app.md)
 - [video-streaming](tasks/video-streaming.md)
 - [upload-images-files](tasks/upload-images-files.md)
+- [message-reactions](tasks/message-reactions.md)
 
 ## Todo
 
 ## In Progress
 
-- [user-typing-indicators](tasks/user-typing-indicators.md)
-
 ## Done
 
+- [user-typing-indicators](tasks/user-typing-indicators.md)
 - [db-seeder-script](tasks/db-seeder-script.md)
 - [rework-emoji-picker-to-use-custom-emojis-not-the-system-os-ones](tasks/rework-emoji-picker-to-use-custom-emojis-not-the-system-os-ones.md)
 - [user-mentions](tasks/user-mentions.md)
