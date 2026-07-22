@@ -12,7 +12,7 @@ import type { Duplex } from "node:stream";
 import { WebSocketServer, type WebSocket } from "ws";
 import { newId, userForToken } from "./auth.js";
 import { db } from "./db/index.js";
-import { channels, messages, users } from "./db/schema";
+import { channelsTable, messagesTable, usersTable } from "./db/schema";
 import { hub, type Client } from "./hub.js";
 import { resolveMentions, saveMentions } from "./modules/messages/mentions.js";
 import { toMessageView } from "./views.js";
@@ -125,11 +125,15 @@ function handleTyping(client: Client, channelId: string) {
 
   // Same gate as posting: someone who cannot send a message must not be
   // advertised as about to send one.
-  const u = db.select().from(users).where(eq(users.id, client.userId)).get();
+  const u = db.select().from(usersTable).where(eq(usersTable.id, client.userId)).get();
   if (!u || u.banned) return;
   if (u.mutedUntil && u.mutedUntil > now) return;
 
-  const channel = db.select().from(channels).where(eq(channels.id, channelId)).get();
+  const channel = db
+    .select()
+    .from(channelsTable)
+    .where(eq(channelsTable.id, channelId))
+    .get();
   if (!channel || channel.type !== ChannelType.Text) return;
 
   lastTyping.set(client.ws, now);
@@ -141,10 +145,14 @@ function handleTyping(client: Client, channelId: string) {
 }
 
 function handleVoiceJoin(client: Client, channelId: string) {
-  const channel = db.select().from(channels).where(eq(channels.id, channelId)).get();
+  const channel = db
+    .select()
+    .from(channelsTable)
+    .where(eq(channelsTable.id, channelId))
+    .get();
   if (!channel || channel.type !== ChannelType.Voice) return;
 
-  const u = db.select().from(users).where(eq(users.id, client.userId)).get();
+  const u = db.select().from(usersTable).where(eq(usersTable.id, client.userId)).get();
   if (!u) return;
   hub.voiceJoin(channelId, {
     id: u.id,
@@ -155,7 +163,11 @@ function handleVoiceJoin(client: Client, channelId: string) {
 
 function replyTarget(replyToId: string | undefined, channelId: string): string | null {
   if (!replyToId) return null;
-  const target = db.select().from(messages).where(eq(messages.id, replyToId)).get();
+  const target = db
+    .select()
+    .from(messagesTable)
+    .where(eq(messagesTable.id, replyToId))
+    .get();
   if (!target || target.deleted || target.channelId !== channelId) return null;
   return target.id;
 }
@@ -164,7 +176,7 @@ function handleCreate(
   client: Client,
   msg: Extract<ClientEvent, { type: ClientEventType.Message_Create }>,
 ) {
-  const u = db.select().from(users).where(eq(users.id, client.userId)).get();
+  const u = db.select().from(usersTable).where(eq(usersTable.id, client.userId)).get();
   if (!u) return;
   if (u.banned)
     return hub.send(client, { type: ServerEventType.Error, message: "you are banned" });
@@ -173,7 +185,11 @@ function handleCreate(
 
   const { channelId, content } = msg;
 
-  const channel = db.select().from(channels).where(eq(channels.id, channelId)).get();
+  const channel = db
+    .select()
+    .from(channelsTable)
+    .where(eq(channelsTable.id, channelId))
+    .get();
   if (!channel || channel.type !== ChannelType.Text) return;
 
   const { userIds, everyone } = resolveMentions(content, client.userId);
@@ -189,7 +205,7 @@ function handleCreate(
     systemEvent: null,
     mentionsEveryone: everyone ? 1 : 0,
   };
-  db.insert(messages).values(row).run();
+  db.insert(messagesTable).values(row).run();
   saveMentions(row.id, userIds);
   hub.broadcast({ type: ServerEventType.Message_New, message: toMessageView(row) });
 }

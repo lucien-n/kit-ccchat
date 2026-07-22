@@ -1,6 +1,6 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-export const invites = sqliteTable("invites", {
+export const invitesTable = sqliteTable("invites", {
   code: text("code").primaryKey(),
   createdBy: text("created_by").notNull(),
   createdAt: integer("created_at").notNull(),

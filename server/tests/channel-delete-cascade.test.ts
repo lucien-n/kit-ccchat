@@ -63,7 +63,8 @@ function say(channelId: string, content: string) {
 
 it("deleting a channel takes its messages and mentions with it", async () => {
   const { db } = await import("../src/db/index.js");
-  const { messages, messageMentions } = await import("../src/db/schema/index.js");
+  const { messagesTable: messages, messageMentionsTable: messageMentions } =
+    await import("../src/db/schema/index.js");
 
   const { channel } = await json<{ channel: Channel }>(
     await post(app, "/api/channels", { name: uniq(), type: ChannelType.Text }, owner),

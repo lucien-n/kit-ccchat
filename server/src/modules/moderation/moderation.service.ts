@@ -1,7 +1,7 @@
 import type { ModeratedMember } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import { db } from "../../db/index.js";
-import { sessions, users, type User } from "../../db/schema";
+import { sessionsTable, usersTable, type User } from "../../db/schema";
 import { httpError } from "../../http/errors.js";
 import { authLevel } from "../../permissions.js";
 import { toModeratedMember } from "../../views.js";
@@ -9,7 +9,7 @@ import { toModeratedMember } from "../../views.js";
 /** Nobody may act on their own rank or above, so an admin can't ban the owner or
  *  another admin. */
 export function resolveTarget(actor: User, targetId: string): User {
-  const target = db.select().from(users).where(eq(users.id, targetId)).get();
+  const target = db.select().from(usersTable).where(eq(usersTable.id, targetId)).get();
   if (!target) httpError(404, "user not found");
   if (target.id === actor.id) httpError(400, "you cannot moderate yourself");
   if (authLevel(target) >= authLevel(actor)) httpError(403, "target outranks you");
@@ -17,10 +17,10 @@ export function resolveTarget(actor: User, targetId: string): User {
 }
 
 const endSessions = (userId: string) =>
-  db.delete(sessions).where(eq(sessions.userId, userId)).run();
+  db.delete(sessionsTable).where(eq(sessionsTable.userId, userId)).run();
 
 const patchUser = (userId: string, patch: Partial<User>) =>
-  db.update(users).set(patch).where(eq(users.id, userId)).run();
+  db.update(usersTable).set(patch).where(eq(usersTable.id, userId)).run();
 
 /** Kick ends every active session and marks the account, so returning takes a
  *  fresh invite rather than just signing back in. */
@@ -49,5 +49,5 @@ export function unmute(target: User) {
 }
 
 export function listMembers(): ModeratedMember[] {
-  return db.select().from(users).all().map(toModeratedMember);
+  return db.select().from(usersTable).all().map(toModeratedMember);
 }

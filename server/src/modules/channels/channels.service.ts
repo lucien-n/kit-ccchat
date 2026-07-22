@@ -8,15 +8,15 @@ import { and, asc, count, eq, gt, isNull, ne, sql } from "drizzle-orm";
 import { newId } from "../../auth.js";
 import { db } from "../../db/index.js";
 import {
-  channelReads,
-  channels,
-  messageMentions,
-  messages,
+  channelReadsTable,
+  channelsTable,
+  messageMentionsTable,
+  messagesTable,
   type User,
 } from "../../db/schema";
 import { httpError } from "../../http/errors.js";
 
-function toChannelView(row: typeof channels.$inferSelect): Channel {
+function toChannelView(row: typeof channelsTable.$inferSelect): Channel {
   return {
     id: row.id,
     name: row.name,
@@ -28,8 +28,8 @@ function toChannelView(row: typeof channels.$inferSelect): Channel {
 export function listChannels(): Channel[] {
   return db
     .select()
-    .from(channels)
-    .orderBy(asc(channels.position), asc(channels.createdAt))
+    .from(channelsTable)
+    .orderBy(asc(channelsTable.position), asc(channelsTable.createdAt))
     .all()
     .map(toChannelView);
 }
@@ -40,22 +40,22 @@ export function unreadCounts(user: User): {
 } {
   const reads = db
     .select()
-    .from(channelReads)
-    .where(eq(channelReads.userId, user.id))
+    .from(channelReadsTable)
+    .where(eq(channelReadsTable.userId, user.id))
     .all();
   const readMap = new Map(reads.map((r) => [r.channelId, r.lastReadAt]));
 
   const unreads: Record<string, number> = {};
   const mentions: Record<string, number> = {};
-  for (const ch of db.select().from(channels).all()) {
+  for (const ch of db.select().from(channelsTable).all()) {
     if (ch.type !== ChannelType.Text) continue;
     const since = readMap.get(ch.id) ?? user.createdAt;
     const visible = and(
-      eq(messages.channelId, ch.id),
-      eq(messages.deleted, 0),
-      isNull(messages.systemEvent),
-      ne(messages.authorId, user.id),
-      gt(messages.createdAt, since),
+      eq(messagesTable.channelId, ch.id),
+      eq(messagesTable.deleted, 0),
+      isNull(messagesTable.systemEvent),
+      ne(messagesTable.authorId, user.id),
+      gt(messagesTable.createdAt, since),
     );
 
     // One scan of the visible rows: the join matches at most one mention row per
@@ -64,14 +64,14 @@ export function unreadCounts(user: User): {
     const row = db
       .select({
         unread: count(),
-        mentions: sql<number>`sum(case when ${messages.mentionsEveryone} = 1 or ${messageMentions.userId} is not null then 1 else 0 end)`,
+        mentions: sql<number>`sum(case when ${messagesTable.mentionsEveryone} = 1 or ${messageMentionsTable.userId} is not null then 1 else 0 end)`,
       })
-      .from(messages)
+      .from(messagesTable)
       .leftJoin(
-        messageMentions,
+        messageMentionsTable,
         and(
-          eq(messageMentions.messageId, messages.id),
-          eq(messageMentions.userId, user.id),
+          eq(messageMentionsTable.messageId, messagesTable.id),
+          eq(messageMentionsTable.userId, user.id),
         ),
       )
       .where(visible)
@@ -85,10 +85,10 @@ export function unreadCounts(user: User): {
 
 export function markRead(userId: string, channelId: string) {
   const now = Date.now();
-  db.insert(channelReads)
+  db.insert(channelReadsTable)
     .values({ userId, channelId, lastReadAt: now })
     .onConflictDoUpdate({
-      target: [channelReads.userId, channelReads.channelId],
+      target: [channelReadsTable.userId, channelReadsTable.channelId],
       set: { lastReadAt: now },
     })
     .run();
@@ -98,8 +98,8 @@ export function isNameTaken(name: string, type: ChannelType, exceptId?: string):
   const key = channelNameKey(name);
   return db
     .select()
-    .from(channels)
-    .where(eq(channels.type, type))
+    .from(channelsTable)
+    .where(eq(channelsTable.type, type))
     .all()
     .some((c) => c.id !== exceptId && channelNameKey(c.name) === key);
 }
@@ -114,25 +114,25 @@ export function createChannel({ name, type }: CreateChannelBody) {
     id: newId(),
     name,
     type,
-    position: db.select().from(channels).all().length,
+    position: db.select().from(channelsTable).all().length,
     createdAt: Date.now(),
   };
-  db.insert(channels).values(channel).run();
+  db.insert(channelsTable).values(channel).run();
   return channel;
 }
 
 export function renameChannel(id: string, name: string): Channel {
-  const existing = db.select().from(channels).where(eq(channels.id, id)).get();
+  const existing = db.select().from(channelsTable).where(eq(channelsTable.id, id)).get();
   if (!existing) httpError(404, "channel not found");
 
   const type = existing.type as ChannelType;
   if (isNameTaken(name, type, id))
     httpError(409, `there's already a ${type} channel called "${name.trim()}"`);
 
-  db.update(channels).set({ name }).where(eq(channels.id, id)).run();
+  db.update(channelsTable).set({ name }).where(eq(channelsTable.id, id)).run();
   return toChannelView({ ...existing, name });
 }
 
 export function deleteChannel(id: string) {
-  db.delete(channels).where(eq(channels.id, id)).run();
+  db.delete(channelsTable).where(eq(channelsTable.id, id)).run();
 }

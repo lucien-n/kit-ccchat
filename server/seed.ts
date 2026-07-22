@@ -4,13 +4,13 @@ import { eq } from "drizzle-orm";
 import { db } from "./src/db";
 import {
   Channel,
-  channels as channelsTable,
-  messages as messagesTable,
+  channelsTable,
+  messagesTable,
   Role,
-  roles as rolesTable,
+  rolesTable,
   User,
-  userRoles as userRolesTable,
-  users as usersTable,
+  userRolesTable,
+  usersTable,
 } from "./src/db/schema";
 
 // scrypt of "password"

@@ -3,11 +3,11 @@ import { eq } from "drizzle-orm";
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { db } from "../../db/index.js";
-import { settings } from "../../db/schema";
+import { settingsTable } from "../../db/schema";
 import { COMMUNITY_NAME, DATA_DIR } from "../../env.js";
 import { httpError } from "../../http/errors.js";
-import { decodeImageUpload, readImageFile, type StoredImage } from "../../images.js";
 import { hub } from "../../hub.js";
+import { decodeImageUpload, readImageFile, type StoredImage } from "../../images.js";
 
 /** The closed set of keys the settings table accepts. Values are the stored
  *  column contents, so renaming one is a migration, not a refactor. */
@@ -22,13 +22,15 @@ const ICON_PATH = join(DATA_DIR, "community-icon");
 /** Runtime settings live in the DB so the owner can change them from the UI.
  *  Environment variables only ever provide the *initial* value. */
 export function getSetting(key: SettingKey): string | null {
-  return db.select().from(settings).where(eq(settings.key, key)).get()?.value ?? null;
+  return (
+    db.select().from(settingsTable).where(eq(settingsTable.key, key)).get()?.value ?? null
+  );
 }
 
 export function setSetting(key: SettingKey, value: string) {
-  db.insert(settings)
+  db.insert(settingsTable)
     .values({ key, value })
-    .onConflictDoUpdate({ target: settings.key, set: { value } })
+    .onConflictDoUpdate({ target: settingsTable.key, set: { value } })
     .run();
 }
 
@@ -39,7 +41,7 @@ export function communityName(): string {
 }
 
 export function deleteSetting(key: SettingKey) {
-  db.delete(settings).where(eq(settings.key, key)).run();
+  db.delete(settingsTable).where(eq(settingsTable.key, key)).run();
 }
 
 export function renameCommunity(name: string) {

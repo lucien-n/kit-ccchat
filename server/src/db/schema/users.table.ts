@@ -1,6 +1,6 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-export const users = sqliteTable("users", {
+export const usersTable = sqliteTable("users", {
   id: text("id").primaryKey(),
   username: text("username").notNull().unique(),
   displayName: text("display_name").notNull(),
@@ -20,4 +20,4 @@ export const users = sqliteTable("users", {
   avatarVersion: integer("avatar_version"),
 });
 
-export type User = typeof users.$inferSelect;
+export type User = typeof usersTable.$inferSelect;

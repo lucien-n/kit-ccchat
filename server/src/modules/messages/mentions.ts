@@ -1,7 +1,7 @@
 import { parseMentions } from "@ccchat/shared";
 import { eq, inArray } from "drizzle-orm";
 import { db } from "../../db/index.js";
-import { messageMentions, userRoles, users } from "../../db/schema";
+import { messageMentionsTable, userRolesTable, usersTable } from "../../db/schema";
 
 export interface ResolvedMentions {
   userIds: string[];
@@ -14,18 +14,18 @@ export function resolveMentions(content: string, authorId: string): ResolvedMent
 
   if (usernames.length) {
     for (const u of db
-      .select({ id: users.id })
-      .from(users)
-      .where(inArray(users.username, usernames))
+      .select({ id: usersTable.id })
+      .from(usersTable)
+      .where(inArray(usersTable.username, usernames))
       .all())
       found.add(u.id);
   }
 
   if (roleIds.length) {
     for (const r of db
-      .select({ userId: userRoles.userId })
-      .from(userRoles)
-      .where(inArray(userRoles.roleId, roleIds))
+      .select({ userId: userRolesTable.userId })
+      .from(userRolesTable)
+      .where(inArray(userRolesTable.roleId, roleIds))
       .all())
       found.add(r.userId);
   }
@@ -35,18 +35,20 @@ export function resolveMentions(content: string, authorId: string): ResolvedMent
 }
 
 export function saveMentions(messageId: string, userIds: string[]) {
-  db.delete(messageMentions).where(eq(messageMentions.messageId, messageId)).run();
+  db.delete(messageMentionsTable)
+    .where(eq(messageMentionsTable.messageId, messageId))
+    .run();
   if (userIds.length)
-    db.insert(messageMentions)
+    db.insert(messageMentionsTable)
       .values(userIds.map((userId) => ({ messageId, userId })))
       .run();
 }
 
 export function mentionsOf(messageId: string): string[] {
   return db
-    .select({ userId: messageMentions.userId })
-    .from(messageMentions)
-    .where(eq(messageMentions.messageId, messageId))
+    .select({ userId: messageMentionsTable.userId })
+    .from(messageMentionsTable)
+    .where(eq(messageMentionsTable.messageId, messageId))
     .all()
     .map((r) => r.userId);
 }

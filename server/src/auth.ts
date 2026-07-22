@@ -2,7 +2,7 @@ import { eq } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { db } from "./db/index.js";
-import { sessions, users, type User } from "./db/schema";
+import { sessionsTable, usersTable, type User } from "./db/schema";
 import { SESSION_TTL_MS } from "./env.js";
 import { isAdmin, isOwner } from "./permissions.js";
 
@@ -33,27 +33,35 @@ export function newId(): string {
 export function createSession(userId: string): string {
   const token = randomToken(32);
   const now = Date.now();
-  db.insert(sessions)
+  db.insert(sessionsTable)
     .values({ token, userId, createdAt: now, expiresAt: now + SESSION_TTL_MS })
     .run();
   return token;
 }
 
 export function destroySession(token: string): void {
-  db.delete(sessions).where(eq(sessions.token, token)).run();
+  db.delete(sessionsTable).where(eq(sessionsTable.token, token)).run();
 }
 
 export function userForToken(token: string | undefined): User | null {
   if (!token) return null;
 
-  const session = db.select().from(sessions).where(eq(sessions.token, token)).get();
+  const session = db
+    .select()
+    .from(sessionsTable)
+    .where(eq(sessionsTable.token, token))
+    .get();
   if (!session) return null;
 
   if (session.expiresAt < Date.now()) {
-    db.delete(sessions).where(eq(sessions.token, token)).run();
+    db.delete(sessionsTable).where(eq(sessionsTable.token, token)).run();
     return null;
   }
-  const user = db.select().from(users).where(eq(users.id, session.userId)).get();
+  const user = db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.id, session.userId))
+    .get();
   if (!user || user.banned || user.kickedAt) return null;
   return user;
 }

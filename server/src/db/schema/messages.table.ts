@@ -1,13 +1,13 @@
 import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { channels } from "./channels.table";
+import { channelsTable } from "./channels.table";
 
-export const messages = sqliteTable(
+export const messagesTable = sqliteTable(
   "messages",
   {
     id: text("id").primaryKey(),
     channelId: text("channel_id")
       .notNull()
-      .references(() => channels.id, { onDelete: "cascade" }),
+      .references(() => channelsTable.id, { onDelete: "cascade" }),
     authorId: text("author_id").notNull(),
     content: text("content").notNull(),
     createdAt: integer("created_at").notNull(),
@@ -22,4 +22,4 @@ export const messages = sqliteTable(
   (t) => ({ byChannel: index("idx_messages_channel").on(t.channelId, t.createdAt) }),
 );
 
-export type Message = typeof messages.$inferSelect;
+export type Message = typeof messagesTable.$inferSelect;
