@@ -9,11 +9,12 @@ import { desc, eq } from "drizzle-orm";
 import { hashPassword, verifyPassword } from "../../auth.js";
 import { db } from "../../db/index.js";
 import { rolesTable, userRolesTable, usersTable, type User } from "../../db/schema";
+import { AVATARS_DIR } from "../../env.js";
 import { httpError } from "../../http/errors.js";
 import { decodeImageUpload, imageStore, type StoredImage } from "../../images.js";
 import { toMember, toRoleView } from "../../views.js";
 
-const avatars = imageStore("avatars");
+const avatars = imageStore(AVATARS_DIR);
 
 export function listMembers(): Member[] {
   return db

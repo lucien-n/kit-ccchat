@@ -118,6 +118,19 @@ export const moderatedMember = member.extend({
 });
 export type ModeratedMember = z.infer<typeof moderatedMember>;
 
+export enum DiskItem {
+  AvatarDir = "AvatarDir",
+  ImagesDir = "ImagesDir",
+  DatabaseFile = "DatabaseFile",
+}
+
+const diskStats = z.object({
+  totalBytes: z.number(),
+  freeBytes: z.number(),
+  usedBytes: z.number(),
+  usedByItem: z.record(z.enum(DiskItem), z.number()),
+});
+
 /** Host machine snapshot, owner-only. Whole-box figures; disk is the filesystem
  *  the data dir lives on. */
 export const systemStats = z.object({
@@ -136,11 +149,7 @@ export const systemStats = z.object({
     usedBytes: z.number(),
     freeBytes: z.number(),
   }),
-  disk: z.object({
-    totalBytes: z.number(),
-    usedBytes: z.number(),
-    freeBytes: z.number(),
-  }),
+  disk: diskStats,
   app: z.object({
     uptimeSec: z.number(),
     rssBytes: z.number(),

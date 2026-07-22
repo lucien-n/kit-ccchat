@@ -1,7 +1,6 @@
 import { IMAGE_MIME_TYPES } from "@ccchat/shared";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
-import { DATA_DIR } from "./env.js";
 import { httpError } from "./http/errors.js";
 
 /** Content type from magic bytes so we serve images with the right header.
@@ -29,7 +28,6 @@ export function decodeImageUpload(image: string, maxBytes: number): Buffer {
 
 export type StoredImage = { bytes: Uint8Array<ArrayBuffer>; mime: string };
 
-/** null when the file is missing or holds bytes we won't vouch for. */
 export function readImageFile(path: string): StoredImage | null {
   if (!existsSync(path)) return null;
   const buf = readFileSync(path);
@@ -37,14 +35,9 @@ export function readImageFile(path: string): StoredImage | null {
   return mime ? { bytes: new Uint8Array(buf), mime } : null;
 }
 
-/** A folder under DATA_DIR holding one image per id. */
-export function imageStore(folder: string) {
-  const dir = join(DATA_DIR, folder);
+export function imageStore(dir: string) {
   mkdirSync(dir, { recursive: true });
 
-  /** Hono hands back the *decoded* param, so an id of `..%2Fccchat.sqlite` arrives
-   *  as a relative path and join() would walk straight out of dir. A stored image
-   *  is always a direct child of it; anything else is someone probing. */
   const pathOf = (id: string): string | null => {
     const path = resolve(dir, id);
     return dirname(path) === dir ? path : null;

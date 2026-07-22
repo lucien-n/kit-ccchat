@@ -4,7 +4,7 @@ import { migrate as runMigrations } from "drizzle-orm/better-sqlite3/migrator";
 import { mkdirSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { DATA_DIR } from "../env.js";
+import { DATA_DIR, DB_FILE } from "../env.js";
 import * as schema from "./schema";
 
 // Resolve relative to this file so it works in development and production.
@@ -12,7 +12,7 @@ const MIGRATIONS_DIR = join(dirname(fileURLToPath(import.meta.url)), "../../driz
 
 mkdirSync(DATA_DIR, { recursive: true });
 
-const sqlite = new Database(join(DATA_DIR, "ccchat.sqlite"));
+const sqlite = new Database(DB_FILE);
 
 sqlite.pragma("journal_mode = WAL");
 sqlite.pragma("foreign_keys = ON");

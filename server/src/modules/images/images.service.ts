@@ -8,9 +8,10 @@ import { and, eq, inArray, isNull } from "drizzle-orm";
 import { newId } from "../../auth.js";
 import { db } from "../../db/index.js";
 import { messageImagesTable } from "../../db/schema";
+import { IMAGES_DIR } from "../../env.js";
 import { decodeImageUpload, imageStore, type StoredImage } from "../../images.js";
 
-const images = imageStore("images");
+const images = imageStore(IMAGES_DIR);
 
 export function readImage(id: string): StoredImage {
   return images.read(id);

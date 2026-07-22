@@ -5,10 +5,9 @@ import {
 } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import { existsSync, rmSync, writeFileSync } from "node:fs";
-import { join } from "node:path";
 import { db } from "../../db/index.js";
 import { settingsTable } from "../../db/schema";
-import { COMMUNITY_NAME, DATA_DIR } from "../../env.js";
+import { COMMUNITY_ICON_FILE, COMMUNITY_NAME } from "../../env.js";
 import { httpError } from "../../http/errors.js";
 import { hub } from "../../hub.js";
 import { decodeImageUpload, readImageFile, type StoredImage } from "../../images.js";
@@ -19,9 +18,6 @@ export enum SettingKey {
   CommunityName = "communityName",
   CommunityIconVersion = "communityIconVersion",
 }
-
-// One community, one icon, so a fixed path rather than a directory.
-const ICON_PATH = join(DATA_DIR, "community-icon");
 
 /** Runtime settings live in the DB so the owner can change them from the UI.
  *  Environment variables only ever provide the *initial* value. */
@@ -61,13 +57,13 @@ export function iconVersion(): number | null {
 }
 
 export function readIcon(): StoredImage {
-  const image = readImageFile(ICON_PATH);
+  const image = readImageFile(COMMUNITY_ICON_FILE);
   if (!image) httpError(404, "not found");
   return image;
 }
 
 export function setIcon({ image }: CommunityIconBody): number {
-  writeFileSync(ICON_PATH, decodeImageUpload(image, MAX_AVATAR_IMAGE_BYTES));
+  writeFileSync(COMMUNITY_ICON_FILE, decodeImageUpload(image, MAX_AVATAR_IMAGE_BYTES));
   const version = Date.now();
   setSetting(SettingKey.CommunityIconVersion, String(version));
   hub.broadcast({
@@ -78,7 +74,7 @@ export function setIcon({ image }: CommunityIconBody): number {
 }
 
 export function clearIcon() {
-  if (existsSync(ICON_PATH)) rmSync(ICON_PATH);
+  if (existsSync(COMMUNITY_ICON_FILE)) rmSync(COMMUNITY_ICON_FILE);
   deleteSetting(SettingKey.CommunityIconVersion);
   hub.broadcast({ type: ServerEventType.Community_Icon_Changed, iconVersion: null });
 }

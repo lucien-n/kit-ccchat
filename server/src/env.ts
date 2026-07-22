@@ -22,6 +22,13 @@ if (process.env.NODE_ENV !== "test") {
 export const PORT = Number(process.env.PORT ?? 8080);
 export const DATA_DIR = resolve(process.env.DATA_DIR ?? "./data");
 export const CLIENT_DIR = resolve(process.env.CLIENT_DIR ?? "../client/build");
+
+/** Everything ccchat writes inside DATA_DIR. Declared here because the disk
+ *  usage panel has to measure what the other modules own. */
+export const AVATARS_DIR = join(DATA_DIR, "avatars");
+export const IMAGES_DIR = join(DATA_DIR, "images");
+export const COMMUNITY_ICON_FILE = join(DATA_DIR, "community-icon");
+export const DB_FILE = join(DATA_DIR, "ccchat.sqlite");
 export const COMMUNITY_NAME = process.env.COMMUNITY_NAME ?? "My Community";
 
 export const OWNER_USERNAME = process.env.OWNER_USERNAME ?? "owner";
