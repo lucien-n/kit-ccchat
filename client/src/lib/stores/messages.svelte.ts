@@ -49,7 +49,9 @@ class Messages {
       }
     } finally {
       this.#arrivedDuringLoad = null;
-      if (this.#channelId === channelId) this.loading = false;
+      if (this.#channelId === channelId) {
+        this.loading = false;
+      }
     }
   }
 

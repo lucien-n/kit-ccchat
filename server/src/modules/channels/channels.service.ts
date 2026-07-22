@@ -84,6 +84,13 @@ export function unreadCounts(user: User): {
 }
 
 export function markRead(userId: string, channelId: string) {
+  const channel = db
+    .select({ id: channelsTable.id })
+    .from(channelsTable)
+    .where(eq(channelsTable.id, channelId))
+    .get();
+  if (!channel) return;
+
   const now = Date.now();
   db.insert(channelReadsTable)
     .values({ userId, channelId, lastReadAt: now })

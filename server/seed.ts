@@ -1,12 +1,12 @@
 import {
   ChannelType,
-  isRenderableEmoji,
   MAX_REACTIONS_PER_MESSAGE,
   Permission,
   username as usernamePrimitive,
 } from "@ccchat/shared";
 import { faker } from "@faker-js/faker";
 import { eq } from "drizzle-orm";
+import { EMOJI_GLYPHS } from "../shared/src/emoji-glyphs";
 import { db } from "./src/db";
 import {
   Channel,
@@ -39,46 +39,7 @@ const ROLES = [
 
 const MESSAGE_GAP_MS = 4 * 60_000;
 
-/** Roughly how many messages get reacted to at all. */
-const REACTED_SHARE = 0.35;
-
-// Filtered rather than trusted: the seeder writes rows straight to the table, so
-// nothing else would stop a glyph the font cannot draw from becoming a tofu box
-// on every screen. Enough of them to fill the per-message cap.
-const REACTION_EMOJI = [
-  "👍",
-  "👎",
-  "❤️",
-  "😂",
-  "🎉",
-  "🔥",
-  "👀",
-  "🙏",
-  "💯",
-  "✅",
-  "❌",
-  "⭐",
-  "😍",
-  "😢",
-  "😮",
-  "😡",
-  "🤔",
-  "🤝",
-  "👏",
-  "🚀",
-  "🐛",
-  "☕",
-  "🍕",
-  "🎂",
-  "🌈",
-  "⚡",
-  "💀",
-  "🧠",
-  "🎯",
-  "🥳",
-  "😅",
-  "🤷",
-].filter(isRenderableEmoji);
+const REACTED_SHARE = 1 / 4;
 
 async function seedUsers(): Promise<User[]> {
   const data = Array.from({ length: 5 }, (_, i) => {
@@ -188,8 +149,6 @@ function reactionsFor(message: Message, emojis: string[], reactors: User[]) {
         messageId: message.id,
         emoji,
         userId: user.id,
-        // Spread so the pills come out in a stable order rather than however
-        // SQLite happens to return same-instant rows.
         createdAt: message.createdAt + i * 1000,
       })),
   );
@@ -205,7 +164,7 @@ async function seedReactions(messages: Message[], users: User[]) {
     faker.datatype.boolean({ probability: REACTED_SHARE })
       ? reactionsFor(
           message,
-          faker.helpers.arrayElements(REACTION_EMOJI, { min: 1, max: 3 }),
+          faker.helpers.arrayElements(EMOJI_GLYPHS, { min: 1, max: 3 }),
           users,
         )
       : [],
@@ -215,7 +174,7 @@ async function seedReactions(messages: Message[], users: User[]) {
   // something to show without clicking thirty times.
   if (wall) {
     rows.push(
-      ...reactionsFor(wall, REACTION_EMOJI.slice(0, MAX_REACTIONS_PER_MESSAGE), users),
+      ...reactionsFor(wall, EMOJI_GLYPHS.slice(0, MAX_REACTIONS_PER_MESSAGE), users),
     );
   }
 
