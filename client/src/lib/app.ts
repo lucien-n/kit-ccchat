@@ -122,6 +122,9 @@ function dispatch(event: ServerEvent) {
     case ServerEventType.Message_Deleted:
       messages.remove(event.id);
       break;
+    case ServerEventType.Message_Reacted:
+      messages.applyReactions(event.id, event.reactions);
+      break;
     case ServerEventType.Presence:
       presence.setOnline(event.online);
       typing.keepOnly(event.online);

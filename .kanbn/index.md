@@ -20,6 +20,7 @@ columnSorting:
 - [upload-images-files](tasks/upload-images-files.md)
 - [use-channel-type-enum-values-in-channels-table](tasks/use-channel-type-enum-values-in-channels-table.md)
 - [make-user-mentions-clickable](tasks/make-user-mentions-clickable.md)
+- [backend-validation-cleaning](tasks/backend-validation-cleaning.md)
 
 ## Todo
 

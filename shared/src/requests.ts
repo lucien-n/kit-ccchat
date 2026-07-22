@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { reactionEmoji } from "./emoji.js";
 import {
   channelName,
   channelType,
@@ -159,3 +160,8 @@ export const searchQuery = z
     offset: Math.max(Math.trunc(Number(s.offset)) || 0, 0),
   }));
 export type SearchQuery = z.infer<typeof searchQuery>;
+
+export const reactMessageParam = z.object({
+  id: z.uuid(),
+  emoji: reactionEmoji,
+});

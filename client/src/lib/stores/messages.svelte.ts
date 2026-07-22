@@ -1,4 +1,4 @@
-import { ClientEventType } from "@ccchat/shared";
+import { ClientEventType, type Reaction } from "@ccchat/shared";
 import { api, type MessageView } from "../api";
 import { realtime } from "./realtime.svelte";
 
@@ -148,6 +148,10 @@ class Messages {
       if (m.replyTo?.author && colorById.has(m.replyTo.author.id))
         m.replyTo.author.color = colorById.get(m.replyTo.author.id) ?? null;
     }
+  }
+
+  applyReactions(id: string, reactions: Reaction[]) {
+    this.list = this.list.map((m) => (m.id === id ? { ...m, reactions } : m));
   }
 
   send(channelId: string, content: string, replyToId?: string): boolean {

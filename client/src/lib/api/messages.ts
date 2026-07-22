@@ -22,4 +22,12 @@ export const messages = {
 
   delete: async (id: string) =>
     (await client.api.messages[":id"].$delete({ param: { id } })).json(),
+
+  react: async (id: string, emoji: string) =>
+    await client.api.messages[":id"].reactions[":emoji"].$put({ param: { id, emoji } }),
+
+  unreact: async (id: string, emoji: string) =>
+    await client.api.messages[":id"].reactions[":emoji"].$delete({
+      param: { id, emoji },
+    }),
 };
