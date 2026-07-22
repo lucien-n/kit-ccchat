@@ -48,6 +48,8 @@ export const maxUses = z.number().int().min(0).max(1000);
 
 export const MESSAGE_MAX_LENGTH = 4000;
 
+export const MAX_REACTIONS_PER_MESSAGE = 30;
+
 export const REPLY_SNIPPET_MAX = 200;
 
 export const TYPING_THROTTLE_MS = 1500;

@@ -2,6 +2,7 @@
   import { type MessageView } from "$lib/api";
   import { getChatContext } from "$lib/context/chat.svelte";
   import { apiErrorMessage } from "$lib/forms";
+  import { toggleReaction } from "$lib/reactions";
   import { messages } from "$lib/stores/messages.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { Button } from "&/button";
@@ -24,38 +25,11 @@
   const canDelete = $derived(session.isAdmin || isMine);
   const canEdit = $derived(!message.systemEvent && isMine);
 
-  async function react(emoji: string) {
-    try {
-      await messages.react(message.id, emoji);
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to react"));
-    }
-  }
-
   async function remove() {
     try {
       await messages.delete(message.id);
     } catch (e) {
       toast.error(apiErrorMessage(e, "failed to delete message"));
-    }
-  }
-
-  async function handleReact(emoji: string) {
-    const hasAlreadyReacted = message.reactions.some(
-      (reaction) =>
-        reaction.emoji === emoji &&
-        session.user &&
-        reaction.userIds.includes(session.user.id),
-    );
-
-    try {
-      if (hasAlreadyReacted) {
-        await messages.unreact(message.id, emoji);
-      } else {
-        await messages.react(message.id, emoji);
-      }
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to react"));
     }
   }
 </script>
@@ -66,7 +40,7 @@
       variant="ghost"
       size="icon-sm"
       title="React with {emoji}"
-      onclick={() => handleReact(emoji)}
+      onclick={() => toggleReaction(message, emoji)}
       class="text-base"
     >
       {emoji}
@@ -77,7 +51,7 @@
     <Separator orientation="vertical" />
   </div>
 
-  <EmojiPicker onpick={react} class="size-7" />
+  <EmojiPicker onpick={(emoji) => toggleReaction(message, emoji)} class="size-7" />
 
   <Button
     variant="ghost"

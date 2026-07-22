@@ -3,6 +3,15 @@ import { asc, eq } from "drizzle-orm";
 import { db } from "../../db";
 import { messageReactionsTable, type User } from "../../db/schema";
 
+export function emojiOn(messageId: string): Reaction["emoji"][] {
+  return db
+    .selectDistinct({ emoji: messageReactionsTable.emoji })
+    .from(messageReactionsTable)
+    .where(eq(messageReactionsTable.messageId, messageId))
+    .all()
+    .map((r) => r.emoji);
+}
+
 export function reactionsOf(messageId: string): Reaction[] {
   const rows = db
     .select({ emoji: messageReactionsTable.emoji, userId: messageReactionsTable.userId })

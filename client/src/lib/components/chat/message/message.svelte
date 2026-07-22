@@ -100,7 +100,7 @@
     {:else}
       <UserAvatar user={null} fallbackClass="text-sm" />
     {/if}
-    <div class="flex flex-col">
+    <div class="flex w-full min-w-0 flex-col">
       <div class="min-w-0">
         {#if message.replyTo}
           {@const reply = message.replyTo}

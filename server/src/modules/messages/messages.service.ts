@@ -1,6 +1,7 @@
 import {
   ChannelType,
   isMuted,
+  MAX_REACTIONS_PER_MESSAGE,
   ServerEventType,
   type EditMessageBody,
   type MessageView,
@@ -20,7 +21,7 @@ import { httpError } from "../../http/errors.js";
 import { hub } from "../../hub.js";
 import { toMessageView } from "../../views.js";
 import { resolveMentions, saveMentions } from "./mentions.js";
-import { reactionsOf } from "./reactions.js";
+import { emojiOn, reactionsOf } from "./reactions.js";
 
 export function postSystemMessage(event: SystemEvent, subjectId: string) {
   const channel = db
@@ -167,6 +168,11 @@ export function reactMessage(id: string, user: User, emoji: string) {
   }
   if (msg.systemEvent) {
     httpError(400, "cannot react to a system message");
+  }
+
+  const taken = emojiOn(id);
+  if (taken.length >= MAX_REACTIONS_PER_MESSAGE && !taken.includes(emoji)) {
+    httpError(409, `a message can only carry ${MAX_REACTIONS_PER_MESSAGE} reactions`);
   }
 
   db.insert(messageReactionsTable)
