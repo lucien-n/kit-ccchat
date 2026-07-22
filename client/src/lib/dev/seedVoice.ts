@@ -83,6 +83,7 @@ export async function seedVoice(count = 6, opts: SeedOptions = {}) {
       id: p.id,
       displayName: p.name,
       avatarVersion: p.avatarVersion,
+      sharing: p.sharing,
     })),
   });
 

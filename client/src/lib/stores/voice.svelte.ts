@@ -41,6 +41,8 @@ class VoiceStore {
   screens = $state<Record<string, Track>>({});
   /** Whose screen fills the chat pane, if any. */
   watching = $state<string | null>(null);
+  /** Wanted to watch someone whose track has not been subscribed yet. */
+  private pendingWatch = $state<string | null>(null);
 
   private room: Room | null = null;
   private audioEls = new Map<string, HTMLMediaElement>();
@@ -118,6 +120,12 @@ class VoiceStore {
             this.audioEls.set(`${p.identity}:${track.sid}`, el);
           } else if (pub.source === Track.Source.ScreenShare) {
             this.screens = { ...this.screens, [p.identity]: track };
+            // Clicking a stream from outside the channel joins first, so the
+            // watch has to wait here for the track to actually arrive.
+            if (this.pendingWatch === p.identity) {
+              this.watching = p.identity;
+              this.pendingWatch = null;
+            }
           }
           this.refresh();
         },
@@ -139,12 +147,15 @@ class VoiceStore {
             ...this.screens,
             [room.localParticipant.identity]: pub.track,
           };
+          this.announceSharing(true);
         }
         this.refresh();
       })
       .on(RoomEvent.LocalTrackUnpublished, (pub) => {
-        if (pub.source === Track.Source.ScreenShare)
+        if (pub.source === Track.Source.ScreenShare) {
           this.dropScreen(room.localParticipant.identity);
+          this.announceSharing(false);
+        }
         this.refresh();
       })
       .on(RoomEvent.Disconnected, () => {
@@ -202,12 +213,23 @@ class VoiceStore {
     if (this.watching === identity) this.watching = null;
   }
 
-  watch(identity: string) {
+  private announceSharing(sharing: boolean) {
+    realtime.send({ type: ClientEventType.Screen_Share_Set, sharing });
+  }
+
+  /** Join the channel if needed, then watch as soon as the track lands. The
+   *  pending id is set after joining because join() resets this store. */
+  async watch(channel: { id: string; name: string }, identity: string) {
+    if (!this.screens[identity] && this.channelId !== channel.id) {
+      await this.join(channel);
+    }
     if (this.screens[identity]) this.watching = identity;
+    else this.pendingWatch = identity;
   }
 
   stopWatching() {
     this.watching = null;
+    this.pendingWatch = null;
   }
 
   async toggleScreenShare() {
@@ -247,6 +269,7 @@ class VoiceStore {
     this.audioEls.clear();
     this.screens = {};
     this.watching = null;
+    this.pendingWatch = null;
     this.room = null;
     this.status = "idle";
     this.channelId = null;

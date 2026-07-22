@@ -112,6 +112,80 @@ function nextTyping(ws: WsClient, timeoutMs = 1000): Promise<{ userId: string }>
 const sendTyping = (ws: WsClient, channelId: string) =>
   ws.send(JSON.stringify({ type: ClientEventType.Typing_Start, channelId }));
 
+/** Resolve once a voice presence event satisfies `match`. */
+function voiceWhere(
+  ws: WsClient,
+  match: (presence: Record<string, { id: string; sharing: boolean }[]>) => boolean,
+  timeoutMs = 3000,
+): Promise<Record<string, { id: string; sharing: boolean }[]>> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      ws.off("message", onMessage);
+      reject(new Error(`no matching voice presence within ${timeoutMs}ms`));
+    }, timeoutMs);
+
+    function onMessage(raw: Buffer) {
+      const event = JSON.parse(raw.toString());
+      if (event.type !== ServerEventType.Voice_Presence || !match(event.presence)) return;
+      clearTimeout(timer);
+      ws.off("message", onMessage);
+      resolve(event.presence);
+    }
+    ws.on("message", onMessage);
+  });
+}
+
+const sharingOf = (
+  presence: Record<string, { id: string; sharing: boolean }[]>,
+  userId: string,
+) => presence[voiceChannelId]?.find((m) => m.id === userId)?.sharing;
+
+it("tells everyone who is screen sharing, including people outside the channel", async () => {
+  const watcher = await connect(memberToken);
+  const streamer = await connect(ownerToken);
+
+  const joined = voiceWhere(watcher, (p) => sharingOf(p, ownerId) === false);
+  streamer.send(
+    JSON.stringify({ type: ClientEventType.Voice_Join, channelId: voiceChannelId }),
+  );
+  await joined;
+
+  const shared = voiceWhere(watcher, (p) => sharingOf(p, ownerId) === true);
+  streamer.send(JSON.stringify({ type: ClientEventType.Screen_Share_Set, sharing: true }));
+  expect(sharingOf(await shared, ownerId)).toBe(true);
+
+  const stopped = voiceWhere(watcher, (p) => sharingOf(p, ownerId) === false);
+  streamer.send(
+    JSON.stringify({ type: ClientEventType.Screen_Share_Set, sharing: false }),
+  );
+  expect(sharingOf(await stopped, ownerId)).toBe(false);
+
+  watcher.terminate();
+  streamer.terminate();
+});
+
+it("drops the sharing flag when the streamer leaves voice", async () => {
+  const watcher = await connect(memberToken);
+  const streamer = await connect(ownerToken);
+
+  const joined = voiceWhere(watcher, (p) => sharingOf(p, ownerId) === false);
+  streamer.send(
+    JSON.stringify({ type: ClientEventType.Voice_Join, channelId: voiceChannelId }),
+  );
+  await joined;
+
+  const shared = voiceWhere(watcher, (p) => sharingOf(p, ownerId) === true);
+  streamer.send(JSON.stringify({ type: ClientEventType.Screen_Share_Set, sharing: true }));
+  await shared;
+
+  const gone = voiceWhere(watcher, (p) => sharingOf(p, ownerId) === undefined);
+  streamer.send(JSON.stringify({ type: ClientEventType.Voice_Leave }));
+  await gone;
+
+  watcher.terminate();
+  streamer.terminate();
+});
+
 it("relays typing to the other clients", async () => {
   const watcher = await connect(memberToken);
   const typist = await connect(ownerToken);
