@@ -23,12 +23,15 @@ columnSorting:
 - [avatar-overlays](tasks/avatar-overlays.md)
 - [profile-banner-and-bio](tasks/profile-banner-and-bio.md)
 - [soundboard](tasks/soundboard.md)
-- [deafen](tasks/deafen.md)
 - [show-mute-deafen-status-in-the-voice-channel](tasks/show-mute-deafen-status-in-the-voice-channel.md)
+- [control-mute-stream-volume](tasks/control-mute-stream-volume.md)
+- [allow-changing-input-output-devices](tasks/allow-changing-input-output-devices.md)
 
 ## Todo
 
 ## In Progress
+
+- [deafen](tasks/deafen.md)
 
 ## Done
 
