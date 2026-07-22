@@ -39,6 +39,25 @@
       toast.error(apiErrorMessage(e, "failed to delete message"));
     }
   }
+
+  async function handleReact(emoji: string) {
+    const hasAlreadyReacted = message.reactions.some(
+      (reaction) =>
+        reaction.emoji === emoji &&
+        session.user &&
+        reaction.userIds.includes(session.user.id),
+    );
+
+    try {
+      if (hasAlreadyReacted) {
+        await messages.unreact(message.id, emoji);
+      } else {
+        await messages.react(message.id, emoji);
+      }
+    } catch (e) {
+      toast.error(apiErrorMessage(e, "failed to react"));
+    }
+  }
 </script>
 
 <div class="bg-popover flex items-center gap-1 rounded-2xl border p-0.5">
@@ -47,7 +66,7 @@
       variant="ghost"
       size="icon-sm"
       title="React with {emoji}"
-      onclick={() => react(emoji)}
+      onclick={() => handleReact(emoji)}
       class="text-base"
     >
       {emoji}
