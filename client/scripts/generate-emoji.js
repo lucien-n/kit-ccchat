@@ -8,7 +8,19 @@ const require = createRequire(import.meta.url);
 
 const groups = require("unicode-emoji-json/data-by-group.json");
 
-// The CLDR name for 🎉 is party_popper; people type :tada:. That set is iamcal.
+// Emoji render through the Twemoji colour font (see app.css). unicode-emoji-json
+// tracks a newer Unicode than the font ships, so a handful of recent sequences
+// (head shaking, walking-facing-right, ...) have no single glyph and the browser
+// splits them into their parts. Keep only what the font draws as one glyph.
+const fontkit = require("fontkit");
+const font = fontkit.openSync(
+  join(dirname(require.resolve("twemoji-colr-font/package.json")), "twemoji.woff2"),
+);
+const renderable = (emoji) => {
+  const { glyphs } = font.layout(emoji);
+  return glyphs.length === 1 && glyphs[0].id !== 0;
+};
+
 const iamcal = require("emojibase-data/en/shortcodes/iamcal.json");
 const github = require("emojibase-data/en/shortcodes/github.json");
 const emojibase = require("emojibase-data/en/data.json");
@@ -52,24 +64,27 @@ let missingShortcode = 0;
 const groupEntries = groups.map((group) => ({
   name: group.name,
   hidden: HIDDEN_GROUPS.has(group.name),
-  emojis: group.emojis.map((e) => {
-    const hex = hexcode(e.emoji);
-    const aliases = [...new Set(shortcodesByHex.get(hex) ?? [])].map(normalize);
-    if (!aliases.length) missingShortcode++;
+  emojis: group.emojis
+    .filter((e) => renderable(e.emoji))
+    .map((e) => {
+      const hex = hexcode(e.emoji);
+      const aliases = [...new Set(shortcodesByHex.get(hex) ?? [])].map(normalize);
+      if (!aliases.length) missingShortcode++;
 
-    const primary = aliases[0] ?? e.slug;
+      const primary = aliases[0] ?? e.slug;
 
-    const names = [...new Set([...aliases, e.slug])].filter((n) => n && n !== primary);
+      const names = [...new Set([...aliases, e.slug])].filter((n) => n && n !== primary);
 
-    const tags = [...new Set((tagsByHex.get(hex) ?? []).map(normalize))].filter(
-      (t) => t && t !== primary && !names.includes(t),
-    );
+      const tags = [...new Set((tagsByHex.get(hex) ?? []).map(normalize))].filter(
+        (t) => t && t !== primary && !names.includes(t),
+      );
 
-    return [e.emoji, primary, names.join(" "), tags.join(" ")];
-  }),
+      return [e.emoji, primary, names.join(" "), tags.join(" ")];
+    }),
 }));
 
 const total = groupEntries.reduce((n, g) => n + g.emojis.length, 0);
+const dropped = groups.reduce((n, g) => n + g.emojis.length, 0) - total;
 
 const body = groupEntries
   .map(
@@ -120,5 +135,6 @@ execFileSync(
 );
 
 console.log(`wrote ${total} emoji to ${out}`);
+if (dropped) console.log(`${dropped} dropped: no single glyph in the Twemoji font`);
 if (missingShortcode)
   console.log(`${missingShortcode} had no Slack/GitHub shortcode, kept CLDR slug`);

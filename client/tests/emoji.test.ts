@@ -24,7 +24,7 @@ describe("the generated dataset", () => {
   });
 
   it("gives every emoji a shortcode and keeps flags out of the grid", () => {
-    expect(index.all.length).toBeGreaterThan(1800);
+    expect(index.all.length).toBeGreaterThan(1700);
     expect(index.all.every(([emoji, shortcode]) => !!emoji && !!shortcode)).toBe(true);
     expect(index.groups.some((g) => g.hidden)).toBe(true);
     expect(index.groups.some((g) => !g.hidden)).toBe(true);
