@@ -7,6 +7,7 @@ import {
   communityName,
   displayName,
   hexColor,
+  imageDataUrl,
   inviteCode,
   maxUses,
   MESSAGE_MAX_LENGTH,
@@ -82,10 +83,17 @@ export const muteBody = z.object({
   minutes: z.number().int().positive().max(10080).default(60),
 });
 
-export const avatarBody = z.object({ image: z.string().min(1) });
+export const uploadImageBody = z.object({
+  image: imageDataUrl,
+  width: z.number().int().positive(),
+  height: z.number().int().positive(),
+});
+export type UploadImageBody = z.infer<typeof uploadImageBody>;
+
+export const avatarBody = z.object({ image: imageDataUrl });
 export type AvatarBody = z.infer<typeof avatarBody>;
 
-export const communityIconBody = z.object({ image: z.string().min(1) });
+export const communityIconBody = z.object({ image: imageDataUrl });
 export type CommunityIconBody = z.infer<typeof communityIconBody>;
 
 export const createRoleBody = z.object({

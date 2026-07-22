@@ -156,11 +156,17 @@ class Messages {
     this.list = this.list.map((m) => (m.id === id ? { ...m, reactions } : m));
   }
 
-  send(channelId: string, content: string, replyToId?: string): boolean {
+  send(
+    channelId: string,
+    content: string,
+    replyToId?: string,
+    imageIds?: string[],
+  ): boolean {
     return realtime.send({
       type: ClientEventType.Message_Create,
       channelId,
       content,
+      imageIds,
       replyToId,
     });
   }

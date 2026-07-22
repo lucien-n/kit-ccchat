@@ -55,6 +55,13 @@ export const replyRef = z.object({
 });
 export type ReplyRef = z.infer<typeof replyRef>;
 
+export const messageImage = z.object({
+  id: z.uuid(),
+  width: z.number(),
+  height: z.number(),
+});
+export type MessageImage = z.infer<typeof messageImage>;
+
 export const reaction = z.object({
   emoji: z.string(),
   userIds: z.array(z.string()),
@@ -75,6 +82,7 @@ export const messageView = z.object({
   mentions: z.array(z.string()),
   mentionsEveryone: z.boolean(),
   reactions: z.array(reaction),
+  images: z.array(messageImage),
 });
 export type MessageView = z.infer<typeof messageView>;
 

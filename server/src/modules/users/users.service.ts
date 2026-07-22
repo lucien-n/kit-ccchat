@@ -1,25 +1,19 @@
-import type { AvatarBody, ChangePasswordBody, Member, Role } from "@ccchat/shared";
+import {
+  MAX_AVATAR_IMAGE_BYTES,
+  type AvatarBody,
+  type ChangePasswordBody,
+  type Member,
+  type Role,
+} from "@ccchat/shared";
 import { desc, eq } from "drizzle-orm";
-import { existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
 import { hashPassword, verifyPassword } from "../../auth.js";
 import { db } from "../../db/index.js";
 import { rolesTable, userRolesTable, usersTable, type User } from "../../db/schema";
-import { DATA_DIR } from "../../env.js";
 import { httpError } from "../../http/errors.js";
-import { decodeImageUpload, readImageFile, type StoredImage } from "../../images.js";
+import { decodeImageUpload, imageStore, type StoredImage } from "../../images.js";
 import { toMember, toRoleView } from "../../views.js";
 
-const AVATAR_DIR = join(DATA_DIR, "avatars");
-mkdirSync(AVATAR_DIR, { recursive: true });
-
-/** Hono hands back the *decoded* param, so an id of `..%2Fccchat.sqlite` arrives
- *  as a relative path and join() would walk straight out of AVATAR_DIR. An
- *  avatar is always a direct child of it; anything else is someone probing. */
-function avatarPath(id: string): string | null {
-  const path = resolve(AVATAR_DIR, id);
-  return dirname(path) === AVATAR_DIR ? path : null;
-}
+const avatars = imageStore("avatars");
 
 export function listMembers(): Member[] {
   return db
@@ -31,22 +25,18 @@ export function listMembers(): Member[] {
 }
 
 export function readAvatar(id: string): StoredImage {
-  const path = avatarPath(id);
-  const image = path ? readImageFile(path) : null;
-  if (!image) httpError(404, "not found");
-  return image;
+  return avatars.read(id);
 }
 
 export function saveAvatar(userId: string, { image }: AvatarBody): number {
-  writeFileSync(join(AVATAR_DIR, userId), decodeImageUpload(image));
+  avatars.write(userId, decodeImageUpload(image, MAX_AVATAR_IMAGE_BYTES));
   const avatarVersion = Date.now();
   db.update(usersTable).set({ avatarVersion }).where(eq(usersTable.id, userId)).run();
   return avatarVersion;
 }
 
 export function deleteAvatar(userId: string) {
-  const path = join(AVATAR_DIR, userId);
-  if (existsSync(path)) rmSync(path);
+  avatars.remove(userId);
   db.update(usersTable)
     .set({ avatarVersion: null })
     .where(eq(usersTable.id, userId))

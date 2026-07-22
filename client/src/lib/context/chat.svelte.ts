@@ -94,10 +94,10 @@ export class ChatContext {
     if (channelId) typing.signal(channelId);
   }
 
-  send(text: string): boolean {
+  send(text: string, imageIds?: string[]): boolean {
     const channelId = channels.currentId;
     if (!channelId) return false;
-    if (!messages.send(channelId, text, this.replyTo?.id)) {
+    if (!messages.send(channelId, text, this.replyTo?.id, imageIds)) {
       toast.error("Not connected, your message wasn't sent.");
       return false;
     }

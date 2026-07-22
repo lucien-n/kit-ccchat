@@ -1,4 +1,8 @@
-import { ServerEventType, type CommunityIconBody } from "@ccchat/shared";
+import {
+  MAX_AVATAR_IMAGE_BYTES,
+  ServerEventType,
+  type CommunityIconBody,
+} from "@ccchat/shared";
 import { eq } from "drizzle-orm";
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
@@ -63,7 +67,7 @@ export function readIcon(): StoredImage {
 }
 
 export function setIcon({ image }: CommunityIconBody): number {
-  writeFileSync(ICON_PATH, decodeImageUpload(image));
+  writeFileSync(ICON_PATH, decodeImageUpload(image, MAX_AVATAR_IMAGE_BYTES));
   const version = Date.now();
   setSetting(SettingKey.CommunityIconVersion, String(version));
   hub.broadcast({

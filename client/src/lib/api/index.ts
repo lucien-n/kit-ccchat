@@ -1,6 +1,7 @@
 import { auth } from "./auth";
 import { channels } from "./channels";
 import { community } from "./community";
+import { images } from "./images";
 import { invites } from "./invites";
 import { messages } from "./messages";
 import { moderation } from "./moderation";
@@ -14,6 +15,7 @@ export const api = {
   auth,
   channels,
   community,
+  images,
   invites,
   messages,
   moderation,
@@ -25,6 +27,7 @@ export const api = {
 };
 
 export { communityIconUrl } from "./community";
+export { imageUrl } from "./images";
 export { apiBase, ApiError } from "./http";
 export { ModAction } from "./moderation";
 export { authToken } from "./token.svelte";
@@ -34,6 +37,7 @@ export type {
   Channel,
   Invite,
   Member,
+  MessageImage,
   MessageView,
   ModeratedMember,
   Role,

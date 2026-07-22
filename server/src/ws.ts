@@ -15,6 +15,7 @@ import { newId, userForToken } from "./auth.js";
 import { db } from "./db/index.js";
 import { channelsTable, messagesTable, usersTable } from "./db/schema";
 import { hub, type Client } from "./hub.js";
+import { attachImages } from "./modules/images/images.service.js";
 import { resolveMentions, saveMentions } from "./modules/messages/mentions.js";
 import { toMessageView } from "./views.js";
 
@@ -189,6 +190,8 @@ function handleCreate(
   }
 
   const { channelId, content } = msg;
+  const imageIds = msg.imageIds ?? [];
+  if (!content && !imageIds.length) return;
 
   const channel = db
     .select()
@@ -212,5 +215,6 @@ function handleCreate(
   };
   db.insert(messagesTable).values(row).run();
   saveMentions(row.id, userIds);
+  attachImages(row.id, client.userId, imageIds);
   hub.broadcast({ type: ServerEventType.Message_New, message: toMessageView(row) });
 }

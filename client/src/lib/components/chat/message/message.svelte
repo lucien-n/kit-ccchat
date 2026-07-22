@@ -16,6 +16,7 @@
   import { tick } from "svelte";
   import { toast } from "svelte-sonner";
   import MessageActions from "./message-actions.svelte";
+  import MessageImages from "./message-images.svelte";
   import MessageReactions from "./message-reactions.svelte";
 
   interface Props {
@@ -174,6 +175,8 @@
           <Markdown content={message.content} />
         {/if}
       </div>
+
+      <MessageImages {message} />
 
       <MessageReactions {message} />
     </div>

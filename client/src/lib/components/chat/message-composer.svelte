@@ -1,6 +1,8 @@
 <script lang="ts">
-  import type { MessageView } from "$lib/api";
+  import { api, imageUrl, type MessageImage, type MessageView } from "$lib/api";
   import Markdown from "$lib/components/markdown/markdown.svelte";
+  import { apiErrorMessage } from "$lib/forms";
+  import { prepareImage } from "$lib/image";
   import {
     emojiLabel,
     loadEmoji,
@@ -12,15 +14,20 @@
   import { mentionQuery, searchMentions, type MentionSuggestion } from "$lib/mentions";
   import { Button } from "&/button";
   import { Textarea } from "&/textarea";
-  import { MESSAGE_MAX_LENGTH } from "@ccchat/shared";
-  import { Eye, EyeOff, Reply, Send, X } from "@lucide/svelte";
+  import {
+    IMAGE_MIME_TYPES,
+    MAX_IMAGES_PER_MESSAGE,
+    MESSAGE_MAX_LENGTH,
+  } from "@ccchat/shared";
+  import { Eye, EyeOff, ImagePlus, Reply, Send, X } from "@lucide/svelte";
   import { tick } from "svelte";
+  import { toast } from "svelte-sonner";
   import EmojiPicker from "./emoji-picker.svelte";
 
   interface Props {
     placeholder: string;
     disabled?: boolean;
-    onsend: (text: string) => boolean;
+    onsend: (text: string, imageIds?: string[]) => boolean;
     ontyping?: () => void;
     replyingTo?: MessageView | null;
     oncancelreply?: () => void;
@@ -43,6 +50,9 @@
   let el = $state<HTMLTextAreaElement | null>(null);
   let index = $state<EmojiIndex | null>(null);
   let preview = $state(false);
+  let pending = $state<MessageImage[]>([]);
+  let uploading = $state(false);
+  let fileEl = $state<HTMLInputElement | null>(null);
 
   type Suggestion =
     { kind: "emoji"; entry: EmojiEntry } | { kind: "mention"; entry: MentionSuggestion };
@@ -134,11 +144,55 @@
     if (draft.trim()) ontyping?.();
   }
 
+  async function addFiles(files: Iterable<File>) {
+    const room = MAX_IMAGES_PER_MESSAGE - pending.length;
+    const picked = [...files]
+      .filter((f) => IMAGE_MIME_TYPES.includes(f.type))
+      .slice(0, room);
+    if (!picked.length) return;
+
+    uploading = true;
+    try {
+      const uploaded = await Promise.all(
+        picked.map(
+          async (file) => (await api.images.upload(await prepareImage(file))).image,
+        ),
+      );
+      pending = [...pending, ...uploaded];
+    } catch (e) {
+      toast.error(apiErrorMessage(e, "failed to upload image"));
+    } finally {
+      uploading = false;
+    }
+  }
+
+  function onpaste(e: ClipboardEvent) {
+    const files = [...(e.clipboardData?.items ?? [])]
+      .filter((i) => i.kind === "file")
+      .map((i) => i.getAsFile())
+      .filter((f) => f !== null);
+    if (!files.length) return;
+    e.preventDefault();
+    void addFiles(files);
+  }
+
+  function onpick(e: Event) {
+    const input = e.currentTarget as HTMLInputElement;
+    void addFiles(input.files ?? []);
+    input.value = "";
+  }
+
   function submit() {
     const text = draft.trim();
-    if (!text) return;
-    if (onsend(text)) {
+    if (!text && !pending.length) return;
+    if (
+      onsend(
+        text,
+        pending.map((p) => p.id),
+      )
+    ) {
       draft = "";
+      pending = [];
       close();
     }
   }
@@ -235,6 +289,36 @@
     </div>
   {/if}
 
+  {#if pending.length || uploading}
+    <div class="mb-2 flex flex-wrap gap-2">
+      {#each pending as image (image.id)}
+        <div class="relative">
+          <img
+            src={imageUrl(image.id)}
+            alt=""
+            class="h-20 w-20 rounded-xl border object-cover"
+          />
+          <Button
+            variant="secondary"
+            size="icon-xs"
+            class="absolute -top-1.5 -right-1.5 rounded-full"
+            title="Remove image"
+            onclick={() => (pending = pending.filter((p) => p.id !== image.id))}
+          >
+            <X class="size-3" />
+          </Button>
+        </div>
+      {/each}
+      {#if uploading}
+        <div
+          class="bg-muted/40 text-muted-foreground flex h-20 w-20 items-center justify-center rounded-xl border text-xs"
+        >
+          Uploading
+        </div>
+      {/if}
+    </div>
+  {/if}
+
   {#if replyingTo}
     <div
       class="bg-muted/40 text-muted-foreground mb-2 flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs"
@@ -279,11 +363,29 @@
       class="thin-scrollbar field-sizing-content max-h-60 min-h-8 flex-1 rounded-none border-0 bg-transparent py-1.5 pl-2 focus-visible:border-transparent focus-visible:ring-0"
       autocomplete="off"
       onkeydown={disabled ? undefined : onkeydown}
+      onpaste={disabled ? undefined : onpaste}
       oninput={changed}
       onclick={refresh}
       onfocus={ensureIndex}
       onblur={close}
     />
+    <input
+      bind:this={fileEl}
+      type="file"
+      accept={IMAGE_MIME_TYPES.join(",")}
+      multiple
+      class="hidden"
+      onchange={onpick}
+    />
+    <Button
+      variant="ghost"
+      size="icon"
+      disabled={disabled || pending.length >= MAX_IMAGES_PER_MESSAGE}
+      title="Attach images"
+      onclick={() => fileEl?.click()}
+    >
+      <ImagePlus class="size-4" />
+    </Button>
     <Button
       variant="ghost"
       size="icon"

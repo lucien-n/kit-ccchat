@@ -17,7 +17,6 @@ columnSorting:
 - [unify-channel-type-icons-and-labels](tasks/unify-channel-type-icons-and-labels.md)
 - [mobile-app](tasks/mobile-app.md)
 - [video-streaming](tasks/video-streaming.md)
-- [upload-images-files](tasks/upload-images-files.md)
 - [use-channel-type-enum-values-in-channels-table](tasks/use-channel-type-enum-values-in-channels-table.md)
 - [backend-validation-cleaning](tasks/backend-validation-cleaning.md)
 
@@ -25,10 +24,11 @@ columnSorting:
 
 ## In Progress
 
-- [make-user-mentions-clickable](tasks/make-user-mentions-clickable.md)
+- [upload-images-files](tasks/upload-images-files.md)
 
 ## Done
 
+- [make-user-mentions-clickable](tasks/make-user-mentions-clickable.md)
 - [message-reactions](tasks/message-reactions.md)
 - [user-typing-indicators](tasks/user-typing-indicators.md)
 - [db-seeder-script](tasks/db-seeder-script.md)

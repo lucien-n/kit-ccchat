@@ -1,7 +1,8 @@
-import { existsSync, readFileSync } from "node:fs";
+import { IMAGE_MIME_TYPES } from "@ccchat/shared";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, resolve } from "node:path";
+import { DATA_DIR } from "./env.js";
 import { httpError } from "./http/errors.js";
-
-const MAX_IMAGE_BYTES = 2_000_000;
 
 /** Content type from magic bytes so we serve images with the right header.
  *  null = these bytes are not an image we recognise. */
@@ -15,12 +16,13 @@ export function sniffMime(buf: Buffer): string | null {
 
 /** Decode a `data:image/...;base64,` upload. The data: prefix is only a claim
  *  the uploader makes, so the bytes themselves decide whether this is an image. */
-export function decodeImageUpload(image: string): Buffer {
-  const m = /^data:image\/(png|jpeg|webp|gif);base64,(.+)$/.exec(image);
-  if (!m) httpError(400, "invalid image");
+export function decodeImageUpload(image: string, maxBytes: number): Buffer {
+  const m = /^data:([\w/+.-]+);base64,(.+)$/.exec(image);
+  if (!m || !IMAGE_MIME_TYPES.includes(m[1])) httpError(400, "invalid image");
 
   const buf = Buffer.from(m[2], "base64");
-  if (buf.length > MAX_IMAGE_BYTES) httpError(400, "image too large (max 2MB)");
+  if (buf.length > maxBytes)
+    httpError(400, `image too large (max ${Math.round(maxBytes / 1_000_000)}MB)`);
   if (!sniffMime(buf)) httpError(400, "invalid image");
   return buf;
 }
@@ -33,4 +35,34 @@ export function readImageFile(path: string): StoredImage | null {
   const buf = readFileSync(path);
   const mime = sniffMime(buf);
   return mime ? { bytes: new Uint8Array(buf), mime } : null;
+}
+
+/** A folder under DATA_DIR holding one image per id. */
+export function imageStore(folder: string) {
+  const dir = join(DATA_DIR, folder);
+  mkdirSync(dir, { recursive: true });
+
+  /** Hono hands back the *decoded* param, so an id of `..%2Fccchat.sqlite` arrives
+   *  as a relative path and join() would walk straight out of dir. A stored image
+   *  is always a direct child of it; anything else is someone probing. */
+  const pathOf = (id: string): string | null => {
+    const path = resolve(dir, id);
+    return dirname(path) === dir ? path : null;
+  };
+
+  return {
+    read(id: string): StoredImage {
+      const path = pathOf(id);
+      const image = path ? readImageFile(path) : null;
+      if (!image) httpError(404, "not found");
+      return image;
+    },
+    write(id: string, bytes: Buffer) {
+      writeFileSync(join(dir, id), bytes);
+    },
+    remove(id: string) {
+      const path = pathOf(id);
+      if (path) rmSync(path, { force: true });
+    },
+  };
 }

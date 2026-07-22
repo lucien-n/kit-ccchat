@@ -50,6 +50,23 @@ export const MESSAGE_MAX_LENGTH = 4000;
 
 export const MAX_REACTIONS_PER_MESSAGE = 30;
 
+export const MAX_IMAGES_PER_MESSAGE = 4;
+
+export const IMAGE_MAX_DIMENSION = 1600;
+
+export const MAX_MESSAGE_IMAGE_BYTES = 8_000_000;
+
+export const MAX_AVATAR_IMAGE_BYTES = 2_000_000;
+
+export const IMAGE_MIME_TYPES: readonly string[] = [
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/gif",
+];
+
+export const imageDataUrl = z.string().min(1);
+
 export const REPLY_SNIPPET_MAX = 200;
 
 export const TYPING_THROTTLE_MS = 1500;

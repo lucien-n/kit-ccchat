@@ -18,6 +18,7 @@ import {
   type Message,
   type User,
 } from "./db/schema";
+import { imagesOf } from "./modules/images/images.service.js";
 import { mentionsOf } from "./modules/messages/mentions.js";
 import { reactionsOf } from "./modules/messages/reactions.js";
 import { colorFor, isAdmin, isOwner, roleIdsOf } from "./permissions.js";
@@ -109,5 +110,6 @@ export function toMessageView(m: Message): MessageView {
     mentions: mentionsOf(m.id),
     mentionsEveryone: m.mentionsEveryone === 1,
     reactions: reactionsOf(m.id),
+    images: imagesOf(m.id),
   };
 }

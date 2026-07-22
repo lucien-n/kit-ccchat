@@ -201,7 +201,7 @@
         bind:this={chat.composer}
         placeholder={`Message #${channels.current?.name ?? ""}`}
         disabled={channels.current?.type !== ChannelType.Text}
-        onsend={(text) => chat.send(text)}
+        onsend={(text, imageIds) => chat.send(text, imageIds)}
         ontyping={() => chat.typing()}
         replyingTo={chat.replyTo}
         oncancelreply={() => (chat.replyTo = null)}
