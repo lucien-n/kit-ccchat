@@ -16,16 +16,27 @@ columnSorting:
 
 - [unify-channel-type-icons-and-labels](tasks/unify-channel-type-icons-and-labels.md)
 - [mobile-app](tasks/mobile-app.md)
-- [video-streaming](tasks/video-streaming.md)
 - [use-channel-type-enum-values-in-channels-table](tasks/use-channel-type-enum-values-in-channels-table.md)
 - [backend-validation-cleaning](tasks/backend-validation-cleaning.md)
+- [push-notifications-for-messages](tasks/push-notifications-for-messages.md)
+- [allow-theme-change](tasks/allow-theme-change.md)
+- [avatar-overlays](tasks/avatar-overlays.md)
+- [profile-banner-and-bio](tasks/profile-banner-and-bio.md)
+- [soundboard](tasks/soundboard.md)
+- [show-mute-deafen-status-in-the-voice-channel](tasks/show-mute-deafen-status-in-the-voice-channel.md)
+- [control-mute-stream-volume](tasks/control-mute-stream-volume.md)
+- [allow-changing-input-output-devices](tasks/allow-changing-input-output-devices.md)
+- [webcams](tasks/webcams.md)
 
 ## Todo
 
 ## In Progress
 
+- [deafen](tasks/deafen.md)
+
 ## Done
 
+- [video-streaming](tasks/video-streaming.md)
 - [upload-images-files](tasks/upload-images-files.md)
 - [make-user-mentions-clickable](tasks/make-user-mentions-clickable.md)
 - [message-reactions](tasks/message-reactions.md)
