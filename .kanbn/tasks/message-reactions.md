@@ -1,10 +1,10 @@
 ---
 created: 2026-07-22T10:47:50.039Z
-updated: 2026-07-22T11:44:49.174Z
+updated: 2026-07-22T11:59:07.352Z
 assigned: ""
 progress: 0
 tags: []
-started: 2026-07-22T11:44:49.174Z
+started: 2026-07-22T00:00:00.000Z
 ---
 
 # message reactions
@@ -50,16 +50,16 @@ Settled up front so they don't get re-argued mid-build:
 ## Sub-tasks
 
 - [x] Pull the drawable emoji into `shared` and add the `reactionEmoji` schema so
-    the server can check a reaction against exactly what the picker offers
-- [ ] Add the `message_reactions` table and generate the migration
-- [ ] Add the reaction shape to `messageView` and the new `Message_Reacted` event
-    to the shared types
+the server can check a reaction against exactly what the picker offers
+- [x] Add the `message_reactions` table and generate the migration
+- [x] Add the reaction shape to `messageView` and the new `Message_Reacted` event
+to the shared types
 - [ ] Server: read reactions back with a message, plus the add and remove
-    endpoints, and clear the rows when a message is deleted
+endpoints, and clear the rows when a message is deleted
 - [ ] Client: api calls, the store update, and handling the new event
 - [ ] The pills under a message, and an add-reaction button in the hover bar next
-    to reply/edit/delete
+to reply/edit/delete
 - [ ] Tests: the schema edges, muted people, deleted messages, and the cap on how
-    many different emoji one message can hold
+many different emoji one message can hold
 - [ ] Have the seeder scatter a few reactions around, so this is testable without
-    logging in as two people
+logging in as two people
