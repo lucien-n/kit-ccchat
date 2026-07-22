@@ -95,8 +95,12 @@
     )}
   >
     {#if message.author}
-      <UserCard userId={message.author.id}>
-        <UserAvatar user={message.author} class="size-9" fallbackClass="text-sm" />
+      <UserCard userId={message.author.id} class="h-fit">
+        <UserAvatar
+          user={message.author}
+          class={cn("size-9", message.replyTo ? "mt-5" : "mt-1")}
+          fallbackClass="text-sm"
+        />
       </UserCard>
     {:else}
       <UserAvatar user={null} fallbackClass="text-sm" />
