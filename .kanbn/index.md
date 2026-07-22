@@ -19,6 +19,7 @@ columnSorting:
 - [video-streaming](tasks/video-streaming.md)
 - [use-channel-type-enum-values-in-channels-table](tasks/use-channel-type-enum-values-in-channels-table.md)
 - [backend-validation-cleaning](tasks/backend-validation-cleaning.md)
+- [push-notifications-for-messages](tasks/push-notifications-for-messages.md)
 
 ## Todo
 
