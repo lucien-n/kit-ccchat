@@ -137,9 +137,7 @@
               class="size-4"
             />{/if}
         </Button>
-        <span class="text-muted-foreground hidden text-sm sm:inline"
-          >{presence.online.size} online</span
-        >
+
         <ToggleGroup.Root
           type="single"
           variant="outline"
@@ -149,8 +147,14 @@
           <ToggleGroup.Item value="search" title="Search messages">
             <SearchIcon class="size-4" />
           </ToggleGroup.Item>
-          <ToggleGroup.Item value="members" title="Members">
+          <ToggleGroup.Item
+            value="members"
+            title="Members, {presence.online.size} online"
+          >
             <Users class="size-4" />
+            <span class="text-xs">
+              {presence.online.size} online
+            </span>
           </ToggleGroup.Item>
         </ToggleGroup.Root>
       </div>
