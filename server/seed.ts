@@ -1,10 +1,18 @@
-import { ChannelType, Permission, username as usernamePrimitive } from "@ccchat/shared";
+import {
+  ChannelType,
+  isRenderableEmoji,
+  MAX_REACTIONS_PER_MESSAGE,
+  Permission,
+  username as usernamePrimitive,
+} from "@ccchat/shared";
 import { faker } from "@faker-js/faker";
 import { eq } from "drizzle-orm";
 import { db } from "./src/db";
 import {
   Channel,
   channelsTable,
+  Message,
+  messageReactionsTable,
   messagesTable,
   Role,
   rolesTable,
@@ -30,6 +38,47 @@ const ROLES = [
 ];
 
 const MESSAGE_GAP_MS = 4 * 60_000;
+
+/** Roughly how many messages get reacted to at all. */
+const REACTED_SHARE = 0.35;
+
+// Filtered rather than trusted: the seeder writes rows straight to the table, so
+// nothing else would stop a glyph the font cannot draw from becoming a tofu box
+// on every screen. Enough of them to fill the per-message cap.
+const REACTION_EMOJI = [
+  "👍",
+  "👎",
+  "❤️",
+  "😂",
+  "🎉",
+  "🔥",
+  "👀",
+  "🙏",
+  "💯",
+  "✅",
+  "❌",
+  "⭐",
+  "😍",
+  "😢",
+  "😮",
+  "😡",
+  "🤔",
+  "🤝",
+  "👏",
+  "🚀",
+  "🐛",
+  "☕",
+  "🍕",
+  "🎂",
+  "🌈",
+  "⚡",
+  "💀",
+  "🧠",
+  "🎯",
+  "🥳",
+  "😅",
+  "🤷",
+].filter(isRenderableEmoji);
 
 async function seedUsers(): Promise<User[]> {
   const data = Array.from({ length: 5 }, (_, i) => {
@@ -105,20 +154,74 @@ async function seedChannels(): Promise<Channel[]> {
   return channels;
 }
 
-async function seedMessages(channel: Channel, count: number, authors: User[]) {
+async function seedMessages(
+  channel: Channel,
+  count: number,
+  authors: User[],
+): Promise<Message[]> {
   const start = Date.now() - count * MESSAGE_GAP_MS;
 
-  await db.insert(messagesTable).values(
-    Array.from({ length: count }, (_, i) => ({
-      id: crypto.randomUUID(),
-      channelId: channel.id,
-      authorId: faker.helpers.arrayElement(authors).id,
-      content: faker.lorem.sentence({ min: 3, max: 20 }),
-      createdAt: start + i * MESSAGE_GAP_MS,
-    })),
-  );
+  const messages = await db
+    .insert(messagesTable)
+    .values(
+      Array.from({ length: count }, (_, i) => ({
+        id: crypto.randomUUID(),
+        channelId: channel.id,
+        authorId: faker.helpers.arrayElement(authors).id,
+        content: faker.lorem.sentence({ min: 3, max: 20 }),
+        createdAt: start + i * MESSAGE_GAP_MS,
+      })),
+    )
+    .returning();
 
   console.log(`Seeded ${count} messages in #${channel.name}`);
+
+  return messages;
+}
+
+function reactionsFor(message: Message, emojis: string[], reactors: User[]) {
+  return emojis.flatMap((emoji, i) =>
+    faker.helpers
+      .arrayElements(reactors, { min: 1, max: reactors.length })
+      .map((user) => ({
+        id: crypto.randomUUID(),
+        messageId: message.id,
+        emoji,
+        userId: user.id,
+        // Spread so the pills come out in a stable order rather than however
+        // SQLite happens to return same-instant rows.
+        createdAt: message.createdAt + i * 1000,
+      })),
+  );
+}
+
+async function seedReactions(messages: Message[], users: User[]) {
+  // The newest message is held back for the wall below: reacting to it twice
+  // would collide on (message, emoji, user).
+  const wall = messages.at(-1);
+  const rest = messages.slice(0, -1);
+
+  const rows = rest.flatMap((message) =>
+    faker.datatype.boolean({ probability: REACTED_SHARE })
+      ? reactionsFor(
+          message,
+          faker.helpers.arrayElements(REACTION_EMOJI, { min: 1, max: 3 }),
+          users,
+        )
+      : [],
+  );
+
+  // One message carries the full cap, so the wrapping and the 409 both have
+  // something to show without clicking thirty times.
+  if (wall) {
+    rows.push(
+      ...reactionsFor(wall, REACTION_EMOJI.slice(0, MAX_REACTIONS_PER_MESSAGE), users),
+    );
+  }
+
+  if (rows.length) await db.insert(messageReactionsTable).values(rows);
+
+  console.log(`Seeded ${rows.length} reactions`);
 }
 
 async function main() {
@@ -139,7 +242,8 @@ async function main() {
 
   const authors = [owner, ...users];
   for (const [i, { messages }] of TEXT_CHANNELS.entries()) {
-    if (messages) await seedMessages(channels[i], messages, authors);
+    if (messages)
+      await seedReactions(await seedMessages(channels[i], messages, authors), authors);
   }
 
   console.log("\nDone. Restart the server so connected clients pick it up.");
