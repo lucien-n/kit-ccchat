@@ -32,6 +32,7 @@
   import MessageComposer from "./message-composer.svelte";
   import MessageSkeleton from "./message-skeleton.svelte";
   import TypingIndicator from "./typing-indicator.svelte";
+  import StreamView from "$lib/components/voice/stream-view.svelte";
 
   const desktopNow =
     typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
@@ -50,8 +51,10 @@
     if (chat.isDesktop) prefs.setMembersPanel(chat.showMembers);
   });
 
+  // voice.watching: closing a stream remounts the scroller at the top.
   $effect(() => {
     void messages.list.length;
+    void voice.watching;
     if (chat.stick) chat.toBottom();
   });
 
@@ -162,24 +165,28 @@
       </div>
     </header>
 
-    <ScrollArea class="min-h-0 flex-1" bind:viewportRef={chat.scroller}>
-      <div class="flex flex-col gap-0.5 p-3 sm:p-5">
-        {#if messages.loading}
-          <MessageSkeleton count={6} />
-        {:else if messages.list.length === 0}
-          <div class="text-muted-foreground m-auto">No messages yet. Say hi 👋</div>
-        {:else}
-          {#if messages.loadingOlder}
-            <MessageSkeleton />
+    {#if voice.watching}
+      <StreamView />
+    {:else}
+      <ScrollArea class="min-h-0 flex-1" bind:viewportRef={chat.scroller}>
+        <div class="flex flex-col gap-0.5 p-3 sm:p-5">
+          {#if messages.loading}
+            <MessageSkeleton count={6} />
+          {:else if messages.list.length === 0}
+            <div class="text-muted-foreground m-auto">No messages yet. Say hi 👋</div>
+          {:else}
+            {#if messages.loadingOlder}
+              <MessageSkeleton />
+            {/if}
+            {#each messages.list as message (message.id)}
+              <Message {message} />
+            {/each}
           {/if}
-          {#each messages.list as message (message.id)}
-            <Message {message} />
-          {/each}
-        {/if}
-      </div>
-    </ScrollArea>
+        </div>
+      </ScrollArea>
+    {/if}
 
-    {#if messages.hasMoreAfter}
+    {#if messages.hasMoreAfter && !voice.watching}
       <div class="flex justify-center border-t px-2 py-1.5">
         <Button variant="secondary" size="sm" onclick={() => chat.backToPresent()}>
           <ArrowDownIcon data-icon="inline-start" />

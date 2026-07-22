@@ -17,6 +17,7 @@ export interface VoiceParticipant {
   name: string;
   speaking: boolean;
   muted: boolean;
+  sharing: boolean;
   isLocal: boolean;
 }
 
@@ -35,6 +36,11 @@ class VoiceStore {
   error = $state("");
   /** Soft notice - connected, but mic couldn't be captured (listen-only). */
   micError = $state("");
+  /** Screen share tracks by publisher identity. A track only lands here once it
+   *  is subscribed, so anything in here is watchable right now. */
+  screens = $state<Record<string, Track>>({});
+  /** Whose screen fills the chat pane, if any. */
+  watching = $state<string | null>(null);
 
   private room: Room | null = null;
   private audioEls = new Map<string, HTMLMediaElement>();
@@ -43,6 +49,11 @@ class VoiceStore {
 
   get inCall(): boolean {
     return this.status !== "idle";
+  }
+
+  get isSharing(): boolean {
+    const identity = this.room?.localParticipant.identity;
+    return !!identity && !!this.screens[identity];
   }
 
   async join(channel: { id: string; name: string }) {
@@ -97,22 +108,43 @@ class VoiceStore {
       .on(RoomEvent.ActiveSpeakersChanged, rerender)
       .on(RoomEvent.TrackMuted, rerender)
       .on(RoomEvent.TrackUnmuted, rerender)
-      .on(RoomEvent.LocalTrackPublished, rerender)
       .on(
         RoomEvent.TrackSubscribed,
-        (track: RemoteTrack, _pub: RemoteTrackPublication, p: Participant) => {
+        (track: RemoteTrack, pub: RemoteTrackPublication, p: Participant) => {
           if (track.kind === Track.Kind.Audio) {
             const el = track.attach();
             el.style.display = "none";
             document.body.appendChild(el);
             this.audioEls.set(`${p.identity}:${track.sid}`, el);
+          } else if (pub.source === Track.Source.ScreenShare) {
+            this.screens = { ...this.screens, [p.identity]: track };
           }
           this.refresh();
         },
       )
-      .on(RoomEvent.TrackUnsubscribed, (track: RemoteTrack, _pub, p: Participant) => {
-        track.detach().forEach((el) => el.remove());
-        this.audioEls.delete(`${p.identity}:${track.sid}`);
+      .on(
+        RoomEvent.TrackUnsubscribed,
+        (track: RemoteTrack, pub: RemoteTrackPublication, p: Participant) => {
+          track.detach().forEach((el) => el.remove());
+          this.audioEls.delete(`${p.identity}:${track.sid}`);
+          if (pub.source === Track.Source.ScreenShare) this.dropScreen(p.identity);
+          this.refresh();
+        },
+      )
+      // The browser's own "Stop sharing" bar never touches our button, so the
+      // publish events are the only honest signal for the local screen.
+      .on(RoomEvent.LocalTrackPublished, (pub) => {
+        if (pub.source === Track.Source.ScreenShare && pub.track) {
+          this.screens = {
+            ...this.screens,
+            [room.localParticipant.identity]: pub.track,
+          };
+        }
+        this.refresh();
+      })
+      .on(RoomEvent.LocalTrackUnpublished, (pub) => {
+        if (pub.source === Track.Source.ScreenShare)
+          this.dropScreen(room.localParticipant.identity);
         this.refresh();
       })
       .on(RoomEvent.Disconnected, () => {
@@ -145,6 +177,7 @@ class VoiceStore {
         name: lp.name || "me",
         speaking: speaking.has(lp.identity),
         muted: !lp.isMicrophoneEnabled,
+        sharing: !!this.screens[lp.identity],
         isLocal: true,
       },
     ];
@@ -154,11 +187,40 @@ class VoiceStore {
         name: p.name || p.identity,
         speaking: speaking.has(p.identity),
         muted: !p.isMicrophoneEnabled,
+        sharing: !!this.screens[p.identity],
         isLocal: false,
       });
     }
     this.participants = list;
     this.micMuted = !lp.isMicrophoneEnabled;
+  }
+
+  private dropScreen(identity: string) {
+    const next = { ...this.screens };
+    delete next[identity];
+    this.screens = next;
+    if (this.watching === identity) this.watching = null;
+  }
+
+  watch(identity: string) {
+    if (this.screens[identity]) this.watching = identity;
+  }
+
+  stopWatching() {
+    this.watching = null;
+  }
+
+  async toggleScreenShare() {
+    const lp = this.room?.localParticipant;
+    if (!lp || !this.canPublish) return;
+    try {
+      await lp.setScreenShareEnabled(!lp.isScreenShareEnabled, { audio: true });
+    } catch (e) {
+      // Dismissing the picker is a decision, not a fault.
+      if (errorName(e) !== "NotAllowedError")
+        this.error = `Couldn't share your screen (${errorName(e)}).`;
+    }
+    this.refresh();
   }
 
   async toggleMic() {
@@ -183,6 +245,8 @@ class VoiceStore {
   private reset() {
     for (const el of this.audioEls.values()) el.remove();
     this.audioEls.clear();
+    this.screens = {};
+    this.watching = null;
     this.room = null;
     this.status = "idle";
     this.channelId = null;

@@ -1,7 +1,12 @@
 <script lang="ts">
   import { voice } from "$lib/stores/voice.svelte";
   import { Button } from "&/button";
-  import { Mic, MicOff, PhoneOff, Volume2 } from "@lucide/svelte";
+  import { Mic, MicOff, PhoneOff, ScreenShare, ScreenShareOff, Volume2 } from "@lucide/svelte";
+
+  // getDisplayMedia does not exist on iOS Safari or Android Chrome, so the
+  // button would only ever throw there.
+  const canScreenShare =
+    typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia;
 </script>
 
 <div
@@ -47,6 +52,21 @@
         <Mic class="size-4" />
       {/if}
     </Button>
+    {#if canScreenShare}
+      <Button
+        variant={voice.isSharing ? "default" : "secondary"}
+        size="icon"
+        disabled={!voice.canPublish}
+        title={voice.isSharing ? "Stop sharing your screen" : "Share your screen"}
+        onclick={() => voice.toggleScreenShare()}
+      >
+        {#if voice.isSharing}
+          <ScreenShareOff class="size-4" />
+        {:else}
+          <ScreenShare class="size-4" />
+        {/if}
+      </Button>
+    {/if}
     <Button variant="destructive" size="icon" onclick={() => voice.leave()}>
       <PhoneOff class="size-4" />
       <span class="sr-only">Leave</span>
