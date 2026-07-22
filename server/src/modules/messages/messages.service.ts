@@ -171,6 +171,7 @@ export function reactMessage(id: string, user: User, emoji: string) {
 
   db.insert(messageReactionsTable)
     .values({
+      id: crypto.randomUUID(),
       messageId: id,
       emoji,
       userId: user.id,

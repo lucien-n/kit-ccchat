@@ -69,7 +69,7 @@
                     {@const on = ctx.assignedIds.has(role.id)}
                     <button
                       type="button"
-                      class="hover:bg-muted flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm disabled:opacity-50"
+                      class="hover:bg-muted flex w-full items-center gap-2 rounded-2xl px-2 py-1.5 text-sm disabled:opacity-50"
                       disabled={ctx.busyRoleId !== null}
                       onclick={() => ctx.toggleRole(role.id)}
                     >

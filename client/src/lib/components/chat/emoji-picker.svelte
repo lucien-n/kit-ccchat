@@ -10,12 +10,14 @@
   import { Input } from "&/input";
   import * as Popover from "&/popover";
   import { ScrollArea } from "&/scroll-area";
-  import { Smile } from "@lucide/svelte";
+  import SmilePlusIcon from "@lucide/svelte/icons/smile-plus";
 
-  let {
-    onpick,
-    disabled = false,
-  }: { onpick: (emoji: string) => void; disabled?: boolean } = $props();
+  interface Props {
+    onpick: (emoji: string) => void;
+    disabled?: boolean;
+    class?: string;
+  }
+  const { onpick, disabled = false, class: className }: Props = $props();
 
   let open = $state(false);
   let index = $state<EmojiIndex | null>(null);
@@ -44,8 +46,15 @@
 <Popover.Root bind:open>
   <Popover.Trigger>
     {#snippet child({ props })}
-      <Button {...props} variant="ghost" size="icon" title="Emoji" {disabled}>
-        <Smile class="size-4" />
+      <Button
+        {...props}
+        variant="ghost"
+        size="icon"
+        title="Emoji"
+        {disabled}
+        class={className}
+      >
+        <SmilePlusIcon class="size-4" />
       </Button>
     {/snippet}
   </Popover.Trigger>
@@ -78,7 +87,7 @@
             {#each results as [emoji, shortcode] (emoji)}
               <button
                 type="button"
-                class="hover:bg-accent rounded-md p-1 text-xl leading-none"
+                class="hover:bg-accent rounded-2xl p-1 text-xl leading-none"
                 title=":{shortcode}:"
                 aria-label={emojiLabel(shortcode)}
                 onclick={() => pick(emoji)}

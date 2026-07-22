@@ -171,6 +171,14 @@ class Messages {
     await api.messages.delete(id);
   }
 
+  async react(id: string, emoji: string) {
+    await api.messages.react(id, emoji);
+  }
+
+  async unreact(id: string, emoji: string) {
+    await api.messages.unreact(id, emoji);
+  }
+
   clear() {
     this.list = [];
     this.hasMoreBefore = false;

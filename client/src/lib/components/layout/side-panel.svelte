@@ -21,7 +21,7 @@
   {/if}
 {/snippet}
 
-{#if chat.isDesktop}
+{#if chat && chat.isDesktop}
   {#if chat.panel}
     <Resizable.Handle />
 

@@ -1,7 +1,7 @@
-import { Reaction } from "@ccchat/shared";
+import type { Reaction } from "@ccchat/shared";
 import { asc, eq } from "drizzle-orm";
 import { db } from "../../db";
-import { messageReactionsTable, User } from "../../db/schema";
+import { messageReactionsTable, type User } from "../../db/schema";
 
 export function reactionsOf(messageId: string): Reaction[] {
   const rows = db

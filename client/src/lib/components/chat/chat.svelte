@@ -26,9 +26,9 @@
   import SearchIcon from "@lucide/svelte/icons/search";
   import { tick } from "svelte";
   import { toast } from "svelte-sonner";
+  import { Message } from "./message";
   import MessageComposer from "./message-composer.svelte";
   import MessageSkeleton from "./message-skeleton.svelte";
-  import Message from "./message.svelte";
   import TypingIndicator from "./typing-indicator.svelte";
 
   const desktopNow =

@@ -4,7 +4,7 @@ import { messagesTable } from "./messages.table";
 export const messageReactionsTable = sqliteTable(
   "message_reactions",
   {
-    id: text("id"),
+    id: text("id").notNull(),
     emoji: text("emoji").notNull(),
     messageId: text("message_id")
       .notNull()

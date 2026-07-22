@@ -177,7 +177,7 @@
         {#each rolesStore.list as role, i (role.id)}
           <div
             class={cn(
-              "group flex items-center gap-1 rounded-md p-2",
+              "group flex items-center gap-1 rounded-2xl p-2",
               selectedId === role.id ? "bg-muted" : "hover:bg-muted/50",
             )}
           >
@@ -271,7 +271,7 @@
             {@const on = member.roleIds.includes(selected.id)}
             <button
               type="button"
-              class="hover:bg-muted flex w-full items-center gap-2 rounded-md p-2 text-left disabled:opacity-50"
+              class="hover:bg-muted flex w-full items-center gap-2 rounded-2xl p-2 text-left disabled:opacity-50"
               disabled={busy || !canEdit(member)}
               onclick={() => toggleMember(member, selected.id)}
             >

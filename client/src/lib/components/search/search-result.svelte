@@ -41,7 +41,7 @@
 
 <button
   type="button"
-  class="hover:bg-muted/60 focus-visible:ring-ring flex w-full flex-col gap-1 rounded-md p-2 text-left focus-visible:ring-2 focus-visible:outline-none"
+  class="hover:bg-muted/60 focus-visible:ring-ring flex w-full flex-col gap-1 rounded-2xl p-2 text-left focus-visible:ring-2 focus-visible:outline-none"
   onclick={onJump}
 >
   <div class="text-muted-foreground flex min-w-0 items-center gap-1.5 text-xs">

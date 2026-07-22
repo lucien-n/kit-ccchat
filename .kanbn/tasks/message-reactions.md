@@ -1,6 +1,6 @@
 ---
 created: 2026-07-22T10:47:50.039Z
-updated: 2026-07-22T14:57:20.095Z
+updated: 2026-07-22T16:23:31.345Z
 assigned: ""
 progress: 0
 tags: []
@@ -57,7 +57,7 @@ to the shared types
 - [x] Server: read reactions back with a message, plus the add and remove
 endpoints, and clear the rows when a message is deleted
 - [x] Client: api calls, the store update, and handling the new event
-- [ ] The pills under a message, and an add-reaction button in the hover bar next
+- [x] The pills under a message, and an add-reaction button in the hover bar next
 to reply/edit/delete
 - [ ] Tests: the schema edges, muted people, deleted messages, and the cap on how
 many different emoji one message can hold
