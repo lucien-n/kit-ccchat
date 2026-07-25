@@ -10,7 +10,7 @@
   import { Badge } from "&/badge";
   import { Button } from "&/button";
   import { ChannelType, type Channel } from "@ccchat/shared";
-  import { MicOff, MonitorPlay } from "@lucide/svelte";
+  import { HeadphoneOff, MicOff, MonitorPlay } from "@lucide/svelte";
   import { CHANNEL_TYPE_ICON } from "../helpers";
   import ChannelContextMenu from "./channel-context-menu.svelte";
 
@@ -86,6 +86,13 @@
               <MicOff
                 class="text-muted-foreground/70 size-3.5 shrink-0"
                 aria-label="{member.displayName} is muted"
+              />
+            {/if}
+
+            {#if member.deafened}
+              <HeadphoneOff
+                class="text-muted-foreground/70 size-3.5 shrink-0"
+                aria-label="{member.displayName} is deafened"
               />
             {/if}
 

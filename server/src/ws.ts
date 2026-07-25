@@ -109,6 +109,9 @@ function onConnection(ws: WebSocket, userId: string) {
       case ClientEventType.Mic_Set:
         hub.setMuted(client.userId, msg.muted);
         break;
+      case ClientEventType.Deafen_Set:
+        hub.setDeafened(client.userId, msg.deafened);
+        break;
     }
   });
 
@@ -170,6 +173,7 @@ function handleVoiceJoin(client: Client, channelId: string) {
     // Seed from what we know rather than a blanket "muted" that would flash the
     // icon on every joiner; the client's Mic_Set corrects it a moment later.
     muted: isMuted(u),
+    deafened: false,
   });
 }
 

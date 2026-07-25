@@ -60,6 +60,8 @@ export async function seedVoice(count = 6, opts: SeedOptions = {}) {
       isLocal: i === 0,
       speaking: opts.allSpeaking ? true : i % 3 === 0,
       muted: i % 4 === 0,
+      // Deafened implies muted, so keep it a subset of the muted set.
+      deafened: i === 4,
       sharing: opts.sharing ? i === 1 : false,
     };
   });
@@ -85,6 +87,7 @@ export async function seedVoice(count = 6, opts: SeedOptions = {}) {
       avatarVersion: p.avatarVersion,
       sharing: p.sharing,
       muted: p.muted,
+      deafened: p.deafened,
     })),
   });
 

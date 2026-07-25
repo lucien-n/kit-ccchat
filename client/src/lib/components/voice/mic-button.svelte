@@ -16,11 +16,11 @@
       disabled: true,
     },
     [MicStatus.Muted]: {
-      variant: "secondary",
+      variant: "destructive",
       title: "Unmute",
     },
     [MicStatus.Enabled]: {
-      variant: "default",
+      variant: "secondary",
       title: "Mute",
     },
   };

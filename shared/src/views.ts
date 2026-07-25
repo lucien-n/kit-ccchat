@@ -37,6 +37,9 @@ export const voiceMember = z.object({
   /** Not transmitting audio - self-mute, mod-mute and denied mic are one flag
    *  from the outside. */
   muted: z.boolean(),
+  /** Has silenced all incoming audio. Independent of muted, though deafening
+   *  also mutes, so a deafened member is muted too. */
+  deafened: z.boolean(),
 });
 export type VoiceMember = z.infer<typeof voiceMember>;
 

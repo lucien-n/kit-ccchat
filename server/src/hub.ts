@@ -65,6 +65,10 @@ class Hub {
     this.patchMember(userId, { muted });
   }
 
+  setDeafened(userId: string, deafened: boolean) {
+    this.patchMember(userId, { deafened });
+  }
+
   /** Patch a voice member and rebroadcast if anything changed. Both mic and
    *  screen-share state live here so everyone sees them, including people who
    *  never joined the channel. */

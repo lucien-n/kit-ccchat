@@ -1,7 +1,14 @@
 <script lang="ts">
   import { voice, VoiceStatus } from "$lib/stores/voice.svelte";
   import { Button } from "&/button";
-  import { Phone, ScreenShare, ScreenShareOff, Volume2 } from "@lucide/svelte";
+  import {
+    Headphones,
+    HeadphoneOff,
+    Phone,
+    ScreenShare,
+    ScreenShareOff,
+    Volume2,
+  } from "@lucide/svelte";
   import MicButton from "./mic-button.svelte";
 
   // getDisplayMedia does not exist on iOS Safari or Android Chrome, so the
@@ -25,6 +32,18 @@
 
   <div class="flex justify-end gap-1.5">
     <MicButton />
+    <Button
+      variant={voice.deafened ? "destructive" : "secondary"}
+      size="icon"
+      onclick={() => voice.toggleDeafen()}
+      title={voice.deafened ? "Undeafen" : "Deafen"}
+    >
+      {#if voice.deafened}
+        <HeadphoneOff class="size-4" />
+      {:else}
+        <Headphones class="size-4" />
+      {/if}
+    </Button>
     {#if canScreenShare}
       <Button
         variant={voice.isSharing ? "default" : "secondary"}

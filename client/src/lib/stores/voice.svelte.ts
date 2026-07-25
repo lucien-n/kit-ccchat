@@ -49,6 +49,8 @@ class VoiceStore {
   audioInputs = $state<MediaDeviceInfo[]>([]);
   /** deviceId of the mic currently in use. "default" follows the OS default. */
   audioInputId = $state("default");
+  /** Whether incoming audio is silenced. Deafening also stops your own mic. */
+  deafened = $state(false);
   /** Screen share tracks by publisher identity. A track only lands here once it
    *  is subscribed, so anything in here is watchable right now. */
   screens = $state<Record<string, Track>>({});
@@ -61,6 +63,8 @@ class VoiceStore {
   private audioEls = new Map<string, HTMLMediaElement>();
   /** Set while we tear down, to tell an intentional leave from a dropped call. */
   private leaving = false;
+  /** True when deafening is what muted the mic, so undeafening can restore it. */
+  private mutedByDeafen = false;
 
   get inCall(): boolean {
     return this.status !== VoiceStatus.Idle;
@@ -141,6 +145,7 @@ class VoiceStore {
           if (track.kind === Track.Kind.Audio) {
             const el = track.attach();
             el.style.display = "none";
+            el.muted = this.deafened;
             document.body.appendChild(el);
             this.audioEls.set(`${p.identity}:${track.sid}`, el);
           } else if (pub.source === Track.Source.ScreenShare) {
@@ -304,9 +309,20 @@ class VoiceStore {
   }
 
   async toggleMic() {
-    const lp = this.room?.localParticipant;
-    if (!lp || !this.canPublish) return;
     const enabling = this.micStatus !== MicStatus.Enabled;
+    const changed = await this.applyMic(enabling);
+    if (!changed) return;
+    // Choosing to talk again cancels deafen - you can't hold a conversation with
+    // people you've silenced. A plain unmute clears the deafen bookkeeping too.
+    if (enabling && this.deafened) this.setDeafened(false);
+    this.mutedByDeafen = false;
+  }
+
+  /** Drive the LiveKit mic and record the outcome. Returns whether the state
+   *  actually moved, so callers know if a follow-up (sound, deafen) applies. */
+  private async applyMic(enabling: boolean): Promise<boolean> {
+    const lp = this.room?.localParticipant;
+    if (!lp || !this.canPublish) return false;
     try {
       await lp.setMicrophoneEnabled(enabling);
     } catch (err) {
@@ -315,12 +331,39 @@ class VoiceStore {
         this.micStatus = MicStatus.NotAllowed;
         this.announceMic();
       }
-      return;
+      return false;
     }
     this.micStatus = enabling ? MicStatus.Enabled : MicStatus.Muted;
     this.announceMic();
     if (enabling) playUnmute();
     else playMute();
+    this.refresh();
+    return true;
+  }
+
+  /** Silence everyone else. Deafening also mutes your own mic (you can't talk to
+   *  people you can't hear); undeafening restores the mic only if deafen is what
+   *  muted it. */
+  async toggleDeafen() {
+    const next = !this.deafened;
+    this.setDeafened(next);
+    if (next) {
+      if (this.micStatus === MicStatus.Enabled) {
+        this.mutedByDeafen = await this.applyMic(false);
+      }
+    } else if (this.mutedByDeafen) {
+      this.mutedByDeafen = false;
+      if (this.micStatus === MicStatus.Muted) await this.applyMic(true);
+    }
+  }
+
+  /** Apply the deafened flag to incoming audio and tell everyone else, so the
+   *  channel shows it next to the mute icon. */
+  private setDeafened(value: boolean) {
+    if (this.deafened === value) return;
+    this.deafened = value;
+    for (const el of this.audioEls.values()) el.muted = value;
+    realtime.send({ type: ClientEventType.Deafen_Set, deafened: value });
     this.refresh();
   }
 
@@ -349,6 +392,8 @@ class VoiceStore {
     this.canPublish = true;
     this.audioInputs = [];
     this.audioInputId = "default";
+    this.deafened = false;
+    this.mutedByDeafen = false;
     this.leaving = false;
   }
 }
