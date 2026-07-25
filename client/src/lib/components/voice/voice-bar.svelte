@@ -6,6 +6,7 @@
   import DeafenButton from "./deafen-button.svelte";
   import HangupButton from "./hangup-button.svelte";
   import ScreenShareButton from "./screen-share-button.svelte";
+  import { SoundboardButton } from "./soundboard";
   import { fly } from "svelte/transition";
   import { elasticInOut } from "svelte/easing";
 </script>
@@ -29,6 +30,7 @@
       <MicButton />
       <DeafenButton />
       <ScreenShareButton />
+      <SoundboardButton />
     </div>
   </Card>
 </div>

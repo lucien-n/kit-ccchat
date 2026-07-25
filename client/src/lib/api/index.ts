@@ -7,6 +7,7 @@ import { messages } from "./messages";
 import { moderation } from "./moderation";
 import { roles } from "./roles";
 import { search } from "./search";
+import { soundboard } from "./soundboard";
 import { system } from "./system";
 import { users } from "./users";
 import { voice } from "./voice";
@@ -21,6 +22,7 @@ export const api = {
   moderation,
   roles,
   search,
+  soundboard,
   system,
   users,
   voice,
@@ -28,6 +30,7 @@ export const api = {
 
 export { communityIconUrl } from "./community";
 export { imageUrl } from "./images";
+export { soundUrl } from "./soundboard";
 export { apiBase, ApiError } from "./http";
 export { ModAction } from "./moderation";
 export { authToken } from "./token.svelte";
@@ -42,6 +45,7 @@ export type {
   ModeratedMember,
   Role,
   SearchHit,
+  Sound,
   SystemStats,
   VoiceMember,
 } from "@ccchat/shared";

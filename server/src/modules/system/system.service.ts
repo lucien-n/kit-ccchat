@@ -2,7 +2,7 @@ import { DiskItem, type SystemStats } from "@ccchat/shared";
 import { readdir, stat, statfs } from "node:fs/promises";
 import os from "node:os";
 import { join } from "node:path";
-import { AVATARS_DIR, DATA_DIR, DB_FILE, IMAGES_DIR } from "../../env.js";
+import { AVATARS_DIR, DATA_DIR, DB_FILE, IMAGES_DIR, SOUNDS_DIR } from "../../env.js";
 
 const SAMPLE_INTERVAL_SEC = 5;
 const HISTORY_SIZE = 180;
@@ -57,6 +57,7 @@ async function cpuPctOnce(sampleMs = 200): Promise<number> {
 const DISK_ITEM_PATH_MAP: Record<DiskItem, string[]> = {
   [DiskItem.AvatarDir]: [AVATARS_DIR],
   [DiskItem.ImagesDir]: [IMAGES_DIR],
+  [DiskItem.SoundsDir]: [SOUNDS_DIR],
   [DiskItem.DatabaseFile]: [DB_FILE, `${DB_FILE}-wal`, `${DB_FILE}-shm`],
 };
 

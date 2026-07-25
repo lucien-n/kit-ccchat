@@ -27,6 +27,7 @@ export const CLIENT_DIR = resolve(process.env.CLIENT_DIR ?? "../client/build");
  *  usage panel has to measure what the other modules own. */
 export const AVATARS_DIR = join(DATA_DIR, "avatars");
 export const IMAGES_DIR = join(DATA_DIR, "images");
+export const SOUNDS_DIR = join(DATA_DIR, "sounds");
 export const COMMUNITY_ICON_FILE = join(DATA_DIR, "community-icon");
 export const DB_FILE = join(DATA_DIR, "ccchat.sqlite");
 export const COMMUNITY_NAME = process.env.COMMUNITY_NAME ?? "My Community";

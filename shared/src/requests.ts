@@ -5,14 +5,17 @@ import {
   channelType,
   ChannelType,
   communityName,
+  dataUrl,
   displayName,
   hexColor,
   imageDataUrl,
   inviteCode,
   maxUses,
   MESSAGE_MAX_LENGTH,
+  MAX_SOUNDBOARD_DURATION_MS,
   optionalDisplayName,
   password,
+  MAX_SOUNDBOARD_NAME,
   permission,
   Permission,
   roleName,
@@ -92,6 +95,17 @@ export type UploadImageBody = z.infer<typeof uploadImageBody>;
 
 export const avatarBody = z.object({ image: imageDataUrl });
 export type AvatarBody = z.infer<typeof avatarBody>;
+
+export const uploadSoundBody = z.object({
+  sound: dataUrl,
+  name: z.string().trim().min(1).max(MAX_SOUNDBOARD_NAME),
+  emoji: z.string().trim().max(8).optional(),
+  durationMs: z.number().int().positive().max(MAX_SOUNDBOARD_DURATION_MS),
+});
+export type UploadSoundBody = z.infer<typeof uploadSoundBody>;
+
+export const updateSoundBody = uploadSoundBody.pick({ emoji: true, name: true });
+export type UpdateSoundBody = z.infer<typeof updateSoundBody>;
 
 export const communityIconBody = z.object({ image: imageDataUrl });
 export type CommunityIconBody = z.infer<typeof communityIconBody>;

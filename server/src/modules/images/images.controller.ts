@@ -1,6 +1,6 @@
 import type { uploadImageBody } from "@ccchat/shared";
 import type { AppContext, JsonContext } from "../../http/context.js";
-import { sendImage } from "../../http/image.js";
+import { sendBlob } from "../../http/blob.js";
 import * as imagesService from "./images.service.js";
 
 export function upload(c: JsonContext<typeof uploadImageBody>) {
@@ -10,5 +10,5 @@ export function upload(c: JsonContext<typeof uploadImageBody>) {
 }
 
 export function get(c: AppContext<"/:id">) {
-  return sendImage(c, imagesService.readImage(c.req.param("id")));
+  return sendBlob(c, imagesService.readImage(c.req.param("id")));
 }

@@ -23,11 +23,12 @@ function measure(file: File): Promise<{ el: HTMLImageElement; url: string }> {
   });
 }
 
-function readDataUrl(file: File): Promise<string> {
+/** Read any File into a base64 `data:` URL. */
+export function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
-    reader.onerror = () => reject(new Error("could not read image"));
+    reader.onerror = () => reject(new Error("could not read file"));
     reader.readAsDataURL(file);
   });
 }
@@ -43,7 +44,11 @@ export async function prepareImage(file: File): Promise<PreparedImage> {
         `that ${file.type === "image/gif" ? "gif" : "image"} is too large (max ${MAX_MESSAGE_IMAGE_BYTES / 1_000_000}MB)`,
       );
     }
-    return { image: await readDataUrl(file), width: naturalWidth, height: naturalHeight };
+    return {
+      image: await fileToDataUrl(file),
+      width: naturalWidth,
+      height: naturalHeight,
+    };
   }
 
   const scale = Math.min(1, IMAGE_MAX_DIMENSION / Math.max(naturalWidth, naturalHeight));

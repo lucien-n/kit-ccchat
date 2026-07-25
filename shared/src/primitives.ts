@@ -65,7 +65,20 @@ export const IMAGE_MIME_TYPES: readonly string[] = [
   "image/gif",
 ];
 
-export const imageDataUrl = z.string().min(1);
+export const MAX_SOUNDBOARD_BYTES = 2_000_000;
+export const MAX_SOUNDBOARD_DURATION_MS = 10_000;
+export const MAX_SOUNDBOARD_NAME = 48;
+
+export const SOUNDBOARD_MIME_TYPES: readonly string[] = [
+  "audio/ogg",
+  "audio/mpeg",
+  "audio/wav",
+  "audio/webm",
+];
+
+/** Non-empty only; the real validation happens server-side when the bytes decode. */
+export const dataUrl = z.string().min(1);
+export const imageDataUrl = dataUrl;
 
 export const REPLY_SNIPPET_MAX = 200;
 

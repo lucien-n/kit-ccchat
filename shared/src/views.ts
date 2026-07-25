@@ -69,6 +69,16 @@ export const messageImage = z.object({
 });
 export type MessageImage = z.infer<typeof messageImage>;
 
+export const sound = z.object({
+  id: z.uuid(),
+  name: z.string(),
+  emoji: z.string().nullable(),
+  uploaderId: z.string(),
+  durationMs: z.number(),
+  createdAt: z.number(),
+});
+export type Sound = z.infer<typeof sound>;
+
 export const reaction = z.object({
   emoji: z.string(),
   userIds: z.array(z.string()),
@@ -128,6 +138,7 @@ export type ModeratedMember = z.infer<typeof moderatedMember>;
 export enum DiskItem {
   AvatarDir = "AvatarDir",
   ImagesDir = "ImagesDir",
+  SoundsDir = "SoundsDir",
   DatabaseFile = "DatabaseFile",
 }
 

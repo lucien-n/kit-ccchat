@@ -1,6 +1,6 @@
 import { communityIconBody, renameCommunityBody } from "@ccchat/shared";
 import type { AppContext, JsonContext } from "../../http/context.js";
-import { sendImage } from "../../http/image.js";
+import { sendBlob } from "../../http/blob.js";
 import * as settingsService from "./settings.service.js";
 
 export function rename(c: JsonContext<typeof renameCommunityBody>) {
@@ -9,7 +9,7 @@ export function rename(c: JsonContext<typeof renameCommunityBody>) {
 }
 
 export function icon(c: AppContext) {
-  return sendImage(c, settingsService.readIcon());
+  return sendBlob(c, settingsService.readIcon());
 }
 
 export function setIcon(c: JsonContext<typeof communityIconBody>) {

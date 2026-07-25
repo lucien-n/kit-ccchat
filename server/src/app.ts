@@ -19,6 +19,7 @@ import messagesRouter from "./modules/messages/messages.router.js";
 import moderationRouter from "./modules/moderation/moderation.router.js";
 import rolesRouter from "./modules/roles/roles.router.js";
 import searchRouter from "./modules/search/search.router.js";
+import soundboardRouter from "./modules/soundboard/soundboard.router.js";
 import systemRouter from "./modules/system/system.router.js";
 import voiceRouter from "./modules/voice/voice.router.js";
 import usersRouter from "./modules/users/users.router.js";
@@ -46,6 +47,7 @@ export const app = new Hono<Env>()
   .route("/api/moderation", moderationRouter)
   .route("/api/roles", rolesRouter)
   .route("/api/search", searchRouter)
+  .route("/api/soundboard", soundboardRouter)
   .route("/api/system", systemRouter)
   .route("/api/voice", voiceRouter)
   .route("/api/users", usersRouter);

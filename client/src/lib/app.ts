@@ -19,11 +19,13 @@ import { realtime } from "./stores/realtime.svelte";
 import { roles } from "./stores/roles.svelte";
 import { search } from "./stores/search.svelte";
 import { session } from "./stores/session.svelte";
+import { soundboard } from "./stores/soundboard.svelte";
 import { typing } from "./stores/typing.svelte";
 import { unread } from "./stores/unread.svelte";
 
 export async function init() {
   prefs.init();
+  soundboard.init();
   window.addEventListener("focus", () => {
     if (channels.currentId) void unread.markRead(channels.currentId);
   });

@@ -31,6 +31,7 @@
   const DISK_ITEM_SPECS: Record<DiskItem, { label: string; color: string }> = {
     [DiskItem.AvatarDir]: { label: "Avatars", color: "bg-sky-500" },
     [DiskItem.ImagesDir]: { label: "Images", color: "bg-violet-500" },
+    [DiskItem.SoundsDir]: { label: "Sounds", color: "bg-amber-500" },
     [DiskItem.DatabaseFile]: { label: "Database", color: "bg-emerald-500" },
   };
 

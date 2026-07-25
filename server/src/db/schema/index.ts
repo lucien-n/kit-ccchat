@@ -8,5 +8,6 @@ export * from "./messages.table";
 export * from "./roles.table";
 export * from "./sessions.table";
 export * from "./settings.table";
+export * from "./soundboard-sounds.table";
 export * from "./user-roles.table";
 export * from "./users.table";
