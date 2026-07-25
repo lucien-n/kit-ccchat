@@ -57,7 +57,7 @@
       title="Choose microphone"
       class={buttonVariants({
         variant: micButtonProps.variant,
-        class: "rounded-l-none bg-clip-padding pr-1 pl-px",
+        class: "rounded-l-none bg-clip-padding pr-1 pl-px [&_svg]:text-current",
       })}
     ></Select.Trigger>
     <Select.Content>
