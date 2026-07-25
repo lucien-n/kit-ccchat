@@ -3,7 +3,7 @@ import { channels } from "../stores/channels.svelte";
 import { members } from "../stores/members.svelte";
 import { presence } from "../stores/presence.svelte";
 import { session } from "../stores/session.svelte";
-import { voice } from "../stores/voice.svelte";
+import { MicStatus, voice, VoiceStatus } from "../stores/voice.svelte";
 
 export interface SeedOptions {
   longNames?: boolean;
@@ -66,9 +66,9 @@ export async function seedVoice(count = 6, opts: SeedOptions = {}) {
 
   voice.channelId = channel.id;
   voice.channelName = channel.name;
-  voice.status = "connected";
+  voice.status = VoiceStatus.Connected;
   voice.canPublish = opts.canPublish ?? true;
-  voice.micMuted = false;
+  voice.micStatus = voice.canPublish ? MicStatus.Enabled : MicStatus.MutedByMod;
   voice.participants = people.map((p) => ({
     identity: p.id,
     name: p.name,
@@ -84,6 +84,7 @@ export async function seedVoice(count = 6, opts: SeedOptions = {}) {
       displayName: p.name,
       avatarVersion: p.avatarVersion,
       sharing: p.sharing,
+      muted: p.muted,
     })),
   });
 

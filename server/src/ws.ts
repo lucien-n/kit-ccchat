@@ -106,6 +106,9 @@ function onConnection(ws: WebSocket, userId: string) {
       case ClientEventType.Screen_Share_Set:
         hub.setSharing(client.userId, msg.sharing);
         break;
+      case ClientEventType.Mic_Set:
+        hub.setMuted(client.userId, msg.muted);
+        break;
     }
   });
 
@@ -164,6 +167,9 @@ function handleVoiceJoin(client: Client, channelId: string) {
     displayName: u.displayName,
     avatarVersion: u.avatarVersion ?? null,
     sharing: false,
+    // Seed from what we know rather than a blanket "muted" that would flash the
+    // icon on every joiner; the client's Mic_Set corrects it a moment later.
+    muted: isMuted(u),
   });
 }
 

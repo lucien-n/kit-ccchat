@@ -21,7 +21,11 @@ export interface VoiceParticipant {
   isLocal: boolean;
 }
 
-type Status = "idle" | "connecting" | "connected";
+export enum VoiceStatus {
+  Idle = "Idle",
+  Connecting = "Connecting",
+  Connected = "Connected",
+}
 
 export enum MicStatus {
   Enabled = "Enabled",
@@ -35,17 +39,11 @@ export enum MicStatus {
 class VoiceStore {
   channelId = $state<string | null>(null);
   channelName = $state("");
-  status = $state<Status>("idle");
+  status = $state<VoiceStatus>(VoiceStatus.Idle);
   participants = $state<VoiceParticipant[]>([]);
-  micMuted = $state(false);
+  micStatus = $state<MicStatus>(MicStatus.Muted);
   canPublish = $state(true);
-  /** Hard failure that prevented joining (shown as a banner). */
   error = $state("");
-  /** Soft notice - connected, but mic couldn't be captured (listen-only). */
-  micError = $state("");
-  /** The browser refused mic capture (permission denied / no device). Distinct
-   *  from muting: you can't unmute your way out of it. */
-  private micDenied = $state(false);
   /** Screen share tracks by publisher identity. A track only lands here once it
    *  is subscribed, so anything in here is watchable right now. */
   screens = $state<Record<string, Track>>({});
@@ -60,15 +58,7 @@ class VoiceStore {
   private leaving = false;
 
   get inCall(): boolean {
-    return this.status !== "idle";
-  }
-
-  get micStatus(): MicStatus {
-    if (!this.canPublish) return MicStatus.MutedByMod;
-    if (this.micDenied) return MicStatus.NotAllowed;
-    if (this.micMuted) return MicStatus.Muted;
-
-    return MicStatus.Enabled;
+    return this.status !== VoiceStatus.Idle;
   }
 
   get isSharing(): boolean {
@@ -76,46 +66,52 @@ class VoiceStore {
     return !!identity && !!this.screens[identity];
   }
 
+  /** Whether the local mic is off for any reason - the boolean form of micStatus
+   *  that the participant row and the presence broadcast both need. */
+  get localMuted(): boolean {
+    return this.micStatus !== MicStatus.Enabled;
+  }
+
   async join(channel: { id: string; name: string }) {
     if (this.channelId === channel.id && this.inCall) return;
     if (this.room) await this.leave();
 
-    this.status = "connecting";
+    this.status = VoiceStatus.Connecting;
     this.channelId = channel.id;
     this.channelName = channel.name;
     this.error = "";
-    this.micError = "";
-    this.micDenied = false;
 
     let url = "";
     try {
       const res = await api.voice.token(channel.id);
       url = res.url;
       this.canPublish = res.canPublish;
+      // Show the intended state up front so the icon doesn't flash muted while
+      // the mic comes up. Corrected below only if capture is refused.
+      this.micStatus = res.canPublish ? MicStatus.Enabled : MicStatus.MutedByMod;
 
       const room = new Room({ adaptiveStream: true, dynacast: true });
       this.room = room;
       this.wire(room);
 
       await room.connect(url, res.token);
-      this.status = "connected";
+      this.status = VoiceStatus.Connected;
       realtime.send({ type: ClientEventType.Voice_Join, channelId: channel.id });
       playVoiceJoin();
       this.refresh();
 
-      // A missing/denied mic must not drop the call: surface it as a soft notice
-      // and keep listening.
+      // A missing/denied mic must not drop the call: fall back to listen-only
+      // (MicStatus.NotAllowed) and keep the connection.
       if (res.canPublish) {
         try {
           await room.localParticipant.setMicrophoneEnabled(true);
-          this.micDenied = false;
         } catch (err) {
-          if (err instanceof Error && err.name === "NotAllowedError") {
-            this.micDenied = true;
-          }
-          this.micError = `Microphone unavailable (${errorName(err)}) - you're listening only.`;
+          this.micStatus =
+            errorName(err) === "NotAllowedError" ? MicStatus.NotAllowed : MicStatus.Muted;
         }
       }
+      // The mic has reached its final state - now safe to tell everyone else.
+      this.announceMic();
       await room.startAudio().catch(() => {});
       this.refresh();
     } catch (e) {
@@ -182,7 +178,7 @@ class VoiceStore {
         this.refresh();
       })
       .on(RoomEvent.Disconnected, () => {
-        const wasConnected = this.status === "connected";
+        const wasConnected = this.status === VoiceStatus.Connected;
         if (!this.leaving && wasConnected) {
           this.error =
             "Voice disconnected - the media connection dropped. If the server is " +
@@ -210,7 +206,7 @@ class VoiceStore {
         identity: lp.identity,
         name: lp.name || "me",
         speaking: speaking.has(lp.identity),
-        muted: !lp.isMicrophoneEnabled,
+        muted: this.localMuted,
         sharing: !!this.screens[lp.identity],
         isLocal: true,
       },
@@ -226,7 +222,12 @@ class VoiceStore {
       });
     }
     this.participants = list;
-    this.micMuted = !lp.isMicrophoneEnabled;
+  }
+
+  /** Tell everyone else our mic state. Called only at real transitions, so there
+   *  is nothing to dedup - the server ignores a no-op change anyway. */
+  private announceMic() {
+    realtime.send({ type: ClientEventType.Mic_Set, muted: this.localMuted });
   }
 
   private dropScreen(identity: string) {
@@ -261,7 +262,6 @@ class VoiceStore {
     try {
       await lp.setScreenShareEnabled(!lp.isScreenShareEnabled, { audio: true });
     } catch (e) {
-      // Dismissing the picker is a decision, not a fault.
       if (errorName(e) !== "NotAllowedError")
         this.error = `Couldn't share your screen (${errorName(e)}).`;
     }
@@ -271,19 +271,20 @@ class VoiceStore {
   async toggleMic() {
     const lp = this.room?.localParticipant;
     if (!lp || !this.canPublish) return;
+    const enabling = this.micStatus !== MicStatus.Enabled;
     try {
-      await lp.setMicrophoneEnabled(!lp.isMicrophoneEnabled);
-      this.micDenied = false;
+      await lp.setMicrophoneEnabled(enabling);
     } catch (err) {
-      // Turning the mic on can still be refused (permission revoked mid-call).
+      // Turning the mic on can still be refused (permission revoked in the OS).
       if (errorName(err) === "NotAllowedError") {
-        this.micDenied = true;
-        this.micError = `Microphone unavailable (${errorName(err)}) - you're listening only.`;
+        this.micStatus = MicStatus.NotAllowed;
+        this.announceMic();
       }
-      this.refresh();
       return;
     }
-    if (lp.isMicrophoneEnabled) playUnmute();
+    this.micStatus = enabling ? MicStatus.Enabled : MicStatus.Muted;
+    this.announceMic();
+    if (enabling) playUnmute();
     else playMute();
     this.refresh();
   }
@@ -305,14 +306,12 @@ class VoiceStore {
     this.watching = null;
     this.pendingWatch = null;
     this.room = null;
-    this.status = "idle";
+    this.status = VoiceStatus.Idle;
     this.channelId = null;
     this.channelName = "";
     this.participants = [];
-    this.micMuted = false;
+    this.micStatus = MicStatus.Muted;
     this.canPublish = true;
-    this.micError = "";
-    this.micDenied = false;
     this.leaving = false;
   }
 }

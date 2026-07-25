@@ -10,7 +10,7 @@
   import { Badge } from "&/badge";
   import { Button } from "&/button";
   import { ChannelType, type Channel } from "@ccchat/shared";
-  import { MonitorPlay } from "@lucide/svelte";
+  import { MicOff, MonitorPlay } from "@lucide/svelte";
   import { CHANNEL_TYPE_ICON } from "../helpers";
   import ChannelContextMenu from "./channel-context-menu.svelte";
 
@@ -60,6 +60,8 @@
             channel.id === voice.channelId
               ? voice.participants.find((p) => p.identity === member.id)
               : undefined}
+          <!-- Live LiveKit state in-channel; presence flag everywhere else. -->
+          {@const muted = participant?.muted ?? member.muted}
           <div class="flex min-w-0 items-center gap-0.5">
             <UserCard
               userId={member.id}
@@ -79,6 +81,13 @@
                 </span>
               </div>
             </UserCard>
+
+            {#if muted}
+              <MicOff
+                class="text-muted-foreground/70 size-3.5 shrink-0"
+                aria-label="{member.displayName} is muted"
+              />
+            {/if}
 
             {#if member.sharing}
               <Button

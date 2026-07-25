@@ -57,13 +57,24 @@ class Hub {
     if (this.removeFromVoice(userId)) this.broadcast(this.voiceEvent());
   }
 
-  /** Screen share state rides along with voice presence so everyone sees who is
-   *  streaming, including people who never joined the channel. */
   setSharing(userId: string, sharing: boolean) {
+    this.patchMember(userId, { sharing });
+  }
+
+  setMuted(userId: string, muted: boolean) {
+    this.patchMember(userId, { muted });
+  }
+
+  /** Patch a voice member and rebroadcast if anything changed. Both mic and
+   *  screen-share state live here so everyone sees them, including people who
+   *  never joined the channel. */
+  private patchMember(userId: string, patch: Partial<VoiceMember>) {
     for (const members of this.voice.values()) {
       const member = members.get(userId);
-      if (!member || member.sharing === sharing) continue;
-      members.set(userId, { ...member, sharing });
+      if (!member) continue;
+      const keys = Object.keys(patch) as (keyof VoiceMember)[];
+      if (keys.every((k) => member[k] === patch[k])) return;
+      members.set(userId, { ...member, ...patch });
       this.broadcast(this.voiceEvent());
       return;
     }

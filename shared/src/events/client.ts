@@ -7,6 +7,7 @@ export enum ClientEventType {
   Voice_Join = "voice_join",
   Voice_Leave = "voice_leave",
   Screen_Share_Set = "screen_share_set",
+  Mic_Set = "mic_set",
 }
 
 export const clientEvent = z.discriminatedUnion("type", [
@@ -31,6 +32,10 @@ export const clientEvent = z.discriminatedUnion("type", [
   z.object({
     type: z.literal(ClientEventType.Screen_Share_Set),
     sharing: z.boolean(),
+  }),
+  z.object({
+    type: z.literal(ClientEventType.Mic_Set),
+    muted: z.boolean(),
   }),
 ]);
 export type ClientEvent = z.infer<typeof clientEvent>;

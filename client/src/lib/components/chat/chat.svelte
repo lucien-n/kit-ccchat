@@ -100,8 +100,8 @@
     setTitleBadge(unread.total);
   });
 
-  // Transient and tied to no field, so it toasts and clears. voice.micError
-  // stays out: it's durable call-length status that VoiceBar shows inline.
+  // A hard join failure is transient and tied to no field, so it toasts and
+  // clears; listen-only (denied mic) is durable status VoiceBar shows instead.
   $effect(() => {
     if (!voice.error) return;
     toast.error(voice.error);

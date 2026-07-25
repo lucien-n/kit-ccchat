@@ -36,7 +36,6 @@
     },
   };
 
-  // Anything but a live, transmitting mic shows the crossed-out icon.
   const micOff = $derived(voice.micStatus !== MicStatus.Enabled);
 </script>
 

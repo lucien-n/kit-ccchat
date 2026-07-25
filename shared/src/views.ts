@@ -34,6 +34,9 @@ export const voiceMember = z.object({
   displayName: z.string(),
   avatarVersion: z.number().nullable(),
   sharing: z.boolean(),
+  /** Not transmitting audio - self-mute, mod-mute and denied mic are one flag
+   *  from the outside. */
+  muted: z.boolean(),
 });
 export type VoiceMember = z.infer<typeof voiceMember>;
 
