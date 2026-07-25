@@ -18,6 +18,8 @@
   import MessageActions from "./message-actions.svelte";
   import MessageImages from "./message-images.svelte";
   import MessageReactions from "./message-reactions.svelte";
+  import { fly } from "svelte/transition";
+  import { elasticInOut } from "svelte/easing";
 
   interface Props {
     message: MessageView;
@@ -34,6 +36,8 @@
   let editing = $state(false);
   let draft = $state("");
   let editEl = $state<HTMLTextAreaElement | null>(null);
+
+  let showActions = $state(false);
 
   async function startEdit() {
     draft = message.content;
@@ -85,6 +89,7 @@
     <span class="opacity-70">{fmtTime(message.createdAt)}</span>
   </div>
 {:else}
+  <!-- svelte-ignore a11y_no_static_element_interactions -->
   <div
     id="msg-{message.id}"
     class={cn(
@@ -93,6 +98,8 @@
         "bg-primary/8 hover:bg-primary/12 border-primary/70 rounded-l-none border-l-2",
       chat.flashId === message.id && "bg-primary/15",
     )}
+    onmouseenter={() => (showActions = true)}
+    onmouseleave={() => (showActions = false)}
   >
     {#if message.author}
       <UserCard userId={message.author.id} class="h-fit">
@@ -184,10 +191,13 @@
 
       <MessageReactions {message} />
     </div>
-    <div
-      class="absolute -top-3.5 right-2 flex opacity-100 transition-opacity duration-50 ease-in-out sm:opacity-0 sm:group-hover:opacity-100"
-    >
-      <MessageActions {message} onedit={startEdit} />
-    </div>
+    {#if showActions}
+      <div
+        class="absolute -top-3.5 right-2 flex opacity-100 transition-opacity duration-50 ease-in-out"
+        transition:fly={{ y: 20, duration: 100, easing: elasticInOut }}
+      >
+        <MessageActions {message} onedit={startEdit} />
+      </div>
+    {/if}
   </div>
 {/if}
