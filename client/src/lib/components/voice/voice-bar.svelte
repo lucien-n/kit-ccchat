@@ -1,9 +1,10 @@
 <script lang="ts">
   import { voice, VoiceStatus } from "$lib/stores/voice.svelte";
   import { Button } from "&/button";
-  import { Phone, ScreenShare, ScreenShareOff, Volume2 } from "@lucide/svelte";
+  import { ScreenShare, ScreenShareOff, Volume2 } from "@lucide/svelte";
   import MicButton from "./mic-button.svelte";
   import DeafenButton from "./deafen-button.svelte";
+  import HangupButton from "./hangup-button.svelte";
 
   // getDisplayMedia does not exist on iOS Safari or Android Chrome, so the
   // button would only ever throw there.
@@ -42,14 +43,6 @@
         {/if}
       </Button>
     {/if}
-    <Button
-      variant="secondary"
-      size="icon"
-      onclick={() => voice.leave()}
-      title="Disconnect"
-    >
-      <Phone class="size-4 rotate-135" />
-      <span class="sr-only">Leave</span>
-    </Button>
+    <HangupButton />
   </div>
 </div>
