@@ -10,10 +10,10 @@ no third party in the middle.
 
 What works today:
 
-- **Invite-only accounts** — username + password, no email, no external provider.
+- **Invite-only accounts** - username + password, no email, no external provider.
 - **Realtime text channels** with unread badges and a notification sound.
 - **Voice channels** through a self-hosted LiveKit SFU.
-- **Moderation** — delete, mute, kick, ban, with an owner > admin > member hierarchy.
+- **Moderation** - delete, mute, kick, ban, with an owner > admin > member hierarchy.
 
 Svelte 5 SPA (adapter-static) · Hono + TypeScript · SQLite via Drizzle · LiveKit
 for voice. In production a single process serves both the API and the client, and
@@ -31,7 +31,7 @@ npm run dev          # server on :8080, client on :5173
 
 Open http://localhost:5173. The first load is the setup wizard: name the
 community, create the owner account, get an invite code to register more people.
-Delete `server/data/` to start over. Both sides hot-reload — Docker is only for
+Delete `server/data/` to start over. Both sides hot-reload - Docker is only for
 deployment.
 
 ### Voice in development
@@ -55,7 +55,7 @@ test it properly.
 
 ## Self-hosting
 
-Linux on x86_64 — the published image is amd64 only.
+Linux on x86_64 - the published image is amd64 only.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/lucien-n/kit-ccchat/main/install.sh | sh

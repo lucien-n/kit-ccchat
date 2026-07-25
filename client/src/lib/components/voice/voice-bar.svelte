@@ -1,10 +1,10 @@
 <script lang="ts">
-  import { voice } from "$lib/stores/voice.svelte";
-  import { Button } from "&/button";
+  import { MicStatus, voice } from "$lib/stores/voice.svelte";
+  import { Button, type ButtonProps } from "&/button";
   import {
     Mic,
     MicOff,
-    PhoneOff,
+    Phone,
     ScreenShare,
     ScreenShareOff,
     Volume2,
@@ -14,6 +14,30 @@
   // button would only ever throw there.
   const canScreenShare =
     typeof navigator !== "undefined" && !!navigator.mediaDevices?.getDisplayMedia;
+
+  const MIC_STATUS_BUTTON_PROPS: Record<MicStatus, Partial<ButtonProps>> = {
+    [MicStatus.NotAllowed]: {
+      variant: "secondary",
+      class: "bg-amber-400/50 hover:bg-amber-400/30",
+      title: "Microphone blocked - enable it in your browser to talk",
+    },
+    [MicStatus.MutedByMod]: {
+      variant: "destructive",
+      title: "You are muted by a moderator",
+      disabled: true,
+    },
+    [MicStatus.Muted]: {
+      variant: "secondary",
+      title: "Unmute",
+    },
+    [MicStatus.Enabled]: {
+      variant: "default",
+      title: "Mute",
+    },
+  };
+
+  // Anything but a live, transmitting mic shows the crossed-out icon.
+  const micOff = $derived(voice.micStatus !== MicStatus.Enabled);
 </script>
 
 <div
@@ -31,29 +55,13 @@
     </div>
   </div>
 
-  {#if voice.micError}
-    <p class="text-xs text-amber-500">{voice.micError}</p>
-  {/if}
-
   <div class="flex justify-end gap-1.5">
     <Button
-      variant={voice.micMuted
-        ? "secondary"
-        : !voice.canPublish
-          ? "destructive"
-          : "default"}
+      {...MIC_STATUS_BUTTON_PROPS[voice.micStatus]}
       size="icon"
-      disabled={!voice.canPublish}
-      title={!voice.canPublish
-        ? "You are muted by a moderator"
-        : voice.micMuted
-          ? "Unmute"
-          : "Mute"}
       onclick={() => voice.toggleMic()}
     >
-      {#if !voice.canPublish}
-        <MicOff class="size-4" />
-      {:else if voice.micMuted}
+      {#if micOff}
         <MicOff class="size-4" />
       {:else}
         <Mic class="size-4" />
@@ -74,8 +82,13 @@
         {/if}
       </Button>
     {/if}
-    <Button variant="destructive" size="icon" onclick={() => voice.leave()}>
-      <PhoneOff class="size-4" />
+    <Button
+      variant="secondary"
+      size="icon"
+      onclick={() => voice.leave()}
+      title="Disconnect"
+    >
+      <Phone class="size-4 rotate-135" />
       <span class="sr-only">Leave</span>
     </Button>
   </div>

@@ -1,10 +1,10 @@
-# LiveKit SFU — powers voice channels (comfortably 20+ people per room).
+# LiveKit SFU - powers voice channels (comfortably 20+ people per room).
 #
 # There is nothing to edit here. The API key/secret are injected from the
 # environment (LIVEKIT_KEYS in docker-compose.yml), generated once by the
 # installer, and signaling is fronted by Caddy at /livekit on your own domain.
 
-port: 7880 # signaling (WebSocket) — Caddy proxies to this, it is not exposed
+port: 7880 # signaling (WebSocket) - Caddy proxies to this, it is not exposed
 
 rtc:
   # Media ports. UDP is what you want (lowest latency); TCP is the fallback for
@@ -18,7 +18,7 @@ rtc:
 
 # ⚠️ Voice does NOT work when LiveKit runs under Docker Desktop on Windows/macOS:
 # its network layer cannot pass WebRTC UDP media (STUN succeeds, then the DTLS
-# handshake times out — a documented Docker Desktop limitation). This is not a
+# handshake times out - a documented Docker Desktop limitation). This is not a
 # ccchat bug and there is no compose-side workaround. It works fine on a real
 # Linux host, which is what you deploy to. To exercise voice locally on Windows,
 # run LiveKit natively instead:

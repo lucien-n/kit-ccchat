@@ -23,6 +23,13 @@ export interface VoiceParticipant {
 
 type Status = "idle" | "connecting" | "connected";
 
+export enum MicStatus {
+  Enabled = "Enabled",
+  Muted = "Muted",
+  MutedByMod = "MutedByMod",
+  NotAllowed = "NotAllowed",
+}
+
 /** The LiveKit voice session. One call at a time, independent of which text
  *  channel you're reading. */
 class VoiceStore {
@@ -36,6 +43,9 @@ class VoiceStore {
   error = $state("");
   /** Soft notice - connected, but mic couldn't be captured (listen-only). */
   micError = $state("");
+  /** The browser refused mic capture (permission denied / no device). Distinct
+   *  from muting: you can't unmute your way out of it. */
+  private micDenied = $state(false);
   /** Screen share tracks by publisher identity. A track only lands here once it
    *  is subscribed, so anything in here is watchable right now. */
   screens = $state<Record<string, Track>>({});
@@ -53,6 +63,14 @@ class VoiceStore {
     return this.status !== "idle";
   }
 
+  get micStatus(): MicStatus {
+    if (!this.canPublish) return MicStatus.MutedByMod;
+    if (this.micDenied) return MicStatus.NotAllowed;
+    if (this.micMuted) return MicStatus.Muted;
+
+    return MicStatus.Enabled;
+  }
+
   get isSharing(): boolean {
     const identity = this.room?.localParticipant.identity;
     return !!identity && !!this.screens[identity];
@@ -67,6 +85,7 @@ class VoiceStore {
     this.channelName = channel.name;
     this.error = "";
     this.micError = "";
+    this.micDenied = false;
 
     let url = "";
     try {
@@ -89,8 +108,12 @@ class VoiceStore {
       if (res.canPublish) {
         try {
           await room.localParticipant.setMicrophoneEnabled(true);
-        } catch (e) {
-          this.micError = `Microphone unavailable (${errorName(e)}) - you're listening only.`;
+          this.micDenied = false;
+        } catch (err) {
+          if (err instanceof Error && err.name === "NotAllowedError") {
+            this.micDenied = true;
+          }
+          this.micError = `Microphone unavailable (${errorName(err)}) - you're listening only.`;
         }
       }
       await room.startAudio().catch(() => {});
@@ -248,7 +271,18 @@ class VoiceStore {
   async toggleMic() {
     const lp = this.room?.localParticipant;
     if (!lp || !this.canPublish) return;
-    await lp.setMicrophoneEnabled(!lp.isMicrophoneEnabled);
+    try {
+      await lp.setMicrophoneEnabled(!lp.isMicrophoneEnabled);
+      this.micDenied = false;
+    } catch (err) {
+      // Turning the mic on can still be refused (permission revoked mid-call).
+      if (errorName(err) === "NotAllowedError") {
+        this.micDenied = true;
+        this.micError = `Microphone unavailable (${errorName(err)}) - you're listening only.`;
+      }
+      this.refresh();
+      return;
+    }
     if (lp.isMicrophoneEnabled) playUnmute();
     else playMute();
     this.refresh();
@@ -278,6 +312,7 @@ class VoiceStore {
     this.micMuted = false;
     this.canPublish = true;
     this.micError = "";
+    this.micDenied = false;
     this.leaving = false;
   }
 }

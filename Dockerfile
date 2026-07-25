@@ -1,6 +1,6 @@
 # Multi-stage: the client toolchain (Vite, Svelte, Tailwind) is only needed to
 # produce static files, so it never reaches the runtime image. That keeps the
-# thing people actually pull small — which matters on the low-power boxes this
+# thing people actually pull small - which matters on the low-power boxes this
 # is meant to be self-hosted on.
 
 # ── build ────────────────────────────────────────────────────────────────────
