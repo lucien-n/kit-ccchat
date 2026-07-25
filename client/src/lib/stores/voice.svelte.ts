@@ -12,6 +12,12 @@ import { apiErrorMessage, errorName } from "../forms";
 import { playMute, playUnmute, playVoiceJoin, playVoiceLeave } from "../notify";
 import { realtime } from "./realtime.svelte";
 
+/** Whether the browser can route audio to a chosen speaker. False on Firefox
+ *  and iOS Safari, where enumerating and switching outputs is pointless. */
+const supportsAudioOutput = () =>
+  typeof HTMLMediaElement !== "undefined" &&
+  "setSinkId" in HTMLMediaElement.prototype;
+
 export interface VoiceParticipant {
   identity: string;
   name: string;
@@ -49,6 +55,11 @@ class VoiceStore {
   audioInputs = $state<MediaDeviceInfo[]>([]);
   /** deviceId of the mic currently in use. "default" follows the OS default. */
   audioInputId = $state("default");
+  /** Available speakers. Empty where the browser can't route output (no
+   *  setSinkId - Firefox, iOS Safari), which disables the picker. */
+  audioOutputs = $state<MediaDeviceInfo[]>([]);
+  /** deviceId of the speaker in use. "default" follows the OS default. */
+  audioOutputId = $state("default");
   /** Whether incoming audio is silenced. Deafening also stops your own mic. */
   deafened = $state(false);
   /** Screen share tracks by publisher identity. A track only lands here once it
@@ -193,6 +204,7 @@ class VoiceStore {
       .on(RoomEvent.MediaDevicesChanged, () => this.loadDevices())
       .on(RoomEvent.ActiveDeviceChanged, (kind, deviceId) => {
         if (kind === "audioinput") this.audioInputId = deviceId;
+        else if (kind === "audiooutput") this.audioOutputId = deviceId;
       })
       .on(RoomEvent.Disconnected, () => {
         const wasConnected = this.status === VoiceStatus.Connected;
@@ -291,6 +303,12 @@ class VoiceStore {
     try {
       this.audioInputs = await Room.getLocalDevices("audioinput");
       this.audioInputId = this.room?.getActiveDevice("audioinput") ?? "default";
+      // Output routing only exists where setSinkId does; elsewhere the list
+      // stays empty so the speaker picker never offers a choice that can't work.
+      if (supportsAudioOutput()) {
+        this.audioOutputs = await Room.getLocalDevices("audiooutput");
+        this.audioOutputId = this.room?.getActiveDevice("audiooutput") ?? "default";
+      }
     } catch {
       /* enumerateDevices can throw in locked-down contexts; leave the list as-is */
     }
@@ -305,6 +323,18 @@ class VoiceStore {
       this.audioInputId = deviceId;
     } catch (e) {
       this.error = `Couldn't switch microphone (${errorName(e)}).`;
+    }
+  }
+
+  /** Switch the speaker all incoming audio plays through. Applies setSinkId to
+   *  every subscribed audio element under the hood. */
+  async setAudioOutput(deviceId: string) {
+    if (!this.room) return;
+    try {
+      await this.room.switchActiveDevice("audiooutput", deviceId);
+      this.audioOutputId = deviceId;
+    } catch (e) {
+      this.error = `Couldn't switch speaker (${errorName(e)}).`;
     }
   }
 
@@ -392,6 +422,8 @@ class VoiceStore {
     this.canPublish = true;
     this.audioInputs = [];
     this.audioInputId = "default";
+    this.audioOutputs = [];
+    this.audioOutputId = "default";
     this.deafened = false;
     this.mutedByDeafen = false;
     this.leaving = false;
