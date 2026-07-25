@@ -44,6 +44,11 @@ class VoiceStore {
   micStatus = $state<MicStatus>(MicStatus.Muted);
   canPublish = $state(true);
   error = $state("");
+  /** Available microphones. Labels only fill in once mic permission is granted,
+   *  so this stays empty until then. */
+  audioInputs = $state<MediaDeviceInfo[]>([]);
+  /** deviceId of the mic currently in use. "default" follows the OS default. */
+  audioInputId = $state("default");
   /** Screen share tracks by publisher identity. A track only lands here once it
    *  is subscribed, so anything in here is watchable right now. */
   screens = $state<Record<string, Track>>({});
@@ -113,6 +118,7 @@ class VoiceStore {
       // The mic has reached its final state - now safe to tell everyone else.
       this.announceMic();
       await room.startAudio().catch(() => {});
+      this.loadDevices();
       this.refresh();
     } catch (e) {
       console.error("[voice] failed to connect", { url, error: e });
@@ -176,6 +182,12 @@ class VoiceStore {
           this.announceSharing(false);
         }
         this.refresh();
+      })
+      // A mic being plugged in/out, or LiveKit switching devices, both need the
+      // list and the active id kept honest.
+      .on(RoomEvent.MediaDevicesChanged, () => this.loadDevices())
+      .on(RoomEvent.ActiveDeviceChanged, (kind, deviceId) => {
+        if (kind === "audioinput") this.audioInputId = deviceId;
       })
       .on(RoomEvent.Disconnected, () => {
         const wasConnected = this.status === VoiceStatus.Connected;
@@ -268,6 +280,29 @@ class VoiceStore {
     this.refresh();
   }
 
+  /** Refresh the mic list and which one is active. Cheap enough to call on any
+   *  device change; labels stay blank until mic permission has been granted. */
+  private async loadDevices() {
+    try {
+      this.audioInputs = await Room.getLocalDevices("audioinput");
+      this.audioInputId = this.room?.getActiveDevice("audioinput") ?? "default";
+    } catch {
+      /* enumerateDevices can throw in locked-down contexts; leave the list as-is */
+    }
+  }
+
+  /** Switch the microphone LiveKit captures from. Persists for the session so a
+   *  later unmute keeps using it. */
+  async setAudioInput(deviceId: string) {
+    if (!this.room) return;
+    try {
+      await this.room.switchActiveDevice("audioinput", deviceId);
+      this.audioInputId = deviceId;
+    } catch (e) {
+      this.error = `Couldn't switch microphone (${errorName(e)}).`;
+    }
+  }
+
   async toggleMic() {
     const lp = this.room?.localParticipant;
     if (!lp || !this.canPublish) return;
@@ -312,6 +347,8 @@ class VoiceStore {
     this.participants = [];
     this.micStatus = MicStatus.Muted;
     this.canPublish = true;
+    this.audioInputs = [];
+    this.audioInputId = "default";
     this.leaving = false;
   }
 }
