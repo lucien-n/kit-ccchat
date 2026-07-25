@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { MicStatus, voice } from "$lib/stores/voice.svelte";
+  import { MicStatus, voice, VoiceStatus } from "$lib/stores/voice.svelte";
   import { Button, type ButtonProps } from "&/button";
   import {
     Mic,
@@ -48,9 +48,7 @@
       <span class="truncate">{voice.channelName}</span>
     </div>
     <div class="text-xs text-green-500">
-      {voice.status === "connected"
-        ? `Connected · ${voice.participants.length}`
-        : "Connecting…"}
+      {voice.status === VoiceStatus.Connected ? "Connected" : "Connecting…"}
     </div>
   </div>
 
