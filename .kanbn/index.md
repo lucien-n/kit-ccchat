@@ -23,19 +23,18 @@ columnSorting:
 - [avatar-overlays](tasks/avatar-overlays.md)
 - [profile-banner-and-bio](tasks/profile-banner-and-bio.md)
 - [soundboard](tasks/soundboard.md)
-- [show-mute-deafen-status-in-the-voice-channel](tasks/show-mute-deafen-status-in-the-voice-channel.md)
 - [control-mute-stream-volume](tasks/control-mute-stream-volume.md)
-- [allow-changing-input-output-devices](tasks/allow-changing-input-output-devices.md)
 - [webcams](tasks/webcams.md)
 
 ## Todo
 
 ## In Progress
 
-- [deafen](tasks/deafen.md)
-
 ## Done
 
+- [show-mute-deafen-status-in-the-voice-channel](tasks/show-mute-deafen-status-in-the-voice-channel.md)
+- [allow-changing-input-output-devices](tasks/allow-changing-input-output-devices.md)
+- [deafen](tasks/deafen.md)
 - [video-streaming](tasks/video-streaming.md)
 - [upload-images-files](tasks/upload-images-files.md)
 - [make-user-mentions-clickable](tasks/make-user-mentions-clickable.md)
