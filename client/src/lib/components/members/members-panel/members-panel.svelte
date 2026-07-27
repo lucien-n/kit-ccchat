@@ -11,6 +11,7 @@
   import { flip } from "svelte/animate";
   import { cubicOut } from "svelte/easing";
   import { crossfade, fade } from "svelte/transition";
+  import { cn } from "$lib/utils";
 
   type Row =
     | { kind: "header"; key: string; group: PresenceGroup }
@@ -64,7 +65,10 @@
         </p>
       {:else}
         <div
-          class="hover:bg-muted/50 flex items-center gap-2 rounded-2xl p-2"
+          class={cn(
+            "hover:bg-muted/50 flex items-center gap-2 rounded-2xl p-2",
+            row.group === PresenceGroup.Offline && "opacity-50",
+          )}
           in:receive={{ key: row.key }}
           out:send={{ key: row.key }}
         >
