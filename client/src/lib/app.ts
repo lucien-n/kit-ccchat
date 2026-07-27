@@ -130,6 +130,9 @@ function dispatch(event: ServerEvent) {
     case ServerEventType.Presence:
       presence.setOnline(event.online);
       typing.keepOnly(event.online);
+      // A first-time joiner shows up as online before they exist in the roster,
+      // so pull a fresh list when presence names someone we don't know yet.
+      if (event.online.some((id) => !members.byId(id))) void members.load(true);
       break;
     case ServerEventType.Typing_Started:
       typing.started(event.channelId, event.userId);

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import MembersPanel from "$lib/components/members/members-panel.svelte";
+  import { MembersPanel } from "$lib/components/members/members-panel";
   import SearchPanel from "$lib/components/search/search-panel.svelte";
   import { getChatContext } from "$lib/context/chat.svelte";
   import { Button } from "&/button";
