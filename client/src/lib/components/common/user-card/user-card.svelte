@@ -1,7 +1,6 @@
 <script lang="ts">
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { setUserContext } from "$lib/context/user.svelte";
-  import { presence } from "$lib/stores/presence.svelte";
   import { roles as rolesStore } from "$lib/stores/roles.svelte";
   import { cn } from "$lib/utils";
   import * as Popover from "&/popover";
@@ -47,15 +46,7 @@
       {#if ctx.profile}
         {@const user = ctx.profile}
         <div class="flex items-center gap-3 p-4">
-          <div class="relative shrink-0">
-            <UserAvatar {user} class="size-12" />
-            <span
-              class={cn(
-                "border-background absolute -right-0.5 -bottom-0.5 size-3 rounded-full border-2",
-                presence.online.has(user.id) ? "bg-green-500" : "bg-muted-foreground",
-              )}
-            ></span>
-          </div>
+          <UserAvatar {user} class="size-12" showPresenceDot />
           <div class="min-w-0">
             <div
               class="truncate font-semibold"
