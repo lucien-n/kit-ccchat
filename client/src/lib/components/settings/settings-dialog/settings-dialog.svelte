@@ -1,8 +1,7 @@
 <script lang="ts">
   import * as Dialog from "&/dialog";
   import * as Tabs from "&/tabs";
-  import AppearanceTab from "./appearance-tab.svelte";
-  import ProfileTab from "./profile-tab.svelte";
+  import { SETTINGS_DIALOG_TAB_SPECS, SettingsDialogTab } from ".";
 
   interface Props {
     open?: boolean;
@@ -18,19 +17,18 @@
       <Dialog.Title>Settings</Dialog.Title>
     </Dialog.Header>
 
-    <Tabs.Root value="profile" class="w-full">
+    <Tabs.Root value={SettingsDialogTab.Profile} class="w-full">
       <Tabs.List class="grid w-full grid-cols-2">
-        <Tabs.Trigger value="profile">Profile</Tabs.Trigger>
-        <Tabs.Trigger value="appearance">Appearance</Tabs.Trigger>
+        {#each Object.entries(SETTINGS_DIALOG_TAB_SPECS) as [tab, spec] (tab)}
+          <Tabs.Trigger value={tab}>{spec.title}</Tabs.Trigger>
+        {/each}
       </Tabs.List>
 
-      <Tabs.Content value="profile" class="space-y-6 pt-4">
-        <ProfileTab />
-      </Tabs.Content>
-
-      <Tabs.Content value="appearance" class="space-y-6 pt-4">
-        <AppearanceTab />
-      </Tabs.Content>
+      {#each Object.entries(SETTINGS_DIALOG_TAB_SPECS) as [tab, spec] (tab)}
+        <Tabs.Content value={tab} class="space-y-6 pt-4">
+          <spec.component />
+        </Tabs.Content>
+      {/each}
     </Tabs.Root>
   </Dialog.Content>
 </Dialog.Root>

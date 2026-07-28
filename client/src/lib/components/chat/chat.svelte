@@ -4,7 +4,7 @@
   import { UserCard } from "$lib/components/common/user-card";
   import SidePanel from "$lib/components/layout/side-panel.svelte";
   import Sidebar from "$lib/components/layout/sidebar";
-  import SettingsDialog from "$lib/components/settings/settings-dialog.svelte";
+  import { SettingsDialog } from "$lib/components/settings/settings-dialog";
   import VoiceBar from "$lib/components/voice/voice-bar.svelte";
   import { setChatContext, type ChatPanel } from "$lib/context/chat.svelte";
   import { setBaseTitle, setTitleBadge } from "$lib/notify";
