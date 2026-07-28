@@ -96,6 +96,9 @@ export type UploadImageBody = z.infer<typeof uploadImageBody>;
 export const avatarBody = z.object({ image: imageDataUrl });
 export type AvatarBody = z.infer<typeof avatarBody>;
 
+export const bannerBody = z.object({ image: imageDataUrl });
+export type BannerBody = z.infer<typeof bannerBody>;
+
 export const uploadSoundBody = z.object({
   sound: dataUrl,
   name: z.string().trim().min(1).max(MAX_SOUNDBOARD_NAME),

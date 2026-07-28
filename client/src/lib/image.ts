@@ -84,3 +84,22 @@ export async function resizeImage(file: File, size = 256): Promise<string> {
   ctx.drawImage(el, sx, sy, side, side, 0, 0, size, size);
   return canvas.toDataURL("image/jpeg", 0.85);
 }
+
+export async function resizeBanner(file: File, width = 600, height = 200): Promise<string> {
+  const { el, url } = await measure(file);
+  URL.revokeObjectURL(url);
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("canvas unavailable");
+
+  const scale = Math.max(width / el.width, height / el.height);
+  const sw = width / scale;
+  const sh = height / scale;
+  const sx = (el.width - sw) / 2;
+  const sy = (el.height - sh) / 2;
+  ctx.drawImage(el, sx, sy, sw, sh, 0, 0, width, height);
+  return canvas.toDataURL("image/jpeg", 0.85);
+}

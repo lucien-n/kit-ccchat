@@ -7,6 +7,11 @@ export function avatarUrl(id: string, version: number | null | undefined): strin
   return `${apiBase()}/api/users/${id}/avatar?v=${version}`;
 }
 
+export function bannerUrl(id: string, version: number | null | undefined): string | null {
+  if (version == null) return null;
+  return `${apiBase()}/api/users/${id}/banner?v=${version}`;
+}
+
 export const users = {
   /** Full community roster, readable by any member (no moderation state). */
   list: async () => (await client.api.users.$get()).json(),
@@ -25,4 +30,9 @@ export const users = {
     (await client.api.users.me.avatar.$post({ json: { image } })).json(),
 
   removeAvatar: async () => (await client.api.users.me.avatar.$delete()).json(),
+
+  setBanner: async (image: string) =>
+    (await client.api.users.me.banner.$post({ json: { image } })).json(),
+
+  removeBanner: async () => (await client.api.users.me.banner.$delete()).json(),
 };

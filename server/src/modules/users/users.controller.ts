@@ -1,4 +1,9 @@
-import { avatarBody, changePasswordBody, updateProfileBody } from "@ccchat/shared";
+import {
+  avatarBody,
+  bannerBody,
+  changePasswordBody,
+  updateProfileBody,
+} from "@ccchat/shared";
 import type { AppContext, JsonContext } from "../../http/context.js";
 import * as usersService from "./users.service.js";
 
@@ -25,6 +30,24 @@ export function uploadAvatar(c: JsonContext<typeof avatarBody>) {
 
 export function removeAvatar(c: AppContext) {
   usersService.deleteAvatar(c.get("user").id);
+  return c.json({ ok: true });
+}
+
+export function banner(c: AppContext<"/:id/banner">) {
+  const { bytes, mime } = usersService.readBanner(c.req.param("id"));
+  c.header("Content-Type", mime);
+  c.header("X-Content-Type-Options", "nosniff");
+  c.header("Cache-Control", "public, max-age=31536000, immutable");
+  return c.body(bytes);
+}
+
+export function uploadBanner(c: JsonContext<typeof bannerBody>) {
+  const bannerVersion = usersService.saveBanner(c.get("user").id, c.req.valid("json"));
+  return c.json({ bannerVersion });
+}
+
+export function removeBanner(c: AppContext) {
+  usersService.deleteBanner(c.get("user").id);
   return c.json({ ok: true });
 }
 

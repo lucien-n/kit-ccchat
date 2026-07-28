@@ -26,6 +26,7 @@ export const CLIENT_DIR = resolve(process.env.CLIENT_DIR ?? "../client/build");
 /** Everything ccchat writes inside DATA_DIR. Declared here because the disk
  *  usage panel has to measure what the other modules own. */
 export const AVATARS_DIR = join(DATA_DIR, "avatars");
+export const BANNERS_DIR = join(DATA_DIR, "banners");
 export const IMAGES_DIR = join(DATA_DIR, "images");
 export const SOUNDS_DIR = join(DATA_DIR, "sounds");
 export const COMMUNITY_ICON_FILE = join(DATA_DIR, "community-icon");

@@ -9,6 +9,7 @@
   import { defaults, setError, setMessage, superForm } from "sveltekit-superforms";
   import { zod4, zod4Client } from "sveltekit-superforms/adapters";
   import AvatarPicker from "./avatar-picker.svelte";
+  import BannerPicker from "./banner-picker.svelte";
 
   const nameForm = superForm(
     defaults({ displayName: session.user?.displayName ?? "" }, zod4(updateProfileBody)),
@@ -61,6 +62,8 @@
     submitting: passwordBusy,
   } = passwordForm;
 </script>
+
+<BannerPicker />
 
 <AvatarPicker />
 

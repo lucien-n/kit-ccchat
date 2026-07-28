@@ -17,6 +17,7 @@ export type MemberRef = z.infer<typeof memberRef>;
 export const member = memberRef.extend({
   isOwner: z.boolean(),
   isAdmin: z.boolean(),
+  bannerVersion: z.number().nullable(),
 });
 export type Member = z.infer<typeof member>;
 

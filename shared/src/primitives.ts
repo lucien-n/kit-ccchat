@@ -58,6 +58,8 @@ export const MAX_MESSAGE_IMAGE_BYTES = 8_000_000;
 
 export const MAX_AVATAR_IMAGE_BYTES = 2_000_000;
 
+export const MAX_BANNER_IMAGE_BYTES = 4_000_000;
+
 export const IMAGE_MIME_TYPES: readonly string[] = [
   "image/png",
   "image/jpeg",

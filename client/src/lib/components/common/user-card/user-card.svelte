@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { bannerUrl } from "$lib/api";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { setUserContext } from "$lib/context/user.svelte";
   import { roles as rolesStore } from "$lib/stores/roles.svelte";
@@ -54,12 +55,20 @@
     <Popover.Content class="w-72 p-0" align="start" customAnchor={anchor}>
       {#if ctx.profile}
         {@const user = ctx.profile}
+        {@const banner = bannerUrl(user.id, user.bannerVersion)}
         <div class="flex flex-col gap-4">
-          <img
-            class="absolute h-20 w-full rounded-t-2xl object-cover brightness-30"
-            src="https://placehold.co/600x400"
-            alt="banner"
-          />
+          {#if banner}
+            <img
+              class="absolute h-20 w-full rounded-t-2xl object-cover"
+              src={banner}
+              alt="banner"
+            />
+          {:else}
+            <div
+              class="bg-primary/30 absolute h-20 w-full rounded-t-2xl"
+              style={user.color ? `background:${user.color}` : undefined}
+            ></div>
+          {/if}
           <UserAvatar
             {user}
             class="ring-popover absolute top-13 left-4 size-14 ring-4"

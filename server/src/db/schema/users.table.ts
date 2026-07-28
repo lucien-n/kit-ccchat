@@ -17,7 +17,8 @@ export const usersTable = sqliteTable("users", {
   kickedAt: integer("kicked_at"),
   // Epoch ms of the last avatar upload; null = no avatar. Doubles as a
   // cache-busting version for the avatar URL.
-  avatarVersion: integer("avatar_version"),
+  avatarVersion: integer("avatar_version").default(0),
+  bannerVersion: integer("banner_version").default(0),
 });
 
 export type User = typeof usersTable.$inferSelect;

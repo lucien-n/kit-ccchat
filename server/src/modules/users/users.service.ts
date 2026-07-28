@@ -1,6 +1,8 @@
 import {
   MAX_AVATAR_IMAGE_BYTES,
+  MAX_BANNER_IMAGE_BYTES,
   type AvatarBody,
+  type BannerBody,
   type ChangePasswordBody,
   type Member,
   type Role,
@@ -9,12 +11,13 @@ import { desc, eq } from "drizzle-orm";
 import { hashPassword, verifyPassword } from "../../auth.js";
 import { db } from "../../db/index.js";
 import { rolesTable, userRolesTable, usersTable, type User } from "../../db/schema";
-import { AVATARS_DIR } from "../../env.js";
+import { AVATARS_DIR, BANNERS_DIR } from "../../env.js";
 import { httpError } from "../../http/errors.js";
 import { decodeImageUpload, imageStore, type StoredImage } from "../../images.js";
 import { toMember, toRoleView } from "../../views.js";
 
 const avatars = imageStore(AVATARS_DIR);
+const banners = imageStore(BANNERS_DIR);
 
 export function listMembers(): Member[] {
   return db
@@ -40,6 +43,25 @@ export function deleteAvatar(userId: string) {
   avatars.remove(userId);
   db.update(usersTable)
     .set({ avatarVersion: null })
+    .where(eq(usersTable.id, userId))
+    .run();
+}
+
+export function readBanner(id: string): StoredImage {
+  return banners.read(id);
+}
+
+export function saveBanner(userId: string, { image }: BannerBody): number {
+  banners.write(userId, decodeImageUpload(image, MAX_BANNER_IMAGE_BYTES));
+  const bannerVersion = Date.now();
+  db.update(usersTable).set({ bannerVersion }).where(eq(usersTable.id, userId)).run();
+  return bannerVersion;
+}
+
+export function deleteBanner(userId: string) {
+  banners.remove(userId);
+  db.update(usersTable)
+    .set({ bannerVersion: null })
     .where(eq(usersTable.id, userId))
     .run();
 }

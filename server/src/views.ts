@@ -29,6 +29,7 @@ export function toMember(u: {
   displayName: string;
   isOwner: number;
   avatarVersion?: number | null;
+  bannerVersion?: number | null;
 }): Member {
   return {
     id: u.id,
@@ -38,6 +39,7 @@ export function toMember(u: {
     isAdmin: isAdmin(u),
     color: colorFor(u.id),
     avatarVersion: u.avatarVersion ?? null,
+    bannerVersion: u.bannerVersion ?? null,
   };
 }
 

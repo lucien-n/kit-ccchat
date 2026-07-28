@@ -34,7 +34,7 @@ export { soundUrl } from "./soundboard";
 export { apiBase, ApiError } from "./http";
 export { ModAction } from "./moderation";
 export { authToken } from "./token.svelte";
-export { avatarUrl } from "./users";
+export { avatarUrl, bannerUrl } from "./users";
 
 export type {
   Channel,
