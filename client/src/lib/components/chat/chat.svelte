@@ -33,6 +33,7 @@
   import MessageSkeleton from "./message-skeleton.svelte";
   import TypingIndicator from "./typing-indicator.svelte";
   import StreamView from "$lib/components/voice/stream-view.svelte";
+  import * as Empty from "$lib/components/ui/empty/index.js";
 
   const desktopNow =
     typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
@@ -173,7 +174,17 @@
           {#if messages.loading}
             <MessageSkeleton count={6} />
           {:else if messages.list.length === 0}
-            <div class="text-muted-foreground m-auto">No messages yet. Say hi 👋</div>
+            <Empty.Root>
+              <Empty.Header>
+                <Empty.Title>No Messages Yet</Empty.Title>
+                <Empty.Description>Start chatting below.</Empty.Description>
+              </Empty.Header>
+              <Empty.Content>
+                <Button variant="outline" onclick={() => chat.composer?.focus()}>
+                  Start
+                </Button>
+              </Empty.Content>
+            </Empty.Root>
           {:else}
             {#if messages.loadingOlder}
               <MessageSkeleton />
