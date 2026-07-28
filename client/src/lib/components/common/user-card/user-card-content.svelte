@@ -1,8 +1,10 @@
 <script lang="ts">
   import { api, bannerUrl } from "$lib/api";
+  import { refreshMemberColors } from "$lib/app";
   import { setUserContext } from "$lib/context/user.svelte";
   import { apiErrorMessage } from "$lib/forms";
   import { resizeBanner, resizeImage } from "$lib/image";
+  import { appearance } from "$lib/stores/appearance.svelte";
   import { roles } from "$lib/stores/roles.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { ui } from "$lib/stores/ui.svelte";
@@ -30,6 +32,19 @@
     ctx.loadProfile();
     ctx.loadRoles();
   });
+
+  const DEFAULT_ACCENT = "#5865f2";
+
+  async function saveAccent(color: string | null) {
+    try {
+      const { user } = await api.users.updateMe({ accentColor: color });
+      session.patchUser({ accentColor: user.accentColor, color: user.color });
+      await ctx.loadProfile();
+      await refreshMemberColors();
+    } catch (err) {
+      toast.error(apiErrorMessage(err, "failed to save color"));
+    }
+  }
 
   function handleOpenSettings() {
     onClose?.();
@@ -170,7 +185,7 @@
         <div class="flex flex-col">
           <p
             class="truncate text-lg font-semibold"
-            style={user.color ? `color:${user.color}` : undefined}
+            style={appearance.nameStyle(user.color)}
           >
             {user.displayName}
           </p>
@@ -183,7 +198,30 @@
           </div>
         </div>
 
-        {#if !editable}
+        {#if editable}
+          <div class="flex items-center gap-2">
+            <span class="text-muted-foreground flex-1 text-xs font-medium">
+              Accent color
+            </span>
+            <input
+              type="color"
+              class="accent-swatch size-7 shrink-0 cursor-pointer overflow-hidden rounded-md border p-0"
+              value={user.accentColor ?? DEFAULT_ACCENT}
+              onchange={(e) => saveAccent(e.currentTarget.value)}
+              aria-label="Accent color"
+            />
+            {#if user.accentColor}
+              <Button
+                variant="secondary"
+                size="icon-sm"
+                onclick={() => saveAccent(null)}
+                aria-label="Clear accent color"
+              >
+                <Trash2Icon class="size-3" />
+              </Button>
+            {/if}
+          </div>
+        {:else}
           <Button onclick={handleOpenSettings} class="w-full">
             <PencilIcon />
             Edit Profile
@@ -265,3 +303,19 @@
 {:else}
   <div class="text-muted-foreground p-4 text-sm">Loading…</div>
 {/if}
+
+<style>
+  /* Native color inputs wrap the swatch in a padded box; zero it out so the
+     colour fills the whole control instead of floating in the middle. */
+  .accent-swatch::-webkit-color-swatch-wrapper {
+    padding: 0;
+  }
+  .accent-swatch::-webkit-color-swatch {
+    border: none;
+    border-radius: 0.3rem;
+  }
+  .accent-swatch::-moz-color-swatch {
+    border: none;
+    border-radius: 0.3rem;
+  }
+</style>

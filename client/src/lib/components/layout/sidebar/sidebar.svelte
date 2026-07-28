@@ -2,6 +2,7 @@
   import * as app from "$lib/app";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import VoiceBar from "$lib/components/voice/voice-bar.svelte";
+  import { appearance } from "$lib/stores/appearance.svelte";
   import { channels } from "$lib/stores/channels.svelte";
   import { session } from "$lib/stores/session.svelte";
   import { ui } from "$lib/stores/ui.svelte";
@@ -75,7 +76,7 @@
     <div class="min-w-0 flex-1 text-left">
       <div
         class="truncate text-sm font-medium"
-        style={session.user?.color ? `color:${session.user.color}` : undefined}
+        style={appearance.nameStyle(session.user?.color ?? null)}
       >
         {session.user?.displayName}
       </div>

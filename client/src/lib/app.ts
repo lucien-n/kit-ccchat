@@ -9,6 +9,7 @@ import { toast } from "svelte-sonner";
 import { api, type MessageView } from "./api";
 import { pingsMe } from "./mentions";
 import { playPing, unlockAudio } from "./notify";
+import { appearance } from "./stores/appearance.svelte";
 import { channels } from "./stores/channels.svelte";
 import { community } from "./stores/community.svelte";
 import { members } from "./stores/members.svelte";
@@ -92,6 +93,13 @@ export async function logout() {
 }
 
 async function afterLogin() {
+  // Fire-and-forget: theme is already painted from localStorage, so this just
+  // reconciles it with the account's server-stored prefs (cross-device sync).
+  void api.users
+    .getAppearance()
+    .then(({ appearance: prefs }) => appearance.hydrate(prefs))
+    .catch(() => {});
+
   await channels.load();
   await unread.load();
   // Mention chips trade a username or role id for the name to show, so the
@@ -154,10 +162,22 @@ function dispatch(event: ServerEvent) {
   }
 }
 
+/** Repaint already-rendered messages from the current roster's colors. */
+function recolorFromRoster() {
+  messages.applyColors(new Map(members.list.map((m) => [m.id, m.color])));
+}
+
 async function onRolesChanged() {
   await session.refresh();
   await Promise.all([roles.load(true), members.load(true)]);
-  messages.applyColors(new Map(members.list.map((m) => [m.id, m.color])));
+  recolorFromRoster();
+}
+
+/** Re-pull the roster and recolor rendered messages, so a color change (e.g. the
+ *  member's own accent) shows up immediately instead of only after a reload. */
+export async function refreshMemberColors() {
+  await members.load(true);
+  recolorFromRoster();
 }
 
 function onMessage(m: MessageView) {

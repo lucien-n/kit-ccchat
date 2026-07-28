@@ -22,6 +22,8 @@ import {
   SEARCH_PAGE,
   searchSort,
   SearchSort,
+  theme,
+  themeMode,
   username,
 } from "./primitives.js";
 
@@ -71,8 +73,21 @@ export type RenameChannelBody = z.infer<typeof renameChannelBody>;
 
 export const renameCommunityBody = z.object({ communityName });
 
-export const updateProfileBody = z.object({ displayName });
+/** A partial profile patch: each field is optional so the display-name form and
+ *  the accent-color picker can each save on their own without clobbering the
+ *  other. `accentColor: null` clears it. */
+export const updateProfileBody = z.object({
+  displayName: displayName.optional(),
+  accentColor: hexColor.nullable().optional(),
+});
 export type UpdateProfileBody = z.infer<typeof updateProfileBody>;
+
+export const updateAppearanceBody = z.object({
+  mode: themeMode,
+  theme,
+  reducedMotion: z.boolean(),
+});
+export type UpdateAppearanceBody = z.infer<typeof updateAppearanceBody>;
 
 export const changePasswordBody = z.object({
   currentPassword: z.string().min(1, "current password required"),

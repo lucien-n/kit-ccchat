@@ -2,6 +2,7 @@
   import { type MessageView } from "$lib/api";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { UserCard } from "$lib/components/common/user-card";
+  import { appearance } from "$lib/stores/appearance.svelte";
   import Markdown from "$lib/components/markdown/markdown.svelte";
   import { getChatContext } from "$lib/context/chat.svelte";
   import { apiErrorMessage } from "$lib/forms";
@@ -145,7 +146,7 @@
             <UserCard userId={message.author.id}>
               <span
                 class="font-semibold hover:underline"
-                style={message.author.color ? `color:${message.author.color}` : undefined}
+                style={appearance.nameStyle(message.author.color)}
               >
                 {message.author.displayName}
               </span>

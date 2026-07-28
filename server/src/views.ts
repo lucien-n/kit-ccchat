@@ -30,6 +30,7 @@ export function toMember(u: {
   isOwner: number;
   avatarVersion?: number | null;
   bannerVersion?: number | null;
+  accentColor?: string | null;
 }): Member {
   return {
     id: u.id,
@@ -37,9 +38,10 @@ export function toMember(u: {
     displayName: u.displayName,
     isOwner: isOwner(u),
     isAdmin: isAdmin(u),
-    color: colorFor(u.id),
+    color: nameColor(u.id, u.accentColor),
     avatarVersion: u.avatarVersion ?? null,
     bannerVersion: u.bannerVersion ?? null,
+    accentColor: u.accentColor ?? null,
   };
 }
 
@@ -63,19 +65,24 @@ export function toRoleView(r: typeof rolesTable.$inferSelect): Role {
 }
 
 function authorOf(userId: string): MemberRef | null {
-  const a = db
+  const row = db
     .select({
       id: usersTable.id,
       username: usersTable.username,
       displayName: usersTable.displayName,
       avatarVersion: usersTable.avatarVersion,
+      accentColor: usersTable.accentColor,
     })
     .from(usersTable)
     .where(eq(usersTable.id, userId))
     .get();
-  return a
-    ? { ...a, color: colorFor(a.id), avatarVersion: a.avatarVersion ?? null }
-    : null;
+  if (!row) return null;
+  const { accentColor, ...ref } = row;
+  return {
+    ...ref,
+    color: colorFor(row.id) ?? accentColor ?? null,
+    avatarVersion: row.avatarVersion ?? null,
+  };
 }
 
 /** Spread across code points, not UTF-16 units, so the cut never lands inside an

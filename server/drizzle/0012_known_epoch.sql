@@ -13,7 +13,7 @@ CREATE TABLE `__new_users` (
 	`banner_version` integer DEFAULT 0
 );
 --> statement-breakpoint
-INSERT INTO `__new_users`("id", "username", "display_name", "password_hash", "is_owner", "created_at", "muted_until", "banned", "kicked_at", "avatar_version", "banner_version") SELECT "id", "username", "display_name", "password_hash", "is_owner", "created_at", "muted_until", "banned", "kicked_at", "avatar_version", "banner_version" FROM `users`;--> statement-breakpoint
+INSERT INTO `__new_users`("id", "username", "display_name", "password_hash", "is_owner", "created_at", "muted_until", "banned", "kicked_at", "avatar_version") SELECT "id", "username", "display_name", "password_hash", "is_owner", "created_at", "muted_until", "banned", "kicked_at", "avatar_version" FROM `users`;--> statement-breakpoint
 DROP TABLE `users`;--> statement-breakpoint
 ALTER TABLE `__new_users` RENAME TO `users`;--> statement-breakpoint
 PRAGMA foreign_keys=ON;--> statement-breakpoint

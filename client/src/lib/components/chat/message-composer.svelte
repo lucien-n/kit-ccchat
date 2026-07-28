@@ -12,6 +12,7 @@
     type EmojiIndex,
   } from "$lib/emoji";
   import { mentionQuery, searchMentions, type MentionSuggestion } from "$lib/mentions";
+  import { appearance } from "$lib/stores/appearance.svelte";
   import { Button } from "&/button";
   import { Textarea } from "&/textarea";
   import {
@@ -267,7 +268,7 @@
             ></span>
             <span
               class="truncate font-medium"
-              style={match.entry.color ? `color:${match.entry.color}` : undefined}
+              style={appearance.nameStyle(match.entry.color)}
             >
               {match.entry.label}
             </span>

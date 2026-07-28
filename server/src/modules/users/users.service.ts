@@ -1,11 +1,16 @@
 import {
   MAX_AVATAR_IMAGE_BYTES,
   MAX_BANNER_IMAGE_BYTES,
+  Theme,
+  ThemeMode,
+  type AppearanceView,
   type AvatarBody,
   type BannerBody,
   type ChangePasswordBody,
   type Member,
   type Role,
+  type UpdateAppearanceBody,
+  type UpdateProfileBody,
 } from "@ccchat/shared";
 import { desc, eq } from "drizzle-orm";
 import { hashPassword, verifyPassword } from "../../auth.js";
@@ -66,9 +71,40 @@ export function deleteBanner(userId: string) {
     .run();
 }
 
-export function updateProfile(user: User, displayName: string): Member {
-  db.update(usersTable).set({ displayName }).where(eq(usersTable.id, user.id)).run();
-  return toMember({ ...user, displayName });
+export function updateProfile(user: User, patch: UpdateProfileBody): Member {
+  // Only the keys the request actually carried are written, so saving one field
+  // never wipes another the caller left untouched.
+  const fields: Partial<Pick<User, "displayName" | "accentColor">> = {};
+  if (patch.displayName !== undefined) fields.displayName = patch.displayName;
+  if (patch.accentColor !== undefined) fields.accentColor = patch.accentColor;
+
+  if (Object.keys(fields).length)
+    db.update(usersTable).set(fields).where(eq(usersTable.id, user.id)).run();
+
+  return toMember({ ...user, ...fields });
+}
+
+export function getAppearance(user: User): AppearanceView {
+  return {
+    mode: (user.themeMode as ThemeMode | null) ?? ThemeMode.Dark,
+    theme: (user.theme as Theme | null) ?? Theme.Default,
+    reducedMotion: user.reducedMotion === 1,
+  };
+}
+
+export function setAppearance(
+  userId: string,
+  body: UpdateAppearanceBody,
+): AppearanceView {
+  db.update(usersTable)
+    .set({
+      themeMode: body.mode,
+      theme: body.theme,
+      reducedMotion: body.reducedMotion ? 1 : 0,
+    })
+    .where(eq(usersTable.id, userId))
+    .run();
+  return body;
 }
 
 export function changePassword(

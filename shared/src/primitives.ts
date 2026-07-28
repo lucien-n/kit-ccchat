@@ -18,6 +18,24 @@ export enum ChannelType {
 }
 export const channelType = z.enum(ChannelType);
 
+/** Appearance preferences. Shared so the server can validate and persist what
+ *  the client used to keep to itself in localStorage. */
+export enum ThemeMode {
+  Light = "light",
+  Dark = "dark",
+  System = "system",
+}
+export const themeMode = z.enum(ThemeMode);
+
+export enum Theme {
+  Default = "default",
+  Tangerine = "tangerine",
+  Notebook = "notebook",
+  Whatsapp = "whatsapp",
+  Neobrutalism = "neobrutalism",
+}
+export const theme = z.enum(Theme);
+
 export enum SystemEvent {
   Member_Join = "member_join",
 }

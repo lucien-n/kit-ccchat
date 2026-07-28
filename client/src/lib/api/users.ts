@@ -1,4 +1,8 @@
-import type { ChangePasswordBody, UpdateProfileBody } from "@ccchat/shared";
+import type {
+  ChangePasswordBody,
+  UpdateAppearanceBody,
+  UpdateProfileBody,
+} from "@ccchat/shared";
 import { apiBase, client } from "./http";
 
 /** `version` doubles as a cache-buster. */
@@ -25,6 +29,13 @@ export const users = {
 
   changePassword: async (body: ChangePasswordBody) =>
     (await client.api.users.me.password.$post({ json: body })).json(),
+
+  /** Private appearance prefs, persisted so they follow the account across
+   *  devices. */
+  getAppearance: async () => (await client.api.users.me.appearance.$get()).json(),
+
+  setAppearance: async (body: UpdateAppearanceBody) =>
+    (await client.api.users.me.appearance.$patch({ json: body })).json(),
 
   setAvatar: async (image: string) =>
     (await client.api.users.me.avatar.$post({ json: { image } })).json(),

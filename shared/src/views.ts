@@ -1,5 +1,12 @@
 import { z } from "zod";
-import { channelType, hexColor, permission, systemEvent } from "./primitives.js";
+import {
+  channelType,
+  hexColor,
+  permission,
+  systemEvent,
+  theme,
+  themeMode,
+} from "./primitives.js";
 
 /** A member's identity as everyone else sees them: the lean shape embedded
  *  wherever a person is referenced (message author, reply, role list). Never
@@ -18,8 +25,21 @@ export const member = memberRef.extend({
   isOwner: z.boolean(),
   isAdmin: z.boolean(),
   bannerVersion: z.number().nullable(),
+  /** The member's own chosen profile color, distinct from the role-derived
+   *  `color`. Roles still win for the name; this fills in when they have none,
+   *  and tints the profile card's banner fallback. */
+  accentColor: hexColor.nullable(),
 });
 export type Member = z.infer<typeof member>;
+
+/** A member's private appearance preferences, persisted server-side so they
+ *  follow the account across devices rather than living only in localStorage. */
+export const appearanceView = z.object({
+  mode: themeMode,
+  theme,
+  reducedMotion: z.boolean(),
+});
+export type AppearanceView = z.infer<typeof appearanceView>;
 
 export const role = z.object({
   id: z.uuid(),

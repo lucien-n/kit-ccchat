@@ -19,6 +19,14 @@ export const usersTable = sqliteTable("users", {
   // cache-busting version for the avatar URL.
   avatarVersion: integer("avatar_version").default(0),
   bannerVersion: integer("banner_version").default(0),
+  // The member's own profile color (hex). null = none chosen.
+  accentColor: text("accent_color"),
+  // Per-user appearance prefs, persisted so they follow the account across
+  // devices. null = the client's default for that setting.
+  themeMode: text("theme_mode"),
+  theme: text("theme"),
+  // 1 = reduce motion. null/absent = off.
+  reducedMotion: integer("reduced_motion"),
 });
 
 export type User = typeof usersTable.$inferSelect;

@@ -2,6 +2,7 @@ import {
   avatarBody,
   bannerBody,
   changePasswordBody,
+  updateAppearanceBody,
   updateProfileBody,
 } from "@ccchat/shared";
 import type { AppContext, JsonContext } from "../../http/context.js";
@@ -52,8 +53,17 @@ export function removeBanner(c: AppContext) {
 }
 
 export function updateProfile(c: JsonContext<typeof updateProfileBody>) {
-  const user = usersService.updateProfile(c.get("user"), c.req.valid("json").displayName);
+  const user = usersService.updateProfile(c.get("user"), c.req.valid("json"));
   return c.json({ user });
+}
+
+export function getAppearance(c: AppContext) {
+  return c.json({ appearance: usersService.getAppearance(c.get("user")) });
+}
+
+export function updateAppearance(c: JsonContext<typeof updateAppearanceBody>) {
+  const appearance = usersService.setAppearance(c.get("user").id, c.req.valid("json"));
+  return c.json({ appearance });
 }
 
 export function changePassword(c: JsonContext<typeof changePasswordBody>) {

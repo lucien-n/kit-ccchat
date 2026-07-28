@@ -2,6 +2,7 @@ import {
   avatarBody,
   bannerBody,
   changePasswordBody,
+  updateAppearanceBody,
   updateProfileBody,
 } from "@ccchat/shared";
 import { Hono } from "hono";
@@ -32,6 +33,13 @@ const router = new Hono<Env>()
     requireAuth,
     validate("json", updateProfileBody),
     usersController.updateProfile,
+  )
+  .get("/me/appearance", requireAuth, usersController.getAppearance)
+  .patch(
+    "/me/appearance",
+    requireAuth,
+    validate("json", updateAppearanceBody),
+    usersController.updateAppearance,
   )
   .post(
     "/me/password",

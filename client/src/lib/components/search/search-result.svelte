@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { SearchHit } from "$lib/api";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
+  import { appearance } from "$lib/stores/appearance.svelte";
   import { channels } from "$lib/stores/channels.svelte";
   import { MATCH_CLOSE, MATCH_OPEN } from "@ccchat/shared";
   import HashIcon from "@lucide/svelte/icons/hash";
@@ -60,9 +61,7 @@
     <div class="min-w-0 flex-1">
       <div
         class="text-sm font-semibold"
-        style={hit.message.author?.color
-          ? `color:${hit.message.author.color}`
-          : undefined}
+        style={appearance.nameStyle(hit.message.author?.color ?? null)}
       >
         {hit.message.author?.displayName ?? "unknown"}
       </div>
