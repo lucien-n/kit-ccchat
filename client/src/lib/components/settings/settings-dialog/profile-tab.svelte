@@ -1,5 +1,6 @@
 <script lang="ts">
   import { api } from "$lib/api";
+  import UserCardContent from "$lib/components/common/user-card/user-card-content.svelte";
   import { apiErrorMessage, fail, ok, toastMessage } from "$lib/forms";
   import { session } from "$lib/stores/session.svelte";
   import * as Form from "&/form";
@@ -10,6 +11,7 @@
   import { zod4, zod4Client } from "sveltekit-superforms/adapters";
   import AvatarPicker from "./avatar-picker.svelte";
   import BannerPicker from "./banner-picker.svelte";
+  import { Card } from "&/card";
 
   const nameForm = superForm(
     defaults({ displayName: session.user?.displayName ?? "" }, zod4(updateProfileBody)),
@@ -63,62 +65,74 @@
   } = passwordForm;
 </script>
 
-<BannerPicker />
+<div class="flex flex-col gap-8 sm:flex-row sm:gap-10">
+  <div class="flex-1 space-y-6 sm:min-w-0">
+    <BannerPicker />
 
-<AvatarPicker />
+    <AvatarPicker />
 
-<form method="POST" use:nameEnhance>
-  <Form.Field form={nameForm} name="displayName">
-    <Form.Control>
-      {#snippet children({ props })}
-        <Form.Label>Display name</Form.Label>
-        <div class="flex gap-2">
-          <Input
-            {...props}
-            bind:value={$nameData.displayName}
-            maxlength={32}
-            class="flex-1"
-          />
-          <Form.Button disabled={$nameBusy}>Save</Form.Button>
-        </div>
-      {/snippet}
-    </Form.Control>
-    <Form.FieldErrors />
-  </Form.Field>
-</form>
+    <form method="POST" use:nameEnhance>
+      <Form.Field form={nameForm} name="displayName">
+        <Form.Control>
+          {#snippet children({ props })}
+            <Form.Label>Display name</Form.Label>
+            <div class="flex gap-2">
+              <Input
+                {...props}
+                bind:value={$nameData.displayName}
+                maxlength={32}
+                class="flex-1"
+              />
+              <Form.Button disabled={$nameBusy}>Save</Form.Button>
+            </div>
+          {/snippet}
+        </Form.Control>
+        <Form.FieldErrors />
+      </Form.Field>
+    </form>
 
-<form method="POST" use:passwordEnhance class="space-y-2">
-  <Label>Change password</Label>
+    <form method="POST" use:passwordEnhance class="space-y-2">
+      <Label>Change password</Label>
 
-  <Form.Field form={passwordForm} name="currentPassword">
-    <Form.Control>
-      {#snippet children({ props })}
-        <Input
-          {...props}
-          type="password"
-          placeholder="current password"
-          bind:value={$passwordData.currentPassword}
-          autocomplete="current-password"
-        />
-      {/snippet}
-    </Form.Control>
-    <Form.FieldErrors />
-  </Form.Field>
+      <Form.Field form={passwordForm} name="currentPassword">
+        <Form.Control>
+          {#snippet children({ props })}
+            <Input
+              {...props}
+              type="password"
+              placeholder="current password"
+              bind:value={$passwordData.currentPassword}
+              autocomplete="current-password"
+            />
+          {/snippet}
+        </Form.Control>
+        <Form.FieldErrors />
+      </Form.Field>
 
-  <Form.Field form={passwordForm} name="newPassword">
-    <Form.Control>
-      {#snippet children({ props })}
-        <Input
-          {...props}
-          type="password"
-          placeholder="new password (min 8)"
-          bind:value={$passwordData.newPassword}
-          autocomplete="new-password"
-        />
-      {/snippet}
-    </Form.Control>
-    <Form.FieldErrors />
-  </Form.Field>
+      <Form.Field form={passwordForm} name="newPassword">
+        <Form.Control>
+          {#snippet children({ props })}
+            <Input
+              {...props}
+              type="password"
+              placeholder="new password (min 8)"
+              bind:value={$passwordData.newPassword}
+              autocomplete="new-password"
+            />
+          {/snippet}
+        </Form.Control>
+        <Form.FieldErrors />
+      </Form.Field>
 
-  <Form.Button variant="secondary" disabled={$passwordBusy}>Update password</Form.Button>
-</form>
+      <Form.Button variant="secondary" disabled={$passwordBusy}>
+        Update password
+      </Form.Button>
+    </form>
+  </div>
+
+  {#if session.user}
+    <Card class="h-fit w-full p-0 sm:w-72 sm:shrink-0">
+      <UserCardContent userId={session.user.id} />
+    </Card>
+  {/if}
+</div>

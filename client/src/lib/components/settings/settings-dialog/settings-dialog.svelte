@@ -10,22 +10,21 @@
   let { open = $bindable(false) }: Props = $props();
 </script>
 
-<!-- Dialog.Content only renders while open, so each tab mounts fresh. -->
 <Dialog.Root bind:open>
-  <Dialog.Content class="max-w-lg">
+  <Dialog.Content class="w-full sm:max-w-3xl">
     <Dialog.Header>
       <Dialog.Title>Settings</Dialog.Title>
     </Dialog.Header>
 
     <Tabs.Root value={SettingsDialogTab.Profile} class="w-full">
-      <Tabs.List class="grid w-full grid-cols-2">
+      <Tabs.List class="w-full">
         {#each Object.entries(SETTINGS_DIALOG_TAB_SPECS) as [tab, spec] (tab)}
           <Tabs.Trigger value={tab}>{spec.title}</Tabs.Trigger>
         {/each}
       </Tabs.List>
 
       {#each Object.entries(SETTINGS_DIALOG_TAB_SPECS) as [tab, spec] (tab)}
-        <Tabs.Content value={tab} class="space-y-6 pt-4">
+        <Tabs.Content value={tab} class="w-full space-y-6 pt-4">
           <spec.component />
         </Tabs.Content>
       {/each}
