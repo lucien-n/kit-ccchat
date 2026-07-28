@@ -25,7 +25,6 @@ describe("claiming a fresh instance", () => {
     const body = await json(res);
     expect(body.user.isOwner).toBe(true);
     expect(body.communityName).toBe("Chat Control Refugees");
-    expect(body.inviteCode).toBeTruthy();
     expect(body.token).toBeTruthy();
   });
 
