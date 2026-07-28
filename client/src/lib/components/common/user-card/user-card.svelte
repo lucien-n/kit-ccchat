@@ -8,6 +8,9 @@
   import CheckIcon from "@lucide/svelte/icons/check";
   import type { Snippet } from "svelte";
   import UserCardActions from "./user-card-actions.svelte";
+  import { Button } from "&/button";
+  import PencilIcon from "@lucide/svelte/icons/pencil";
+  import { ui } from "$lib/stores/ui.svelte";
 
   interface Props {
     userId: string;
@@ -33,6 +36,12 @@
     ctx.loadProfile();
     ctx.loadRoles();
   });
+
+  function handleOpenSettings() {
+    open = false;
+
+    ui.openSettings();
+  }
 </script>
 
 <UserCardActions>
@@ -45,19 +54,38 @@
     <Popover.Content class="w-72 p-0" align="start" customAnchor={anchor}>
       {#if ctx.profile}
         {@const user = ctx.profile}
-        <div class="flex items-center gap-3 p-4">
-          <UserAvatar {user} class="size-12" showPresenceDot />
-          <div class="min-w-0">
-            <div
-              class="truncate font-semibold"
-              style={user.color ? `color:${user.color}` : undefined}
-            >
-              {user.displayName}
+        <div class="flex flex-col gap-4">
+          <img
+            class="absolute h-20 w-full rounded-t-2xl object-cover brightness-30"
+            src="https://placehold.co/600x400"
+            alt="banner"
+          />
+          <UserAvatar
+            {user}
+            class="ring-popover absolute top-13 left-4 size-14 ring-4"
+            showPresenceDot
+          />
+          <div class="mt-30 flex w-full flex-col gap-3 px-4">
+            <div class="flex flex-col">
+              <p
+                class="truncate text-lg font-semibold"
+                style={user.color ? `color:${user.color}` : undefined}
+              >
+                {user.displayName}
+              </p>
+              <div class="text-muted-foreground flex items-center gap-1">
+                <p class="truncate text-xs">@{user.username}</p>
+                <span>·</span>
+                <p class="text-[9px] uppercase">
+                  {ctx.permissionLabel}
+                </p>
+              </div>
             </div>
-            <div class="text-muted-foreground truncate text-xs">@{user.username}</div>
-            <div class="text-muted-foreground text-[10px] uppercase">
-              {ctx.permissionLabel}
-            </div>
+
+            <Button onclick={handleOpenSettings} class="w-full">
+              <PencilIcon />
+              Edit Profile
+            </Button>
           </div>
         </div>
 

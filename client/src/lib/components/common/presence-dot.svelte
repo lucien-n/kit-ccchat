@@ -11,7 +11,7 @@
 
 <span
   class={cn(
-    "bg-muted-foreground outline-background size-2 shrink-0 rounded-full outline",
+    "bg-muted-foreground outline-background aspect-square w-[30%] min-w-2 shrink-0 rounded-full outline outline-2",
     presence.online.has(userId) && "bg-green-500",
     className,
   )}
