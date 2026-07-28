@@ -4,14 +4,12 @@
   import { apiErrorMessage, fail, ok, toastMessage } from "$lib/forms";
   import { session } from "$lib/stores/session.svelte";
   import * as Form from "&/form";
+  import { Card } from "&/card";
   import { Input } from "&/input";
   import { Label } from "&/label";
   import { changePasswordBody, updateProfileBody } from "@ccchat/shared";
   import { defaults, setError, setMessage, superForm } from "sveltekit-superforms";
   import { zod4, zod4Client } from "sveltekit-superforms/adapters";
-  import AvatarPicker from "./avatar-picker.svelte";
-  import BannerPicker from "./banner-picker.svelte";
-  import { Card } from "&/card";
 
   const nameForm = superForm(
     defaults({ displayName: session.user?.displayName ?? "" }, zod4(updateProfileBody)),
@@ -67,10 +65,6 @@
 
 <div class="flex flex-col gap-8 sm:flex-row sm:gap-10">
   <div class="flex-1 space-y-6 sm:min-w-0">
-    <BannerPicker />
-
-    <AvatarPicker />
-
     <form method="POST" use:nameEnhance>
       <Form.Field form={nameForm} name="displayName">
         <Form.Control>
@@ -132,7 +126,7 @@
 
   {#if session.user}
     <Card class="h-fit w-full p-0 sm:w-72 sm:shrink-0">
-      <UserCardContent userId={session.user.id} />
+      <UserCardContent userId={session.user.id} editable />
     </Card>
   {/if}
 </div>
