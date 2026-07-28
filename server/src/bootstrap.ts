@@ -1,8 +1,8 @@
 import { ChannelType } from "@ccchat/shared";
 import { eq } from "drizzle-orm";
-import { hashPassword, newId, randomToken } from "./auth.js";
+import { hashPassword, newId } from "./auth.js";
 import { db } from "./db/index.js";
-import { channelsTable, invitesTable, usersTable } from "./db/schema";
+import { channelsTable, usersTable } from "./db/schema";
 import {
   COMMUNITY_NAME,
   OWNER_PASSWORD,
@@ -33,12 +33,12 @@ export function bootstrap() {
     return;
   }
 
-  const { inviteCode } = seedCommunity({
+  seedCommunity({
     communityName: COMMUNITY_NAME,
     username: OWNER_USERNAME,
     password: OWNER_PASSWORD,
   });
-  printBanner("seeded from environment", OWNER_USERNAME.toLowerCase(), inviteCode);
+  printBanner("seeded from environment", OWNER_USERNAME.toLowerCase());
 }
 
 /** Create the community: the owner account, the default channels, and an initial
@@ -62,8 +62,6 @@ export function seedCommunity(input: {
     banned: 0,
     avatarVersion: null,
   };
-
-  const inviteCode = randomToken(6);
 
   // One transaction: either the whole community exists or none of it does, so a
   // crash mid-setup can't leave an instance that can never be claimed.
@@ -94,17 +92,6 @@ export function seedCommunity(input: {
         },
       ])
       .run();
-    tx.insert(invitesTable)
-      .values({
-        code: inviteCode,
-        createdBy: owner.id,
-        createdAt: now,
-        maxUses: 0, // unlimited, so friends can all use this first one
-        uses: 0,
-        expiresAt: null,
-        revoked: 0,
-      })
-      .run();
   });
 
   settingsService.setSetting(
@@ -112,7 +99,7 @@ export function seedCommunity(input: {
     input.communityName.trim() || "My Community",
   );
 
-  return { owner, inviteCode };
+  return owner;
 }
 
 /** Opt-in recovery: force the existing owner's password back to OWNER_PASSWORD.
@@ -152,12 +139,11 @@ function resetOwnerPassword() {
   console.log("=".repeat(60) + "\n");
 }
 
-function printBanner(title: string, username: string, inviteCode: string) {
+function printBanner(title: string, username: string) {
   console.log("\n" + "=".repeat(60));
   console.log(`  ccchat - ${title}`);
   console.log("=".repeat(60));
   console.log(`  Owner login : ${username}`);
   console.log(`  Owner pass  : (from OWNER_PASSWORD env)`);
-  console.log(`  Invite code : ${inviteCode}   <-- share with friends to join`);
   console.log("=".repeat(60) + "\n");
 }

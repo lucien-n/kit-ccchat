@@ -20,16 +20,16 @@ export function claimCommunity(body: SetupBody) {
 
   claiming = true;
   try {
-    const { owner, inviteCode } = seedCommunity({
+    const owner = seedCommunity({
       communityName,
       username,
       displayName,
       password,
     });
+
     return {
       token: createSession(owner.id),
       user: toMember(owner),
-      inviteCode,
       communityName,
     };
   } finally {

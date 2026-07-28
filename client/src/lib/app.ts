@@ -47,12 +47,11 @@ export async function register(body: RegisterBody) {
   await afterLogin();
 }
 
-export async function setup(body: SetupBody): Promise<string> {
-  const { token, user, inviteCode, communityName } = await api.auth.setup(body);
+export async function setup(body: SetupBody): Promise<void> {
+  const { token, user, communityName } = await api.auth.setup(body);
   community.name = communityName;
   session.start(token, user);
   await afterLogin();
-  return inviteCode;
 }
 
 export async function selectChannel(id: string) {
