@@ -22,7 +22,6 @@ columnSorting:
 - [allow-theme-change](tasks/allow-theme-change.md)
 - [avatar-overlays](tasks/avatar-overlays.md)
 - [profile-banner-and-bio](tasks/profile-banner-and-bio.md)
-- [soundboard](tasks/soundboard.md)
 - [control-mute-stream-volume](tasks/control-mute-stream-volume.md)
 - [webcams](tasks/webcams.md)
 
@@ -32,6 +31,7 @@ columnSorting:
 
 ## Done
 
+- [soundboard](tasks/soundboard.md)
 - [show-mute-deafen-status-in-the-voice-channel](tasks/show-mute-deafen-status-in-the-voice-channel.md)
 - [allow-changing-input-output-devices](tasks/allow-changing-input-output-devices.md)
 - [deafen](tasks/deafen.md)
