@@ -70,11 +70,18 @@ class VoiceStore {
   screens = $state<Record<string, Track>>({});
   /** Whose screen fills the chat pane, if any. */
   watching = $state<string | null>(null);
+  /** Per-stream screen-share audio, keyed by publisher identity. A key exists
+   *  only while that stream is publishing audio, so the watch view knows when to
+   *  offer a volume control. `volume` is 0..1; `muted` is independent of deafen. */
+  screenAudio = $state<Record<string, { volume: number; muted: boolean }>>({});
   /** Wanted to watch someone whose track has not been subscribed yet. */
   private pendingWatch = $state<string | null>(null);
 
   private room: Room | null = null;
   private audioEls = new Map<string, HTMLMediaElement>();
+  /** The audio element carrying each stream's screen-share sound, so per-stream
+   *  volume changes can be applied to it. Keys mirror `screenAudio`. */
+  private screenAudioEls = new Map<string, HTMLMediaElement>();
   private soundboardCtx: AudioContext | null = null;
   /** Decoded clips cached by url, since decode is costly and clips get spammed. */
   private soundBuffers = new Map<string, Promise<AudioBuffer>>();
@@ -168,6 +175,16 @@ class VoiceStore {
             el.muted = this.deafened;
             document.body.appendChild(el);
             this.audioEls.set(`${p.identity}:${track.sid}`, el);
+            // A stream's sound is its own track, so it gets its own volume knob
+            // in the watch view rather than riding the global deafen alone.
+            if (pub.source === Track.Source.ScreenShareAudio) {
+              this.screenAudioEls.set(p.identity, el);
+              this.screenAudio = {
+                ...this.screenAudio,
+                [p.identity]: { volume: 1, muted: false },
+              };
+              this.applyStreamAudio(p.identity);
+            }
           } else if (pub.source === Track.Source.ScreenShare) {
             this.screens = { ...this.screens, [p.identity]: track };
             // Clicking a stream from outside the channel joins first, so the
@@ -186,6 +203,8 @@ class VoiceStore {
           track.detach().forEach((el) => el.remove());
           this.audioEls.delete(`${p.identity}:${track.sid}`);
           if (pub.source === Track.Source.ScreenShare) this.dropScreen(p.identity);
+          if (pub.source === Track.Source.ScreenShareAudio)
+            this.dropScreenAudio(p.identity);
           this.refresh();
         },
       )
@@ -273,6 +292,46 @@ class VoiceStore {
     delete next[identity];
     this.screens = next;
     if (this.watching === identity) this.watching = null;
+  }
+
+  private dropScreenAudio(identity: string) {
+    this.screenAudioEls.delete(identity);
+    const next = { ...this.screenAudio };
+    delete next[identity];
+    this.screenAudio = next;
+  }
+
+  /** Push a stream's stored volume/mute onto its audio element. Deafen still
+   *  wins: it silences every stream regardless of the per-stream setting. */
+  private applyStreamAudio(identity: string) {
+    const element = this.screenAudioEls.get(identity);
+    const settings = this.screenAudio[identity];
+    if (!element || !settings) return;
+    element.volume = settings.volume;
+    element.muted = this.deafened || settings.muted;
+  }
+
+  /** Set how loud a stream plays for you only, 0..1. Muting clears once you
+   *  raise the volume off zero, matching how a slider is expected to behave. */
+  setStreamVolume(identity: string, volume: number) {
+    const settings = this.screenAudio[identity];
+    if (!settings) return;
+    const clamped = Math.min(1, Math.max(0, volume));
+    this.screenAudio = {
+      ...this.screenAudio,
+      [identity]: { volume: clamped, muted: clamped === 0 },
+    };
+    this.applyStreamAudio(identity);
+  }
+
+  toggleStreamMute(identity: string) {
+    const settings = this.screenAudio[identity];
+    if (!settings) return;
+    this.screenAudio = {
+      ...this.screenAudio,
+      [identity]: { ...settings, muted: !settings.muted },
+    };
+    this.applyStreamAudio(identity);
   }
 
   private announceSharing(sharing: boolean) {
@@ -471,6 +530,9 @@ class VoiceStore {
     if (this.deafened === value) return;
     this.deafened = value;
     for (const el of this.audioEls.values()) el.muted = value;
+    // Stream audio lives in audioEls too, so undeafening just muted it blindly;
+    // restore each stream's own volume/mute on top.
+    for (const identity of this.screenAudioEls.keys()) this.applyStreamAudio(identity);
     realtime.send({ type: ClientEventType.Deafen_Set, deafened: value });
     this.refresh();
   }
@@ -488,6 +550,8 @@ class VoiceStore {
   private reset() {
     for (const el of this.audioEls.values()) el.remove();
     this.audioEls.clear();
+    this.screenAudioEls.clear();
+    this.screenAudio = {};
     this.screens = {};
     this.watching = null;
     this.pendingWatch = null;

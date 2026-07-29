@@ -112,7 +112,16 @@
 
 {#snippet mainView()}
   <main class="bg-background flex min-h-0 min-w-0 flex-1 flex-col">
-    <header class="flex h-12 items-center justify-between gap-2 border-b px-2 sm:px-4">
+    {#if voice.watching}
+      <StreamView />
+    {:else}
+      {@render chatView()}
+    {/if}
+  </main>
+{/snippet}
+
+{#snippet chatView()}
+  <header class="flex h-12 items-center justify-between gap-2 border-b px-2 sm:px-4">
       <div class="flex min-w-0 items-center gap-1.5 font-semibold">
         <Button
           variant="ghost"
@@ -166,38 +175,34 @@
       </div>
     </header>
 
-    {#if voice.watching}
-      <StreamView />
-    {:else}
-      <ScrollArea class="min-h-0 flex-1" bind:viewportRef={chat.scroller}>
-        <div class="flex flex-col gap-0.5 p-3 sm:p-5">
-          {#if messages.loading}
-            <MessageSkeleton count={6} />
-          {:else if messages.list.length === 0}
-            <Empty.Root>
-              <Empty.Header>
-                <Empty.Title>No Messages Yet</Empty.Title>
-                <Empty.Description>Start chatting below.</Empty.Description>
-              </Empty.Header>
-              <Empty.Content>
-                <Button variant="outline" onclick={() => chat.composer?.focus()}>
-                  Start
-                </Button>
-              </Empty.Content>
-            </Empty.Root>
-          {:else}
-            {#if messages.loadingOlder}
-              <MessageSkeleton />
-            {/if}
-            {#each messages.list as message (message.id)}
-              <Message {message} />
-            {/each}
+    <ScrollArea class="min-h-0 flex-1" bind:viewportRef={chat.scroller}>
+      <div class="flex flex-col gap-0.5 p-3 sm:p-5">
+        {#if messages.loading}
+          <MessageSkeleton count={6} />
+        {:else if messages.list.length === 0}
+          <Empty.Root>
+            <Empty.Header>
+              <Empty.Title>No Messages Yet</Empty.Title>
+              <Empty.Description>Start chatting below.</Empty.Description>
+            </Empty.Header>
+            <Empty.Content>
+              <Button variant="outline" onclick={() => chat.composer?.focus()}>
+                Start
+              </Button>
+            </Empty.Content>
+          </Empty.Root>
+        {:else}
+          {#if messages.loadingOlder}
+            <MessageSkeleton />
           {/if}
-        </div>
-      </ScrollArea>
-    {/if}
+          {#each messages.list as message (message.id)}
+            <Message {message} />
+          {/each}
+        {/if}
+      </div>
+    </ScrollArea>
 
-    {#if messages.hasMoreAfter && !voice.watching}
+    {#if messages.hasMoreAfter}
       <div class="flex justify-center border-t px-2 py-1.5">
         <Button variant="secondary" size="sm" onclick={() => chat.backToPresent()}>
           <ArrowDownIcon data-icon="inline-start" />
@@ -225,7 +230,6 @@
         oncancelreply={() => (chat.replyTo = null)}
       />
     </div>
-  </main>
 {/snippet}
 
 {#if chat.isDesktop}
