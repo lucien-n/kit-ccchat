@@ -33,15 +33,28 @@
     ctx.loadRoles();
   });
 
-  const DEFAULT_ACCENT = "#5865f2";
+  function resolveColor(accentColor: string | null): string | null {
+    const roleColor = ctx.assigned
+      .filter((role) => role.color)
+      .sort((a, b) => b.position - a.position)[0]?.color;
+    return roleColor ?? accentColor ?? null;
+  }
 
-  async function saveAccent(color: string | null) {
+  function previewAccent(accentColor: string | null) {
+    if (!ctx.profile) return;
+    ctx.profile = { ...ctx.profile, accentColor, color: resolveColor(accentColor) };
+  }
+
+  async function saveAccent(accentColor: string | null) {
+    previewAccent(accentColor);
     try {
-      const { user } = await api.users.updateMe({ accentColor: color });
-      session.patchUser({ accentColor: user.accentColor, color: user.color });
-      await Promise.all([ctx.loadProfile(), refreshMemberColors()]);
+      const { user } = await api.users.updateMe({ accentColor });
+      session.patchUser({ accentColor, color: user.color });
+      if (ctx.profile) ctx.profile = { ...ctx.profile, accentColor, color: user.color };
+      await refreshMemberColors();
     } catch (err) {
       toast.error(apiErrorMessage(err, "failed to save color"));
+      await ctx.loadProfile();
     }
   }
 
@@ -205,8 +218,9 @@
             <input
               type="color"
               class="accent-swatch size-7 shrink-0 cursor-pointer overflow-hidden rounded-md border p-0"
-              value={user.accentColor ?? DEFAULT_ACCENT}
+              value={user.accentColor}
               onchange={(e) => saveAccent(e.currentTarget.value)}
+              oninput={(e) => previewAccent(e.currentTarget.value)}
               aria-label="Accent color"
             />
             {#if user.accentColor}
