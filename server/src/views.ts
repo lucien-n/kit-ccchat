@@ -38,7 +38,7 @@ export function toMember(u: {
     displayName: u.displayName,
     isOwner: isOwner(u),
     isAdmin: isAdmin(u),
-    color: nameColor(u.id, u.accentColor),
+    color: nameColor(u.id, u.accentColor ?? null),
     avatarVersion: u.avatarVersion ?? null,
     bannerVersion: u.bannerVersion ?? null,
     accentColor: u.accentColor ?? null,
@@ -64,6 +64,10 @@ export function toRoleView(r: typeof rolesTable.$inferSelect): Role {
   };
 }
 
+function nameColor(userId: string, accentColor: string | null): string | null {
+  return colorFor(userId) ?? accentColor ?? null;
+}
+
 function authorOf(userId: string): MemberRef | null {
   const row = db
     .select({
@@ -77,10 +81,12 @@ function authorOf(userId: string): MemberRef | null {
     .where(eq(usersTable.id, userId))
     .get();
   if (!row) return null;
-  const { accentColor, ...ref } = row;
+
   return {
-    ...ref,
-    color: colorFor(row.id) ?? accentColor ?? null,
+    id: row.id,
+    username: row.username,
+    displayName: row.displayName,
+    color: nameColor(row.id, row.accentColor),
     avatarVersion: row.avatarVersion ?? null,
   };
 }

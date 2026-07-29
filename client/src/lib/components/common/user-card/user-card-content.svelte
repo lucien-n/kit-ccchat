@@ -39,8 +39,7 @@
     try {
       const { user } = await api.users.updateMe({ accentColor: color });
       session.patchUser({ accentColor: user.accentColor, color: user.color });
-      await ctx.loadProfile();
-      await refreshMemberColors();
+      await Promise.all([ctx.loadProfile(), refreshMemberColors()]);
     } catch (err) {
       toast.error(apiErrorMessage(err, "failed to save color"));
     }
