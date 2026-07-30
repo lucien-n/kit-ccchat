@@ -8,7 +8,6 @@
   import { apiErrorMessage } from "$lib/forms";
   import { pingsMe } from "$lib/mentions";
   import { messages } from "$lib/stores/messages.svelte";
-  import { session } from "$lib/stores/session.svelte";
   import { cn } from "$lib/utils";
   import { Textarea } from "&/textarea";
   import { MESSAGE_MAX_LENGTH, SystemEvent } from "@ccchat/shared";
@@ -29,8 +28,7 @@
 
   const chat = getChatContext();
 
-  const isMine = $derived(message.author?.id === session.user?.id);
-  const mentionsMe = $derived(!message.systemEvent && !isMine && pingsMe(message));
+  const mentionsMe = $derived(!message.systemEvent && pingsMe(message));
 
   const subject = $derived(message.author?.displayName ?? "someone");
 
