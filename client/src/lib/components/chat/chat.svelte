@@ -23,7 +23,7 @@
   import * as Sheet from "&/sheet";
   import * as ToggleGroup from "&/toggle-group";
   import { ChannelType } from "@ccchat/shared";
-  import { Bell, BellOff, Hash, Menu, Users } from "@lucide/svelte";
+  import { Bell, BellOff, Menu, Users } from "@lucide/svelte";
   import ArrowDownIcon from "@lucide/svelte/icons/arrow-down";
   import SearchIcon from "@lucide/svelte/icons/search";
   import { tick } from "svelte";
@@ -34,6 +34,7 @@
   import TypingIndicator from "./typing-indicator.svelte";
   import StreamView from "$lib/components/voice/stream-view.svelte";
   import * as Empty from "$lib/components/ui/empty/index.js";
+  import { channelTypeSpecs } from "$lib/specs";
 
   const desktopNow =
     typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
@@ -121,115 +122,113 @@
 {/snippet}
 
 {#snippet chatView()}
+  {@const Icon = channelTypeSpecs[ChannelType.Text].icon}
   <header class="flex h-12 items-center justify-between gap-2 border-b px-2 sm:px-4">
-      <div class="flex min-w-0 items-center gap-1.5 font-semibold">
-        <Button
-          variant="ghost"
-          size="icon"
-          class="shrink-0 sm:hidden"
-          title="Channels"
-          onclick={() => (ui.nav = true)}
-        >
-          <Menu class="size-5" />
-          {#if unread.total > 0}
-            <span class="bg-destructive absolute top-1.5 right-1.5 size-2 rounded-full"
-            ></span>
-          {/if}
-        </Button>
-        <Hash class="text-muted-foreground size-5 shrink-0" />
-        <span class="truncate">{channels.current?.name ?? "no channel"}</span>
-      </div>
-      <div class="flex shrink-0 items-center gap-1 sm:gap-2">
-        <Button
-          variant="ghost"
-          size="icon"
-          title={prefs.soundEnabled
-            ? "Mute notification sound"
-            : "Unmute notification sound"}
-          onclick={() => prefs.toggleSound()}
-        >
-          {#if prefs.soundEnabled}<Bell class="size-4" />{:else}<BellOff
-              class="size-4"
-            />{/if}
-        </Button>
-
-        <ToggleGroup.Root
-          type="single"
-          variant="outline"
-          value={chat.panel}
-          onValueChange={(v) => (chat.panel = v as ChatPanel)}
-        >
-          <ToggleGroup.Item value="search" title="Search messages">
-            <SearchIcon class="size-4" />
-          </ToggleGroup.Item>
-          <ToggleGroup.Item
-            value="members"
-            title="Members, {presence.online.size} online"
-          >
-            <Users class="size-4" />
-            <span class="text-xs">
-              {presence.online.size} online
-            </span>
-          </ToggleGroup.Item>
-        </ToggleGroup.Root>
-      </div>
-    </header>
-
-    <ScrollArea class="min-h-0 flex-1" bind:viewportRef={chat.scroller}>
-      <div class="flex flex-col gap-0.5 p-3 sm:p-5">
-        {#if messages.loading}
-          <MessageSkeleton count={6} />
-        {:else if messages.list.length === 0}
-          <Empty.Root>
-            <Empty.Header>
-              <Empty.Title>No Messages Yet</Empty.Title>
-              <Empty.Description>Start chatting below.</Empty.Description>
-            </Empty.Header>
-            <Empty.Content>
-              <Button variant="outline" onclick={() => chat.composer?.focus()}>
-                Start
-              </Button>
-            </Empty.Content>
-          </Empty.Root>
-        {:else}
-          {#if messages.loadingOlder}
-            <MessageSkeleton />
-          {/if}
-          {#each messages.list as message (message.id)}
-            <Message {message} />
-          {/each}
+    <div class="flex min-w-0 items-center gap-1.5 font-semibold">
+      <Button
+        variant="ghost"
+        size="icon"
+        class="shrink-0 sm:hidden"
+        title="Channels"
+        onclick={() => (ui.nav = true)}
+      >
+        <Menu class="size-5" />
+        {#if unread.total > 0}
+          <span class="bg-destructive absolute top-1.5 right-1.5 size-2 rounded-full"
+          ></span>
         {/if}
-      </div>
-    </ScrollArea>
-
-    {#if messages.hasMoreAfter}
-      <div class="flex justify-center border-t px-2 py-1.5">
-        <Button variant="secondary" size="sm" onclick={() => chat.backToPresent()}>
-          <ArrowDownIcon data-icon="inline-start" />
-          Jump to present
-        </Button>
-      </div>
-    {/if}
-
-    {#if voice.inCall}
-      <div class="sm:hidden">
-        <VoiceBar />
-      </div>
-    {/if}
-
-    <div class="relative shrink-0">
-      <TypingIndicator channelId={channels.currentId} />
-
-      <MessageComposer
-        bind:this={chat.composer}
-        placeholder={`Message #${channels.current?.name ?? ""}`}
-        disabled={channels.current?.type !== ChannelType.Text}
-        onsend={(text, imageIds) => chat.send(text, imageIds)}
-        ontyping={() => chat.typing()}
-        replyingTo={chat.replyTo}
-        oncancelreply={() => (chat.replyTo = null)}
-      />
+      </Button>
+      <Icon class="text-muted-foreground size-5 shrink-0" />
+      <span class="truncate">{channels.current?.name ?? "no channel"}</span>
     </div>
+    <div class="flex shrink-0 items-center gap-1 sm:gap-2">
+      <Button
+        variant="ghost"
+        size="icon"
+        title={prefs.soundEnabled
+          ? "Mute notification sound"
+          : "Unmute notification sound"}
+        onclick={() => prefs.toggleSound()}
+      >
+        {#if prefs.soundEnabled}<Bell class="size-4" />{:else}<BellOff
+            class="size-4"
+          />{/if}
+      </Button>
+
+      <ToggleGroup.Root
+        type="single"
+        variant="outline"
+        value={chat.panel}
+        onValueChange={(v) => (chat.panel = v as ChatPanel)}
+      >
+        <ToggleGroup.Item value="search" title="Search messages">
+          <SearchIcon class="size-4" />
+        </ToggleGroup.Item>
+        <ToggleGroup.Item value="members" title="Members, {presence.online.size} online">
+          <Users class="size-4" />
+          <span class="text-xs">
+            {presence.online.size} online
+          </span>
+        </ToggleGroup.Item>
+      </ToggleGroup.Root>
+    </div>
+  </header>
+
+  <ScrollArea class="min-h-0 flex-1" bind:viewportRef={chat.scroller}>
+    <div class="flex flex-col gap-0.5 p-3 sm:p-5">
+      {#if messages.loading}
+        <MessageSkeleton count={6} />
+      {:else if messages.list.length === 0}
+        <Empty.Root>
+          <Empty.Header>
+            <Empty.Title>No Messages Yet</Empty.Title>
+            <Empty.Description>Start chatting below.</Empty.Description>
+          </Empty.Header>
+          <Empty.Content>
+            <Button variant="outline" onclick={() => chat.composer?.focus()}>
+              Start
+            </Button>
+          </Empty.Content>
+        </Empty.Root>
+      {:else}
+        {#if messages.loadingOlder}
+          <MessageSkeleton />
+        {/if}
+        {#each messages.list as message (message.id)}
+          <Message {message} />
+        {/each}
+      {/if}
+    </div>
+  </ScrollArea>
+
+  {#if messages.hasMoreAfter}
+    <div class="flex justify-center border-t px-2 py-1.5">
+      <Button variant="secondary" size="sm" onclick={() => chat.backToPresent()}>
+        <ArrowDownIcon data-icon="inline-start" />
+        Jump to present
+      </Button>
+    </div>
+  {/if}
+
+  {#if voice.inCall}
+    <div class="sm:hidden">
+      <VoiceBar />
+    </div>
+  {/if}
+
+  <div class="relative shrink-0">
+    <TypingIndicator channelId={channels.currentId} />
+
+    <MessageComposer
+      bind:this={chat.composer}
+      placeholder={`Message #${channels.current?.name ?? ""}`}
+      disabled={channels.current?.type !== ChannelType.Text}
+      onsend={(text, imageIds) => chat.send(text, imageIds)}
+      ontyping={() => chat.typing()}
+      replyingTo={chat.replyTo}
+      oncancelreply={() => (chat.replyTo = null)}
+    />
+  </div>
 {/snippet}
 
 {#if chat.isDesktop}

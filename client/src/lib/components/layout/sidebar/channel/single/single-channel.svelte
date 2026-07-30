@@ -7,10 +7,10 @@
   import { Badge } from "&/badge";
   import { Button } from "&/button";
   import { ChannelType, type Channel } from "@ccchat/shared";
-  import { CHANNEL_TYPE_ICON } from "../helpers";
   import ChannelContextMenu from "./channel-context-menu.svelte";
   import SingleVoiceParticipant from "./single-voice-participant.svelte";
   import { fly } from "svelte/transition";
+  import { channelTypeSpecs } from "$lib/specs";
 
   interface Props {
     channel: Channel;
@@ -21,7 +21,7 @@
   setChannelContext(() => channel);
 
   const isVoiceChannel = $derived(channel.type === ChannelType.Voice);
-  const Icon = $derived(CHANNEL_TYPE_ICON[channel.type]);
+  const Icon = $derived(channelTypeSpecs[channel.type].icon);
   const members = $derived(presence.voice[channel.id]);
 </script>
 

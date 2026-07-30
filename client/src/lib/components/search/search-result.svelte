@@ -1,10 +1,10 @@
 <script lang="ts">
   import type { SearchHit } from "$lib/api";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
+  import { channelTypeSpecs } from "$lib/specs";
   import { appearance } from "$lib/stores/appearance.svelte";
   import { channels } from "$lib/stores/channels.svelte";
-  import { MATCH_CLOSE, MATCH_OPEN } from "@ccchat/shared";
-  import HashIcon from "@lucide/svelte/icons/hash";
+  import { ChannelType, MATCH_CLOSE, MATCH_OPEN } from "@ccchat/shared";
 
   interface Props {
     hit: SearchHit;
@@ -38,6 +38,8 @@
       year: "numeric",
     });
   }
+
+  const TextChannelIcon = channelTypeSpecs[ChannelType.Text].icon;
 </script>
 
 <button
@@ -46,7 +48,7 @@
   onclick={onJump}
 >
   <div class="text-muted-foreground flex min-w-0 items-center gap-1.5 text-xs">
-    <HashIcon class="size-3 shrink-0" />
+    <TextChannelIcon class="size-3 shrink-0" />
     <span class="truncate font-medium">{channelName}</span>
     <span class="shrink-0">·</span>
     <span class="shrink-0">{fmtDate(hit.message.createdAt)}</span>

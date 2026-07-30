@@ -2,6 +2,7 @@
   import { api } from "$lib/api";
   import * as app from "$lib/app";
   import { apiErrorMessage, fail } from "$lib/forms";
+  import { channelTypeSpecs } from "$lib/specs";
   import { channels } from "$lib/stores/channels.svelte";
   import { cn } from "$lib/utils";
   import { Button } from "&/button";
@@ -9,7 +10,6 @@
   import * as Form from "&/form";
   import { Input } from "&/input";
   import { ChannelType, channelNameKey, createChannelBody } from "@ccchat/shared";
-  import { Hash, Volume2 } from "@lucide/svelte";
   import { defaults, setMessage, superForm } from "sveltekit-superforms";
   import { zod4, zod4Client } from "sveltekit-superforms/adapters";
 
@@ -21,12 +21,9 @@
     initialType?: ChannelType;
   } = $props();
 
-  const options = [
-    { value: ChannelType.Text, label: "Text", icon: Hash },
-    { value: ChannelType.Voice, label: "Voice", icon: Volume2 },
-  ];
-
   const form = superForm(
+    // eslint-disable-next-line svelte/no-unused-svelte-ignore
+    // svelte-ignore state_referenced_locally
     defaults({ name: "", type: initialType }, zod4(createChannelBody)),
     {
       SPA: true,
@@ -75,7 +72,7 @@
 
     <form method="POST" use:enhance class="space-y-4">
       <div class="grid grid-cols-2 gap-2">
-        {#each options as option (option.value)}
+        {#each Object.values(channelTypeSpecs) as option (option.value)}
           {@const Icon = option.icon}
           <button
             type="button"

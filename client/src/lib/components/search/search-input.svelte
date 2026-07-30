@@ -6,6 +6,7 @@
     withoutFilter,
     type FilterKey,
   } from "$lib/search-query";
+  import { channelTypeSpecs } from "$lib/specs";
   import { channels } from "$lib/stores/channels.svelte";
   import { members } from "$lib/stores/members.svelte";
   import { search } from "$lib/stores/search.svelte";
@@ -14,7 +15,6 @@
   import { Input } from "&/input";
   import { ChannelType } from "@ccchat/shared";
   import AtSignIcon from "@lucide/svelte/icons/at-sign";
-  import HashIcon from "@lucide/svelte/icons/hash";
   import SearchIcon from "@lucide/svelte/icons/search";
   import XIcon from "@lucide/svelte/icons/x";
   import { onMount } from "svelte";
@@ -73,6 +73,8 @@
       choose(suggestions[0].value);
     }
   }
+
+  const TextChannelIcon = channelTypeSpecs[ChannelType.Text].icon;
 </script>
 
 <div class="relative flex flex-col gap-2">
@@ -94,7 +96,7 @@
   <div class="flex flex-wrap items-center gap-1">
     {#if parsed.in}
       <Badge variant="secondary" class="gap-1">
-        <HashIcon />
+        <TextChannelIcon />
         {parsed.in}
         <button type="button" title="Clear channel filter" onclick={() => drop("in")}>
           <XIcon class="size-3" />
@@ -102,7 +104,7 @@
       </Badge>
     {:else}
       <Button variant="ghost" size="sm" class="h-6 px-2" onclick={() => insert("in")}>
-        <HashIcon data-icon="inline-start" />
+        <TextChannelIcon data-icon="inline-start" />
         Channel
       </Button>
     {/if}
@@ -134,9 +136,11 @@
             class="hover:bg-accent flex w-full items-center gap-2 px-2 py-1.5 text-left text-sm"
             onclick={() => choose(suggestion.value)}
           >
-            {#if typing.key === "in"}<HashIcon
-                class="text-muted-foreground size-3.5"
-              />{:else}<AtSignIcon class="text-muted-foreground size-3.5" />{/if}
+            {#if typing.key === "in"}
+              <TextChannelIcon class="text-muted-foreground size-3.5" />
+            {:else}
+              <AtSignIcon class="text-muted-foreground size-3.5" />
+            {/if}
             <span class="truncate">{suggestion.label}</span>
             {#if suggestion.hint && suggestion.hint !== suggestion.label}
               <span class="text-muted-foreground truncate text-xs">
