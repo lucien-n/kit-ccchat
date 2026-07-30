@@ -26,6 +26,8 @@
   }
   const { userId, onClose, editable = false }: Props = $props();
 
+  const isMine = $derived(session.user?.id === userId);
+
   const ctx = setUserContext(() => userId);
   $effect(() => {
     void userId;
@@ -236,7 +238,7 @@
               {/if}
             </div>
           </div>
-        {:else}
+        {:else if isMine}
           <Button onclick={handleOpenSettings} class="w-full">
             <PencilIcon />
             Edit Profile
