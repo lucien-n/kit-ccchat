@@ -2,7 +2,7 @@ import { apiBase, client, publicClient } from "./http";
 
 /** null when the community has no icon, so callers fall back to the bundled one. */
 export function communityIconUrl(version: number | null | undefined): string | null {
-  if (version == null) return null;
+  if (version === null) return null;
   return `${apiBase()}/api/settings/icon?v=${version}`;
 }
 

@@ -114,8 +114,7 @@
 </script>
 
 {#if ctx.profile}
-  {@const user = ctx.profile}
-  {@const banner = bannerUrl(user.id, user.bannerVersion)}
+  {@const banner = bannerUrl(ctx.profile.id, ctx.profile.bannerVersion)}
   <div class="space-y-5">
     <div class="relative flex flex-col gap-4">
       {#if editable}
@@ -129,7 +128,7 @@
           {:else}
             <div
               class="bg-primary/30 h-full w-full"
-              style={user.color ? `background:${user.color}` : undefined}
+              style={ctx.profile.color ? `background:${ctx.profile.color}` : undefined}
             ></div>
           {/if}
           <div
@@ -139,7 +138,7 @@
             <span class="text-sm font-medium">Change banner</span>
           </div>
         </button>
-        {#if user.bannerVersion}
+        {#if ctx.profile.bannerVersion}
           <Button
             variant="secondary"
             size="icon-sm"
@@ -158,7 +157,7 @@
       {:else}
         <div
           class="bg-primary/30 absolute h-20 w-full rounded-t-2xl"
-          style={user.color ? `background:${user.color}` : undefined}
+          style={ctx.profile.color ? `background:${ctx.profile.color}` : undefined}
         ></div>
       {/if}
 
@@ -169,14 +168,14 @@
             onclick={() => avatarInput?.click()}
             class="group ring-popover block size-14 cursor-pointer overflow-hidden rounded-full ring-4"
           >
-            <UserAvatar {user} class="size-14" />
+            <UserAvatar user={ctx.profile} class="size-14" />
             <div
               class="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100"
             >
               <UploadIcon class="size-4" />
             </div>
           </button>
-          {#if user.avatarVersion}
+          {#if ctx.profile.avatarVersion}
             <Button
               variant="secondary"
               size="icon-sm"
@@ -189,7 +188,7 @@
         </div>
       {:else}
         <UserAvatar
-          {user}
+          user={ctx.profile}
           class="ring-popover absolute top-13 left-4 size-14 ring-4"
           showPresenceDot
         />
@@ -198,12 +197,12 @@
         <div class="flex flex-col">
           <p
             class="truncate text-lg font-semibold"
-            style={appearance.nameStyle(user.color)}
+            style={appearance.nameStyle(ctx.profile.color)}
           >
-            {user.displayName}
+            {ctx.profile.displayName}
           </p>
           <div class="text-muted-foreground flex items-center gap-1">
-            <p class="truncate text-xs">@{user.username}</p>
+            <p class="truncate text-xs">@{ctx.profile.username}</p>
             <span>·</span>
             <p class="text-[9px] uppercase">
               {ctx.permissionLabel}
@@ -220,12 +219,12 @@
               <Input
                 type="color"
                 class="size-7 w-10"
-                value={user.accentColor}
+                value={ctx.profile.accentColor}
                 onchange={(e) => saveAccent(e.currentTarget.value)}
                 oninput={(e) => previewAccent(e.currentTarget.value)}
                 aria-label="Accent color"
               />
-              {#if user.accentColor}
+              {#if ctx.profile.accentColor}
                 <Button
                   variant="secondary"
                   size="icon-sm"

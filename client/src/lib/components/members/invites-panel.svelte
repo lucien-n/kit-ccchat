@@ -83,7 +83,7 @@
   }
 
   function expiryLabel(i: Invite) {
-    if (i.expiresAt == null) return "never expires";
+    if (i.expiresAt === null) return "never expires";
     const ms = i.expiresAt - Date.now();
     if (ms <= 0) return "expired";
     const hours = Math.round(ms / 3600_000);

@@ -7,12 +7,12 @@ import { apiBase, client } from "./http";
 
 /** `version` doubles as a cache-buster. */
 export function avatarUrl(id: string, version: number | null | undefined): string | null {
-  if (version == null) return null;
+  if (version === null) return null;
   return `${apiBase()}/api/users/${id}/avatar?v=${version}`;
 }
 
 export function bannerUrl(id: string, version: number | null | undefined): string | null {
-  if (version == null) return null;
+  if (version === null) return null;
   return `${apiBase()}/api/users/${id}/banner?v=${version}`;
 }
 
