@@ -33,8 +33,11 @@ export enum Theme {
   Notebook = "notebook",
   Whatsapp = "whatsapp",
   Neobrutalism = "neobrutalism",
+  Custom = "custom",
 }
 export const theme = z.enum(Theme);
+
+export const themeRadius = z.number().min(0).max(1);
 
 export enum SystemEvent {
   Member_Join = "member_join",

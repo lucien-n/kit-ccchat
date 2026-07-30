@@ -6,6 +6,7 @@ import {
   systemEvent,
   theme,
   themeMode,
+  themeRadius,
 } from "./primitives.js";
 
 /** A member's identity as everyone else sees them: the lean shape embedded
@@ -38,6 +39,9 @@ export const appearanceView = z.object({
   mode: themeMode,
   theme,
   reducedMotion: z.boolean(),
+  customPrimary: hexColor.nullable(),
+  customBackground: hexColor.nullable(),
+  customRadius: themeRadius.nullable(),
 });
 export type AppearanceView = z.infer<typeof appearanceView>;
 

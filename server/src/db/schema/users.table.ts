@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { integer, real, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const usersTable = sqliteTable("users", {
   id: text("id").primaryKey(),
@@ -25,8 +25,10 @@ export const usersTable = sqliteTable("users", {
   // devices. null = the client's default for that setting.
   themeMode: text("theme_mode"),
   theme: text("theme"),
-  // 1 = reduce motion. null/absent = off.
   reducedMotion: integer("reduced_motion"),
+  themePrimary: text("theme_primary"),
+  themeBackground: text("theme_background"),
+  themeRadius: real("theme_radius"),
 });
 
 export type User = typeof usersTable.$inferSelect;

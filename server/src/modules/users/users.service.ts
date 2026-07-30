@@ -89,18 +89,23 @@ export function getAppearance(user: User): AppearanceView {
     mode: (user.themeMode as ThemeMode | null) ?? ThemeMode.Dark,
     theme: (user.theme as Theme | null) ?? Theme.Default,
     reducedMotion: user.reducedMotion === 1,
+    customPrimary: user.themePrimary ?? null,
+    customBackground: user.themeBackground ?? null,
+    customRadius: user.themeRadius ?? null,
   };
 }
 
-export function setAppearance(
-  userId: string,
-  body: UpdateAppearanceBody,
-): AppearanceView {
+export function setAppearance(userId: string, body: UpdateAppearanceBody): AppearanceView {
+  // The body is the full view, so every column is written and the validated body
+  // is exactly what we return.
   db.update(usersTable)
     .set({
       themeMode: body.mode,
       theme: body.theme,
       reducedMotion: body.reducedMotion ? 1 : 0,
+      themePrimary: body.customPrimary,
+      themeBackground: body.customBackground,
+      themeRadius: body.customRadius,
     })
     .where(eq(usersTable.id, userId))
     .run();

@@ -17,6 +17,7 @@
   import UploadIcon from "@lucide/svelte/icons/upload";
   import { toast } from "svelte-sonner";
   import UserAvatar from "../user-avatar.svelte";
+  import { Input } from "&/input";
 
   interface Props {
     userId: string;
@@ -215,24 +216,26 @@
             <span class="text-muted-foreground flex-1 text-xs font-medium">
               Accent color
             </span>
-            <input
-              type="color"
-              class="accent-swatch size-7 shrink-0 cursor-pointer overflow-hidden rounded-md border p-0"
-              value={user.accentColor}
-              onchange={(e) => saveAccent(e.currentTarget.value)}
-              oninput={(e) => previewAccent(e.currentTarget.value)}
-              aria-label="Accent color"
-            />
-            {#if user.accentColor}
-              <Button
-                variant="secondary"
-                size="icon-sm"
-                onclick={() => saveAccent(null)}
-                aria-label="Clear accent color"
-              >
-                <Trash2Icon class="size-3" />
-              </Button>
-            {/if}
+            <div class="flex gap-1">
+              <Input
+                type="color"
+                class="size-7 w-10"
+                value={user.accentColor}
+                onchange={(e) => saveAccent(e.currentTarget.value)}
+                oninput={(e) => previewAccent(e.currentTarget.value)}
+                aria-label="Accent color"
+              />
+              {#if user.accentColor}
+                <Button
+                  variant="secondary"
+                  size="icon-sm"
+                  onclick={() => saveAccent(null)}
+                  aria-label="Clear accent color"
+                >
+                  <Trash2Icon class="size-3" />
+                </Button>
+              {/if}
+            </div>
           </div>
         {:else}
           <Button onclick={handleOpenSettings} class="w-full">
@@ -316,19 +319,3 @@
 {:else}
   <div class="text-muted-foreground p-4 text-sm">Loading…</div>
 {/if}
-
-<style>
-  /* Native color inputs wrap the swatch in a padded box; zero it out so the
-     colour fills the whole control instead of floating in the middle. */
-  .accent-swatch::-webkit-color-swatch-wrapper {
-    padding: 0;
-  }
-  .accent-swatch::-webkit-color-swatch {
-    border: none;
-    border-radius: 0.3rem;
-  }
-  .accent-swatch::-moz-color-swatch {
-    border: none;
-    border-radius: 0.3rem;
-  }
-</style>

@@ -22,10 +22,9 @@ import {
   SEARCH_PAGE,
   searchSort,
   SearchSort,
-  theme,
-  themeMode,
   username,
 } from "./primitives.js";
+import { appearanceView, type AppearanceView } from "./views.js";
 
 /** Request bodies. The server validates with these; the client's forms are
  *  built from the same objects, so a rule can't drift between the two. */
@@ -82,12 +81,8 @@ export const updateProfileBody = z.object({
 });
 export type UpdateProfileBody = z.infer<typeof updateProfileBody>;
 
-export const updateAppearanceBody = z.object({
-  mode: themeMode,
-  theme,
-  reducedMotion: z.boolean(),
-});
-export type UpdateAppearanceBody = z.infer<typeof updateAppearanceBody>;
+export const updateAppearanceBody = appearanceView;
+export type UpdateAppearanceBody = AppearanceView;
 
 export const changePasswordBody = z.object({
   currentPassword: z.string().min(1, "current password required"),
