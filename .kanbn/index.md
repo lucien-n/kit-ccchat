@@ -21,9 +21,9 @@ columnSorting:
 - [push-notifications-for-messages](tasks/push-notifications-for-messages.md)
 - [allow-theme-change](tasks/allow-theme-change.md)
 - [avatar-overlays](tasks/avatar-overlays.md)
-- [profile-banner-and-bio](tasks/profile-banner-and-bio.md)
 - [webcams](tasks/webcams.md)
 - [channel-members-view](tasks/channel-members-view.md)
+- [profile-bio](tasks/profile-bio.md)
 
 ## Todo
 
@@ -31,6 +31,7 @@ columnSorting:
 
 ## Done
 
+- [profile-banner](tasks/profile-banner.md)
 - [control-mute-stream-volume](tasks/control-mute-stream-volume.md)
 - [soundboard](tasks/soundboard.md)
 - [show-mute-deafen-status-in-the-voice-channel](tasks/show-mute-deafen-status-in-the-voice-channel.md)
