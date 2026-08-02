@@ -14,7 +14,6 @@ columnSorting:
 
 ## Backlog
 
-- [unify-channel-type-icons-and-labels](tasks/unify-channel-type-icons-and-labels.md)
 - [mobile-app](tasks/mobile-app.md)
 - [backend-validation-cleaning](tasks/backend-validation-cleaning.md)
 - [push-notifications-for-messages](tasks/push-notifications-for-messages.md)
@@ -28,10 +27,10 @@ columnSorting:
 
 ## In Progress
 
-- [use-channel-type-enum-values-in-channels-table](tasks/use-channel-type-enum-values-in-channels-table.md)
-
 ## Done
 
+- [unify-channel-type-icons-and-labels](tasks/unify-channel-type-icons-and-labels.md)
+- [use-channel-type-enum-values-in-channels-table](tasks/use-channel-type-enum-values-in-channels-table.md)
 - [profile-banner](tasks/profile-banner.md)
 - [control-mute-stream-volume](tasks/control-mute-stream-volume.md)
 - [soundboard](tasks/soundboard.md)
