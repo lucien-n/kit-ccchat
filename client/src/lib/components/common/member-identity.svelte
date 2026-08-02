@@ -17,10 +17,7 @@
 
 <UserAvatar user={member} class="size-7" fallbackClass="text-xs" showPresenceDot />
 <div class="flex min-w-0 flex-1 items-center gap-1.5">
-  <span
-    class="truncate text-sm font-medium"
-    style={appearance.nameStyle(member.color)}
-  >
+  <span class="truncate text-sm font-medium" style={appearance.nameStyle(member.color)}>
     {member.displayName}
   </span>
   {#if showRank}

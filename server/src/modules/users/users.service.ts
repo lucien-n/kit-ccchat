@@ -95,7 +95,10 @@ export function getAppearance(user: User): AppearanceView {
   };
 }
 
-export function setAppearance(userId: string, body: UpdateAppearanceBody): AppearanceView {
+export function setAppearance(
+  userId: string,
+  body: UpdateAppearanceBody,
+): AppearanceView {
   // The body is the full view, so every column is written and the validated body
   // is exactly what we return.
   db.update(usersTable)

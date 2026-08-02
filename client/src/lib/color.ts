@@ -82,13 +82,18 @@ export function deriveCustomTheme(
   // background reads as tinted grey rather than a saturated wash.
   const neutralChroma = Math.min(bg.c ?? 0, 0.02);
 
-  const neutral = (offset: number) => shade(hue, neutralChroma, baseLightness + dir * offset);
+  const neutral = (offset: number) =>
+    shade(hue, neutralChroma, baseLightness + dir * offset);
   const foreground = shade(hue, neutralChroma, dark ? 0.985 : 0.205);
   const mutedForeground = shade(hue, neutralChroma, dark ? 0.715 : 0.556);
 
   // Primary sits on its own hue; its foreground flips to whichever end stays
   // readable on top of it.
-  const primaryForeground = shade(prim.h ?? hue, 0.01, luminanceOf(primary) < 0.4 ? 0.985 : 0.205);
+  const primaryForeground = shade(
+    prim.h ?? hue,
+    0.01,
+    luminanceOf(primary) < 0.4 ? 0.985 : 0.205,
+  );
 
   // A fixed, mode-aware red so destructive actions never blend into the theme.
   const destructive = dark ? "oklch(0.704 0.191 22.216)" : "oklch(0.577 0.245 27.325)";

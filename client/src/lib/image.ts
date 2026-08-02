@@ -85,7 +85,11 @@ export async function resizeImage(file: File, size = 256): Promise<string> {
   return canvas.toDataURL("image/jpeg", 0.85);
 }
 
-export async function resizeBanner(file: File, width = 600, height = 200): Promise<string> {
+export async function resizeBanner(
+  file: File,
+  width = 600,
+  height = 200,
+): Promise<string> {
   const { el, url } = await measure(file);
   URL.revokeObjectURL(url);
 

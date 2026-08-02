@@ -130,7 +130,10 @@ class Appearance {
     const entries: [string, string | null][] = [
       ["appearance:customPrimary", this.customPrimary],
       ["appearance:customBackground", this.customBackground],
-      ["appearance:customRadius", this.customRadius === null ? null : String(this.customRadius)],
+      [
+        "appearance:customRadius",
+        this.customRadius === null ? null : String(this.customRadius),
+      ],
     ];
     for (const [key, value] of entries) {
       if (value === null) localStorage.removeItem(key);
@@ -169,7 +172,8 @@ class Appearance {
         this.effectiveBackground,
         this.effectiveRadius,
       );
-      for (const [name, value] of Object.entries(tokens)) html.style.setProperty(name, value);
+      for (const [name, value] of Object.entries(tokens))
+        html.style.setProperty(name, value);
       // The chosen background defines light-vs-dark, so drive `.dark` off it
       // rather than the mode toggle while a custom theme is active.
       html.classList.toggle("dark", isDarkBackground(this.effectiveBackground));
