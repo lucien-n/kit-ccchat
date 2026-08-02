@@ -31,6 +31,7 @@
 
   function handleJoinVoice(channel: { id: string; name: string }) {
     voice.join(channel);
+    void app.selectChannel(channel.id);
     ui.nav = false;
   }
 </script>

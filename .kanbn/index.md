@@ -20,12 +20,13 @@ columnSorting:
 - [allow-theme-change](tasks/allow-theme-change.md)
 - [avatar-overlays](tasks/avatar-overlays.md)
 - [webcams](tasks/webcams.md)
-- [channel-members-view](tasks/channel-members-view.md)
 - [profile-bio](tasks/profile-bio.md)
 
 ## Todo
 
 ## In Progress
+
+- [channel-members-view](tasks/channel-members-view.md)
 
 ## Done
 

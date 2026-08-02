@@ -1,6 +1,7 @@
 <script lang="ts">
   import SidePanel from "$lib/components/layout/side-panel.svelte";
   import Sidebar from "$lib/components/layout/sidebar";
+  import RoomView from "$lib/components/voice/room-view.svelte";
   import StreamView from "$lib/components/voice/stream-view.svelte";
   import { setChatContext } from "$lib/context/chat.svelte";
   import { setBaseTitle, setTitleBadge } from "$lib/notify";
@@ -12,6 +13,7 @@
   import { voice } from "$lib/stores/voice.svelte";
   import * as Resizable from "&/resizable";
   import * as Sheet from "&/sheet";
+  import { ChannelType } from "@ccchat/shared";
   import { toast } from "svelte-sonner";
   import ChatDialogs from "./chat-dialogs.svelte";
   import ChatView from "./chat-view.svelte";
@@ -57,6 +59,8 @@
   <main class="bg-background flex min-h-0 min-w-0 flex-1 flex-col">
     {#if voice.watching}
       <StreamView />
+    {:else if channels.current?.type === ChannelType.Voice}
+      <RoomView channel={channels.current} />
     {:else}
       <ChatView />
     {/if}
