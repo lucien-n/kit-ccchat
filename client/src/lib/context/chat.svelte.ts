@@ -17,6 +17,7 @@ export class ChatContext {
   isDesktop = $state(false);
   showMembers = $state(false);
   stick = $state(true);
+  fromBottom = $state(0);
   flashId = $state<string | null>(null);
   replyTo = $state<MessageView | null>(null);
   composer = $state<{ focus: () => void } | null>(null);
