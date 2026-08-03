@@ -140,7 +140,7 @@ describe("sessions", () => {
     const name = uniq();
     const member = await register(app, invite.code, name).then(json);
 
-    await post(app, `/api/moderation/${member.user.id}/ban`, undefined, token);
+    await post(app, `/api/moderation/${member.user.id}/ban`, {}, token);
 
     expect((await get(app, "/api/auth/me", member.token)).status).toBe(401);
     expect(
