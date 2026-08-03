@@ -12,6 +12,12 @@ class Channels {
     this.list = (await api.channels.list()).channels;
   }
 
+  /** Persist a new sidebar order (all channel ids, top-to-bottom) and refresh. */
+  async reorder(orderedIds: string[]) {
+    await api.channels.reorder(orderedIds);
+    await this.load();
+  }
+
   clear() {
     this.list = [];
     this.currentId = null;

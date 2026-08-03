@@ -73,6 +73,9 @@ export const channel = z.object({
   name: z.string(),
   type: channelType,
   position: z.number(),
+  /** The one text channel that receives member-join lines. Exactly one text
+   *  channel is main at any time; voice channels are never main. */
+  isMain: z.boolean(),
 });
 export type Channel = z.infer<typeof channel>;
 

@@ -10,6 +10,7 @@ import {
   mkInvite,
   patch,
   post,
+  put,
   register,
   uniq,
 } from "./harness.js";
@@ -162,4 +163,66 @@ it("rejects an invalid name and forbids a non-admin", async () => {
     await register(app, invite.code, uniq()),
   );
   expect((await rename(channel.id, uniq(), member)).status).toBe(403);
+});
+
+const setMain = (id: string, tok = token) =>
+  post(app, `/api/channels/${id}/main`, undefined, tok);
+
+it("marks the seeded general channel as the main channel", async () => {
+  const general = (await list()).find((c) => c.name === "general");
+  expect(general?.isMain).toBe(true);
+});
+
+it("moves the main flag to another text channel, keeping exactly one", async () => {
+  const { channel } = await json<{ channel: Channel }>(await create(uniq()));
+  expect((await setMain(channel.id)).status).toBe(200);
+  expect((await list()).filter((c) => c.isMain).map((c) => c.id)).toEqual([channel.id]);
+});
+
+it("refuses to make a voice channel the main channel", async () => {
+  const { channel } = await json<{ channel: Channel }>(
+    await create(uniq(), ChannelType.Voice),
+  );
+  expect((await setMain(channel.id)).status).toBe(400);
+});
+
+it("forbids a non-admin from changing the main channel", async () => {
+  const { invite } = await mkInvite(app, token, { maxUses: 0 });
+  const { token: member } = await json<{ token: string }>(
+    await register(app, invite.code, uniq()),
+  );
+  const someText = (await list()).find((c) => c.type === ChannelType.Text)!;
+  expect((await setMain(someText.id, member)).status).toBe(403);
+});
+
+it("hands the main flag to a surviving text channel when the main is deleted", async () => {
+  const { channel } = await json<{ channel: Channel }>(await create(uniq()));
+  await setMain(channel.id);
+  await app.request(`/api/channels/${channel.id}`, {
+    method: "DELETE",
+    headers: { authorization: `Bearer ${token}` },
+  });
+  const main = (await list()).filter((c) => c.isMain);
+  expect(main).toHaveLength(1);
+  expect(main[0]!.type).toBe(ChannelType.Text);
+});
+
+it("reorders channels, rewriting positions from the sent order", async () => {
+  const ids = (await list()).map((c) => c.id);
+  const reversed = [...ids].reverse();
+  expect(
+    (await put(app, "/api/channels/order", { orderedIds: reversed }, token)).status,
+  ).toBe(200);
+  expect((await list()).map((c) => c.id)).toEqual(reversed);
+});
+
+it("forbids a non-admin from reordering channels", async () => {
+  const { invite } = await mkInvite(app, token, { maxUses: 0 });
+  const { token: member } = await json<{ token: string }>(
+    await register(app, invite.code, uniq()),
+  );
+  const ids = (await list()).map((c) => c.id);
+  expect(
+    (await put(app, "/api/channels/order", { orderedIds: ids }, member)).status,
+  ).toBe(403);
 });

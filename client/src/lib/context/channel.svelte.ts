@@ -38,6 +38,15 @@ export class ChannelContext {
     }
     this.busy = false;
   }
+
+  async setMain() {
+    try {
+      await api.channels.setMain(this.channel.id);
+      await channels.load();
+    } catch (e) {
+      toast.error(apiErrorMessage(e, "failed to set main channel"));
+    }
+  }
 }
 
 export function setChannelContext(read: () => Channel): ChannelContext {

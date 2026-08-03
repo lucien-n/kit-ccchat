@@ -1,14 +1,15 @@
 <script lang="ts">
   import { setChannelContext } from "$lib/context/channel.svelte";
+  import { channelTypeSpecs } from "$lib/specs";
   import { channels, presence, unread } from "$lib/stores";
   import { cn } from "$lib/utils";
   import { Badge } from "&/badge";
   import { Button } from "&/button";
   import { ChannelType, type Channel } from "@ccchat/shared";
+  import HomeIcon from "@lucide/svelte/icons/home";
+  import { fly } from "svelte/transition";
   import ChannelContextMenu from "./channel-context-menu.svelte";
   import SingleVoiceParticipant from "./single-voice-participant.svelte";
-  import { fly } from "svelte/transition";
-  import { channelTypeSpecs } from "$lib/specs";
 
   interface Props {
     channel: Channel;
@@ -19,7 +20,7 @@
   setChannelContext(() => channel);
 
   const isVoiceChannel = $derived(channel.type === ChannelType.Voice);
-  const Icon = $derived(channelTypeSpecs[channel.type].icon);
+  const Icon = $derived(channel.isMain ? HomeIcon : channelTypeSpecs[channel.type].icon);
   const members = $derived(presence.voice[channel.id]);
 </script>
 
@@ -37,6 +38,7 @@
     >
       <Icon class="size-4 shrink-0" />
       <span class="truncate">{channel.name}</span>
+
       {#if (unread.counts[channel.id] ?? 0) > 0}
         {@const mentioned = (unread.mentions[channel.id] ?? 0) > 0}
         <Badge

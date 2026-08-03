@@ -23,6 +23,7 @@ function toChannelView(row: typeof channelsTable.$inferSelect): Channel {
     name: row.name,
     type: row.type as ChannelType,
     position: row.position,
+    isMain: row.isMain === 1,
   };
 }
 
@@ -33,6 +34,41 @@ export function listChannels(): Channel[] {
     .orderBy(asc(channelsTable.position), asc(channelsTable.createdAt))
     .all()
     .map(toChannelView);
+}
+
+/** The text channel that receives member-join lines, or the top text channel as
+ *  a fallback when nothing is flagged (e.g. a database predating the flag). */
+export function mainTextChannel() {
+  return (
+    db
+      .select()
+      .from(channelsTable)
+      .where(and(eq(channelsTable.type, ChannelType.Text), eq(channelsTable.isMain, 1)))
+      .get() ?? topTextChannel()
+  );
+}
+
+function topTextChannel() {
+  return db
+    .select()
+    .from(channelsTable)
+    .where(eq(channelsTable.type, ChannelType.Text))
+    .orderBy(asc(channelsTable.position), asc(channelsTable.createdAt))
+    .get();
+}
+
+/** Guarantee exactly one main text channel exists, promoting the top one when
+ *  none is flagged. Idempotent; safe to call after any channel mutation. */
+function ensureMainChannel() {
+  const flagged = db
+    .select()
+    .from(channelsTable)
+    .where(and(eq(channelsTable.type, ChannelType.Text), eq(channelsTable.isMain, 1)))
+    .get();
+  if (flagged) return;
+  const top = topTextChannel();
+  if (top)
+    db.update(channelsTable).set({ isMain: 1 }).where(eq(channelsTable.id, top.id)).run();
 }
 
 export function unreadCounts(user: User): {
@@ -118,10 +154,13 @@ export function createChannel({ name, type }: CreateChannelBody) {
     name,
     type,
     position: db.select().from(channelsTable).all().length,
+    isMain: 0,
     createdAt: Date.now(),
   };
   db.insert(channelsTable).values(channel).run();
-  return channel;
+  // A community's first text channel becomes main so join lines have a home.
+  ensureMainChannel();
+  return toChannelView(getById(channelsTable, channel.id, "channel not found"));
 }
 
 export function renameChannel(id: string, name: string): Channel {
@@ -135,6 +174,41 @@ export function renameChannel(id: string, name: string): Channel {
   return toChannelView({ ...existing, name });
 }
 
+/** Reassign every position from the given sidebar order so positions can't
+ *  drift into collisions. Unknown ids are ignored. */
+export function reorderChannels(orderedIds: string[]) {
+  const known = new Set(
+    db
+      .select({ id: channelsTable.id })
+      .from(channelsTable)
+      .all()
+      .map((c) => c.id),
+  );
+  const ids = orderedIds.filter((id) => known.has(id));
+  db.transaction((tx) => {
+    ids.forEach((id, i) => {
+      tx.update(channelsTable).set({ position: i }).where(eq(channelsTable.id, id)).run();
+    });
+  });
+}
+
+/** Make one text channel the sole main channel. Voice channels can't be main
+ *  because join lines are text messages. */
+export function setMainChannel(id: string): Channel {
+  const channel = getById(channelsTable, id, "channel not found");
+  if (channel.type !== ChannelType.Text)
+    httpError(400, "only a text channel can be the main channel");
+
+  db.transaction((tx) => {
+    tx.update(channelsTable).set({ isMain: 0 }).run();
+    tx.update(channelsTable).set({ isMain: 1 }).where(eq(channelsTable.id, id)).run();
+  });
+  return toChannelView({ ...channel, isMain: 1 });
+}
+
 export function deleteChannel(id: string) {
   db.delete(channelsTable).where(eq(channelsTable.id, id)).run();
+  // If the main channel was the one removed, hand the flag to the next text
+  // channel so join lines still land somewhere.
+  ensureMainChannel();
 }

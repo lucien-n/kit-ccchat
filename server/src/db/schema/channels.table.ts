@@ -8,6 +8,7 @@ export const channelsTable = sqliteTable("channels", {
     .notNull()
     .default(ChannelType.Text),
   position: integer("position").notNull().default(0),
+  isMain: integer("is_main").notNull().default(0),
   createdAt: integer("created_at").notNull(),
 });
 

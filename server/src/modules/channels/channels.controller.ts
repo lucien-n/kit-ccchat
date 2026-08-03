@@ -1,4 +1,8 @@
-import { createChannelBody, renameChannelBody } from "@ccchat/shared";
+import {
+  createChannelBody,
+  renameChannelBody,
+  reorderChannelsBody,
+} from "@ccchat/shared";
 import type { AppContext, JsonContext } from "../../http/context.js";
 import * as channelsService from "./channels.service.js";
 
@@ -24,6 +28,16 @@ export function rename(c: JsonContext<typeof renameChannelBody, "/:id">) {
     c.req.param("id"),
     c.req.valid("json").name,
   );
+  return c.json({ channel });
+}
+
+export function reorder(c: JsonContext<typeof reorderChannelsBody>) {
+  channelsService.reorderChannels(c.req.valid("json").orderedIds);
+  return c.json({ ok: true });
+}
+
+export function setMain(c: AppContext<"/:id">) {
+  const channel = channelsService.setMainChannel(c.req.param("id"));
   return c.json({ channel });
 }
 

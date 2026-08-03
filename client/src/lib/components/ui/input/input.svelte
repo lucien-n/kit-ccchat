@@ -65,7 +65,11 @@
   <input
     bind:this={ref}
     data-slot={dataSlot}
-    class={cn(baseClass, type === "color" && "accent-swatch cursor-pointer p-0", className)}
+    class={cn(
+      baseClass,
+      type === "color" && "accent-swatch cursor-pointer p-0",
+      className,
+    )}
     {type}
     bind:value
     {...restProps}

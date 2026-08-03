@@ -1,4 +1,8 @@
-import { createChannelBody, renameChannelBody } from "@ccchat/shared";
+import {
+  createChannelBody,
+  renameChannelBody,
+  reorderChannelsBody,
+} from "@ccchat/shared";
 import { Hono } from "hono";
 import { requireAuth, requireCan, type Env } from "../../auth.js";
 import { validate } from "../../validate.js";
@@ -21,6 +25,13 @@ const router = new Hono<Env>()
     validate("json", renameChannelBody),
     channelsController.rename,
   )
+  .put(
+    "/order",
+    requireCan("manageChannels"),
+    validate("json", reorderChannelsBody),
+    channelsController.reorder,
+  )
+  .post("/:id/main", requireCan("manageChannels"), channelsController.setMain)
   .delete("/:id", requireCan("manageChannels"), channelsController.remove);
 
 export default router;

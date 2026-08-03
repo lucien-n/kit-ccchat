@@ -1,5 +1,4 @@
 import {
-  ChannelType,
   isMuted,
   MAX_REACTIONS_PER_MESSAGE,
   ServerEventType,
@@ -11,27 +10,18 @@ import {
 import { and, asc, desc, eq, gt, lt, lte } from "drizzle-orm";
 import { can, newId } from "../../auth.js";
 import { db } from "../../db/index.js";
-import {
-  channelsTable,
-  messageReactionsTable,
-  messagesTable,
-  type User,
-} from "../../db/schema";
+import { messageReactionsTable, messagesTable, type User } from "../../db/schema";
 import { findById } from "../../db/query.js";
 import { httpError } from "../../http/errors.js";
 import { hub } from "../../hub.js";
 import { toMessageView } from "../../views.js";
+import { mainTextChannel } from "../channels/channels.service.js";
 import { deleteImagesOf } from "../images/images.service.js";
 import { resolveMentions, saveMentions } from "./mentions.js";
 import { emojiOn, reactionsOf } from "./reactions.js";
 
 export function postSystemMessage(event: SystemEvent, subjectId: string) {
-  const channel = db
-    .select()
-    .from(channelsTable)
-    .where(eq(channelsTable.type, ChannelType.Text))
-    .orderBy(asc(channelsTable.position), asc(channelsTable.createdAt))
-    .get();
+  const channel = mainTextChannel();
   if (!channel) {
     return;
   }

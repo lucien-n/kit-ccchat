@@ -1,6 +1,16 @@
 import { SystemEvent, type Channel, type MessageView } from "@ccchat/shared";
 import { afterAll, beforeAll, expect, it } from "vitest";
-import { boot, claim, cleanup, get, json, mkInvite, register, uniq } from "./harness.js";
+import {
+  boot,
+  claim,
+  cleanup,
+  get,
+  json,
+  mkInvite,
+  post,
+  register,
+  uniq,
+} from "./harness.js";
 import type { Hono } from "hono";
 
 let app: Hono<any>;
@@ -54,4 +64,21 @@ it("does not count toward unread", async () => {
     await get(app, "/api/channels/unreads", token),
   );
   expect(unreads[general] ?? 0).toBe(0);
+});
+
+it("follows the main channel when it changes", async () => {
+  const before = (await history(random)).length;
+  expect((await post(app, `/api/channels/${random}/main`, undefined, token)).status).toBe(
+    200,
+  );
+
+  const name = uniq();
+  await register(app, await invite(), name);
+
+  const joins = (await history(random)).filter(
+    (m) => m.systemEvent === SystemEvent.Member_Join,
+  );
+  expect(joins).toHaveLength(1);
+  expect(joins[0]!.author?.username).toBe(name);
+  expect(await history(random)).toHaveLength(before + 1);
 });
