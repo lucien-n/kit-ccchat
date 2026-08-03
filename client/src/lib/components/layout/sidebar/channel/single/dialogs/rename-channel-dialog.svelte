@@ -1,40 +1,31 @@
 <script lang="ts">
+  import { channelNameTaken } from "$lib/channels";
   import { getChannelContext } from "$lib/context/channel.svelte";
-  import { apiErrorMessage, fail } from "$lib/forms";
+  import { spaForm } from "$lib/forms";
   import { channels } from "$lib/stores";
   import { Button } from "&/button";
   import * as Dialog from "&/dialog";
   import * as Form from "&/form";
   import { Input } from "&/input";
-  import { channelNameKey, renameChannelBody } from "@ccchat/shared";
-  import { defaults, setMessage, superForm } from "sveltekit-superforms";
-  import { zod4, zod4Client } from "sveltekit-superforms/adapters";
+  import { renameChannelBody } from "@ccchat/shared";
 
   const ctx = getChannelContext();
 
-  const form = superForm(defaults({ name: ctx.channel.name }, zod4(renameChannelBody)), {
-    SPA: true,
-    validators: zod4Client(renameChannelBody),
-    resetForm: false,
-    onUpdate: async ({ form }) => {
-      if (!form.valid) return;
-      try {
-        await ctx.rename(form.data.name);
-      } catch (err) {
-        setMessage(form, fail(apiErrorMessage(err, "failed to rename channel")));
-      }
+  const form = spaForm(
+    renameChannelBody,
+    { name: ctx.channel.name },
+    {
+      toast: false,
+      fallback: "failed to rename channel",
+      onValid: (data) => ctx.rename(data.name),
     },
-  });
+  );
 
   const { form: formData, enhance, submitting } = form;
 
-  const taken = $derived.by(() => {
-    const key = channelNameKey($formData.name);
-    if (!key || key === channelNameKey(ctx.channel.name)) return false;
-    return channels.list.some(
-      (c) => c.type === ctx.channel.type && channelNameKey(c.name) === key,
-    );
-  });
+  const taken = $derived(
+    channelNameTaken($formData.name, ctx.channel.type, channels.list, ctx.channel.name),
+  );
 
   $effect(() => {
     if (ctx.renaming) $formData.name = ctx.channel.name;

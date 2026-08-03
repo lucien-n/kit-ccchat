@@ -2,33 +2,20 @@
   import { goto } from "$app/navigation";
   import { resolve } from "$app/paths";
   import { setup } from "$lib/app";
-  import { apiErrorMessage, fail, toastMessage } from "$lib/forms";
+  import TextField from "$lib/components/common/text-field.svelte";
+  import { spaForm } from "$lib/forms";
   import * as Card from "&/card";
   import * as Form from "&/form";
-  import { Input } from "&/input";
   import { setupBody } from "@ccchat/shared";
-  import { defaults, setMessage, superForm } from "sveltekit-superforms";
-  import { zod4, zod4Client } from "sveltekit-superforms/adapters";
 
-  const form = superForm(
-    defaults(
-      { communityName: "", username: "", displayName: "", password: "" },
-      zod4(setupBody),
-    ),
+  const form = spaForm(
+    setupBody,
+    { communityName: "", username: "", displayName: "", password: "" },
     {
-      SPA: true,
-      validators: zod4Client(setupBody),
-      resetForm: false,
-      onUpdate: async ({ form }) => {
-        if (!form.valid) return;
-        try {
-          await setup(form.data);
-          await goto(resolve("/"));
-        } catch (err) {
-          setMessage(form, fail(apiErrorMessage(err, "something went wrong")));
-        }
+      onValid: async (data) => {
+        await setup(data);
+        await goto(resolve("/"));
       },
-      onUpdated: toastMessage,
     },
   );
 
@@ -47,51 +34,33 @@
 
     <form method="POST" use:enhance>
       <Card.Content class="space-y-4">
-        <Form.Field {form} name="communityName">
-          <Form.Control>
-            {#snippet children({ props })}
-              <Form.Label>Community name</Form.Label>
-              <Input
-                {...props}
-                bind:value={$formData.communityName}
-                placeholder="e.g. The Group Chat"
-                autocomplete="off"
-              />
-            {/snippet}
-          </Form.Control>
-          <Form.FieldErrors />
-        </Form.Field>
+        <TextField
+          {form}
+          name="communityName"
+          label="Community name"
+          bind:value={$formData.communityName}
+          placeholder="e.g. The Group Chat"
+          autocomplete="off"
+        />
 
-        <Form.Field {form} name="username">
-          <Form.Control>
-            {#snippet children({ props })}
-              <Form.Label>Your username</Form.Label>
-              <Input
-                {...props}
-                bind:value={$formData.username}
-                placeholder="lowercase, 2–24 chars"
-                autocomplete="username"
-              />
-            {/snippet}
-          </Form.Control>
-          <Form.FieldErrors />
-        </Form.Field>
+        <TextField
+          {form}
+          name="username"
+          label="Your username"
+          bind:value={$formData.username}
+          placeholder="lowercase, 2–24 chars"
+          autocomplete="username"
+        />
 
-        <Form.Field {form} name="password">
-          <Form.Control>
-            {#snippet children({ props })}
-              <Form.Label>Your password</Form.Label>
-              <Input
-                {...props}
-                type="password"
-                bind:value={$formData.password}
-                placeholder="at least 8 characters"
-                autocomplete="new-password"
-              />
-            {/snippet}
-          </Form.Control>
-          <Form.FieldErrors />
-        </Form.Field>
+        <TextField
+          {form}
+          name="password"
+          label="Your password"
+          type="password"
+          bind:value={$formData.password}
+          placeholder="at least 8 characters"
+          autocomplete="new-password"
+        />
       </Card.Content>
 
       <Card.Footer class="mt-6 flex-col gap-3">
