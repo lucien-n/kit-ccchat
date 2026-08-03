@@ -14,7 +14,7 @@
   const { member, channel }: Props = $props();
 
   const participant = $derived(
-    channel.id === voice.channelId
+    channel.id === voice.channel?.id
       ? voice.participants.find((p) => p.identity === member.id)
       : undefined,
   );

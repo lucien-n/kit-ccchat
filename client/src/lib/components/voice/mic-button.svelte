@@ -27,7 +27,7 @@
   const micButtonProps = $derived(MIC_STATUS_BUTTON_PROPS[voice.micStatus]);
   const micOff = $derived(voice.micStatus !== MicStatus.Enabled);
 
-  const canPickDevice = $derived(voice.audioInputs.length > 1);
+  const canPickDevice = $derived(voice.devices.inputs.length > 1);
 
   function label(device: MediaDeviceInfo, i: number): string {
     return device.label || `Microphone ${i + 1}`;
@@ -49,7 +49,7 @@
   </Button>
   <Select.Root
     type="single"
-    value={voice.audioInputId}
+    value={voice.devices.inputId}
     onValueChange={(v) => voice.setAudioInput(v)}
   >
     <Select.Trigger
@@ -62,7 +62,7 @@
     ></Select.Trigger>
     <Select.Content>
       <Select.Group>
-        {#each voice.audioInputs as device, i (device.deviceId)}
+        {#each voice.devices.inputs as device, i (device.deviceId)}
           <Select.Item value={device.deviceId} label={label(device, i)} />
         {/each}
       </Select.Group>

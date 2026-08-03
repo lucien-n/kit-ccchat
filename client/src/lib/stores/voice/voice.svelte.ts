@@ -34,44 +34,44 @@ export enum MicStatus {
   NotAllowed = "NotAllowed",
 }
 
+interface Channel {
+  id: string;
+  name: string;
+}
+
 /** The LiveKit voice session. One call at a time, independent of which text
  *  channel you're reading. */
 class VoiceStore {
-  channelId = $state<string | null>(null);
-  channelName = $state("");
+  /** The channel this call is in, or null when idle. */
+  channel = $state<Channel | null>(null);
   status = $state<VoiceStatus>(VoiceStatus.Idle);
   participants = $state<VoiceParticipant[]>([]);
   micStatus = $state<MicStatus>(MicStatus.Muted);
   canPublish = $state(true);
   error = $state("");
-  /** Available microphones. Labels only fill in once mic permission is granted,
-   *  so this stays empty until then. */
-  audioInputs = $state<MediaDeviceInfo[]>([]);
-  /** deviceId of the mic currently in use. "default" follows the OS default. */
-  audioInputId = $state("default");
-  /** Available speakers. Empty where the browser can't route output (no
-   *  setSinkId - Firefox, iOS Safari), which disables the picker. */
-  audioOutputs = $state<MediaDeviceInfo[]>([]);
-  /** deviceId of the speaker in use. "default" follows the OS default. */
-  audioOutputId = $state("default");
   /** Whether incoming audio is silenced. Deafening also stops your own mic. */
   deafened = $state(false);
-  /** Screen share tracks by publisher identity. A track only lands here once it
-   *  is subscribed, so anything in here is watchable right now. */
-  screens = $state<Record<string, Track>>({});
-  /** Whose screen fills the chat pane, if any. */
-  watching = $state<string | null>(null);
-  /** Per-stream screen-share audio, keyed by publisher identity. A key exists
-   *  only while that stream is publishing audio, so the watch view knows when to
-   *  offer a volume control. `volume` is 0..1; `muted` is independent of deafen. */
-  screenAudio = $state<Record<string, { volume: number; muted: boolean }>>({});
+
+  devices = $state({
+    inputs: [] as MediaDeviceInfo[],
+    inputId: "default",
+    outputs: [] as MediaDeviceInfo[],
+    outputId: "default",
+  });
+
+  share = $state({
+    screens: {} as Record<string, Track>,
+    watching: null as string | null,
+    audio: {} as Record<string, { volume: number; muted: boolean }>,
+  });
+
   /** Wanted to watch someone whose track has not been subscribed yet. */
-  private pendingWatch = $state<string | null>(null);
+  private pendingWatch: string | null = null;
 
   private room: Room | null = null;
   private audioEls = new Map<string, HTMLMediaElement>();
   /** The audio element carrying each stream's screen-share sound, so per-stream
-   *  volume changes can be applied to it. Keys mirror `screenAudio`. */
+   *  volume changes can be applied to it. Keys mirror `share.audio`. */
   private screenAudioEls = new Map<string, HTMLMediaElement>();
   private soundboard = new SoundboardPlayer();
   /** Clips publishing right now; drives the local speaking ring that LiveKit's
@@ -88,7 +88,7 @@ class VoiceStore {
 
   get isSharing(): boolean {
     const identity = this.room?.localParticipant.identity;
-    return !!identity && !!this.screens[identity];
+    return !!identity && !!this.share.screens[identity];
   }
 
   /** Whether the local mic is off for any reason - the boolean form of micStatus
@@ -97,18 +97,17 @@ class VoiceStore {
     return this.micStatus !== MicStatus.Enabled;
   }
 
-  async join(channel: { id: string; name: string }) {
-    if (this.channelId === channel.id && this.inCall) return;
+  async join(target: Channel) {
+    if (this.channel?.id === target.id && this.inCall) return;
     if (this.room) await this.leave();
 
     this.status = VoiceStatus.Connecting;
-    this.channelId = channel.id;
-    this.channelName = channel.name;
+    this.channel = { id: target.id, name: target.name };
     this.error = "";
 
     let url = "";
     try {
-      const res = await api.voice.token(channel.id);
+      const res = await api.voice.token(target.id);
       url = res.url;
       this.canPublish = res.canPublish;
       // Show the intended state up front so the icon doesn't flash muted while
@@ -121,7 +120,7 @@ class VoiceStore {
 
       await room.connect(url, res.token);
       this.status = VoiceStatus.Connected;
-      realtime.send({ type: ClientEventType.Voice_Join, channelId: channel.id });
+      realtime.send({ type: ClientEventType.Voice_Join, channelId: target.id });
       playVoiceJoin();
       this.refresh();
 
@@ -168,18 +167,18 @@ class VoiceStore {
             // in the watch view rather than riding the global deafen alone.
             if (pub.source === Track.Source.ScreenShareAudio) {
               this.screenAudioEls.set(p.identity, el);
-              this.screenAudio = {
-                ...this.screenAudio,
+              this.share.audio = {
+                ...this.share.audio,
                 [p.identity]: { volume: 1, muted: false },
               };
               this.applyStreamAudio(p.identity);
             }
           } else if (pub.source === Track.Source.ScreenShare) {
-            this.screens = { ...this.screens, [p.identity]: track };
+            this.share.screens = { ...this.share.screens, [p.identity]: track };
             // Clicking a stream from outside the channel joins first, so the
             // watch has to wait here for the track to actually arrive.
             if (this.pendingWatch === p.identity) {
-              this.watching = p.identity;
+              this.share.watching = p.identity;
               this.pendingWatch = null;
             }
           }
@@ -201,8 +200,8 @@ class VoiceStore {
       // publish events are the only honest signal for the local screen.
       .on(RoomEvent.LocalTrackPublished, (pub) => {
         if (pub.source === Track.Source.ScreenShare && pub.track) {
-          this.screens = {
-            ...this.screens,
+          this.share.screens = {
+            ...this.share.screens,
             [room.localParticipant.identity]: pub.track,
           };
           this.announceSharing(true);
@@ -220,8 +219,8 @@ class VoiceStore {
       // list and the active id kept honest.
       .on(RoomEvent.MediaDevicesChanged, () => this.loadDevices())
       .on(RoomEvent.ActiveDeviceChanged, (kind, deviceId) => {
-        if (kind === "audioinput") this.audioInputId = deviceId;
-        else if (kind === "audiooutput") this.audioOutputId = deviceId;
+        if (kind === "audioinput") this.devices.inputId = deviceId;
+        else if (kind === "audiooutput") this.devices.outputId = deviceId;
       })
       .on(RoomEvent.Disconnected, () => {
         const wasConnected = this.status === VoiceStatus.Connected;
@@ -239,7 +238,7 @@ class VoiceStore {
   private refresh() {
     this.participants = this.room
       ? buildParticipants(this.room, {
-          screens: this.screens,
+          screens: this.share.screens,
           localMuted: this.localMuted,
           localSpeaking: this.playingSounds > 0,
         })
@@ -253,24 +252,24 @@ class VoiceStore {
   }
 
   private dropScreen(identity: string) {
-    const next = { ...this.screens };
+    const next = { ...this.share.screens };
     delete next[identity];
-    this.screens = next;
-    if (this.watching === identity) this.watching = null;
+    this.share.screens = next;
+    if (this.share.watching === identity) this.share.watching = null;
   }
 
   private dropScreenAudio(identity: string) {
     this.screenAudioEls.delete(identity);
-    const next = { ...this.screenAudio };
+    const next = { ...this.share.audio };
     delete next[identity];
-    this.screenAudio = next;
+    this.share.audio = next;
   }
 
   /** Push a stream's stored volume/mute onto its audio element. Deafen still
    *  wins: it silences every stream regardless of the per-stream setting. */
   private applyStreamAudio(identity: string) {
     const element = this.screenAudioEls.get(identity);
-    const settings = this.screenAudio[identity];
+    const settings = this.share.audio[identity];
     if (!element || !settings) return;
     element.volume = settings.volume;
     element.muted = this.deafened || settings.muted;
@@ -279,21 +278,21 @@ class VoiceStore {
   /** Set how loud a stream plays for you only, 0..1. Muting clears once you
    *  raise the volume off zero, matching how a slider is expected to behave. */
   setStreamVolume(identity: string, volume: number) {
-    const settings = this.screenAudio[identity];
+    const settings = this.share.audio[identity];
     if (!settings) return;
     const clamped = Math.min(1, Math.max(0, volume));
-    this.screenAudio = {
-      ...this.screenAudio,
+    this.share.audio = {
+      ...this.share.audio,
       [identity]: { volume: clamped, muted: clamped === 0 },
     };
     this.applyStreamAudio(identity);
   }
 
   toggleStreamMute(identity: string) {
-    const settings = this.screenAudio[identity];
+    const settings = this.share.audio[identity];
     if (!settings) return;
-    this.screenAudio = {
-      ...this.screenAudio,
+    this.share.audio = {
+      ...this.share.audio,
       [identity]: { ...settings, muted: !settings.muted },
     };
     this.applyStreamAudio(identity);
@@ -305,16 +304,16 @@ class VoiceStore {
 
   /** Join the channel if needed, then watch as soon as the track lands. The
    *  pending id is set after joining because join() resets this store. */
-  async watch(channel: { id: string; name: string }, identity: string) {
-    if (!this.screens[identity] && this.channelId !== channel.id) {
-      await this.join(channel);
+  async watch(target: Channel, identity: string) {
+    if (!this.share.screens[identity] && this.channel?.id !== target.id) {
+      await this.join(target);
     }
-    if (this.screens[identity]) this.watching = identity;
+    if (this.share.screens[identity]) this.share.watching = identity;
     else this.pendingWatch = identity;
   }
 
   stopWatching() {
-    this.watching = null;
+    this.share.watching = null;
     this.pendingWatch = null;
   }
 
@@ -352,13 +351,13 @@ class VoiceStore {
    *  device change; labels stay blank until mic permission has been granted. */
   private async loadDevices() {
     try {
-      this.audioInputs = await Room.getLocalDevices("audioinput");
-      this.audioInputId = this.room?.getActiveDevice("audioinput") ?? "default";
+      this.devices.inputs = await Room.getLocalDevices("audioinput");
+      this.devices.inputId = this.room?.getActiveDevice("audioinput") ?? "default";
       // Output routing only exists where setSinkId does; elsewhere the list
       // stays empty so the speaker picker never offers a choice that can't work.
       if (supportsAudioOutput()) {
-        this.audioOutputs = await Room.getLocalDevices("audiooutput");
-        this.audioOutputId = this.room?.getActiveDevice("audiooutput") ?? "default";
+        this.devices.outputs = await Room.getLocalDevices("audiooutput");
+        this.devices.outputId = this.room?.getActiveDevice("audiooutput") ?? "default";
       }
     } catch {
       /* enumerateDevices can throw in locked-down contexts; leave the list as-is */
@@ -371,7 +370,7 @@ class VoiceStore {
     if (!this.room) return;
     try {
       await this.room.switchActiveDevice("audioinput", deviceId);
-      this.audioInputId = deviceId;
+      this.devices.inputId = deviceId;
     } catch (e) {
       this.error = `Couldn't switch microphone (${errorName(e)}).`;
     }
@@ -383,7 +382,7 @@ class VoiceStore {
     if (!this.room) return;
     try {
       await this.room.switchActiveDevice("audiooutput", deviceId);
-      this.audioOutputId = deviceId;
+      this.devices.outputId = deviceId;
     } catch (e) {
       this.error = `Couldn't switch speaker (${errorName(e)}).`;
     }
@@ -465,21 +464,15 @@ class VoiceStore {
     for (const el of this.audioEls.values()) el.remove();
     this.audioEls.clear();
     this.screenAudioEls.clear();
-    this.screenAudio = {};
-    this.screens = {};
-    this.watching = null;
+    this.share = { screens: {}, watching: null, audio: {} };
     this.pendingWatch = null;
     this.room = null;
     this.status = VoiceStatus.Idle;
-    this.channelId = null;
-    this.channelName = "";
+    this.channel = null;
     this.participants = [];
     this.micStatus = MicStatus.Muted;
     this.canPublish = true;
-    this.audioInputs = [];
-    this.audioInputId = "default";
-    this.audioOutputs = [];
-    this.audioOutputId = "default";
+    this.devices = { inputs: [], inputId: "default", outputs: [], outputId: "default" };
     this.deafened = false;
     this.mutedByDeafen = false;
     this.playingSounds = 0;

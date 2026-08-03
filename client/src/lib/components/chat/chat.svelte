@@ -52,7 +52,7 @@
 
 {#snippet mainView()}
   <main class="bg-background flex min-h-0 min-w-0 flex-1 flex-col">
-    {#if voice.watching}
+    {#if voice.share.watching}
       <StreamView />
     {:else if channels.current?.type === ChannelType.Voice}
       <RoomView channel={channels.current} />

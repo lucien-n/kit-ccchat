@@ -16,7 +16,7 @@
   const { channel }: Props = $props();
 
   const Icon = channelTypeSpecs[ChannelType.Voice].icon;
-  const joined = $derived(voice.channelId === channel.id);
+  const joined = $derived(voice.channel?.id === channel.id);
 
   // The server-pushed roster is the base (it carries avatars and works before we
   // join); live LiveKit state overlays speaking and the subscribed screen track
@@ -30,7 +30,7 @@
         member,
         speaking: p?.speaking ?? false,
         muted: p?.muted ?? member.muted,
-        track: voice.screens[member.id] ?? null,
+        track: voice.share.screens[member.id] ?? null,
       };
     });
   });

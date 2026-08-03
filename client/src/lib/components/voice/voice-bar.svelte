@@ -17,7 +17,7 @@
       <div class="min-w-0 flex-1">
         <div class="flex items-center gap-1 truncate text-sm font-semibold">
           <Volume2Icon class="size-3.5 shrink-0" />
-          <span class="truncate">{voice.channelName}</span>
+          <span class="truncate">{voice.channel?.name}</span>
         </div>
         <div class="text-xs text-green-500">
           {voice.status === VoiceStatus.Connected ? "Connected" : "Connecting…"}

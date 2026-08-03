@@ -5,7 +5,7 @@
   import { Headphones, HeadphoneOff } from "@lucide/svelte";
 
   const variant: ButtonVariant = $derived(voice.deafened ? "destructive" : "secondary");
-  const canPickDevice = $derived(voice.audioOutputs.length > 1);
+  const canPickDevice = $derived(voice.devices.outputs.length > 1);
 
   function label(device: MediaDeviceInfo, i: number): string {
     return device.label || `Speaker ${i + 1}`;
@@ -28,7 +28,7 @@
   </Button>
   <Select.Root
     type="single"
-    value={voice.audioOutputId}
+    value={voice.devices.outputId}
     onValueChange={(v) => voice.setAudioOutput(v)}
   >
     <Select.Trigger
@@ -43,7 +43,7 @@
     ></Select.Trigger>
     <Select.Content>
       <Select.Group>
-        {#each voice.audioOutputs as device, i (device.deviceId)}
+        {#each voice.devices.outputs as device, i (device.deviceId)}
           <Select.Item value={device.deviceId} label={label(device, i)} />
         {/each}
       </Select.Group>

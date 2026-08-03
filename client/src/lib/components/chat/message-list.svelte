@@ -10,10 +10,10 @@
 
   const chat = getChatContext();
 
-  // voice.watching: closing a stream remounts the scroller at the top.
+  // voice.share.watching: closing a stream remounts the scroller at the top.
   $effect(() => {
     void messages.list.length;
-    void voice.watching;
+    void voice.share.watching;
     if (chat.stick) chat.toBottom();
   });
 

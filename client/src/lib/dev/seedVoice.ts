@@ -70,8 +70,7 @@ export async function seedVoice(count = 6, opts: SeedOptions = {}) {
     };
   });
 
-  voice.channelId = channel.id;
-  voice.channelName = channel.name;
+  voice.channel = { id: channel.id, name: channel.name };
   voice.status = VoiceStatus.Connected;
   voice.canPublish = opts.canPublish ?? true;
   voice.micStatus = voice.canPublish ? MicStatus.Enabled : MicStatus.MutedByMod;
