@@ -2,7 +2,7 @@
   import { api } from "$lib/api";
   import CommunityIconPicker from "$lib/components/community/community-icon-picker.svelte";
   import { apiErrorMessage, fail, ok, toastMessage } from "$lib/forms";
-  import { community } from "$lib/stores/community.svelte";
+  import { community } from "$lib/stores";
   import * as Form from "&/form";
   import { Input } from "&/input";
   import { renameCommunityBody } from "@ccchat/shared";

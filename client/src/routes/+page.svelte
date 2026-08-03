@@ -4,9 +4,7 @@
   import Login from "$lib/components/auth/login.svelte";
   import Setup from "$lib/components/setup/setup.svelte";
   import { setFavicon } from "$lib/favicon";
-  import { appearance } from "$lib/stores/appearance.svelte";
-  import { community } from "$lib/stores/community.svelte";
-  import { session } from "$lib/stores/session.svelte";
+  import { appearance, community, session } from "$lib/stores";
   import { onMount } from "svelte";
 
   let ready = $state(false);

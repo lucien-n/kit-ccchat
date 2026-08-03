@@ -2,7 +2,7 @@
   import { api } from "$lib/api";
   import { apiErrorMessage } from "$lib/forms";
   import { resizeImage } from "$lib/image";
-  import { community } from "$lib/stores/community.svelte";
+  import { community } from "$lib/stores";
   import { Button } from "&/button";
   import ImageIcon from "@lucide/svelte/icons/image";
   import Trash2 from "@lucide/svelte/icons/trash-2";

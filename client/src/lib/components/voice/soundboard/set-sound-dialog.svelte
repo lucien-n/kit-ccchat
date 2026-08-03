@@ -1,6 +1,6 @@
 <script lang="ts">
   import EmojiPicker from "$lib/components/chat/emoji-picker.svelte";
-  import { soundboard } from "$lib/stores/soundboard.svelte";
+  import { soundboard } from "$lib/stores";
   import { Button } from "&/button";
   import * as Dialog from "&/dialog";
   import { Input } from "&/input";

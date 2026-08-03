@@ -1,4 +1,4 @@
-import { api, type Channel } from "../api";
+import { api, type Channel } from "$lib/api";
 
 class Channels {
   list = $state<Channel[]>([]);

@@ -1,5 +1,5 @@
 import { SEARCH_PAGE, SearchSort } from "@ccchat/shared";
-import { api, type SearchHit } from "../api";
+import { api, type SearchHit } from "$lib/api";
 
 export interface SearchFilters {
   q: string;

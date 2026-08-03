@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { voice, VoiceStatus } from "$lib/stores/voice.svelte";
+  import { voice, VoiceStatus } from "$lib/stores";
   import { Card } from "&/card";
   import Volume2Icon from "@lucide/svelte/icons/volume-2";
   import MicButton from "./mic-button.svelte";

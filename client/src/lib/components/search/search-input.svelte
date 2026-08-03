@@ -7,9 +7,7 @@
     type FilterKey,
   } from "$lib/search-query";
   import { channelTypeSpecs } from "$lib/specs";
-  import { channels } from "$lib/stores/channels.svelte";
-  import { members } from "$lib/stores/members.svelte";
-  import { search } from "$lib/stores/search.svelte";
+  import { channels, members, search } from "$lib/stores";
   import { Badge } from "&/badge";
   import { Button } from "&/button";
   import { Input } from "&/input";

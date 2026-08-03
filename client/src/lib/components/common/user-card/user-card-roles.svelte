@@ -1,6 +1,6 @@
 <script lang="ts">
   import { getUserContext } from "$lib/context/user.svelte";
-  import { roles } from "$lib/stores/roles.svelte";
+  import { roles } from "$lib/stores";
   import { cn } from "$lib/utils";
   import { ScrollArea } from "&/scroll-area";
   import CheckIcon from "@lucide/svelte/icons/check";
@@ -31,7 +31,9 @@
               <span class="text-muted-foreground text-[10px] uppercase">
                 {role.permission}
               </span>
-              <CheckIcon class={cn("size-4 shrink-0", on ? "opacity-100" : "opacity-0")} />
+              <CheckIcon
+                class={cn("size-4 shrink-0", on ? "opacity-100" : "opacity-0")}
+              />
             </button>
           {/each}
         </div>

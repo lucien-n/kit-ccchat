@@ -1,7 +1,7 @@
 <script lang="ts">
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { UserCard } from "$lib/components/common/user-card";
-  import { voice } from "$lib/stores/voice.svelte";
+  import { voice } from "$lib/stores";
   import { cn } from "$lib/utils";
   import { Button } from "&/button";
   import type { Channel, VoiceMember } from "@ccchat/shared";

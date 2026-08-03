@@ -1,8 +1,6 @@
 import type { MentionResolver } from "$lib/markdown";
 import { EVERYONE, USERNAME_CHARS } from "@ccchat/shared";
-import { members } from "./stores/members.svelte";
-import { roles } from "./stores/roles.svelte";
-import { session } from "./stores/session.svelte";
+import { members, roles, session } from "$lib/stores";
 
 export function mentionResolver(): MentionResolver {
   const meId = session.user?.id;

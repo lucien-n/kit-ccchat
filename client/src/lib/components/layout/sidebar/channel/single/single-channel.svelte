@@ -1,8 +1,6 @@
 <script lang="ts">
   import { setChannelContext } from "$lib/context/channel.svelte";
-  import { channels } from "$lib/stores/channels.svelte";
-  import { presence } from "$lib/stores/presence.svelte";
-  import { unread } from "$lib/stores/unread.svelte";
+  import { channels, presence, unread } from "$lib/stores";
   import { cn } from "$lib/utils";
   import { Badge } from "&/badge";
   import { Button } from "&/button";

@@ -1,9 +1,6 @@
 import type { MessageView } from "$lib/api";
 import { jumpToPresent, openMessage } from "$lib/app";
-import { channels } from "$lib/stores/channels.svelte";
-import { messages } from "$lib/stores/messages.svelte";
-import { search } from "$lib/stores/search.svelte";
-import { typing } from "$lib/stores/typing.svelte";
+import { channels, messages, search, typing } from "$lib/stores";
 import { getContext, setContext, tick } from "svelte";
 import { toast } from "svelte-sonner";
 

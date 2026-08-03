@@ -1,11 +1,7 @@
 <script lang="ts">
   import { getChatContext, type ChatPanel } from "$lib/context/chat.svelte";
   import { channelTypeSpecs } from "$lib/specs";
-  import { channels } from "$lib/stores/channels.svelte";
-  import { prefs } from "$lib/stores/prefs.svelte";
-  import { presence } from "$lib/stores/presence.svelte";
-  import { ui } from "$lib/stores/ui.svelte";
-  import { unread } from "$lib/stores/unread.svelte";
+  import { channels, prefs, presence, ui, unread } from "$lib/stores";
   import { Button } from "&/button";
   import * as ToggleGroup from "&/toggle-group";
   import { ChannelType } from "@ccchat/shared";
@@ -27,7 +23,8 @@
     >
       <Menu class="size-5" />
       {#if unread.total > 0}
-        <span class="bg-destructive absolute top-1.5 right-1.5 size-2 rounded-full"></span>
+        <span class="bg-destructive absolute top-1.5 right-1.5 size-2 rounded-full"
+        ></span>
       {/if}
     </Button>
     <Icon class="text-muted-foreground size-5 shrink-0" />
@@ -37,9 +34,7 @@
     <Button
       variant="ghost"
       size="icon"
-      title={prefs.soundEnabled
-        ? "Mute notification sound"
-        : "Unmute notification sound"}
+      title={prefs.soundEnabled ? "Mute notification sound" : "Unmute notification sound"}
       onclick={() => prefs.toggleSound()}
     >
       {#if prefs.soundEnabled}<Bell class="size-4" />{:else}<BellOff

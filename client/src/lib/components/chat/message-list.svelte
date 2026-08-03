@@ -1,8 +1,7 @@
 <script lang="ts">
   import * as Empty from "$lib/components/ui/empty/index.js";
   import { getChatContext } from "$lib/context/chat.svelte";
-  import { messages } from "$lib/stores/messages.svelte";
-  import { voice } from "$lib/stores/voice.svelte";
+  import { messages, voice } from "$lib/stores";
   import { Button } from "&/button";
   import { ScrollArea } from "&/scroll-area";
   import { tick } from "svelte";
@@ -62,9 +61,7 @@
           <Empty.Description>Start chatting below.</Empty.Description>
         </Empty.Header>
         <Empty.Content>
-          <Button variant="outline" onclick={() => chat.composer?.focus()}>
-            Start
-          </Button>
+          <Button variant="outline" onclick={() => chat.composer?.focus()}>Start</Button>
         </Empty.Content>
       </Empty.Root>
     {:else}

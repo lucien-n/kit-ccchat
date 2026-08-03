@@ -3,8 +3,7 @@
   import { getChatContext } from "$lib/context/chat.svelte";
   import { apiErrorMessage } from "$lib/forms";
   import { toggleReaction } from "$lib/reactions";
-  import { messages } from "$lib/stores/messages.svelte";
-  import { session } from "$lib/stores/session.svelte";
+  import { messages, session } from "$lib/stores";
   import { Button } from "&/button";
   import { Separator } from "&/separator";
   import PencilIcon from "@lucide/svelte/icons/pencil";

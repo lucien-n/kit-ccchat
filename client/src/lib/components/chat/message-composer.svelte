@@ -12,7 +12,7 @@
     type EmojiIndex,
   } from "$lib/emoji";
   import { mentionQuery, searchMentions, type MentionSuggestion } from "$lib/mentions";
-  import { appearance } from "$lib/stores/appearance.svelte";
+  import { appearance } from "$lib/stores";
   import { Button } from "&/button";
   import { Textarea } from "&/textarea";
   import {

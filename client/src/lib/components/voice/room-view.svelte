@@ -1,7 +1,6 @@
 <script lang="ts">
   import { channelTypeSpecs } from "$lib/specs";
-  import { presence } from "$lib/stores/presence.svelte";
-  import { voice } from "$lib/stores/voice.svelte";
+  import { presence, voice } from "$lib/stores";
   import { Button } from "&/button";
   import { ChannelType, type Channel } from "@ccchat/shared";
   import DeafenButton from "./deafen-button.svelte";

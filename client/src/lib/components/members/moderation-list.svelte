@@ -3,9 +3,7 @@
   import MemberIdentity from "$lib/components/common/member-identity.svelte";
   import { apiErrorMessage } from "$lib/forms";
   import { byRank, isMuted } from "$lib/members";
-  import { members } from "$lib/stores/members.svelte";
-  import { presence } from "$lib/stores/presence.svelte";
-  import { session } from "$lib/stores/session.svelte";
+  import { members, presence, session } from "$lib/stores";
   import { Badge } from "&/badge";
   import { Button } from "&/button";
   import { Checkbox } from "&/checkbox";

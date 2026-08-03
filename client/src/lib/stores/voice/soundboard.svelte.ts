@@ -5,9 +5,9 @@ import {
   type Sound,
 } from "@ccchat/shared";
 import { SvelteSet } from "svelte/reactivity";
-import { api } from "../api";
-import { apiErrorMessage } from "../forms";
-import { fileToDataUrl } from "../image";
+import { api } from "$lib/api";
+import { apiErrorMessage } from "$lib/forms";
+import { fileToDataUrl } from "$lib/image";
 
 const FAVORITES_KEY = "soundboardFavorites";
 

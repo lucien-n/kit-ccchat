@@ -1,9 +1,7 @@
 <script lang="ts">
   import VoiceBar from "$lib/components/voice/voice-bar.svelte";
   import { getChatContext } from "$lib/context/chat.svelte";
-  import { channels } from "$lib/stores/channels.svelte";
-  import { messages } from "$lib/stores/messages.svelte";
-  import { voice } from "$lib/stores/voice.svelte";
+  import { channels, messages, voice } from "$lib/stores";
   import { Button } from "&/button";
   import { ChannelType } from "@ccchat/shared";
   import ArrowDownIcon from "@lucide/svelte/icons/arrow-down";

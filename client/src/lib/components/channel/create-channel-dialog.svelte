@@ -3,7 +3,7 @@
   import * as app from "$lib/app";
   import { apiErrorMessage, fail } from "$lib/forms";
   import { channelTypeSpecs } from "$lib/specs";
-  import { channels } from "$lib/stores/channels.svelte";
+  import { channels } from "$lib/stores";
   import { cn } from "$lib/utils";
   import { Button } from "&/button";
   import * as Dialog from "&/dialog";

@@ -7,10 +7,10 @@ import {
   type RemoteTrack,
   type RemoteTrackPublication,
 } from "livekit-client";
-import { api } from "../api";
-import { apiErrorMessage, errorName } from "../forms";
-import { playMute, playUnmute, playVoiceJoin, playVoiceLeave } from "../notify";
-import { realtime } from "./realtime.svelte";
+import { api } from "$lib/api";
+import { apiErrorMessage, errorName } from "$lib/forms";
+import { playMute, playUnmute, playVoiceJoin, playVoiceLeave } from "$lib/notify";
+import { realtime } from "$lib/stores/realtime.svelte";
 
 /** Whether the browser can route audio to a chosen speaker. False on Firefox
  *  and iOS Safari, where enumerating and switching outputs is pointless. */

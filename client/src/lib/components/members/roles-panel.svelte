@@ -4,9 +4,7 @@
   import { Select } from "$lib/components/common/select";
   import { apiErrorMessage } from "$lib/forms";
   import { permissionSpecs } from "$lib/specs";
-  import { members } from "$lib/stores/members.svelte";
-  import { roles as rolesStore } from "$lib/stores/roles.svelte";
-  import { session } from "$lib/stores/session.svelte";
+  import { members, roles as rolesStore, session } from "$lib/stores";
   import { cn } from "$lib/utils";
   import { Button } from "&/button";
   import { Input } from "&/input";

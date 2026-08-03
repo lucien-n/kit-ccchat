@@ -1,5 +1,5 @@
 import { api, ModAction, type Member, type ModeratedMember } from "$lib/api";
-import { session } from "./session.svelte";
+import { session } from "$lib/stores/session/session.svelte";
 
 // Non-admins load the plain roster; the moderation fields they can't see get
 // harmless defaults so the app has one member type.

@@ -1,4 +1,4 @@
-import { api, communityIconUrl } from "../api";
+import { api, communityIconUrl } from "$lib/api";
 
 /** The instance itself, as opposed to your session on it. Readable logged out:
  *  the login screen shows the name. */

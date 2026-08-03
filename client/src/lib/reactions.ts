@@ -1,7 +1,6 @@
 import type { MessageView } from "$lib/api";
 import { apiErrorMessage } from "$lib/forms";
-import { messages } from "$lib/stores/messages.svelte";
-import { session } from "$lib/stores/session.svelte";
+import { messages, session } from "$lib/stores";
 import { toast } from "svelte-sonner";
 
 export const reactedByMe = (userIds: string[]) =>

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { voice } from "$lib/stores/voice.svelte";
+  import { voice } from "$lib/stores";
   import { Button } from "&/button";
   import ScreenShareIcon from "@lucide/svelte/icons/screen-share";
   import ScreenShareOffIcon from "@lucide/svelte/icons/screen-share-off";

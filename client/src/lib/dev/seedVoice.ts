@@ -1,9 +1,13 @@
 import { ChannelType } from "@ccchat/shared";
-import { channels } from "../stores/channels.svelte";
-import { members } from "../stores/members.svelte";
-import { presence } from "../stores/presence.svelte";
-import { session } from "../stores/session.svelte";
-import { MicStatus, voice, VoiceStatus } from "../stores/voice.svelte";
+import {
+  channels,
+  members,
+  presence,
+  session,
+  MicStatus,
+  voice,
+  VoiceStatus,
+} from "$lib/stores";
 
 export interface SeedOptions {
   longNames?: boolean;

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { externalLink } from "$lib/stores/externalLink.svelte";
+  import { externalLink } from "$lib/stores";
   import { Button } from "&/button";
   import * as Dialog from "&/dialog";
   import ExternalLinkIcon from "@lucide/svelte/icons/external-link";

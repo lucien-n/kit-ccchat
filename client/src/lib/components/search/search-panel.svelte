@@ -2,9 +2,7 @@
   import MessageSkeleton from "$lib/components/chat/message-skeleton.svelte";
   import { getChatContext } from "$lib/context/chat.svelte";
   import { parseQuery } from "$lib/search-query";
-  import { channels } from "$lib/stores/channels.svelte";
-  import { members } from "$lib/stores/members.svelte";
-  import { search } from "$lib/stores/search.svelte";
+  import { channels, members, search } from "$lib/stores";
   import { Button } from "&/button";
   import * as Empty from "&/empty";
   import { ScrollArea } from "&/scroll-area";

@@ -5,12 +5,7 @@
   import StreamView from "$lib/components/voice/stream-view.svelte";
   import { setChatContext } from "$lib/context/chat.svelte";
   import { setBaseTitle, setTitleBadge } from "$lib/notify";
-  import { channels } from "$lib/stores/channels.svelte";
-  import { community } from "$lib/stores/community.svelte";
-  import { prefs } from "$lib/stores/prefs.svelte";
-  import { ui } from "$lib/stores/ui.svelte";
-  import { unread } from "$lib/stores/unread.svelte";
-  import { voice } from "$lib/stores/voice.svelte";
+  import { channels, community, prefs, ui, unread, voice } from "$lib/stores";
   import * as Resizable from "&/resizable";
   import * as Sheet from "&/sheet";
   import { ChannelType } from "@ccchat/shared";

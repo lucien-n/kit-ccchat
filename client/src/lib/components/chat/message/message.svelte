@@ -2,12 +2,11 @@
   import { type MessageView } from "$lib/api";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { UserCard } from "$lib/components/common/user-card";
-  import { appearance } from "$lib/stores/appearance.svelte";
+  import { appearance, messages } from "$lib/stores";
   import Markdown from "$lib/components/markdown/markdown.svelte";
   import { getChatContext } from "$lib/context/chat.svelte";
   import { apiErrorMessage } from "$lib/forms";
   import { pingsMe } from "$lib/mentions";
-  import { messages } from "$lib/stores/messages.svelte";
   import { cn } from "$lib/utils";
   import { Textarea } from "&/textarea";
   import { MESSAGE_MAX_LENGTH, SystemEvent } from "@ccchat/shared";

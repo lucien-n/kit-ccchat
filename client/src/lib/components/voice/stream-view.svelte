@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { voice } from "$lib/stores/voice.svelte";
+  import { voice } from "$lib/stores";
   import { Button } from "&/button";
   import MaximizeIcon from "@lucide/svelte/icons/maximize";
   import MinimizeIcon from "@lucide/svelte/icons/minimize";

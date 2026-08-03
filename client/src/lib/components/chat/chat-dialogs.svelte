@@ -3,8 +3,7 @@
   import { UserCard } from "$lib/components/common/user-card";
   import CommunitySettingsDialog from "$lib/components/community/community-settings-dialog.svelte";
   import { SettingsDialog } from "$lib/components/settings/settings-dialog";
-  import { mentionCard } from "$lib/stores/mention-card.svelte";
-  import { ui } from "$lib/stores/ui.svelte";
+  import { mentionCard, ui } from "$lib/stores";
 </script>
 
 <CommunitySettingsDialog bind:open={ui.isCommunitySettingsDialogOpen} />

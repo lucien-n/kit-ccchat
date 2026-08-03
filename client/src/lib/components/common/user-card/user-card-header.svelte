@@ -4,9 +4,7 @@
   import { getUserContext } from "$lib/context/user.svelte";
   import { apiErrorMessage } from "$lib/forms";
   import { resizeBanner, resizeImage } from "$lib/image";
-  import { appearance } from "$lib/stores/appearance.svelte";
-  import { session } from "$lib/stores/session.svelte";
-  import { ui } from "$lib/stores/ui.svelte";
+  import { appearance, session, ui } from "$lib/stores";
   import { Button } from "&/button";
   import { Input } from "&/input";
   import PencilIcon from "@lucide/svelte/icons/pencil";

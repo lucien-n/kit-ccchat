@@ -2,7 +2,7 @@ import { getContext, setContext } from "svelte";
 import { toast } from "svelte-sonner";
 import { api, type Channel } from "$lib/api";
 import { apiErrorMessage } from "$lib/forms";
-import { channels } from "$lib/stores/channels.svelte";
+import { channels } from "$lib/stores";
 
 const KEY = Symbol("channel");
 

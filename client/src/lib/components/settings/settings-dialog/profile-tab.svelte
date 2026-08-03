@@ -2,7 +2,7 @@
   import { api } from "$lib/api";
   import UserCardContent from "$lib/components/common/user-card/user-card-content.svelte";
   import { apiErrorMessage, fail, ok, toastMessage } from "$lib/forms";
-  import { session } from "$lib/stores/session.svelte";
+  import { session } from "$lib/stores";
   import * as Form from "&/form";
   import { Card } from "&/card";
   import { Input } from "&/input";

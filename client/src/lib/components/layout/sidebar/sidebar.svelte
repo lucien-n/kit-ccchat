@@ -2,11 +2,7 @@
   import * as app from "$lib/app";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import VoiceBar from "$lib/components/voice/voice-bar.svelte";
-  import { appearance } from "$lib/stores/appearance.svelte";
-  import { channels } from "$lib/stores/channels.svelte";
-  import { session } from "$lib/stores/session.svelte";
-  import { ui } from "$lib/stores/ui.svelte";
-  import { voice } from "$lib/stores/voice.svelte";
+  import { appearance, channels, session, ui, voice } from "$lib/stores";
   import { Button } from "&/button";
   import { ChannelType } from "@ccchat/shared";
   import { LogOut } from "@lucide/svelte";

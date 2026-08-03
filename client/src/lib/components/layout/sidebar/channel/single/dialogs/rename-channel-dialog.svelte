@@ -1,7 +1,7 @@
 <script lang="ts">
   import { getChannelContext } from "$lib/context/channel.svelte";
   import { apiErrorMessage, fail } from "$lib/forms";
-  import { channels } from "$lib/stores/channels.svelte";
+  import { channels } from "$lib/stores";
   import { Button } from "&/button";
   import * as Dialog from "&/dialog";
   import * as Form from "&/form";

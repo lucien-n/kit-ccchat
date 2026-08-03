@@ -9,20 +9,22 @@ import { toast } from "svelte-sonner";
 import { api, type MessageView } from "./api";
 import { pingsMe } from "./mentions";
 import { playPing, unlockAudio } from "./notify";
-import { appearance } from "./stores/appearance.svelte";
-import { channels } from "./stores/channels.svelte";
-import { community } from "./stores/community.svelte";
-import { members } from "./stores/members.svelte";
-import { messages } from "./stores/messages.svelte";
-import { prefs } from "./stores/prefs.svelte";
-import { presence } from "./stores/presence.svelte";
-import { realtime } from "./stores/realtime.svelte";
-import { roles } from "./stores/roles.svelte";
-import { search } from "./stores/search.svelte";
-import { session } from "./stores/session.svelte";
-import { soundboard } from "./stores/soundboard.svelte";
-import { typing } from "./stores/typing.svelte";
-import { unread } from "./stores/unread.svelte";
+import {
+  appearance,
+  channels,
+  community,
+  members,
+  messages,
+  prefs,
+  presence,
+  realtime,
+  roles,
+  search,
+  session,
+  soundboard,
+  typing,
+  unread,
+} from "$lib/stores";
 
 export async function init() {
   prefs.init();

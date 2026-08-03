@@ -1,6 +1,5 @@
 <script lang="ts">
-  import { members } from "$lib/stores/members.svelte";
-  import { typing } from "$lib/stores/typing.svelte";
+  import { members, typing } from "$lib/stores";
   import { typingLabel } from "$lib/typing";
   import { fade } from "svelte/transition";
 

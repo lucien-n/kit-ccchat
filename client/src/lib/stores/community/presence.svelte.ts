@@ -1,4 +1,4 @@
-import type { VoiceMember } from "../api";
+import type { VoiceMember } from "$lib/api";
 
 /** Who is online and who is in which voice channel. Entirely server-pushed:
  *  nothing here is ever set locally, it is replaced wholesale by each event. */

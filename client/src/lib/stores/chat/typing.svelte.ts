@@ -6,9 +6,9 @@ import {
   withoutTypist,
   withTypist,
   type Typist,
-} from "../typing";
-import { realtime } from "./realtime.svelte";
-import { session } from "./session.svelte";
+} from "$lib/typing";
+import { realtime } from "$lib/stores/realtime.svelte";
+import { session } from "$lib/stores/session/session.svelte";
 
 const SWEEP_MS = 1000;
 

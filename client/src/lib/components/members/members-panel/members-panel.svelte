@@ -2,8 +2,7 @@
   import MemberIdentity from "$lib/components/common/member-identity.svelte";
   import { UserCard } from "$lib/components/common/user-card";
   import { byRank } from "$lib/members";
-  import { members } from "$lib/stores/members.svelte";
-  import { presence } from "$lib/stores/presence.svelte";
+  import { members, presence } from "$lib/stores";
   import type { Member } from "@ccchat/shared";
   import { onMount } from "svelte";
   import { PresenceGroup } from ".";

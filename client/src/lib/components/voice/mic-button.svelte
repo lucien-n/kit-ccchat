@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { MicStatus, voice } from "$lib/stores/voice.svelte";
+  import { MicStatus, voice } from "$lib/stores";
   import { Button, buttonVariants, type ButtonProps } from "&/button";
   import * as Select from "$lib/components/ui/select";
   import { Mic, MicOff } from "@lucide/svelte";

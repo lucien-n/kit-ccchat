@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { appearance, Theme, ThemeMode } from "$lib/stores/appearance.svelte";
+  import { appearance, Theme, ThemeMode } from "$lib/stores";
   import { Button } from "&/button";
   import { Input } from "&/input";
   import { Label } from "&/label";
