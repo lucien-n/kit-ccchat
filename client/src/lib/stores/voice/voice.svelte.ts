@@ -11,24 +11,15 @@ import {
   type RemoteTrack,
   type RemoteTrackPublication,
 } from "livekit-client";
+import { buildParticipants, type VoiceParticipant } from "./participants";
+import { SoundboardPlayer } from "./soundboard-player";
+
+export type { VoiceParticipant };
 
 /** Whether the browser can route audio to a chosen speaker. False on Firefox
  *  and iOS Safari, where enumerating and switching outputs is pointless. */
 const supportsAudioOutput = () =>
   typeof HTMLMediaElement !== "undefined" && "setSinkId" in HTMLMediaElement.prototype;
-
-/** Cap on decoded clips kept in memory. Each is multiple MB, so evict the
- *  least-recently-played once past this. */
-const MAX_CACHED_SOUNDS = 32;
-
-export interface VoiceParticipant {
-  identity: string;
-  name: string;
-  speaking: boolean;
-  muted: boolean;
-  sharing: boolean;
-  isLocal: boolean;
-}
 
 export enum VoiceStatus {
   Idle = "Idle",
@@ -82,9 +73,7 @@ class VoiceStore {
   /** The audio element carrying each stream's screen-share sound, so per-stream
    *  volume changes can be applied to it. Keys mirror `screenAudio`. */
   private screenAudioEls = new Map<string, HTMLMediaElement>();
-  private soundboardCtx: AudioContext | null = null;
-  /** Decoded clips cached by url, since decode is costly and clips get spammed. */
-  private soundBuffers = new Map<string, Promise<AudioBuffer>>();
+  private soundboard = new SoundboardPlayer();
   /** Clips publishing right now; drives the local speaking ring that LiveKit's
    *  mic detection won't light. Only read from refresh(), so a plain field. */
   private playingSounds = 0;
@@ -248,34 +237,13 @@ class VoiceStore {
   }
 
   private refresh() {
-    const room = this.room;
-    if (!room) {
-      this.participants = [];
-      return;
-    }
-    const speaking = new Set(room.activeSpeakers.map((p) => p.identity));
-    const lp = room.localParticipant;
-    const list: VoiceParticipant[] = [
-      {
-        identity: lp.identity,
-        name: lp.name || "me",
-        speaking: speaking.has(lp.identity) || this.playingSounds > 0,
-        muted: this.localMuted,
-        sharing: !!this.screens[lp.identity],
-        isLocal: true,
-      },
-    ];
-    for (const p of room.remoteParticipants.values()) {
-      list.push({
-        identity: p.identity,
-        name: p.name || p.identity,
-        speaking: speaking.has(p.identity),
-        muted: !p.isMicrophoneEnabled,
-        sharing: !!this.screens[p.identity],
-        isLocal: false,
-      });
-    }
-    this.participants = list;
+    this.participants = this.room
+      ? buildParticipants(this.room, {
+          screens: this.screens,
+          localMuted: this.localMuted,
+          localSpeaking: this.playingSounds > 0,
+        })
+      : [];
   }
 
   /** Tell everyone else our mic state. Called only at real transitions, so there
@@ -350,70 +318,19 @@ class VoiceStore {
     this.pendingWatch = null;
   }
 
-  private loadSound(ctx: AudioContext, url: string): Promise<AudioBuffer> {
-    const cached = this.soundBuffers.get(url);
-    if (cached) {
-      // Re-insert to mark most-recently-played (Map keeps insertion order).
-      this.soundBuffers.delete(url);
-      this.soundBuffers.set(url, cached);
-      return cached;
-    }
-
-    const buffer = fetch(url)
-      .then((r) => r.arrayBuffer())
-      .then((bytes) => ctx.decodeAudioData(bytes));
-    buffer.catch(() => this.soundBuffers.delete(url)); // let a failed load retry
-    this.soundBuffers.set(url, buffer);
-    if (this.soundBuffers.size > MAX_CACHED_SOUNDS) {
-      const oldest = this.soundBuffers.keys().next().value;
-      if (oldest !== undefined) this.soundBuffers.delete(oldest);
-    }
-    return buffer;
-  }
-
-  /** Play a clip into the call. LiveKit won't loop your own audio back, so it's
-   *  routed to the local speakers too, then unpublished when the clip ends. */
+  /** Play a soundboard clip into the call. Muted means muted: a clip triggered
+   *  while muted plays only for you. */
   async playSound(url: string) {
     const lp = this.room?.localParticipant;
     if (!lp) return;
-    // Muted means muted: a clip triggered while muted plays only for you.
     const broadcast = !this.localMuted && this.canPublish;
     try {
-      const ctx = (this.soundboardCtx ??= new AudioContext());
-      // Fetch/decode doesn't need a running context, so overlap it with resume.
-      const bufferP = this.loadSound(ctx, url);
-      if (ctx.state === "suspended") await ctx.resume();
-
-      const buffer = await bufferP;
-
-      const src = ctx.createBufferSource();
-      src.buffer = buffer;
-      src.connect(ctx.destination); // -> so you always hear it yourself
-
-      if (!broadcast) {
-        src.start();
-        return;
-      }
-
-      const dest = ctx.createMediaStreamDestination();
-      src.connect(dest); // -> published to everyone else
-      const track = dest.stream.getAudioTracks()[0];
-      await lp.publishTrack(track, {
-        // Not Microphone: keeps the clip off the mic-state UI and mute logic.
-        source: Track.Source.Unknown,
-        name: "soundboard",
-      });
-      // LiveKit's active-speaker detection watches the mic, not this track, so
-      // light the speaking ring by hand for as long as the clip is publishing.
-      this.playingSounds++;
-      this.refresh();
-      src.onended = () => {
-        void lp.unpublishTrack(track);
-        track.stop();
-        this.playingSounds = Math.max(0, this.playingSounds - 1);
+      await this.soundboard.play(lp, url, broadcast, (delta) => {
+        // LiveKit's active-speaker detection watches the mic, not this track, so
+        // light the speaking ring by hand while the clip is publishing.
+        this.playingSounds = Math.max(0, this.playingSounds + delta);
         this.refresh();
-      };
-      src.start();
+      });
     } catch (e) {
       this.error = `Couldn't play that sound (${errorName(e)}).`;
     }
