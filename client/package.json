@@ -18,6 +18,7 @@
     "livekit-client": "^2.7.5",
     "markdown-it": "^14.3.0",
     "markdown-it-emoji": "^3.0.0",
+    "svelte-dnd-action": "^0.9.77",
     "twemoji-colr-font": "^15.0.3"
   },
   "devDependencies": {

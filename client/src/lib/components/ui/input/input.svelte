@@ -23,51 +23,53 @@
   }: Props = $props();
 
   let isPasswordVisible = $state(false);
+
+  const baseClass =
+    "bg-input/50 focus-visible:border-ring focus-visible:ring-ring/30 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 file:text-foreground placeholder:text-muted-foreground h-8 w-full min-w-0 rounded-2xl border border-transparent px-2.5 py-1 text-base transition-[color,box-shadow] duration-200 outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-3 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-3 md:text-sm";
 </script>
 
 {#if type === "file"}
   <input
     bind:this={ref}
     data-slot={dataSlot}
-    class={cn(
-      "bg-input/50 focus-visible:border-ring focus-visible:ring-ring/30 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 file:text-foreground placeholder:text-muted-foreground h-8 w-full min-w-0 rounded-2xl border border-transparent px-2.5 py-1 text-base transition-[color,box-shadow] duration-200 outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-3 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-3 md:text-sm",
-      className,
-    )}
+    class={cn(baseClass, className)}
     type="file"
     bind:files
     bind:value
     {...restProps}
   />
-{:else}
+{:else if type === "password"}
   <div class="relative flex-1">
     <input
       bind:this={ref}
       data-slot={dataSlot}
-      class={cn(
-        "bg-input/50 focus-visible:border-ring focus-visible:ring-ring/30 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:aria-invalid:border-destructive/50 file:text-foreground placeholder:text-muted-foreground h-8 w-full min-w-0 rounded-2xl border border-transparent px-2.5 py-1 text-base transition-[color,box-shadow] duration-200 outline-none file:inline-flex file:h-6 file:border-0 file:bg-transparent file:text-sm file:font-medium focus-visible:ring-3 disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-50 aria-invalid:ring-3 md:text-sm",
-        type === "password" && "pr-8",
-        type === "color" && "accent-swatch cursor-pointer p-0",
-        className,
-      )}
-      type={type === "password" && isPasswordVisible ? "text" : type}
+      class={cn(baseClass, "pr-8", className)}
+      type={isPasswordVisible ? "text" : "password"}
       bind:value
       {...restProps}
     />
-    {#if type === "password"}
-      <Button
-        class="absolute right-0"
-        onclick={() => (isPasswordVisible = !isPasswordVisible)}
-        variant="ghost"
-        size="icon"
-      >
-        {#if isPasswordVisible}
-          <EyeIcon />
-        {:else}
-          <EyeClosedIcon />
-        {/if}
-      </Button>
-    {/if}
+    <Button
+      class="absolute right-0"
+      onclick={() => (isPasswordVisible = !isPasswordVisible)}
+      variant="ghost"
+      size="icon"
+    >
+      {#if isPasswordVisible}
+        <EyeIcon />
+      {:else}
+        <EyeClosedIcon />
+      {/if}
+    </Button>
   </div>
+{:else}
+  <input
+    bind:this={ref}
+    data-slot={dataSlot}
+    class={cn(baseClass, type === "color" && "accent-swatch cursor-pointer p-0", className)}
+    {type}
+    bind:value
+    {...restProps}
+  />
 {/if}
 
 <style>

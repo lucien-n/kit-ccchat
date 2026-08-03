@@ -12,10 +12,11 @@
   import { ScrollArea } from "&/scroll-area";
   import { Permission } from "@ccchat/shared";
   import CheckIcon from "@lucide/svelte/icons/check";
-  import ChevronDownIcon from "@lucide/svelte/icons/chevron-down";
-  import ChevronUpIcon from "@lucide/svelte/icons/chevron-up";
+  import GripVerticalIcon from "@lucide/svelte/icons/grip-vertical";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import { onMount } from "svelte";
+  import { dndzone, type DndEvent } from "svelte-dnd-action";
+  import { flip } from "svelte/animate";
 
   const DEFAULT_COLOR = "#5865f2";
 
@@ -108,14 +109,24 @@
     busy = false;
   }
 
-  /** Swap a role with its neighbour and send the whole new order; dir -1 is up
-   *  the list (higher precedence), +1 is down. */
-  async function move(id: string, dir: -1 | 1) {
-    const order = rolesStore.list.map((r) => r.id);
-    const i = order.indexOf(id);
-    const j = i + dir;
-    if (i < 0 || j < 0 || j >= order.length) return;
-    [order[i], order[j]] = [order[j], order[i]];
+  // Local mirror the dnd zone can reorder live; kept in sync with the store
+  // except while a drag is in flight.
+  let ordered = $state<Role[]>([]);
+  let dragging = $state(false);
+  $effect(() => {
+    if (!dragging) ordered = rolesStore.list;
+  });
+
+  function consider(e: CustomEvent<DndEvent<Role>>) {
+    dragging = true;
+    ordered = e.detail.items;
+  }
+
+  async function finalize(e: CustomEvent<DndEvent<Role>>) {
+    ordered = e.detail.items;
+    dragging = false;
+    const order = ordered.map((r) => r.id);
+    if (order.every((id, i) => id === rolesStore.list[i]?.id)) return;
     busy = true;
     await attempt(
       async () => {
@@ -162,7 +173,7 @@
   <Label>{label}</Label>
   <Input placeholder="Role name" bind:value={model.name} class="w-full" />
   <div class="flex flex-wrap items-center gap-2">
-    <Input type="color" bind:value={model.color} aria-label="Role color" />
+    <Input type="color" bind:value={model.color} aria-label="Role color" class="w-8" />
     <Select
       bind:value={model.permission}
       options={Object.values(permissionSpecs)}
@@ -185,14 +196,37 @@
     </div>
 
     <ScrollArea class="min-h-0 flex-1">
-      <div class="space-y-0.5 pr-2">
-        {#each rolesStore.list as role, i (role.id)}
+      {#if ordered.length === 0}
+        <p class="text-muted-foreground py-8 text-center text-sm">
+          No roles yet. Create one.
+        </p>
+      {/if}
+      <div
+        class="flex flex-col gap-0.5 pr-2"
+        use:dndzone={{
+          items: ordered,
+          flipDurationMs: 150,
+          dropTargetStyle: {},
+          dragDisabled: busy,
+        }}
+        onconsider={consider}
+        onfinalize={finalize}
+      >
+        {#each ordered as role (role.id)}
           <div
+            animate:flip={{ duration: 150 }}
             class={cn(
               "group flex items-center gap-1 rounded-2xl p-2",
               selectedId === role.id ? "bg-muted" : "hover:bg-muted/50",
             )}
           >
+            <span
+              class="text-muted-foreground/60 hover:text-muted-foreground -ml-1 cursor-grab"
+              title="Drag to reorder"
+              aria-label="Drag to reorder"
+            >
+              <GripVerticalIcon class="size-4" />
+            </span>
             <button
               type="button"
               class="flex min-w-0 flex-1 items-center gap-2 text-left"
@@ -217,36 +251,12 @@
               variant="ghost"
               size="icon"
               class="size-7 opacity-0 group-hover:opacity-100 max-sm:opacity-100"
-              title="Move up"
-              disabled={busy || i === 0}
-              onclick={() => move(role.id, -1)}
-            >
-              <ChevronUpIcon class="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              class="size-7 opacity-0 group-hover:opacity-100 max-sm:opacity-100"
-              title="Move down"
-              disabled={busy || i === rolesStore.list.length - 1}
-              onclick={() => move(role.id, 1)}
-            >
-              <ChevronDownIcon class="size-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              class="size-7 opacity-0 group-hover:opacity-100 max-sm:opacity-100"
               title="Delete role"
               onclick={() => remove(role.id)}
             >
               <Trash2Icon class="size-4" />
             </Button>
           </div>
-        {:else}
-          <p class="text-muted-foreground py-8 text-center text-sm">
-            No roles yet. Create one.
-          </p>
         {/each}
       </div>
     </ScrollArea>
