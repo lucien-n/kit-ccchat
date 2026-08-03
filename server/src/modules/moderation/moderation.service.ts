@@ -8,6 +8,7 @@ import {
   usersTable,
   type User,
 } from "../../db/schema";
+import { getById } from "../../db/query.js";
 import { httpError } from "../../http/errors.js";
 import { hub } from "../../hub.js";
 import { authLevel } from "../../permissions.js";
@@ -18,8 +19,7 @@ import { reactionsOf } from "../messages/reactions.js";
 /** Nobody may act on their own rank or above, so an admin can't ban the owner or
  *  another admin. */
 export function resolveTarget(actor: User, targetId: string): User {
-  const target = db.select().from(usersTable).where(eq(usersTable.id, targetId)).get();
-  if (!target) httpError(404, "user not found");
+  const target = getById(usersTable, targetId, "user not found");
   if (target.id === actor.id) httpError(400, "you cannot moderate yourself");
   if (authLevel(target) >= authLevel(actor)) httpError(403, "target outranks you");
   return target;

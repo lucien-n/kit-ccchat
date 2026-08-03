@@ -3,6 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { randomToken } from "../../auth.js";
 import { db } from "../../db/index.js";
 import { invitesTable, usersTable } from "../../db/schema";
+import { findById } from "../../db/query.js";
 import { httpError } from "../../http/errors.js";
 
 /** Derived state is resolved here so the client never re-implements the
@@ -10,11 +11,7 @@ import { httpError } from "../../http/errors.js";
 function toInviteView(i: typeof invitesTable.$inferSelect): Invite {
   const exhausted = i.maxUses !== 0 && i.uses >= i.maxUses;
   const expired = i.expiresAt != null && i.expiresAt < Date.now();
-  const creator = db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, i.createdBy))
-    .get();
+  const creator = findById(usersTable, i.createdBy);
   return {
     code: i.code,
     createdAt: i.createdAt,

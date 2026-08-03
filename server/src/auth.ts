@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import type { Context, MiddlewareHandler } from "hono";
 import { randomBytes, randomUUID, scryptSync, timingSafeEqual } from "node:crypto";
 import { db } from "./db/index.js";
+import { findById } from "./db/query.js";
 import { sessionsTable, usersTable, type User } from "./db/schema";
 import { SESSION_TTL_MS } from "./env.js";
 import { isAdmin, isOwner } from "./permissions.js";
@@ -57,11 +58,7 @@ export function userForToken(token: string | undefined): User | null {
     db.delete(sessionsTable).where(eq(sessionsTable.token, token)).run();
     return null;
   }
-  const user = db
-    .select()
-    .from(usersTable)
-    .where(eq(usersTable.id, session.userId))
-    .get();
+  const user = findById(usersTable, session.userId);
   if (!user || user.banned || user.kickedAt) return null;
   return user;
 }

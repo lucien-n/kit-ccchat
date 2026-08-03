@@ -17,6 +17,7 @@ import { hashPassword, verifyPassword } from "../../auth.js";
 import { db } from "../../db/index.js";
 import { rolesTable, userRolesTable, usersTable, type User } from "../../db/schema";
 import { AVATARS_DIR, BANNERS_DIR } from "../../env.js";
+import { getById } from "../../db/query.js";
 import { httpError } from "../../http/errors.js";
 import { decodeImageUpload, imageStore, type StoredImage } from "../../images.js";
 import { toMember, toRoleView } from "../../views.js";
@@ -129,8 +130,7 @@ export function changePassword(
 }
 
 export function getUser(id: string): { user: Member; roles: Role[] } {
-  const u = db.select().from(usersTable).where(eq(usersTable.id, id)).get();
-  if (!u) httpError(404, "user not found");
+  const u = getById(usersTable, id, "user not found");
 
   const assigned = db
     .select({

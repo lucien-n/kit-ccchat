@@ -14,6 +14,7 @@ import {
   messagesTable,
   type User,
 } from "../../db/schema";
+import { findById, getById } from "../../db/query.js";
 import { httpError } from "../../http/errors.js";
 
 function toChannelView(row: typeof channelsTable.$inferSelect): Channel {
@@ -84,12 +85,7 @@ export function unreadCounts(user: User): {
 }
 
 export function markRead(userId: string, channelId: string) {
-  const channel = db
-    .select({ id: channelsTable.id })
-    .from(channelsTable)
-    .where(eq(channelsTable.id, channelId))
-    .get();
-  if (!channel) return;
+  if (!findById(channelsTable, channelId)) return;
 
   const now = Date.now();
   db.insert(channelReadsTable)
@@ -129,8 +125,7 @@ export function createChannel({ name, type }: CreateChannelBody) {
 }
 
 export function renameChannel(id: string, name: string): Channel {
-  const existing = db.select().from(channelsTable).where(eq(channelsTable.id, id)).get();
-  if (!existing) httpError(404, "channel not found");
+  const existing = getById(channelsTable, id, "channel not found");
 
   const type = existing.type as ChannelType;
   if (isNameTaken(name, type, id))

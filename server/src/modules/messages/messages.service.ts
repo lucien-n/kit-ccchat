@@ -17,6 +17,7 @@ import {
   messagesTable,
   type User,
 } from "../../db/schema";
+import { findById } from "../../db/query.js";
 import { httpError } from "../../http/errors.js";
 import { hub } from "../../hub.js";
 import { toMessageView } from "../../views.js";
@@ -81,11 +82,7 @@ export function around(
   messageId: string,
   limit: number,
 ): MessageWindow | null {
-  const target = db
-    .select()
-    .from(messagesTable)
-    .where(eq(messagesTable.id, messageId))
-    .get();
+  const target = findById(messagesTable, messageId);
   if (!target || target.channelId !== channelId || target.deleted) {
     return null;
   }
@@ -121,7 +118,7 @@ export function around(
 }
 
 export function editMessage(id: string, user: User, { content }: EditMessageBody) {
-  const msg = db.select().from(messagesTable).where(eq(messagesTable.id, id)).get();
+  const msg = findById(messagesTable, id);
   if (!msg || msg.deleted) {
     httpError(404, "not found");
   }
@@ -146,7 +143,7 @@ export function editMessage(id: string, user: User, { content }: EditMessageBody
 }
 
 export function deleteMessage(id: string, user: User) {
-  const msg = db.select().from(messagesTable).where(eq(messagesTable.id, id)).get();
+  const msg = findById(messagesTable, id);
   if (!msg || msg.deleted) {
     httpError(404, "not found");
   }
@@ -164,7 +161,7 @@ export function reactMessage(id: string, user: User, emoji: string) {
     httpError(403, "you are muted");
   }
 
-  const msg = db.select().from(messagesTable).where(eq(messagesTable.id, id)).get();
+  const msg = findById(messagesTable, id);
   if (!msg || msg.deleted) {
     httpError(404, "not found");
   }
@@ -200,7 +197,7 @@ export function unreactMessage(id: string, user: User, emoji: string) {
     httpError(403, "you are muted");
   }
 
-  const msg = db.select().from(messagesTable).where(eq(messagesTable.id, id)).get();
+  const msg = findById(messagesTable, id);
   if (!msg || msg.deleted) {
     httpError(404, "not found");
   }
