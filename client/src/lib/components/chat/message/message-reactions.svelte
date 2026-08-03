@@ -4,7 +4,7 @@
   import { cn } from "$lib/utils";
   import { Button } from "&/button";
   import { elasticInOut } from "svelte/easing";
-  import { fly } from "svelte/transition";
+  import { fly, scale } from "svelte/transition";
 
   interface Props {
     message: MessageView;
@@ -13,7 +13,10 @@
 </script>
 
 {#if message.reactions.length > 0}
-  <div class="mt-1 mb-1 flex flex-wrap gap-1">
+  <div
+    class="mt-1 mb-1 flex flex-wrap gap-1 self-start"
+    transition:scale={{ duration: 75 }}
+  >
     {#each message.reactions as reaction (reaction.emoji)}
       {@const reacted = reactedByMe(reaction.userIds)}
 
