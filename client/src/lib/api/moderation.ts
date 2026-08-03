@@ -1,3 +1,4 @@
+import { DeleteSpan } from "@ccchat/shared";
 import { client } from "./http";
 
 export enum ModAction {
@@ -8,24 +9,36 @@ export enum ModAction {
   Unmute = "Unmute",
 }
 
+export interface ModOptions {
+  minutes?: number;
+  deleteSpan?: DeleteSpan;
+}
+
 export const moderation = {
   /** Moderation view of members (admin only): includes banned/muted + roleIds. */
   members: async () => (await client.api.moderation.members.$get()).json(),
 
-  act: async (userId: string, action: ModAction, minutes?: number) => {
+  act: async (userId: string, action: ModAction, opts: ModOptions = {}) => {
     const param = { id: userId };
     const route = client.api.moderation[":id"];
     switch (action) {
       case ModAction.Kick:
         return (await route.kick.$post({ param })).json();
       case ModAction.Ban:
-        return (await route.ban.$post({ param })).json();
+        return (
+          await route.ban.$post({
+            param,
+            json: { deleteSpan: opts.deleteSpan ?? DeleteSpan.None },
+          })
+        ).json();
       case ModAction.Unban:
         return (await route.unban.$post({ param })).json();
       case ModAction.Unmute:
         return (await route.unmute.$post({ param })).json();
       case ModAction.Mute:
-        return (await route.mute.$post({ param, json: { minutes } })).json();
+        return (
+          await route.mute.$post({ param, json: { minutes: opts.minutes } })
+        ).json();
     }
   },
 };

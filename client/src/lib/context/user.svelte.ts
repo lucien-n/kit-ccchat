@@ -1,4 +1,11 @@
-import { api, ModAction, type Member, type ModeratedMember, type Role } from "$lib/api";
+import {
+  api,
+  ModAction,
+  type Member,
+  type ModeratedMember,
+  type ModOptions,
+  type Role,
+} from "$lib/api";
 import { apiErrorMessage } from "$lib/forms";
 import { canModerate, isMuted } from "$lib/members";
 import { members, roles, session } from "$lib/stores";
@@ -90,11 +97,11 @@ export class UserContext {
     }
   }
 
-  async moderate(action: ModAction, minutes?: number) {
+  async moderate(action: ModAction, opts?: ModOptions) {
     const { name } = this;
     this.busy = true;
     try {
-      await members.moderate(this.userId, action, minutes);
+      await members.moderate(this.userId, action, opts);
       toast.success(`${name} was ${PAST_TENSE[action]}`);
     } catch (e) {
       toast.error(apiErrorMessage(e, "action failed"));

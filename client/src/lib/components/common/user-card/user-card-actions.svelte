@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { ModAction } from "$lib/api";
+  import { DeleteSpan, ModAction } from "$lib/api";
+  import { Select } from "$lib/components/common/select";
   import { getUserContext } from "$lib/context/user.svelte";
   import * as AlertDialog from "&/alert-dialog";
   import * as ContextMenu from "&/context-menu";
@@ -24,6 +25,16 @@
     { minutes: 1440, label: "1 day" },
     { minutes: 10080, label: "1 week" },
   ];
+
+  const DELETE_SPANS = [
+    { value: DeleteSpan.None, label: "Don't delete any" },
+    { value: DeleteSpan.Hour, label: "Previous hour" },
+    { value: DeleteSpan.Day, label: "Previous 24 hours" },
+    { value: DeleteSpan.Week, label: "Previous 7 days" },
+    { value: DeleteSpan.All, label: "All messages" },
+  ];
+
+  let deleteSpan = $state<DeleteSpan>(DeleteSpan.None);
 </script>
 
 <ContextMenu.Root>
@@ -60,7 +71,7 @@
             <ContextMenu.SubContent class="z-100">
               {#each MUTE_DURATIONS as d (d.minutes)}
                 <ContextMenu.Item
-                  onSelect={() => ctx.moderate(ModAction.Mute, d.minutes)}
+                  onSelect={() => ctx.moderate(ModAction.Mute, { minutes: d.minutes })}
                 >
                   {d.label}
                 </ContextMenu.Item>
@@ -102,6 +113,7 @@
   open={ctx.confirming !== null}
   onOpenChange={(v) => {
     if (!v) ctx.confirming = null;
+    deleteSpan = DeleteSpan.None;
   }}
 >
   <AlertDialog.Content>
@@ -117,11 +129,28 @@
         {/if}
       </AlertDialog.Description>
     </AlertDialog.Header>
+    {#if ctx.confirming === ModAction.Ban}
+      <div class="grid gap-2">
+        <span class="text-sm font-medium">Delete message history</span>
+        <Select
+          bind:value={deleteSpan}
+          options={DELETE_SPANS}
+          triggerProps={{ class: "w-full" }}
+        />
+        {#if deleteSpan !== DeleteSpan.None}
+          <span class="text-muted-foreground text-xs">
+            Permanently removes their messages and reactions in that span. This can't be
+            undone.
+          </span>
+        {/if}
+      </div>
+    {/if}
     <AlertDialog.Footer>
       <AlertDialog.Cancel disabled={ctx.busy}>Cancel</AlertDialog.Cancel>
       <AlertDialog.Action
         disabled={ctx.busy}
-        onclick={() => ctx.confirming && ctx.moderate(ctx.confirming)}
+        onclick={() =>
+          ctx.confirming && ctx.moderate(ctx.confirming, { deleteSpan })}
       >
         {ctx.confirming === ModAction.Ban ? "Ban" : "Kick"}
       </AlertDialog.Action>

@@ -1,4 +1,10 @@
-import { api, ModAction, type Member, type ModeratedMember } from "$lib/api";
+import {
+  api,
+  ModAction,
+  type Member,
+  type ModeratedMember,
+  type ModOptions,
+} from "$lib/api";
 import { session } from "$lib/stores/session/session.svelte";
 
 // Non-admins load the plain roster; the moderation fields they can't see get
@@ -32,8 +38,8 @@ class Members {
     await this.load(true);
   }
 
-  async moderate(userId: string, action: ModAction, minutes?: number) {
-    await api.moderation.act(userId, action, minutes);
+  async moderate(userId: string, action: ModAction, opts?: ModOptions) {
+    await api.moderation.act(userId, action, opts);
     await this.load(true);
   }
 

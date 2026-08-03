@@ -32,7 +32,8 @@ export { communityIconUrl } from "./community";
 export { imageUrl } from "./images";
 export { soundUrl } from "./soundboard";
 export { apiBase, ApiError } from "./http";
-export { ModAction } from "./moderation";
+export { ModAction, type ModOptions } from "./moderation";
+export { DeleteSpan } from "@ccchat/shared";
 export { authToken } from "./token.svelte";
 export { avatarUrl, bannerUrl } from "./users";
 

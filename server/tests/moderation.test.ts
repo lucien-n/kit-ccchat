@@ -168,6 +168,43 @@ describe("unban", () => {
   });
 });
 
+describe("ban with deletion", () => {
+  it("wipes the member's messages when a span is chosen", async () => {
+    const m = await newMember();
+    const sock = await open(m.token);
+    const content = uniq();
+    expect((await say(sock, general, content)).ok).toBe(true);
+    sock.terminate();
+
+    const before = await json<{ messages: { content: string }[] }>(
+      await get(app, `/api/messages/${general}`, owner),
+    );
+    expect(before.messages.some((msg) => msg.content === content)).toBe(true);
+
+    expect((await act(m.id, "ban", { deleteSpan: "all" })).status).toBe(200);
+
+    const after = await json<{ messages: { content: string }[] }>(
+      await get(app, `/api/messages/${general}`, owner),
+    );
+    expect(after.messages.some((msg) => msg.content === content)).toBe(false);
+  });
+
+  it("leaves messages in place when no span is chosen", async () => {
+    const m = await newMember();
+    const sock = await open(m.token);
+    const content = uniq();
+    expect((await say(sock, general, content)).ok).toBe(true);
+    sock.terminate();
+
+    expect((await act(m.id, "ban")).status).toBe(200);
+
+    const after = await json<{ messages: { content: string }[] }>(
+      await get(app, `/api/messages/${general}`, owner),
+    );
+    expect(after.messages.some((msg) => msg.content === content)).toBe(true);
+  });
+});
+
 describe("who you may act on", () => {
   it("refuses to let you moderate yourself", async () => {
     const me = await json<any>(await get(app, "/api/auth/me", owner));

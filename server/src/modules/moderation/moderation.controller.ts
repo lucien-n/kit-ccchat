@@ -1,4 +1,4 @@
-import { muteBody } from "@ccchat/shared";
+import { banBody, muteBody } from "@ccchat/shared";
 import type { Context, Next } from "hono";
 import type { Env } from "../../auth.js";
 import type { User } from "../../db/schema";
@@ -24,8 +24,8 @@ export function kick(c: Context<ModEnv>) {
   return c.json({ ok: true });
 }
 
-export function ban(c: Context<ModEnv>) {
-  moderationService.ban(c.get("target"));
+export function ban(c: JsonContext<typeof banBody, "/:id", ModEnv>) {
+  moderationService.ban(c.get("target"), c.req.valid("json").deleteSpan);
   return c.json({ ok: true });
 }
 

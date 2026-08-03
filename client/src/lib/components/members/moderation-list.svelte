@@ -28,7 +28,11 @@
 
   async function act(id: string, action: ModAction) {
     try {
-      await members.moderate(id, action, action === ModAction.Mute ? 60 : undefined);
+      await members.moderate(
+        id,
+        action,
+        action === ModAction.Mute ? { minutes: 60 } : undefined,
+      );
     } catch (e) {
       toast.error(apiErrorMessage(e, "action failed"));
     }
