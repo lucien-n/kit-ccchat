@@ -1,5 +1,4 @@
-import z from "zod";
-import { messageView, reaction, voiceMember } from "../views";
+import type { MessageView, Reaction, VoiceMember } from "../views";
 
 export enum ServerEventType {
   Message_New = "message_new",
@@ -18,11 +17,11 @@ export enum ServerEventType {
 export type ServerEvent =
   | {
       type: ServerEventType.Message_New;
-      message: z.infer<typeof messageView>;
+      message: MessageView;
     }
   | {
       type: ServerEventType.Message_Edited;
-      message: z.infer<typeof messageView>;
+      message: MessageView;
     }
   | {
       type: ServerEventType.Message_Deleted;
@@ -33,7 +32,7 @@ export type ServerEvent =
       type: ServerEventType.Message_Reacted;
       id: string;
       channelId: string;
-      reactions: z.infer<typeof reaction>[];
+      reactions: Reaction[];
     }
   | {
       type: ServerEventType.Presence;
@@ -46,7 +45,7 @@ export type ServerEvent =
     }
   | {
       type: ServerEventType.Voice_Presence;
-      presence: Record<string, z.infer<typeof voiceMember>[]>;
+      presence: Record<string, VoiceMember[]>;
     }
   | {
       type: ServerEventType.Community_Renamed;
