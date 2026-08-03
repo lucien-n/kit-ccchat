@@ -2,7 +2,7 @@
   import { api, bannerUrl } from "$lib/api";
   import { refreshMemberColors } from "$lib/app";
   import { getUserContext } from "$lib/context/user.svelte";
-  import { apiErrorMessage } from "$lib/forms";
+  import { apiErrorMessage, attempt } from "$lib/forms";
   import { resizeBanner, resizeImage } from "$lib/image";
   import { appearance, session, ui } from "$lib/stores";
   import { Button } from "&/button";
@@ -60,16 +60,16 @@
     const input = e.currentTarget as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
-    try {
-      const dataUrl = await resizeImage(file, 256);
-      const { avatarVersion } = await api.users.setAvatar(dataUrl);
-      session.patchUser({ avatarVersion });
-      await ctx.loadProfile();
-    } catch (err) {
-      toast.error(apiErrorMessage(err, "upload failed"));
-    } finally {
-      input.value = "";
-    }
+    await attempt(
+      async () => {
+        const dataUrl = await resizeImage(file, 256);
+        const { avatarVersion } = await api.users.setAvatar(dataUrl);
+        session.patchUser({ avatarVersion });
+        await ctx.loadProfile();
+      },
+      { error: "upload failed" },
+    );
+    input.value = "";
   }
 
   async function removeAvatar() {
@@ -82,16 +82,16 @@
     const input = e.currentTarget as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
-    try {
-      const dataUrl = await resizeBanner(file);
-      const { bannerVersion } = await api.users.setBanner(dataUrl);
-      session.patchUser({ bannerVersion });
-      await ctx.loadProfile();
-    } catch (err) {
-      toast.error(apiErrorMessage(err, "upload failed"));
-    } finally {
-      input.value = "";
-    }
+    await attempt(
+      async () => {
+        const dataUrl = await resizeBanner(file);
+        const { bannerVersion } = await api.users.setBanner(dataUrl);
+        session.patchUser({ bannerVersion });
+        await ctx.loadProfile();
+      },
+      { error: "upload failed" },
+    );
+    input.value = "";
   }
 
   async function removeBanner() {

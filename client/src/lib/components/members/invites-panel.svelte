@@ -1,6 +1,6 @@
 <script lang="ts">
   import { api, type Invite } from "$lib/api";
-  import { apiErrorMessage } from "$lib/forms";
+  import { attempt } from "$lib/forms";
   import { inviteLink } from "$lib/invite";
   import { cn } from "$lib/utils";
   import { Badge } from "&/badge";
@@ -8,7 +8,6 @@
   import { Label } from "&/label";
   import { Check, Copy, Link2, Trash2 } from "@lucide/svelte";
   import { onMount } from "svelte";
-  import { toast } from "svelte-sonner";
 
   let invites = $state<Invite[]>([]);
   let busy = $state(false);
@@ -38,38 +37,42 @@
   onMount(load);
 
   async function load() {
-    try {
-      invites = (await api.invites.list()).invites;
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to load invites"));
-    }
+    const res = await attempt(() => api.invites.list(), {
+      error: "failed to load invites",
+    });
+    if (res) invites = res.invites;
   }
 
   async function create(p: (typeof presets)[number]) {
     busy = true;
-    try {
-      const { invite } = await api.invites.create({
-        maxUses: p.maxUses,
-        expiresInHours: p.expiresInHours,
-      });
-      invites = [invite, ...invites];
-      await copy(invite.code);
-      toast.success("Invite link copied to your clipboard.");
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to create invite"));
-    } finally {
-      busy = false;
-    }
+    await attempt(
+      async () => {
+        const { invite } = await api.invites.create({
+          maxUses: p.maxUses,
+          expiresInHours: p.expiresInHours,
+        });
+        invites = [invite, ...invites];
+        await copy(invite.code);
+      },
+      {
+        error: "failed to create invite",
+        success: "Invite link copied to your clipboard.",
+      },
+    );
+    busy = false;
   }
 
   async function revoke(code: string) {
-    try {
-      const { invite } = await api.invites.revoke(code);
-      invites = invites.map((i) => (i.code === code ? invite : i));
-      toast.success("Invite revoked. That link no longer works.");
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to revoke"));
-    }
+    await attempt(
+      async () => {
+        const { invite } = await api.invites.revoke(code);
+        invites = invites.map((i) => (i.code === code ? invite : i));
+      },
+      {
+        error: "failed to revoke",
+        success: "Invite revoked. That link no longer works.",
+      },
+    );
   }
 
   async function copy(code: string) {

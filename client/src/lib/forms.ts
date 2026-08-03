@@ -25,6 +25,21 @@ export function errorName(err: unknown, fallback = "error"): string {
   return err instanceof Error && err.name ? err.name : fallback;
 }
 
+/** Runs an async action, toasting the outcome. Never throws, so a `busy` flag
+ *  can be flipped around it without a try/finally. Returns undefined on failure. */
+export async function attempt<T>(
+  fn: () => Promise<T>,
+  opts: { error: string; success?: string },
+): Promise<T | undefined> {
+  try {
+    const result = await fn();
+    if (opts.success) toast.success(opts.success);
+    return result;
+  } catch (e) {
+    toast.error(apiErrorMessage(e, opts.error));
+  }
+}
+
 export const ok = (text: string): App.Superforms.Message => ({ type: "success", text });
 export const fail = (text: string): App.Superforms.Message => ({ type: "error", text });
 

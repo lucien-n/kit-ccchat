@@ -5,7 +5,7 @@
   import { appearance, messages } from "$lib/stores";
   import Markdown from "$lib/components/markdown/markdown.svelte";
   import { getChatContext } from "$lib/context/chat.svelte";
-  import { apiErrorMessage } from "$lib/forms";
+  import { attempt } from "$lib/forms";
   import { pingsMe } from "$lib/mentions";
   import { cn } from "$lib/utils";
   import { Textarea } from "&/textarea";
@@ -13,7 +13,6 @@
   import ReplyIcon from "@lucide/svelte/icons/reply";
   import UserRoundPlusIcon from "@lucide/svelte/icons/user-round-plus";
   import { tick } from "svelte";
-  import { toast } from "svelte-sonner";
   import MessageActions from "./message-actions.svelte";
   import MessageImages from "./message-images.svelte";
   import MessageReactions from "./message-reactions.svelte";
@@ -50,12 +49,13 @@
       editing = false;
       return;
     }
-    try {
-      await messages.edit(message.id, text);
-      editing = false;
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to edit message"));
-    }
+    await attempt(
+      async () => {
+        await messages.edit(message.id, text);
+        editing = false;
+      },
+      { error: "failed to edit message" },
+    );
   }
 
   function onEditKeydown(e: KeyboardEvent) {

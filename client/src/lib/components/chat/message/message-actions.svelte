@@ -1,7 +1,7 @@
 <script lang="ts">
   import { type MessageView } from "$lib/api";
   import { getChatContext } from "$lib/context/chat.svelte";
-  import { apiErrorMessage } from "$lib/forms";
+  import { attempt } from "$lib/forms";
   import { toggleReaction } from "$lib/reactions";
   import { messages, session } from "$lib/stores";
   import { Button } from "&/button";
@@ -9,7 +9,6 @@
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import ReplyIcon from "@lucide/svelte/icons/reply";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
-  import { toast } from "svelte-sonner";
   import EmojiPicker from "../emoji-picker.svelte";
 
   interface Props {
@@ -25,11 +24,9 @@
   const canEdit = $derived(!message.systemEvent && isMine);
 
   async function remove() {
-    try {
-      await messages.delete(message.id);
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to delete message"));
-    }
+    await attempt(() => messages.delete(message.id), {
+      error: "failed to delete message",
+    });
   }
 </script>
 

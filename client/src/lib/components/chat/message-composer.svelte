@@ -1,7 +1,7 @@
 <script lang="ts">
   import { api, imageUrl, type MessageImage, type MessageView } from "$lib/api";
   import Markdown from "$lib/components/markdown/markdown.svelte";
-  import { apiErrorMessage } from "$lib/forms";
+  import { attempt } from "$lib/forms";
   import { prepareImage } from "$lib/image";
   import {
     emojiLabel,
@@ -22,7 +22,6 @@
   } from "@ccchat/shared";
   import { Eye, EyeOff, ImagePlus, Reply, Send, X } from "@lucide/svelte";
   import { tick } from "svelte";
-  import { toast } from "svelte-sonner";
   import EmojiPicker from "./emoji-picker.svelte";
 
   interface Props {
@@ -153,18 +152,18 @@
     if (!picked.length) return;
 
     uploading = true;
-    try {
-      const uploaded = await Promise.all(
-        picked.map(
-          async (file) => (await api.images.upload(await prepareImage(file))).image,
-        ),
-      );
-      pending = [...pending, ...uploaded];
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to upload image"));
-    } finally {
-      uploading = false;
-    }
+    await attempt(
+      async () => {
+        const uploaded = await Promise.all(
+          picked.map(
+            async (file) => (await api.images.upload(await prepareImage(file))).image,
+          ),
+        );
+        pending = [...pending, ...uploaded];
+      },
+      { error: "failed to upload image" },
+    );
+    uploading = false;
   }
 
   function onpaste(e: ClipboardEvent) {

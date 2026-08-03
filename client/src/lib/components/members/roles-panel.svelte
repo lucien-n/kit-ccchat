@@ -2,7 +2,7 @@
   import { api, type ModeratedMember, type Role } from "$lib/api";
   import MemberIdentity from "$lib/components/common/member-identity.svelte";
   import { Select } from "$lib/components/common/select";
-  import { apiErrorMessage } from "$lib/forms";
+  import { attempt } from "$lib/forms";
   import { permissionSpecs } from "$lib/specs";
   import { members, roles as rolesStore, session } from "$lib/stores";
   import { cn } from "$lib/utils";
@@ -16,7 +16,6 @@
   import ChevronUpIcon from "@lucide/svelte/icons/chevron-up";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import { onMount } from "svelte";
-  import { toast } from "svelte-sonner";
 
   const DEFAULT_COLOR = "#5865f2";
 
@@ -73,37 +72,37 @@
   async function create() {
     if (!name.trim()) return;
     busy = true;
-    try {
-      const { role } = await api.roles.create({
-        name: name.trim(),
-        color,
-        permission,
-      });
-      name = "";
-      await rolesStore.load(true);
-      select(role);
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to create role"));
-    } finally {
-      busy = false;
-    }
+    await attempt(
+      async () => {
+        const { role } = await api.roles.create({
+          name: name.trim(),
+          color,
+          permission,
+        });
+        name = "";
+        await rolesStore.load(true);
+        select(role);
+      },
+      { error: "failed to create role" },
+    );
+    busy = false;
   }
 
   async function saveEdit() {
     if (!selected || !editName.trim()) return;
     busy = true;
-    try {
-      await api.roles.update(selected.id, {
-        name: editName.trim(),
-        color: editColor,
-        permission: editPermission,
-      });
-      await rolesStore.load(true);
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to update role"));
-    } finally {
-      busy = false;
-    }
+    await attempt(
+      async () => {
+        await api.roles.update(selected.id, {
+          name: editName.trim(),
+          color: editColor,
+          permission: editPermission,
+        });
+        await rolesStore.load(true);
+      },
+      { error: "failed to update role" },
+    );
+    busy = false;
   }
 
   /** Swap a role with its neighbour and send the whole new order; dir -1 is up
@@ -115,25 +114,26 @@
     if (i < 0 || j < 0 || j >= order.length) return;
     [order[i], order[j]] = [order[j], order[i]];
     busy = true;
-    try {
-      await api.roles.reorder(order);
-      await rolesStore.load(true);
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to reorder roles"));
-    } finally {
-      busy = false;
-    }
+    await attempt(
+      async () => {
+        await api.roles.reorder(order);
+        await rolesStore.load(true);
+      },
+      { error: "failed to reorder roles" },
+    );
+    busy = false;
   }
 
   async function remove(id: string) {
-    try {
-      await api.roles.delete(id);
-      if (selectedId === id) selectedId = null;
-      await rolesStore.load(true);
-      await members.load(true);
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to delete role"));
-    }
+    await attempt(
+      async () => {
+        await api.roles.delete(id);
+        if (selectedId === id) selectedId = null;
+        await rolesStore.load(true);
+        await members.load(true);
+      },
+      { error: "failed to delete role" },
+    );
   }
 
   async function toggleMember(member: ModeratedMember, roleId: string) {
@@ -142,13 +142,10 @@
       ? member.roleIds.filter((id) => id !== roleId)
       : [...member.roleIds, roleId];
     busy = true;
-    try {
-      await members.setRoles(member.id, next);
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to update roles"));
-    } finally {
-      busy = false;
-    }
+    await attempt(() => members.setRoles(member.id, next), {
+      error: "failed to update roles",
+    });
+    busy = false;
   }
 </script>
 
