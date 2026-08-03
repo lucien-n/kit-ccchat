@@ -23,29 +23,32 @@
   let memberSearch = $state("");
   let busy = $state(false);
 
-  let name = $state("");
-  let color = $state(DEFAULT_COLOR);
-  let permission = $state<Permission>(Permission.Member);
+  type RoleFields = { name: string; color: string; permission: Permission };
+  const blankFields = (): RoleFields => ({
+    name: "",
+    color: DEFAULT_COLOR,
+    permission: Permission.Member,
+  });
+
+  const draft = $state<RoleFields>(blankFields());
 
   // Selected role's editable fields, populated on select() so an in-flight edit
   // isn't clobbered by a background roles refresh.
-  let editName = $state("");
-  let editColor = $state(DEFAULT_COLOR);
-  let editPermission = $state<Permission>(Permission.Member);
+  const edit = $state<RoleFields>(blankFields());
 
   const selected = $derived(rolesStore.list.find((r) => r.id === selectedId) ?? null);
   const dirty = $derived(
     !!selected &&
-      (editName.trim() !== selected.name ||
-        editColor !== (selected.color ?? DEFAULT_COLOR) ||
-        editPermission !== selected.permission),
+      (edit.name.trim() !== selected.name ||
+        edit.color !== (selected.color ?? DEFAULT_COLOR) ||
+        edit.permission !== selected.permission),
   );
 
   function select(role: Role) {
     selectedId = role.id;
-    editName = role.name;
-    editColor = role.color ?? DEFAULT_COLOR;
-    editPermission = role.permission;
+    edit.name = role.name;
+    edit.color = role.color ?? DEFAULT_COLOR;
+    edit.permission = role.permission;
   }
 
   const shownMembers = $derived.by(() => {
@@ -70,16 +73,16 @@
   });
 
   async function create() {
-    if (!name.trim()) return;
+    if (!draft.name.trim()) return;
     busy = true;
     await attempt(
       async () => {
         const { role } = await api.roles.create({
-          name: name.trim(),
-          color,
-          permission,
+          name: draft.name.trim(),
+          color: draft.color,
+          permission: draft.permission,
         });
-        name = "";
+        draft.name = "";
         await rolesStore.load(true);
         select(role);
       },
@@ -89,14 +92,14 @@
   }
 
   async function saveEdit() {
-    if (!selected || !editName.trim()) return;
+    if (!selected || !edit.name.trim()) return;
     busy = true;
     await attempt(
       async () => {
         await api.roles.update(selected.id, {
-          name: editName.trim(),
-          color: editColor,
-          permission: editPermission,
+          name: edit.name.trim(),
+          color: edit.color,
+          permission: edit.permission,
         });
         await rolesStore.load(true);
       },
@@ -149,22 +152,36 @@
   }
 </script>
 
+{#snippet roleFields(
+  model: RoleFields,
+  label: string,
+  onsubmit: () => void,
+  submitLabel: string,
+  disabled: boolean,
+)}
+  <Label>{label}</Label>
+  <Input placeholder="Role name" bind:value={model.name} class="w-full" />
+  <div class="flex flex-wrap items-center gap-2">
+    <Input type="color" bind:value={model.color} aria-label="Role color" />
+    <Select
+      bind:value={model.permission}
+      options={Object.values(permissionSpecs)}
+      triggerProps={{ class: "min-w-32" }}
+    />
+    <Button onclick={onsubmit} {disabled}>{submitLabel}</Button>
+  </div>
+{/snippet}
+
 <div class="flex h-full min-h-0 flex-col gap-4 sm:grid sm:grid-cols-2">
   <div class="flex min-h-0 w-full flex-1 flex-col gap-3">
     <div class="space-y-2">
-      <Label>New role</Label>
-      <Input placeholder="Role name" bind:value={name} class="w-full" />
-      <div class="flex flex-wrap items-center gap-2">
-        <Input type="color" bind:value={color} aria-label="Role color" />
-        <Select
-          bind:value={permission}
-          options={Object.values(permissionSpecs)}
-          triggerProps={{
-            class: "min-w-32",
-          }}
-        />
-        <Button onclick={create} disabled={busy || !name.trim()}>Create</Button>
-      </div>
+      {@render roleFields(
+        draft,
+        "New role",
+        create,
+        "Create",
+        busy || !draft.name.trim(),
+      )}
     </div>
 
     <ScrollArea class="min-h-0 flex-1">
@@ -243,19 +260,13 @@
   >
     {#if selected}
       <div class="space-y-2 pb-3">
-        <Label>Edit role</Label>
-        <Input placeholder="Role name" bind:value={editName} class="w-full" />
-        <div class="flex flex-wrap items-center gap-2">
-          <Input type="color" bind:value={editColor} aria-label="Role color" />
-          <Select
-            bind:value={editPermission}
-            options={Object.values(permissionSpecs)}
-            triggerProps={{ class: "min-w-32" }}
-          />
-          <Button onclick={saveEdit} disabled={busy || !editName.trim() || !dirty}>
-            Save
-          </Button>
-        </div>
+        {@render roleFields(
+          edit,
+          "Edit role",
+          saveEdit,
+          "Save",
+          busy || !edit.name.trim() || !dirty,
+        )}
       </div>
 
       <Input placeholder="Search members" bind:value={memberSearch} class="mb-2" />
