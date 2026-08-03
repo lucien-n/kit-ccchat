@@ -1,8 +1,8 @@
 <script lang="ts">
   import { DeleteSpan, ModAction } from "$lib/api";
+  import ConfirmDialog from "$lib/components/common/confirm-dialog.svelte";
   import { Select } from "$lib/components/common/select";
   import { getUserContext } from "$lib/context/user.svelte";
-  import * as AlertDialog from "&/alert-dialog";
   import * as ContextMenu from "&/context-menu";
   import BanIcon from "@lucide/svelte/icons/ban";
   import CopyIcon from "@lucide/svelte/icons/copy";
@@ -109,51 +109,34 @@
   </ContextMenu.Content>
 </ContextMenu.Root>
 
-<AlertDialog.Root
+<ConfirmDialog
   open={ctx.confirming !== null}
   onOpenChange={(v) => {
     if (!v) ctx.confirming = null;
     deleteSpan = DeleteSpan.None;
   }}
+  title={ctx.confirming === ModAction.Ban ? `Ban ${ctx.name}?` : `Kick ${ctx.name}?`}
+  description={ctx.confirming === ModAction.Ban
+    ? "They lose every active session and cannot sign back in until unbanned."
+    : "They lose every active session and need a fresh invite to return."}
+  confirmLabel={ctx.confirming === ModAction.Ban ? "Ban" : "Kick"}
+  busy={ctx.busy}
+  onConfirm={() => ctx.confirming && ctx.moderate(ctx.confirming, { deleteSpan })}
 >
-  <AlertDialog.Content>
-    <AlertDialog.Header>
-      <AlertDialog.Title>
-        {ctx.confirming === ModAction.Ban ? `Ban ${ctx.name}?` : `Kick ${ctx.name}?`}
-      </AlertDialog.Title>
-      <AlertDialog.Description>
-        {#if ctx.confirming === ModAction.Ban}
-          They lose every active session and cannot sign back in until unbanned.
-        {:else}
-          They lose every active session and need a fresh invite to return.
-        {/if}
-      </AlertDialog.Description>
-    </AlertDialog.Header>
-    {#if ctx.confirming === ModAction.Ban}
-      <div class="grid gap-2">
-        <span class="text-sm font-medium">Delete message history</span>
-        <Select
-          bind:value={deleteSpan}
-          options={DELETE_SPANS}
-          triggerProps={{ class: "w-full" }}
-        />
-        {#if deleteSpan !== DeleteSpan.None}
-          <span class="text-muted-foreground text-xs">
-            Permanently removes their messages and reactions in that span. This can't be
-            undone.
-          </span>
-        {/if}
-      </div>
-    {/if}
-    <AlertDialog.Footer>
-      <AlertDialog.Cancel disabled={ctx.busy}>Cancel</AlertDialog.Cancel>
-      <AlertDialog.Action
-        disabled={ctx.busy}
-        onclick={() =>
-          ctx.confirming && ctx.moderate(ctx.confirming, { deleteSpan })}
-      >
-        {ctx.confirming === ModAction.Ban ? "Ban" : "Kick"}
-      </AlertDialog.Action>
-    </AlertDialog.Footer>
-  </AlertDialog.Content>
-</AlertDialog.Root>
+  {#if ctx.confirming === ModAction.Ban}
+    <div class="grid gap-2">
+      <span class="text-sm font-medium">Delete message history</span>
+      <Select
+        bind:value={deleteSpan}
+        options={DELETE_SPANS}
+        triggerProps={{ class: "w-full" }}
+      />
+      {#if deleteSpan !== DeleteSpan.None}
+        <span class="text-muted-foreground text-xs">
+          Permanently removes their messages and reactions in that span. This can't be
+          undone.
+        </span>
+      {/if}
+    </div>
+  {/if}
+</ConfirmDialog>
