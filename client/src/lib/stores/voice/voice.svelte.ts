@@ -1,3 +1,7 @@
+import { api } from "$lib/api";
+import { apiErrorMessage, errorName } from "$lib/forms";
+import { playMute, playUnmute, playVoiceJoin, playVoiceLeave } from "$lib/notify";
+import { realtime } from "$lib/stores/realtime.svelte";
 import { ClientEventType } from "@ccchat/shared";
 import {
   Room,
@@ -7,10 +11,6 @@ import {
   type RemoteTrack,
   type RemoteTrackPublication,
 } from "livekit-client";
-import { api } from "$lib/api";
-import { apiErrorMessage, errorName } from "$lib/forms";
-import { playMute, playUnmute, playVoiceJoin, playVoiceLeave } from "$lib/notify";
-import { realtime } from "$lib/stores/realtime.svelte";
 
 /** Whether the browser can route audio to a chosen speaker. False on Firefox
  *  and iOS Safari, where enumerating and switching outputs is pointless. */
@@ -237,10 +237,7 @@ class VoiceStore {
       .on(RoomEvent.Disconnected, () => {
         const wasConnected = this.status === VoiceStatus.Connected;
         if (!this.leaving && wasConnected) {
-          this.error =
-            "Voice disconnected - the media connection dropped. If the server is " +
-            "in Docker Desktop on Windows/macOS, WebRTC UDP is blocked there; run " +
-            "it on a Linux host (see README).";
+          this.error = "Voice disconnected - the media connection dropped.";
         }
         if (wasConnected) {
           playVoiceLeave();
