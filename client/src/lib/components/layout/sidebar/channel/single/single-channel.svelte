@@ -4,7 +4,7 @@
   import { channels, presence, unread } from "$lib/stores";
   import { cn } from "$lib/utils";
   import { Badge } from "&/badge";
-  import { Button } from "&/button";
+  import { buttonVariants } from "&/button";
   import { ChannelType, type Channel } from "@ccchat/shared";
   import HomeIcon from "@lucide/svelte/icons/home";
   import { fly } from "svelte/transition";
@@ -26,14 +26,22 @@
 
 <ChannelContextMenu>
   <div class="flex flex-col">
-    <Button
-      variant="ghost"
+    <div
+      role="button"
+      tabindex="0"
       class={cn(
+        buttonVariants({ variant: "ghost" }),
         "text-muted-foreground h-10 w-full justify-start gap-2 px-2 font-normal sm:h-8",
         channel.id === channels.currentId &&
           "bg-sidebar-accent text-sidebar-accent-foreground",
       )}
       onclick={onSelect}
+      onkeydown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
       title={isVoiceChannel ? "Join voice" : undefined}
     >
       <Icon class="size-4 shrink-0" />
@@ -49,7 +57,7 @@
           {mentioned ? unread.mentions[channel.id] : unread.counts[channel.id]}
         </Badge>
       {/if}
-    </Button>
+    </div>
 
     {#if isVoiceChannel}
       <div class="mt-0.5 mb-1 ml-4 flex flex-col gap-0.5">
