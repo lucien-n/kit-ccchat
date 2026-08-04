@@ -36,9 +36,7 @@ class Members {
   /** Merge a live profile update into the roster, keeping the moderation fields
    *  we already have (the broadcast only carries the public Member view). */
   apply(member: Member) {
-    this.list = this.list.map((m) =>
-      m.id === member.id ? { ...m, ...member } : m,
-    );
+    this.list = this.list.map((m) => (m.id === member.id ? { ...m, ...member } : m));
   }
 
   async setRoles(userId: string, roleIds: string[]) {
