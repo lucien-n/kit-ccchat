@@ -43,7 +43,7 @@
         variant: button.variant,
         class: "rounded-l-none bg-clip-padding pr-1 pl-px [&_svg]:text-current",
       })}
-    ></Select.Trigger>
+    />
     <Select.Content>
       <Select.Group>
         {#each devices as device, i (device.deviceId)}
