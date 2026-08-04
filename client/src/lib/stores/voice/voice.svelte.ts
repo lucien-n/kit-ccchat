@@ -70,6 +70,9 @@ class VoiceStore implements VoiceCore {
     return this.mediaCtl.isCameraOn;
   }
 
+  loadDevices() {
+    return this.deviceCtl.load();
+  }
   setAudioInput(deviceId: string) {
     return this.deviceCtl.setInput(deviceId);
   }
@@ -125,7 +128,12 @@ class VoiceStore implements VoiceCore {
       this.canPublish = res.canPublish;
       this.micCtl.initForCall(res.canPublish);
 
-      const room = new Room({ adaptiveStream: true, dynacast: true });
+      const room = new Room({
+        adaptiveStream: true,
+        dynacast: true,
+        audioCaptureDefaults: { deviceId: this.deviceCtl.state.inputId },
+        audioOutput: { deviceId: this.deviceCtl.state.outputId },
+      });
       this.roomRef = room;
       this.wire(room);
 
@@ -137,6 +145,7 @@ class VoiceStore implements VoiceCore {
 
       if (res.canPublish) await this.micCtl.engage();
       this.micCtl.announce();
+      this.micCtl.announceDeafen();
       await room.startAudio().catch(() => {});
       this.deviceCtl.load();
       this.refresh();
@@ -246,7 +255,6 @@ class VoiceStore implements VoiceCore {
     this.audio.clear();
     this.micCtl.reset();
     this.mediaCtl.reset();
-    this.deviceCtl.reset();
     this.roomRef = null;
     this.status = VoiceStatus.Idle;
     this.channel = null;

@@ -1,14 +1,17 @@
 <script lang="ts">
   import { api } from "$lib/api";
+  import { logout } from "$lib/app";
   import TextField from "$lib/components/common/text-field.svelte";
   import UserCardContent from "$lib/components/common/user-card/user-card-content.svelte";
   import { apiErrorMessage, ok, setError, setMessage, spaForm } from "$lib/forms";
   import { session } from "$lib/stores";
-  import * as Form from "&/form";
+  import { Button } from "&/button";
   import { Card } from "&/card";
+  import * as Form from "&/form";
   import { Input } from "&/input";
   import { Label } from "&/label";
   import { changePasswordBody, updateProfileBody } from "@ccchat/shared";
+  import LogOutIcon from "@lucide/svelte/icons/log-out";
 
   const nameForm = spaForm(
     updateProfileBody,
@@ -97,6 +100,16 @@
         Update password
       </Form.Button>
     </form>
+
+    <Button
+      variant="destructive"
+      class="w-full shrink-0"
+      title="Log out"
+      onclick={logout}
+    >
+      <LogOutIcon class="size-4" />
+      Log Out
+    </Button>
   </div>
 
   {#if session.user}

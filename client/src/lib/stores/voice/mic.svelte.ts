@@ -5,7 +5,7 @@ import { ClientEventType } from "@ccchat/shared";
 import { MicStatus, type VoiceCore } from "./context";
 
 export class MicController {
-  status = $state<MicStatus>(MicStatus.Muted);
+  status = $state<MicStatus>(MicStatus.Enabled);
   deafened = $state(false);
 
   private mutedByDeafen = false;
@@ -22,13 +22,18 @@ export class MicController {
 
   initForCall(canPublish: boolean) {
     this.mutedByMod = !canPublish;
-    this.status = canPublish ? MicStatus.Enabled : MicStatus.MutedByMod;
+    if (!canPublish) {
+      this.status = MicStatus.MutedByMod;
+    } else if (this.status !== MicStatus.Muted) {
+      // Respect a mute chosen before joining; otherwise open the mic.
+      this.status = MicStatus.Enabled;
+    }
   }
 
   async engage() {
     const lp = this.core.room?.localParticipant;
     try {
-      await lp?.setMicrophoneEnabled(true);
+      await lp?.setMicrophoneEnabled(this.status === MicStatus.Enabled);
     } catch (err) {
       this.status =
         errorName(err) === "NotAllowedError" ? MicStatus.NotAllowed : MicStatus.Muted;
@@ -39,8 +44,19 @@ export class MicController {
     realtime.send({ type: ClientEventType.Mic_Set, muted: this.localMuted });
   }
 
+  // Others default to hearing us, so only a standing deafen needs sending on join.
+  announceDeafen() {
+    if (this.deafened) realtime.send({ type: ClientEventType.Deafen_Set, deafened: true });
+  }
+
   async toggle() {
     const enabling = this.status !== MicStatus.Enabled;
+    if (!this.core.inCall) {
+      this.status = enabling ? MicStatus.Enabled : MicStatus.Muted;
+      if (enabling && this.deafened) this.setDeafened(false);
+      this.mutedByDeafen = false;
+      return;
+    }
     const changed = await this.apply(enabling);
     if (!changed) return;
     if (enabling && this.deafened) this.setDeafened(false);
@@ -95,6 +111,17 @@ export class MicController {
   async toggleDeafen() {
     const next = !this.deafened;
     this.setDeafened(next);
+    if (!this.core.inCall) {
+      // No track to toggle yet, so mirror the deafen-implies-mute intent by hand.
+      if (next) {
+        this.mutedByDeafen = this.status === MicStatus.Enabled;
+        if (this.mutedByDeafen) this.status = MicStatus.Muted;
+      } else if (this.mutedByDeafen) {
+        this.mutedByDeafen = false;
+        this.status = MicStatus.Enabled;
+      }
+      return;
+    }
     if (next) {
       if (this.status === MicStatus.Enabled) {
         this.mutedByDeafen = await this.apply(false);
@@ -109,7 +136,7 @@ export class MicController {
     if (this.deafened === value) return;
     this.deafened = value;
     this.core.audio.setDeafened(value, this.core.streamAudio);
-    realtime.send({ type: ClientEventType.Deafen_Set, deafened: value });
+    if (this.core.inCall) realtime.send({ type: ClientEventType.Deafen_Set, deafened: value });
     this.core.refresh();
   }
 
@@ -122,7 +149,13 @@ export class MicController {
   }
 
   reset() {
-    this.status = MicStatus.Muted;
+    // Carry a deliberate mute into the next call, but drop call-only states and
+    // any mute that only existed because we were deafened.
+    if (this.status === MicStatus.MutedByMod) {
+      this.status = this.selfMutedBeforeMod ? MicStatus.Muted : MicStatus.Enabled;
+    } else if (this.status === MicStatus.NotAllowed || this.mutedByDeafen) {
+      this.status = MicStatus.Enabled;
+    }
     this.resetKeepingStatus();
   }
 }

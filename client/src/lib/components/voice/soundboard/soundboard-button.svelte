@@ -15,6 +15,11 @@
   import { untrack } from "svelte";
   import SetSoundDialog, { type DialogMode } from "./set-sound-dialog.svelte";
 
+  interface Props {
+    class?: string;
+  }
+  const { class: className }: Props = $props();
+
   let isOpen = $state(false);
   let query = $state("");
   let fileInput = $state<HTMLInputElement>();
@@ -59,7 +64,13 @@
 <Popover.Root bind:open={isOpen}>
   <Popover.Trigger>
     {#snippet child({ props })}
-      <Button {...props} variant="secondary" size="icon" title="Soundboard">
+      <Button
+        {...props}
+        variant="secondary"
+        size="icon"
+        title="Soundboard"
+        class={className}
+      >
         <MegaphoneIcon class="size-4" />
       </Button>
     {/snippet}
