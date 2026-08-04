@@ -1,3 +1,6 @@
+import { api } from "$lib/api";
+import { apiErrorMessage } from "$lib/forms";
+import { fileToDataUrl } from "$lib/image";
 import {
   MAX_SOUNDBOARD_BYTES,
   MAX_SOUNDBOARD_DURATION_MS,
@@ -5,9 +8,6 @@ import {
   type Sound,
 } from "@ccchat/shared";
 import { SvelteSet } from "svelte/reactivity";
-import { api } from "$lib/api";
-import { apiErrorMessage } from "$lib/forms";
-import { fileToDataUrl } from "$lib/image";
 
 const FAVORITES_KEY = "soundboardFavorites";
 

@@ -1,6 +1,6 @@
 <script lang="ts">
   import { soundUrl } from "$lib/api";
-  import { session, nameFromFile, soundboard, voice } from "$lib/stores";
+  import { nameFromFile, session, soundboard, voice } from "$lib/stores";
   import { Button } from "&/button";
   import { Input } from "&/input";
   import * as Popover from "&/popover";
@@ -10,6 +10,7 @@
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import StarIcon from "@lucide/svelte/icons/star";
   import UploadIcon from "@lucide/svelte/icons/upload";
+  import { untrack } from "svelte";
   import SetSoundDialog, { type DialogMode } from "./set-sound-dialog.svelte";
 
   let isOpen = $state(false);
@@ -20,8 +21,9 @@
   let mode = $state<DialogMode | null>(null);
 
   $effect(() => {
-    // Refresh on every open so newly uploaded clips from others show up.
-    if (isOpen) void soundboard.load();
+    if (!isOpen) return;
+
+    untrack(() => soundboard.load());
   });
 
   const results = $derived(soundboard.search(query));
@@ -113,7 +115,7 @@
           </div>
         {:else}
           <div class="text-muted-foreground py-8 text-center text-sm">
-            No sounds yet — upload one to get started.
+            No sounds yet - upload one to get started.
           </div>
         {/if}
       </div>

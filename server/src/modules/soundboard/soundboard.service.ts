@@ -7,9 +7,9 @@ import {
 import { desc, eq } from "drizzle-orm";
 import { newId } from "../../auth.js";
 import { db } from "../../db/index.js";
+import { getById } from "../../db/query.js";
 import { soundboardSoundsTable } from "../../db/schema";
 import { SOUNDS_DIR } from "../../env.js";
-import { getById } from "../../db/query.js";
 import { httpError } from "../../http/errors.js";
 import { decodeSoundUpload, soundStore, type StoredSound } from "../../sounds.js";
 
