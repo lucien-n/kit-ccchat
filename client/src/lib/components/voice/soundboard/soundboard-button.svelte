@@ -2,6 +2,7 @@
   import { soundUrl } from "$lib/api";
   import { nameFromFile, session, soundboard, voice } from "$lib/stores";
   import { Button } from "&/button";
+  import * as Empty from "&/empty";
   import { Input } from "&/input";
   import * as Popover from "&/popover";
   import { ScrollArea } from "&/scroll-area";
@@ -114,9 +115,18 @@
             No sound matches "{query.trim()}"
           </div>
         {:else}
-          <div class="text-muted-foreground py-8 text-center text-sm">
-            No sounds yet - upload one to get started.
-          </div>
+          <Empty.Root>
+            <Empty.Header>
+              <Empty.Title>No sounds yet</Empty.Title>
+              <Empty.Description>Upload one to get started.</Empty.Description>
+            </Empty.Header>
+            <Empty.Content>
+              <Button variant="outline" onclick={() => fileInput?.click()}>
+                <UploadIcon class="size-4" />
+                Upload
+              </Button>
+            </Empty.Content>
+          </Empty.Root>
         {/if}
       </div>
     </ScrollArea>
