@@ -1,23 +1,20 @@
 <script lang="ts">
+  import { cn } from "$lib/utils";
   import { Button, buttonVariants, type ButtonProps } from "&/button";
   import * as Select from "&/select";
-  import { cn } from "$lib/utils";
   import type { Snippet } from "svelte";
 
   interface Props {
-    /** Toggle button props; `variant` also colors the device-picker trigger. */
     button: Partial<ButtonProps>;
     onToggle: () => void;
     devices: MediaDeviceInfo[];
     selectedId?: string;
     onSelect: (value: string) => void;
     pickerTitle: string;
-    /** Prefix for devices the browser won't name, e.g. "Microphone 2". */
     fallbackLabel: string;
     children: Snippet;
   }
-
-  let {
+  const {
     button,
     onToggle,
     devices,
@@ -44,8 +41,6 @@
       title={pickerTitle}
       class={buttonVariants({
         variant: button.variant,
-        // The trigger's chevron is hardcoded to text-muted-foreground, which
-        // ignores the variant; make it follow the button color like the icon.
         class: "rounded-l-none bg-clip-padding pr-1 pl-px [&_svg]:text-current",
       })}
     ></Select.Trigger>
