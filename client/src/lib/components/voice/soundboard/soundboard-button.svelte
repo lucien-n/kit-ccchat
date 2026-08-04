@@ -7,6 +7,7 @@
   import * as Popover from "&/popover";
   import { ScrollArea } from "&/scroll-area";
   import type { Sound } from "@ccchat/shared";
+  import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
   import MegaphoneIcon from "@lucide/svelte/icons/megaphone";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import StarIcon from "@lucide/svelte/icons/star";
@@ -107,8 +108,11 @@
             {/each}
           </div>
         {:else if soundboard.loading}
-          <div class="text-muted-foreground py-8 text-center text-sm">
+          <div
+            class="text-muted-foreground flex flex-col items-center justify-center gap-3 py-8 text-sm"
+          >
             Loading sounds…
+            <LoaderCircleIcon class="animate-spin" />
           </div>
         {:else if query.trim()}
           <div class="text-muted-foreground py-8 text-center text-sm">
