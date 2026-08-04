@@ -1,13 +1,20 @@
 <script lang="ts">
   import { setChannelContext } from "$lib/context/channel.svelte";
   import { channelTypeSpecs } from "$lib/specs";
-  import { channels, presence, unread } from "$lib/stores";
+  import {
+    channels,
+    presence,
+    session,
+    unread,
+    voice,
+    VOICE_DRAG_MIME,
+  } from "$lib/stores";
   import { cn } from "$lib/utils";
   import { Badge } from "&/badge";
   import { buttonVariants } from "&/button";
   import { ChannelType, type Channel } from "@ccchat/shared";
   import HomeIcon from "@lucide/svelte/icons/home";
-  import { fly } from "svelte/transition";
+  import { fly } from "$lib/motion";
   import ChannelContextMenu from "./channel-context-menu.svelte";
   import SingleVoiceParticipant from "./single-voice-participant.svelte";
 
@@ -22,10 +29,41 @@
   const isVoiceChannel = $derived(channel.type === ChannelType.Voice);
   const Icon = $derived(channel.isMain ? HomeIcon : channelTypeSpecs[channel.type].icon);
   const members = $derived(presence.voice[channel.id]);
+
+  let dragOver = $state(false);
+  const acceptsDrag = (e: DragEvent) =>
+    isVoiceChannel && !!e.dataTransfer?.types.includes(VOICE_DRAG_MIME);
+
+  function onDragOver(e: DragEvent) {
+    if (!acceptsDrag(e)) return;
+    e.preventDefault();
+    e.dataTransfer!.dropEffect = "move";
+    dragOver = true;
+  }
+
+  function onDrop(e: DragEvent) {
+    dragOver = false;
+    if (!acceptsDrag(e)) return;
+    e.preventDefault();
+    const userId = e.dataTransfer!.getData(VOICE_DRAG_MIME);
+    if (!userId) return;
+    if (userId === session.user?.id)
+      void voice.join({ id: channel.id, name: channel.name });
+    else voice.moveMember(userId, channel.id);
+  }
 </script>
 
 <ChannelContextMenu>
-  <div class="flex flex-col">
+  <div
+    class={cn(
+      "flex flex-col rounded-2xl",
+      dragOver && "ring-primary bg-primary/10 ring-2",
+    )}
+    role={isVoiceChannel ? "group" : undefined}
+    ondragover={onDragOver}
+    ondragleave={() => (dragOver = false)}
+    ondrop={onDrop}
+  >
     <div
       role="button"
       tabindex="0"

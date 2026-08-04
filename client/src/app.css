@@ -597,7 +597,8 @@
   }
 }
 
-/* Appearance → "Reduced motion". Also honours the OS setting automatically. */
+/* Appearance → "Reduced motion". The class is driven by the appearance store,
+ * which folds in the OS `prefers-reduced-motion` setting as a floor. */
 .reduce-motion *,
 .reduce-motion *::before,
 .reduce-motion *::after {
@@ -605,15 +606,4 @@
   animation-iteration-count: 1 !important;
   transition-duration: 0.001ms !important;
   scroll-behavior: auto !important;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.001ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.001ms !important;
-    scroll-behavior: auto !important;
-  }
 }

@@ -16,6 +16,10 @@ import { SoundboardPlayer } from "./soundboard-player";
 
 export type { VoiceParticipant };
 
+/** dataTransfer key carrying the dragged member's id when moving someone
+ *  between voice channels; the value is only readable on drop, not dragover. */
+export const VOICE_DRAG_MIME = "application/x-ccchat-voice-user";
+
 /** Whether the browser can route audio to a chosen speaker. False on Firefox
  *  and iOS Safari, where enumerating and switching outputs is pointless. */
 const supportsAudioOutput = () =>
@@ -81,6 +85,13 @@ class VoiceStore {
   private leaving = false;
   /** True when deafening is what muted the mic, so undeafening can restore it. */
   private mutedByDeafen = false;
+  /** True while a moderator mute is holding our mic down. LiveKit lets the server
+   *  silence our track but not turn it back on, so the client re-enables the mic
+   *  itself when the mute lifts. */
+  private mutedByMod = false;
+  /** Whether we were self-muted when a mod mute landed, so lifting it returns us
+   *  there instead of unmuting someone who wanted to stay quiet. */
+  private selfMutedBeforeMod = false;
 
   get inCall(): boolean {
     return this.status !== VoiceStatus.Idle;
@@ -110,6 +121,9 @@ class VoiceStore {
       const res = await api.voice.token(target.id);
       url = res.url;
       this.canPublish = res.canPublish;
+      // Joining while already mod-muted means the mute is holding the mic down,
+      // so a later unmute has to know to restore it.
+      this.mutedByMod = !res.canPublish;
       // Show the intended state up front so the icon doesn't flash muted while
       // the mic comes up. Corrected below only if capture is refused.
       this.micStatus = res.canPublish ? MicStatus.Enabled : MicStatus.MutedByMod;
@@ -398,6 +412,38 @@ class VoiceStore {
     this.mutedByDeafen = false;
   }
 
+  /** React to a moderator muting or unmuting us mid-call, driven by our own
+   *  `forceMuted` flag in voice presence. LiveKit can silence our track from the
+   *  server but can't turn it back on, so the client has to re-enable the mic
+   *  itself when the mute lifts - otherwise the mic stays dead until a manual
+   *  toggle. */
+  async applyModMute(forceMuted: boolean) {
+    if (!this.inCall || forceMuted === this.mutedByMod) return;
+    const lp = this.room?.localParticipant;
+
+    if (forceMuted) {
+      this.mutedByMod = true;
+      this.selfMutedBeforeMod = this.micStatus === MicStatus.Muted;
+      this.canPublish = false;
+      this.micStatus = MicStatus.MutedByMod;
+      await lp?.setMicrophoneEnabled(false).catch(() => {});
+      this.refresh();
+      return;
+    }
+
+    this.mutedByMod = false;
+    this.canPublish = true;
+    // Return someone who was already self-muted to that state rather than opening
+    // their mic for them; otherwise restore the mic the mute silenced.
+    if (this.selfMutedBeforeMod) {
+      this.micStatus = MicStatus.Muted;
+      this.announceMic();
+      this.refresh();
+    } else {
+      await this.applyMic(true);
+    }
+  }
+
   /** Drive the LiveKit mic and record the outcome. Returns whether the state
    *  actually moved, so callers know if a follow-up (sound, deafen) applies. */
   private async applyMic(enabling: boolean): Promise<boolean> {
@@ -450,6 +496,12 @@ class VoiceStore {
     this.refresh();
   }
 
+  /** Force another member into a voice channel (moderator action). The server
+   *  checks permission and tells their client to reconnect. */
+  moveMember(userId: string, channelId: string) {
+    realtime.send({ type: ClientEventType.Voice_Move, userId, channelId });
+  }
+
   async leave() {
     this.leaving = true;
     try {
@@ -475,6 +527,8 @@ class VoiceStore {
     this.devices = { inputs: [], inputId: "default", outputs: [], outputId: "default" };
     this.deafened = false;
     this.mutedByDeafen = false;
+    this.mutedByMod = false;
+    this.selfMutedBeforeMod = false;
     this.playingSounds = 0;
     this.leaving = false;
   }

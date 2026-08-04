@@ -1,4 +1,4 @@
-import type { MessageView, Reaction, VoiceMember } from "../views";
+import type { Member, MessageView, Reaction, VoiceMember } from "../views";
 
 export enum ServerEventType {
   Message_New = "message_new",
@@ -6,11 +6,13 @@ export enum ServerEventType {
   Message_Deleted = "message_deleted",
   Message_Reacted = "message_reacted",
   Presence = "presence",
+  Member_Updated = "member_updated",
   Typing_Started = "typing_started",
   Voice_Presence = "voice_presence",
   Community_Renamed = "community_renamed",
   Community_Icon_Changed = "community_icon_changed",
   Roles_Changed = "roles_changed",
+  Voice_Moved = "voice_moved",
   Error = "error",
 }
 
@@ -39,6 +41,10 @@ export type ServerEvent =
       online: string[];
     }
   | {
+      type: ServerEventType.Member_Updated;
+      member: Member;
+    }
+  | {
       type: ServerEventType.Typing_Started;
       channelId: string;
       userId: string;
@@ -58,6 +64,10 @@ export type ServerEvent =
     }
   | {
       type: ServerEventType.Roles_Changed;
+    }
+  | {
+      type: ServerEventType.Voice_Moved;
+      channelId: string;
     }
   | {
       type: ServerEventType.Error;

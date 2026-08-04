@@ -4,10 +4,11 @@
   import VoiceBar from "$lib/components/voice/voice-bar.svelte";
   import { appearance, channels, session, ui, voice } from "$lib/stores";
   import { Button } from "&/button";
+  import { ScrollArea } from "&/scroll-area";
   import { ChannelType, type Channel } from "@ccchat/shared";
   import { LogOut } from "@lucide/svelte";
   import { dndzone, type DndEvent } from "svelte-dnd-action";
-  import { flip } from "svelte/animate";
+  import { flip } from "$lib/motion";
   import { ChannelCategoryHeader, SingleChannel } from "./channel";
   import SidebarHeader from "./sidebar-header.svelte";
 
@@ -74,41 +75,43 @@
 
 <SidebarHeader />
 
-<nav class="min-h-0 flex-1 overflow-y-auto p-2">
-  <ChannelCategoryHeader
-    title="Text"
-    onCreate={() => ui.openCreateChannel(ChannelType.Text)}
-  />
+<ScrollArea class="min-h-0 flex-1" scrollbarYClasses="my-1 mr-0.5">
+  <nav class="p-2">
+    <ChannelCategoryHeader
+      title="Text"
+      onCreate={() => ui.openCreateChannel(ChannelType.Text)}
+    />
 
-  <div
-    use:dndzone={{ items: textChannels, type: "text-channels", ...dndOptions }}
-    onconsider={considerText}
-    onfinalize={finalizeText}
-  >
-    {#each textChannels as channel (channel.id)}
-      <div animate:flip={{ duration: 150 }}>
-        <SingleChannel {channel} onSelect={() => handleSelectChannel(channel.id)} />
-      </div>
-    {/each}
-  </div>
+    <div
+      use:dndzone={{ items: textChannels, type: "text-channels", ...dndOptions }}
+      onconsider={considerText}
+      onfinalize={finalizeText}
+    >
+      {#each textChannels as channel (channel.id)}
+        <div animate:flip={{ duration: 150 }}>
+          <SingleChannel {channel} onSelect={() => handleSelectChannel(channel.id)} />
+        </div>
+      {/each}
+    </div>
 
-  <ChannelCategoryHeader
-    title="Voice"
-    onCreate={() => ui.openCreateChannel(ChannelType.Voice)}
-  />
+    <ChannelCategoryHeader
+      title="Voice"
+      onCreate={() => ui.openCreateChannel(ChannelType.Voice)}
+    />
 
-  <div
-    use:dndzone={{ items: voiceChannels, type: "voice-channels", ...dndOptions }}
-    onconsider={considerVoice}
-    onfinalize={finalizeVoice}
-  >
-    {#each voiceChannels as channel (channel.id)}
-      <div animate:flip={{ duration: 150 }}>
-        <SingleChannel {channel} onSelect={() => handleJoinVoice(channel)} />
-      </div>
-    {/each}
-  </div>
-</nav>
+    <div
+      use:dndzone={{ items: voiceChannels, type: "voice-channels", ...dndOptions }}
+      onconsider={considerVoice}
+      onfinalize={finalizeVoice}
+    >
+      {#each voiceChannels as channel (channel.id)}
+        <div animate:flip={{ duration: 150 }}>
+          <SingleChannel {channel} onSelect={() => handleJoinVoice(channel)} />
+        </div>
+      {/each}
+    </div>
+  </nav>
+</ScrollArea>
 
 {#if withVoice && voice.inCall}
   <VoiceBar />

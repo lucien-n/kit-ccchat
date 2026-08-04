@@ -17,7 +17,10 @@
           m === "dark" ||
           (m === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
         document.documentElement.classList.toggle("dark", dark);
-        if (localStorage.getItem("appearance:reducedMotion") === "1")
+        if (
+          localStorage.getItem("appearance:reducedMotion") === "1" ||
+          matchMedia("(prefers-reduced-motion: reduce)").matches
+        )
           document.documentElement.classList.add("reduce-motion");
       } catch (e) {}
     </script>

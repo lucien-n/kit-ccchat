@@ -3,6 +3,7 @@
   import { UserCard } from "$lib/components/common/user-card";
   import { voice } from "$lib/stores";
   import { cn } from "$lib/utils";
+  import { muteState } from "$lib/voice-mute";
   import { Button } from "&/button";
   import type { Channel, VoiceMember } from "@ccchat/shared";
   import { HeadphoneOff, MicOff, MonitorPlay } from "@lucide/svelte";
@@ -18,10 +19,10 @@
       ? voice.participants.find((p) => p.identity === member.id)
       : undefined,
   );
-  const isMuted = $derived(participant?.muted ?? member.muted);
+  const mute = $derived(muteState(member, participant?.muted));
 </script>
 
-<div class="flex min-w-0 items-center gap-0.5">
+<div class="group flex min-w-0 items-center gap-0.5" role="listitem">
   <UserCard
     userId={member.id}
     class="hover:bg-sidebar-accent min-w-0 flex-1 rounded-2xl px-1.5 py-1"
@@ -38,10 +39,15 @@
     </div>
   </UserCard>
 
-  {#if isMuted}
+  {#if mute}
     <MicOff
-      class="text-muted-foreground/70 size-3.5 shrink-0"
-      aria-label="{member.displayName} is muted"
+      class={cn(
+        "size-3.5 shrink-0",
+        mute === "forced" ? "text-amber-400" : "text-muted-foreground/70",
+      )}
+      aria-label="{member.displayName} is muted{mute === 'forced'
+        ? ' by a moderator'
+        : ''}"
     />
   {/if}
 

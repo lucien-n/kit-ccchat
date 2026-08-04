@@ -1,7 +1,7 @@
 <script lang="ts">
   import { members, typing } from "$lib/stores";
   import { typingLabel } from "$lib/typing";
-  import { fade } from "svelte/transition";
+  import { fade } from "$lib/motion";
 
   interface Props {
     channelId: string | null;

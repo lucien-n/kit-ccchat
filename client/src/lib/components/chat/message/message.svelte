@@ -16,7 +16,7 @@
   import MessageActions from "./message-actions.svelte";
   import MessageImages from "./message-images.svelte";
   import MessageReactions from "./message-reactions.svelte";
-  import { fly } from "svelte/transition";
+  import { fly } from "$lib/motion";
   import { elasticInOut } from "svelte/easing";
 
   interface Props {

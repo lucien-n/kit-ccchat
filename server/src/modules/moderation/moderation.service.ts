@@ -15,6 +15,20 @@ import { authLevel } from "../../permissions.js";
 import { toModeratedMember } from "../../views.js";
 import { deleteImagesOf } from "../images/images.service.js";
 import { reactionsOf } from "../messages/reactions.js";
+import { setMemberAudioMuted } from "../voice/voice.service.js";
+
+/** Push a mod-mute onto the member's live LiveKit tracks. When lifting the mute
+ *  we restore to their own self-mute state, so unmuting never forces the mic of
+ *  someone who had muted themselves. Fire-and-forget: presence and the DB have
+ *  already been updated, this just silences the wire. */
+function syncVoiceAudio(userId: string, forceMuted: boolean) {
+  const room = hub.voiceChannelOf(userId);
+  if (!room) return;
+  const wantMuted = forceMuted || (hub.voiceMemberOf(userId)?.muted ?? false);
+  void setMemberAudioMuted(room, userId, wantMuted).catch((err) =>
+    console.error("livekit mute sync failed", err),
+  );
+}
 
 /** Nobody may act on their own rank or above, so an admin can't ban the owner or
  *  another admin. */
@@ -144,11 +158,15 @@ export function unban(target: User) {
 export function mute(target: User, minutes: number): number {
   const mutedUntil = Date.now() + minutes * 60_000;
   patchUser(target.id, { mutedUntil });
+  hub.setForceMuted(target.id, true);
+  syncVoiceAudio(target.id, true);
   return mutedUntil;
 }
 
 export function unmute(target: User) {
   patchUser(target.id, { mutedUntil: null });
+  hub.setForceMuted(target.id, false);
+  syncVoiceAudio(target.id, false);
 }
 
 export function listMembers(): ModeratedMember[] {

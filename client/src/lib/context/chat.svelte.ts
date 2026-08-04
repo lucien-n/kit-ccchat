@@ -1,6 +1,6 @@
 import type { MessageView } from "$lib/api";
 import { jumpToPresent, openMessage } from "$lib/app";
-import { channels, messages, search, typing } from "$lib/stores";
+import { appearance, channels, messages, search, typing } from "$lib/stores";
 import { getContext, setContext, tick } from "svelte";
 import { toast } from "svelte-sonner";
 
@@ -52,7 +52,10 @@ export class ChatContext {
   scrollTo(id: string): boolean {
     const el = document.getElementById(`msg-${id}`);
     if (!el) return false;
-    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    el.scrollIntoView({
+      block: "center",
+      behavior: appearance.motionReduced ? "auto" : "smooth",
+    });
     this.flash(id);
     return true;
   }

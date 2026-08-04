@@ -45,6 +45,8 @@ services:
       DATA_DIR: /app/data
       LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-ccchat}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?run ./install.sh, or set LIVEKIT_API_SECRET in .env}
+      # Server-side management API (mod mutes), reached in-cluster by service name.
+      LIVEKIT_HOST: http://livekit:7880
     volumes:
       # Your entire community (accounts, channels, messages) is this one folder.
       # Back it up and you have backed up everything.

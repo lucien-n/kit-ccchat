@@ -16,7 +16,7 @@
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import { onMount } from "svelte";
   import { dndzone, type DndEvent } from "svelte-dnd-action";
-  import { flip } from "svelte/animate";
+  import { flip } from "$lib/motion";
 
   const DEFAULT_COLOR = "#5865f2";
 

@@ -36,6 +36,13 @@ class Appearance {
   }
 
   private media: MediaQueryList | null = null;
+  private motionMedia: MediaQueryList | null = null;
+
+  /** True when motion should be reduced, from either the explicit setting or the
+   *  OS preference. The OS acts as a floor: it can force reduction on. */
+  get motionReduced() {
+    return this.reducedMotion || (this.motionMedia?.matches ?? false);
+  }
 
   /** Inline `style` for a name rendered in its own color, nudged to stay legible
    *  against the current theme. Returns undefined (so the attribute drops) when
@@ -47,6 +54,7 @@ class Appearance {
 
   init() {
     this.media = window.matchMedia("(prefers-color-scheme: dark)");
+    this.motionMedia = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     this.mode = (localStorage.getItem("appearance:mode") as ThemeMode) ?? ThemeMode.Dark;
 
@@ -65,6 +73,8 @@ class Appearance {
     this.media.addEventListener("change", () => {
       if (this.mode === "system") this.applyTheme();
     });
+
+    this.motionMedia.addEventListener("change", () => this.applyMotion());
   }
 
   setMode(mode: ThemeMode) {
@@ -192,7 +202,7 @@ class Appearance {
   }
 
   private applyMotion() {
-    document.documentElement.classList.toggle("reduce-motion", this.reducedMotion);
+    document.documentElement.classList.toggle("reduce-motion", this.motionReduced);
   }
 }
 

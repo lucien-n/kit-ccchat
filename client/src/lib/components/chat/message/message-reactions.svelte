@@ -4,7 +4,7 @@
   import { cn } from "$lib/utils";
   import { Button } from "&/button";
   import { elasticInOut } from "svelte/easing";
-  import { fly, scale } from "svelte/transition";
+  import { fly, scale } from "$lib/motion";
 
   interface Props {
     message: MessageView;

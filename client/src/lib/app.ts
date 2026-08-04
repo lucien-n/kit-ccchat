@@ -1,9 +1,11 @@
 import {
   ChannelType,
   ServerEventType,
+  type Member,
   type RegisterBody,
   type ServerEvent,
   type SetupBody,
+  type VoiceMember,
 } from "@ccchat/shared";
 import { toast } from "svelte-sonner";
 import { api, type MessageView } from "./api";
@@ -24,6 +26,7 @@ import {
   soundboard,
   typing,
   unread,
+  voice,
 } from "$lib/stores";
 
 export async function init() {
@@ -143,11 +146,15 @@ function dispatch(event: ServerEvent) {
       // so pull a fresh list when presence names someone we don't know yet.
       if (event.online.some((id) => !members.byId(id))) void members.load(true);
       break;
+    case ServerEventType.Member_Updated:
+      onMemberUpdated(event.member);
+      break;
     case ServerEventType.Typing_Started:
       typing.started(event.channelId, event.userId);
       break;
     case ServerEventType.Voice_Presence:
       presence.setVoice(event.presence);
+      onVoicePresence(event.presence);
       break;
     case ServerEventType.Community_Renamed:
       community.name = event.name;
@@ -158,15 +165,59 @@ function dispatch(event: ServerEvent) {
     case ServerEventType.Roles_Changed:
       void onRolesChanged();
       break;
+    case ServerEventType.Voice_Moved:
+      onVoiceMoved(event.channelId);
+      break;
     case ServerEventType.Error:
       toast.error(event.message);
       break;
   }
 }
 
+/** Someone changed their profile (name, accent, avatar or banner). Update the
+ *  roster; if it was us on another device, keep this session's own copy in step
+ *  too. Rendered messages only carry the resolved color, so repaint them only
+ *  when that actually moved - an avatar or banner change leaves it untouched. */
+function onMemberUpdated(member: Member) {
+  const colorChanged = members.byId(member.id)?.color !== member.color;
+  members.apply(member);
+  if (member.id === session.user?.id)
+    session.patchUser({
+      displayName: member.displayName,
+      accentColor: member.accentColor,
+      color: member.color,
+      avatarVersion: member.avatarVersion,
+      bannerVersion: member.bannerVersion,
+    });
+  if (colorChanged) recolorFromRoster();
+}
+
 /** Repaint already-rendered messages from the current roster's colors. */
 function recolorFromRoster() {
   messages.applyColors(new Map(members.list.map((m) => [m.id, m.color])));
+}
+
+/** A moderator can mute or unmute us while we're in a call. LiveKit won't let the
+ *  server turn our mic back on, so hand our own `forceMuted` flag to the voice
+ *  store to restore (or lock) the mic locally. */
+function onVoicePresence(byChannel: Record<string, VoiceMember[]>) {
+  const me = session.user?.id;
+  if (!me) return;
+  for (const members of Object.values(byChannel)) {
+    const self = members.find((m) => m.id === me);
+    if (self) {
+      void voice.applyModMute(self.forceMuted);
+      return;
+    }
+  }
+}
+
+/** A moderator moved us. Only the device that's actually in a call follows, so
+ *  a moved user isn't yanked into voice on a background tab. */
+function onVoiceMoved(channelId: string) {
+  if (!voice.inCall) return;
+  const channel = channels.list.find((c) => c.id === channelId);
+  if (channel?.type === ChannelType.Voice) void voice.join(channel);
 }
 
 async function onRolesChanged() {

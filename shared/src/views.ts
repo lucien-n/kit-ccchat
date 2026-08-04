@@ -59,9 +59,12 @@ export const voiceMember = z.object({
   displayName: z.string(),
   avatarVersion: z.number().nullable(),
   sharing: z.boolean(),
-  /** Not transmitting audio - self-mute, mod-mute and denied mic are one flag
-   *  from the outside. */
+  /** Not transmitting audio by the member's own doing - self-mute or a denied
+   *  mic. Distinct from forceMuted so the two render differently. */
   muted: z.boolean(),
+  /** Silenced by a moderator. Shown red for everyone and cannot be cleared by
+   *  the member's own mic toggle. */
+  forceMuted: z.boolean(),
   /** Has silenced all incoming audio. Independent of muted, though deafening
    *  also mutes, so a deafened member is muted too. */
   deafened: z.boolean(),

@@ -1,7 +1,7 @@
 <script lang="ts">
   import { init } from "$lib/app";
-  import Chat from "$lib/components/chat/chat.svelte";
   import Login from "$lib/components/auth/login.svelte";
+  import Chat from "$lib/components/chat/chat.svelte";
   import Setup from "$lib/components/setup/setup.svelte";
   import { setFavicon } from "$lib/favicon";
   import { appearance, community, session } from "$lib/stores";
@@ -15,11 +15,6 @@
     appearance.init();
     await init();
     ready = true;
-
-    if (import.meta.env.DEV) {
-      const { installVoiceDevTools } = await import("$lib/dev/seedVoice");
-      installVoiceDevTools();
-    }
   });
 </script>
 

@@ -7,9 +7,8 @@
   import { onMount } from "svelte";
   import { PresenceGroup } from ".";
   import { SvelteMap } from "svelte/reactivity";
-  import { flip } from "svelte/animate";
+  import { crossfade, fade, flip } from "$lib/motion";
   import { cubicOut } from "svelte/easing";
-  import { crossfade, fade } from "svelte/transition";
   import { cn } from "$lib/utils";
 
   type Row =

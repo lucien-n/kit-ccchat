@@ -1,4 +1,9 @@
-import { IMAGE_MAX_DIMENSION, MAX_MESSAGE_IMAGE_BYTES } from "@ccchat/shared";
+import {
+  IMAGE_MAX_DIMENSION,
+  MAX_AVATAR_IMAGE_BYTES,
+  MAX_BANNER_IMAGE_BYTES,
+  MAX_MESSAGE_IMAGE_BYTES,
+} from "@ccchat/shared";
 
 export interface PreparedImage {
   image: string;
@@ -9,6 +14,18 @@ export interface PreparedImage {
 /** Formats we upload untouched. Redrawing one onto a canvas keeps a single
  *  frame, so a GIF would arrive as a still and a WebP would lose its alpha. */
 const PASSTHROUGH = new Set(["image/gif", "image/webp"]);
+
+function tooLargeError(file: File, maxBytes: number): Error {
+  const kind = file.type === "image/gif" ? "gif" : "image";
+  return new Error(`that ${kind} is too large (max ${maxBytes / 1_000_000}MB)`);
+}
+
+/** Animated formats (see PASSTHROUGH) upload untouched, so all three entry
+ *  points share the same size-gate-then-encode step. */
+async function passthroughDataUrl(file: File, maxBytes: number): Promise<string> {
+  if (file.size > maxBytes) throw tooLargeError(file, maxBytes);
+  return fileToDataUrl(file);
+}
 
 function measure(file: File): Promise<{ el: HTMLImageElement; url: string }> {
   return new Promise((resolve, reject) => {
@@ -39,13 +56,8 @@ export async function prepareImage(file: File): Promise<PreparedImage> {
   URL.revokeObjectURL(url);
 
   if (PASSTHROUGH.has(file.type)) {
-    if (file.size > MAX_MESSAGE_IMAGE_BYTES) {
-      throw new Error(
-        `that ${file.type === "image/gif" ? "gif" : "image"} is too large (max ${MAX_MESSAGE_IMAGE_BYTES / 1_000_000}MB)`,
-      );
-    }
     return {
-      image: await fileToDataUrl(file),
+      image: await passthroughDataUrl(file, MAX_MESSAGE_IMAGE_BYTES),
       width: naturalWidth,
       height: naturalHeight,
     };
@@ -67,8 +79,15 @@ export async function prepareImage(file: File): Promise<PreparedImage> {
 }
 
 /** Load a File, center-crop to a square, resize to `size`×`size`, and return a
- *  JPEG data URL. Keeps avatars small and a single format the server can serve. */
-export async function resizeImage(file: File, size = 256): Promise<string> {
+ *  JPEG data URL. Keeps avatars small and a single format the server can serve.
+ *  Animated formats pass through untouched so they keep playing; CSS crops them. */
+export async function resizeImage(
+  file: File,
+  size = 256,
+  maxBytes = MAX_AVATAR_IMAGE_BYTES,
+): Promise<string> {
+  if (PASSTHROUGH.has(file.type)) return passthroughDataUrl(file, maxBytes);
+
   const { el, url } = await measure(file);
   URL.revokeObjectURL(url);
 
@@ -90,6 +109,8 @@ export async function resizeBanner(
   width = 600,
   height = 200,
 ): Promise<string> {
+  if (PASSTHROUGH.has(file.type)) return passthroughDataUrl(file, MAX_BANNER_IMAGE_BYTES);
+
   const { el, url } = await measure(file);
   URL.revokeObjectURL(url);
 

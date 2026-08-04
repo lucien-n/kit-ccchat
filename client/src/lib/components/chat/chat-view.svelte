@@ -6,7 +6,7 @@
   import { ChannelType } from "@ccchat/shared";
   import ArrowDownIcon from "@lucide/svelte/icons/arrow-down";
   import { elasticOut } from "svelte/easing";
-  import { fly } from "svelte/transition";
+  import { fly } from "$lib/motion";
   import ChatHeader from "./chat-header.svelte";
   import MessageComposer from "./message-composer.svelte";
   import MessageList from "./message-list.svelte";

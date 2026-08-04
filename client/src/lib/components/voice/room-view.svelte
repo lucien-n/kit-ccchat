@@ -1,8 +1,11 @@
 <script lang="ts">
+  import { flip, scale } from "$lib/motion";
   import { channelTypeSpecs } from "$lib/specs";
   import { presence, voice } from "$lib/stores";
+  import { muteState } from "$lib/voice-mute";
   import { Button } from "&/button";
   import { ChannelType, type Channel } from "@ccchat/shared";
+  import { backOut } from "svelte/easing";
   import DeafenButton from "./deafen-button.svelte";
   import HangupButton from "./hangup-button.svelte";
   import MicButton from "./mic-button.svelte";
@@ -29,7 +32,7 @@
       return {
         member,
         speaking: p?.speaking ?? false,
-        muted: p?.muted ?? member.muted,
+        mute: muteState(member, p?.muted),
         track: voice.share.screens[member.id] ?? null,
       };
     });
@@ -57,13 +60,18 @@
         style="grid-template-columns: repeat(auto-fit, minmax(240px, 1fr))"
       >
         {#each tiles as tile (tile.member.id)}
-          <RoomTile
-            {channel}
-            member={tile.member}
-            speaking={tile.speaking}
-            muted={tile.muted}
-            track={tile.track}
-          />
+          <div
+            animate:flip={{ duration: 250, easing: backOut }}
+            transition:scale={{ duration: 200, start: 0.85, easing: backOut }}
+          >
+            <RoomTile
+              {channel}
+              member={tile.member}
+              speaking={tile.speaking}
+              mute={tile.mute}
+              track={tile.track}
+            />
+          </div>
         {/each}
       </div>
     {/if}

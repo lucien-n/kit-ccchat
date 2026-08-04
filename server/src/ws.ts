@@ -10,11 +10,12 @@ import {
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
 import { WebSocketServer, type WebSocket } from "ws";
-import { newId, userForToken } from "./auth.js";
+import { can, newId, userForToken } from "./auth.js";
 import { db } from "./db/index.js";
 import { findById } from "./db/query.js";
 import { channelsTable, messagesTable, usersTable } from "./db/schema";
 import { hub, type Client } from "./hub.js";
+import { authLevel } from "./permissions.js";
 import { attachImages } from "./modules/images/images.service.js";
 import { resolveMentions, saveMentions } from "./modules/messages/mentions.js";
 import { toMessageView } from "./views.js";
@@ -103,6 +104,9 @@ function onConnection(ws: WebSocket, userId: string) {
       case ClientEventType.Voice_Leave:
         hub.voiceLeaveAll(client.userId);
         break;
+      case ClientEventType.Voice_Move:
+        handleVoiceMove(client, msg.userId, msg.channelId);
+        break;
       case ClientEventType.Screen_Share_Set:
         hub.setSharing(client.userId, msg.sharing);
         break;
@@ -162,11 +166,28 @@ function handleVoiceJoin(client: Client, channelId: string) {
     displayName: u.displayName,
     avatarVersion: u.avatarVersion ?? null,
     sharing: false,
-    // Seed from what we know rather than a blanket "muted" that would flash the
-    // icon on every joiner; the client's Mic_Set corrects it a moment later.
-    muted: isMuted(u),
+    // Self-mute starts off; the client's Mic_Set corrects it a moment later.
+    // A mod-mute is a separate overlay so it survives that correction.
+    muted: false,
+    forceMuted: isMuted(u),
     deafened: false,
   });
+}
+
+function handleVoiceMove(client: Client, targetUserId: string, channelId: string) {
+  const mover = findById(usersTable, client.userId);
+  if (!mover || !can(mover, "moderateMembers")) return;
+
+  const channel = findById(channelsTable, channelId);
+  if (!channel || channel.type !== ChannelType.Voice) return;
+
+  const target = findById(usersTable, targetUserId);
+  // Only move someone who's actually in a call, and never someone who outranks
+  // you, matching how role edits are gated.
+  if (!target || !hub.isInVoice(targetUserId)) return;
+  if (authLevel(target) > authLevel(mover)) return;
+
+  hub.sendToUser(targetUserId, { type: ServerEventType.Voice_Moved, channelId });
 }
 
 function replyTarget(replyToId: string | undefined, channelId: string): string | null {

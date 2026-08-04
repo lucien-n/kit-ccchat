@@ -7,7 +7,7 @@
   import HangupButton from "./hangup-button.svelte";
   import ScreenShareButton from "./screen-share-button.svelte";
   import { SoundboardButton } from "./soundboard";
-  import { fly } from "svelte/transition";
+  import { fly } from "$lib/motion";
   import { elasticInOut } from "svelte/easing";
 </script>
 

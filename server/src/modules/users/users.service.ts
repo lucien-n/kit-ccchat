@@ -1,6 +1,7 @@
 import {
   MAX_AVATAR_IMAGE_BYTES,
   MAX_BANNER_IMAGE_BYTES,
+  ServerEventType,
   Theme,
   ThemeMode,
   type AppearanceView,
@@ -15,6 +16,7 @@ import {
 import { desc, eq } from "drizzle-orm";
 import { hashPassword, verifyPassword } from "../../auth.js";
 import { db } from "../../db/index.js";
+import { hub } from "../../hub.js";
 import { rolesTable, userRolesTable, usersTable, type User } from "../../db/schema";
 import { AVATARS_DIR, BANNERS_DIR } from "../../env.js";
 import { getById } from "../../db/query.js";
@@ -24,6 +26,16 @@ import { toMember, toRoleView } from "../../views.js";
 
 const avatars = imageStore(AVATARS_DIR);
 const banners = imageStore(BANNERS_DIR);
+
+/** Everyone renders each other's avatar, banner, name and accent from the
+ *  roster, so a change has to reach every other client instead of only the
+ *  editor's own view. Pass a prebuilt member to skip the re-read. */
+function broadcastMember(userId: string, member?: Member) {
+  hub.broadcast({
+    type: ServerEventType.Member_Updated,
+    member: member ?? toMember(getById(usersTable, userId, "user not found")),
+  });
+}
 
 export function listMembers(): Member[] {
   return db
@@ -42,6 +54,7 @@ export function saveAvatar(userId: string, { image }: AvatarBody): number {
   avatars.write(userId, decodeImageUpload(image, MAX_AVATAR_IMAGE_BYTES));
   const avatarVersion = Date.now();
   db.update(usersTable).set({ avatarVersion }).where(eq(usersTable.id, userId)).run();
+  broadcastMember(userId);
   return avatarVersion;
 }
 
@@ -51,6 +64,7 @@ export function deleteAvatar(userId: string) {
     .set({ avatarVersion: null })
     .where(eq(usersTable.id, userId))
     .run();
+  broadcastMember(userId);
 }
 
 export function readBanner(id: string): StoredImage {
@@ -61,6 +75,7 @@ export function saveBanner(userId: string, { image }: BannerBody): number {
   banners.write(userId, decodeImageUpload(image, MAX_BANNER_IMAGE_BYTES));
   const bannerVersion = Date.now();
   db.update(usersTable).set({ bannerVersion }).where(eq(usersTable.id, userId)).run();
+  broadcastMember(userId);
   return bannerVersion;
 }
 
@@ -70,6 +85,7 @@ export function deleteBanner(userId: string) {
     .set({ bannerVersion: null })
     .where(eq(usersTable.id, userId))
     .run();
+  broadcastMember(userId);
 }
 
 export function updateProfile(user: User, patch: UpdateProfileBody): Member {
@@ -79,10 +95,13 @@ export function updateProfile(user: User, patch: UpdateProfileBody): Member {
   if (patch.displayName !== undefined) fields.displayName = patch.displayName;
   if (patch.accentColor !== undefined) fields.accentColor = patch.accentColor;
 
-  if (Object.keys(fields).length)
-    db.update(usersTable).set(fields).where(eq(usersTable.id, user.id)).run();
+  if (!Object.keys(fields).length) return toMember(user);
 
-  return toMember({ ...user, ...fields });
+  db.update(usersTable).set(fields).where(eq(usersTable.id, user.id)).run();
+
+  const member = toMember({ ...user, ...fields });
+  broadcastMember(user.id, member);
+  return member;
 }
 
 export function getAppearance(user: User): AppearanceView {
