@@ -33,15 +33,20 @@ export const member = memberRef.extend({
 });
 export type Member = z.infer<typeof member>;
 
+export const customTheme = z.object({
+  primary: hexColor.nullable(),
+  background: hexColor.nullable(),
+  radius: themeRadius.nullable(),
+});
+export type CustomTheme = z.infer<typeof customTheme>;
+
 /** A member's private appearance preferences, persisted server-side so they
  *  follow the account across devices rather than living only in localStorage. */
 export const appearanceView = z.object({
   mode: themeMode,
   theme,
   reducedMotion: z.boolean(),
-  customPrimary: hexColor.nullable(),
-  customBackground: hexColor.nullable(),
-  customRadius: themeRadius.nullable(),
+  customTheme,
 });
 export type AppearanceView = z.infer<typeof appearanceView>;
 

@@ -24,9 +24,9 @@ columnSorting:
 
 ## Todo
 
-- [collapse-custom-theme-properties-to-an-object](tasks/collapse-custom-theme-properties-to-an-object.md)
-
 ## In Progress
+
+- [collapse-custom-theme-properties-to-an-object](tasks/collapse-custom-theme-properties-to-an-object.md)
 
 ## Done
 

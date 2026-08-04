@@ -7,32 +7,42 @@ import {
   legibleColor,
   luminanceOf,
 } from "$lib/color";
-import { Theme, ThemeMode, type AppearanceView } from "@ccchat/shared";
+import {
+  customTheme,
+  Theme,
+  ThemeMode,
+  type AppearanceView,
+  type CustomTheme,
+} from "@ccchat/shared";
 
 // Re-exported so components can keep importing the enums from the store.
 export { Theme, ThemeMode };
+
+const CUSTOM_THEME_KEY = "appearance:customTheme";
+
+const emptyCustomTheme = (): CustomTheme => ({
+  primary: null,
+  background: null,
+  radius: null,
+});
 
 class Appearance {
   mode = $state<ThemeMode>(ThemeMode.Dark);
   theme = $state<Theme>(Theme.Default);
   reducedMotion = $state(false);
 
-  // Inputs for the custom theme. null = not yet chosen; the getters below fall
-  // back to sensible defaults so the pickers always have something to show.
-  customPrimary = $state<string | null>(null);
-  customBackground = $state<string | null>(null);
-  customRadius = $state<number | null>(null);
+  customTheme = $state<CustomTheme>(emptyCustomTheme());
 
   bgLuminance = $state(0.1);
 
-  get effectivePrimary() {
-    return this.customPrimary ?? CUSTOM_THEME_DEFAULTS.primary;
-  }
-  get effectiveBackground() {
-    return this.customBackground ?? CUSTOM_THEME_DEFAULTS.background;
-  }
-  get effectiveRadius() {
-    return this.customRadius ?? CUSTOM_THEME_DEFAULTS.radius;
+  /** The custom theme with every unset field filled from the defaults, so the
+   *  derivation and the color inputs always have concrete values to work with. */
+  get effectiveTheme(): { primary: string; background: string; radius: number } {
+    return {
+      primary: this.customTheme.primary ?? CUSTOM_THEME_DEFAULTS.primary,
+      background: this.customTheme.background ?? CUSTOM_THEME_DEFAULTS.background,
+      radius: this.customTheme.radius ?? CUSTOM_THEME_DEFAULTS.radius,
+    };
   }
 
   private media: MediaQueryList | null = null;
@@ -62,10 +72,7 @@ class Appearance {
 
     this.reducedMotion = localStorage.getItem("appearance:reducedMotion") === "1";
 
-    this.customPrimary = localStorage.getItem("appearance:customPrimary");
-    this.customBackground = localStorage.getItem("appearance:customBackground");
-    const storedRadius = localStorage.getItem("appearance:customRadius");
-    this.customRadius = storedRadius === null ? null : Number(storedRadius);
+    this.customTheme = readStoredCustomTheme();
 
     this.applyTheme();
     this.applyMotion();
@@ -99,22 +106,20 @@ class Appearance {
   }
 
   setCustomPrimary(color: string) {
-    this.customPrimary = color;
-    localStorage.setItem("appearance:customPrimary", color);
-    this.applyTheme();
-    this.persist();
+    this.updateCustomTheme({ primary: color });
   }
 
   setCustomBackground(color: string) {
-    this.customBackground = color;
-    localStorage.setItem("appearance:customBackground", color);
-    this.applyTheme();
-    this.persist();
+    this.updateCustomTheme({ background: color });
   }
 
   setCustomRadius(radius: number) {
-    this.customRadius = radius;
-    localStorage.setItem("appearance:customRadius", String(radius));
+    this.updateCustomTheme({ radius });
+  }
+
+  private updateCustomTheme(patch: Partial<CustomTheme>) {
+    this.customTheme = { ...this.customTheme, ...patch };
+    this.writeCustomStorage();
     this.applyTheme();
     this.persist();
   }
@@ -123,32 +128,19 @@ class Appearance {
     this.mode = prefs.mode;
     this.theme = prefs.theme;
     this.reducedMotion = prefs.reducedMotion;
-    this.customPrimary = prefs.customPrimary;
-    this.customBackground = prefs.customBackground;
-    this.customRadius = prefs.customRadius;
+    this.customTheme = prefs.customTheme;
     localStorage.setItem("appearance:mode", prefs.mode);
     localStorage.setItem("appearance:theme", prefs.theme);
     localStorage.setItem("appearance:reducedMotion", prefs.reducedMotion ? "1" : "0");
-    this.syncCustomStorage();
+    this.writeCustomStorage();
     this.applyTheme();
     this.applyMotion();
   }
 
-  /** Mirror the custom-theme inputs into localStorage so the pre-login screen
-   *  (which themes before the server responds) matches the account. */
-  private syncCustomStorage() {
-    const entries: [string, string | null][] = [
-      ["appearance:customPrimary", this.customPrimary],
-      ["appearance:customBackground", this.customBackground],
-      [
-        "appearance:customRadius",
-        this.customRadius === null ? null : String(this.customRadius),
-      ],
-    ];
-    for (const [key, value] of entries) {
-      if (value === null) localStorage.removeItem(key);
-      else localStorage.setItem(key, value);
-    }
+  /** Mirror the custom theme into localStorage so the pre-login screen (which
+   *  themes before the server responds) matches the account. */
+  private writeCustomStorage() {
+    localStorage.setItem(CUSTOM_THEME_KEY, JSON.stringify(this.customTheme));
   }
 
   /** Push the current prefs to the server, fire-and-forget. Skipped while logged
@@ -160,9 +152,7 @@ class Appearance {
         mode: this.mode,
         theme: this.theme,
         reducedMotion: this.reducedMotion,
-        customPrimary: this.customPrimary,
-        customBackground: this.customBackground,
-        customRadius: this.customRadius,
+        customTheme: this.customTheme,
       })
       .catch(() => {});
   }
@@ -177,16 +167,13 @@ class Appearance {
     html.dataset.theme = this.theme;
 
     if (this.theme === Theme.Custom) {
-      const tokens = deriveCustomTheme(
-        this.effectivePrimary,
-        this.effectiveBackground,
-        this.effectiveRadius,
-      );
+      const { primary, background, radius } = this.effectiveTheme;
+      const tokens = deriveCustomTheme(primary, background, radius);
       for (const [name, value] of Object.entries(tokens))
         html.style.setProperty(name, value);
       // The chosen background defines light-vs-dark, so drive `.dark` off it
       // rather than the mode toggle while a custom theme is active.
-      html.classList.toggle("dark", isDarkBackground(this.effectiveBackground));
+      html.classList.toggle("dark", isDarkBackground(background));
     } else {
       for (const name of CUSTOM_THEME_VARS) html.style.removeProperty(name);
       html.classList.toggle("dark", this.prefersDark());
@@ -203,6 +190,20 @@ class Appearance {
 
   private applyMotion() {
     document.documentElement.classList.toggle("reduce-motion", this.motionReduced);
+  }
+}
+
+/** Read the persisted custom theme, tolerating absent or malformed storage by
+ *  falling back to an all-null theme. */
+function readStoredCustomTheme(): CustomTheme {
+  const raw = localStorage.getItem(CUSTOM_THEME_KEY);
+  if (!raw) return emptyCustomTheme();
+
+  try {
+    const parsed = customTheme.safeParse(JSON.parse(raw));
+    return parsed.success ? parsed.data : emptyCustomTheme();
+  } catch {
+    return emptyCustomTheme();
   }
 }
 
