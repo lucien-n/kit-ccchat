@@ -56,8 +56,6 @@ class VoiceStore {
   error = $state("");
   /** Whether incoming audio is silenced. Deafening also stops your own mic. */
   deafened = $state(false);
-  isCameraOn = $state(false);
-  isScreenSharing = $state(false);
 
   devices = $state({
     inputs: [] as MediaDeviceInfo[],
@@ -102,6 +100,20 @@ class VoiceStore {
 
   get inCall(): boolean {
     return this.status !== VoiceStatus.Idle;
+  }
+
+  private get localParticipant(): VoiceParticipant | undefined {
+    return this.participants.find((p) => p.isLocal);
+  }
+
+  /** Read the local participant's own live state rather than a mirrored flag, so
+   *  there is one truth for "am I sharing / on camera" that resets with it. */
+  get isScreenSharing(): boolean {
+    return this.localParticipant?.sharing ?? false;
+  }
+
+  get isCameraOn(): boolean {
+    return this.localParticipant?.camera ?? false;
   }
 
   /** The one video the floating window shows while you're away from the room:
@@ -377,8 +389,6 @@ class VoiceStore {
   }
 
   private announceSharing(sharing: boolean) {
-    this.isScreenSharing = sharing;
-
     realtime.send({ type: ClientEventType.Screen_Share_Set, sharing });
   }
 
@@ -412,8 +422,6 @@ class VoiceStore {
     if (!lp) return;
 
     const on = lp.isCameraEnabled;
-    this.isCameraOn = on;
-
     const pub = lp.getTrackPublication(Track.Source.Camera);
     if (on && pub?.track)
       this.share.cameras = { ...this.share.cameras, [lp.identity]: pub.track };
@@ -643,8 +651,6 @@ class VoiceStore {
     this.mutedByMod = false;
     this.selfMutedBeforeMod = false;
     this.cameraAnnounced = false;
-    this.isCameraOn = false;
-    this.isScreenSharing = false;
     this.playingSounds = 0;
   }
 
@@ -676,8 +682,6 @@ class VoiceStore {
     this.mutedByMod = false;
     this.selfMutedBeforeMod = false;
     this.cameraAnnounced = false;
-    this.isCameraOn = false;
-    this.isScreenSharing = false;
     this.playingSounds = 0;
     this.leaving = false;
   }
