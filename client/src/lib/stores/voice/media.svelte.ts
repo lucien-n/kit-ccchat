@@ -1,4 +1,5 @@
 import { errorName } from "$lib/forms";
+import { playCameraOff, playCameraOn } from "$lib/notify";
 import { realtime } from "$lib/stores/realtime.svelte";
 import { ClientEventType } from "@ccchat/shared";
 import {
@@ -216,9 +217,12 @@ export class MediaController {
   }
 
   private syncRemoteCamera(identity: string, pub: RemoteTrackPublication) {
+    const was = identity in this.share.cameras;
     if (pub.track && !pub.isMuted)
       this.share.cameras = { ...this.share.cameras, [identity]: pub.track };
     else this.dropCamera(identity);
+    const now = identity in this.share.cameras;
+    if (was !== now && this.core.liveCues) (now ? playCameraOn : playCameraOff)();
   }
 
   private syncLocalCamera() {
@@ -234,6 +238,7 @@ export class MediaController {
     if (on !== this.cameraAnnounced) {
       this.cameraAnnounced = on;
       this.announceCamera(on);
+      if (this.core.liveCues) (on ? playCameraOn : playCameraOff)();
     }
   }
 

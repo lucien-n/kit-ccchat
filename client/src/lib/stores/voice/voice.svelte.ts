@@ -1,9 +1,16 @@
 import { api } from "$lib/api";
 import { apiErrorMessage, errorName } from "$lib/forms";
-import { playVoiceJoin, playVoiceLeave } from "$lib/notify";
+import {
+  playShareStart,
+  playShareStop,
+  playUserJoin,
+  playUserLeave,
+  playVoiceJoin,
+  playVoiceLeave,
+} from "$lib/notify";
 import { realtime } from "$lib/stores/realtime.svelte";
 import { ClientEventType } from "@ccchat/shared";
-import { Room, RoomEvent } from "livekit-client";
+import { Room, RoomEvent, Track } from "livekit-client";
 import { AudioSink, type StreamAudio } from "./audio-sink";
 import { MicStatus, VoiceStatus, type Channel, type VoiceCore } from "./context";
 import { DeviceController } from "./devices.svelte";
@@ -40,6 +47,12 @@ class VoiceStore implements VoiceCore {
   }
   get inCall(): boolean {
     return this.status !== VoiceStatus.Idle;
+  }
+  // Ambient cues (someone else joining, a screen share or camera starting) should
+  // only fire during a settled call, never amid the connect/switch/leave churn
+  // that fires the same room events.
+  get liveCues(): boolean {
+    return this.status === VoiceStatus.Connected && !this.leaving;
   }
   get deafened(): boolean {
     return this.micCtl.deafened;
@@ -159,23 +172,33 @@ class VoiceStore implements VoiceCore {
   private wire(room: Room) {
     const rerender = () => this.refresh();
     room
-      .on(RoomEvent.ParticipantConnected, rerender)
-      .on(RoomEvent.ParticipantDisconnected, rerender)
+      .on(RoomEvent.ParticipantConnected, () => {
+        if (this.liveCues) playUserJoin();
+        this.refresh();
+      })
+      .on(RoomEvent.ParticipantDisconnected, () => {
+        if (this.liveCues) playUserLeave();
+        this.refresh();
+      })
       .on(RoomEvent.ActiveSpeakersChanged, rerender)
       .on(RoomEvent.TrackMuted, (pub, p) => this.mediaCtl.onCameraMuteChanged(pub, p))
       .on(RoomEvent.TrackUnmuted, (pub, p) => this.mediaCtl.onCameraMuteChanged(pub, p))
-      .on(RoomEvent.TrackSubscribed, (track, pub, p) =>
-        this.mediaCtl.onTrackSubscribed(track, pub, p),
-      )
-      .on(RoomEvent.TrackUnsubscribed, (track, pub, p) =>
-        this.mediaCtl.onTrackUnsubscribed(track, pub, p),
-      )
-      .on(RoomEvent.LocalTrackPublished, (pub) =>
-        this.mediaCtl.onLocalTrackPublished(pub, room),
-      )
-      .on(RoomEvent.LocalTrackUnpublished, (pub) =>
-        this.mediaCtl.onLocalTrackUnpublished(pub, room),
-      )
+      .on(RoomEvent.TrackSubscribed, (track, pub, p) => {
+        this.mediaCtl.onTrackSubscribed(track, pub, p);
+        if (pub.source === Track.Source.ScreenShare && this.liveCues) playShareStart();
+      })
+      .on(RoomEvent.TrackUnsubscribed, (track, pub, p) => {
+        this.mediaCtl.onTrackUnsubscribed(track, pub, p);
+        if (pub.source === Track.Source.ScreenShare && this.liveCues) playShareStop();
+      })
+      .on(RoomEvent.LocalTrackPublished, (pub) => {
+        this.mediaCtl.onLocalTrackPublished(pub, room);
+        if (pub.source === Track.Source.ScreenShare && this.liveCues) playShareStart();
+      })
+      .on(RoomEvent.LocalTrackUnpublished, (pub) => {
+        this.mediaCtl.onLocalTrackUnpublished(pub, room);
+        if (pub.source === Track.Source.ScreenShare && this.liveCues) playShareStop();
+      })
       .on(RoomEvent.MediaDevicesChanged, () => this.deviceCtl.load())
       .on(RoomEvent.ActiveDeviceChanged, (kind, id) =>
         this.deviceCtl.onActiveDeviceChanged(kind, id),

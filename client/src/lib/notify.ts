@@ -60,6 +60,54 @@ export const playVoiceLeave = () =>
 export const playUnmute = () => playSequence([[660, 0.09]]);
 export const playMute = () => playSequence([[440, 0.09]]);
 
+// Deafen is the bigger action than mute, so it gets a darker two-note fall/rise
+// that reads as distinct from the single mute/unmute blip.
+export const playDeafen = () =>
+  playSequence([
+    [415.3, 0.08],
+    [277.18, 0.1],
+  ]);
+export const playUndeafen = () =>
+  playSequence([
+    [277.18, 0.08],
+    [415.3, 0.1],
+  ]);
+
+// Softer, two-note cues for other people entering or leaving your call, kept
+// lighter than your own three-note join/leave arpeggio.
+export const playUserJoin = () =>
+  playSequence([
+    [587.33, 0.07],
+    [783.99, 0.09],
+  ]);
+export const playUserLeave = () =>
+  playSequence([
+    [783.99, 0.07],
+    [587.33, 0.09],
+  ]);
+
+export const playShareStart = () =>
+  playSequence([
+    [659.25, 0.06],
+    [987.77, 0.09],
+  ]);
+export const playShareStop = () =>
+  playSequence([
+    [987.77, 0.06],
+    [659.25, 0.09],
+  ]);
+
+export const playCameraOn = () =>
+  playSequence([
+    [523.25, 0.06],
+    [698.46, 0.09],
+  ]);
+export const playCameraOff = () =>
+  playSequence([
+    [698.46, 0.06],
+    [523.25, 0.09],
+  ]);
+
 let baseTitle = "ccchat";
 export function setBaseTitle(title: string) {
   baseTitle = title;

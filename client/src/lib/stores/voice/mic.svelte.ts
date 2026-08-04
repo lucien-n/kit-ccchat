@@ -1,5 +1,5 @@
 import { errorName } from "$lib/forms";
-import { playMute, playUnmute } from "$lib/notify";
+import { playDeafen, playMute, playUndeafen, playUnmute } from "$lib/notify";
 import { realtime } from "$lib/stores/realtime.svelte";
 import { ClientEventType } from "@ccchat/shared";
 import { MicStatus, type VoiceCore } from "./context";
@@ -53,13 +53,15 @@ export class MicController {
     const enabling = this.status !== MicStatus.Enabled;
     if (!this.core.inCall) {
       this.status = enabling ? MicStatus.Enabled : MicStatus.Muted;
-      if (enabling && this.deafened) this.setDeafened(false);
+      if (enabling) playUnmute();
+      else playMute();
+      if (enabling && this.deafened) this.setDeafened(false, true);
       this.mutedByDeafen = false;
       return;
     }
     const changed = await this.apply(enabling);
     if (!changed) return;
-    if (enabling && this.deafened) this.setDeafened(false);
+    if (enabling && this.deafened) this.setDeafened(false, true);
     this.mutedByDeafen = false;
   }
 
@@ -88,7 +90,9 @@ export class MicController {
     }
   }
 
-  private async apply(enabling: boolean): Promise<boolean> {
+  // silent skips the mute/unmute cue when the change is a side effect of deafen,
+  // which plays its own cue.
+  private async apply(enabling: boolean, silent = false): Promise<boolean> {
     const lp = this.core.room?.localParticipant;
     if (!lp || !this.core.canPublish) return false;
     try {
@@ -102,8 +106,10 @@ export class MicController {
     }
     this.status = enabling ? MicStatus.Enabled : MicStatus.Muted;
     this.announce();
-    if (enabling) playUnmute();
-    else playMute();
+    if (!silent) {
+      if (enabling) playUnmute();
+      else playMute();
+    }
     this.core.refresh();
     return true;
   }
@@ -124,19 +130,23 @@ export class MicController {
     }
     if (next) {
       if (this.status === MicStatus.Enabled) {
-        this.mutedByDeafen = await this.apply(false);
+        this.mutedByDeafen = await this.apply(false, true);
       }
     } else if (this.mutedByDeafen) {
       this.mutedByDeafen = false;
-      if (this.status === MicStatus.Muted) await this.apply(true);
+      if (this.status === MicStatus.Muted) await this.apply(true, true);
     }
   }
 
-  private setDeafened(value: boolean) {
+  private setDeafened(value: boolean, silent = false) {
     if (this.deafened === value) return;
     this.deafened = value;
     this.core.audio.setDeafened(value, this.core.streamAudio);
     if (this.core.inCall) realtime.send({ type: ClientEventType.Deafen_Set, deafened: value });
+    if (!silent) {
+      if (value) playDeafen();
+      else playUndeafen();
+    }
     this.core.refresh();
   }
 

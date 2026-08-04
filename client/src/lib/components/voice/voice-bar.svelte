@@ -22,7 +22,7 @@
           {voice.status === VoiceStatus.Connected ? "Connected" : "Connecting…"}
         </div>
       </div>
-      <HangupButton />
+      <HangupButton variant="ghost" />
     </div>
 
     <div class="flex gap-1.5">

@@ -24,6 +24,7 @@ export interface VoiceCore {
   readonly room: Room | null;
   readonly channel: Channel | null;
   readonly inCall: boolean;
+  readonly liveCues: boolean;
   canPublish: boolean;
   error: string;
   readonly deafened: boolean;
