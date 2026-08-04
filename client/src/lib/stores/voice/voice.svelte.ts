@@ -643,6 +643,8 @@ class VoiceStore {
     this.mutedByMod = false;
     this.selfMutedBeforeMod = false;
     this.cameraAnnounced = false;
+    this.isCameraOn = false;
+    this.isScreenSharing = false;
     this.playingSounds = 0;
   }
 
@@ -673,6 +675,9 @@ class VoiceStore {
     this.mutedByDeafen = false;
     this.mutedByMod = false;
     this.selfMutedBeforeMod = false;
+    this.cameraAnnounced = false;
+    this.isCameraOn = false;
+    this.isScreenSharing = false;
     this.playingSounds = 0;
     this.leaving = false;
   }
