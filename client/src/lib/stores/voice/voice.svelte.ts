@@ -110,11 +110,18 @@ class VoiceStore {
 
   async join(target: Channel) {
     if (this.channel?.id === target.id && this.inCall) return;
-    if (this.room) await this.leave();
+
+    // Switching straight from another channel keeps the bar up: show the new
+    // channel now and tear the old room down quietly, so status never drops to
+    // Idle (which unmounts the bar and plays its fly-out) between the two calls.
+    const previous = this.room;
+    this.room = null;
 
     this.status = VoiceStatus.Connecting;
     this.channel = { id: target.id, name: target.name };
     this.error = "";
+
+    if (previous) await this.teardownRoom(previous);
 
     let url = "";
     try {
@@ -237,6 +244,10 @@ class VoiceStore {
         else if (kind === "audiooutput") this.devices.outputId = deviceId;
       })
       .on(RoomEvent.Disconnected, () => {
+        // A room we've already swapped away from (channel switch) tears itself
+        // down through teardownRoom; ignore its Disconnected so it can't reset
+        // the call we're now joining.
+        if (this.room !== room) return;
         const wasConnected = this.status === VoiceStatus.Connected;
         if (!this.leaving && wasConnected) {
           this.error = "Voice disconnected - the media connection dropped.";
@@ -500,6 +511,28 @@ class VoiceStore {
    *  checks permission and tells their client to reconnect. */
   moveMember(userId: string, channelId: string) {
     realtime.send({ type: ClientEventType.Voice_Move, userId, channelId });
+  }
+
+  /** Disconnect a room we're switching away from and drop its media, without
+   *  touching the visible status or channel - the bar stays up for the next
+   *  call. The server clears our old voice presence when the new Voice_Join
+   *  lands, so there's no leave to send from here. */
+  private async teardownRoom(room: Room) {
+    try {
+      await room.disconnect();
+    } catch {
+      /* ignore */
+    }
+    for (const el of this.audioEls.values()) el.remove();
+    this.audioEls.clear();
+    this.screenAudioEls.clear();
+    this.share = { screens: {}, watching: null, audio: {} };
+    this.pendingWatch = null;
+    this.deafened = false;
+    this.mutedByDeafen = false;
+    this.mutedByMod = false;
+    this.selfMutedBeforeMod = false;
+    this.playingSounds = 0;
   }
 
   async leave() {
