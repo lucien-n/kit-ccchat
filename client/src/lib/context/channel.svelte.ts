@@ -2,7 +2,7 @@ import { getContext, setContext } from "svelte";
 import { toast } from "svelte-sonner";
 import { api, type Channel } from "$lib/api";
 import { apiErrorMessage } from "$lib/forms";
-import { channels } from "$lib/stores/channels.svelte";
+import { channels } from "$lib/stores";
 
 const KEY = Symbol("channel");
 
@@ -37,6 +37,15 @@ export class ChannelContext {
       toast.error(apiErrorMessage(e, "failed to delete channel"));
     }
     this.busy = false;
+  }
+
+  async setMain() {
+    try {
+      await api.channels.setMain(this.channel.id);
+      await channels.load();
+    } catch (e) {
+      toast.error(apiErrorMessage(e, "failed to set main channel"));
+    }
   }
 }
 

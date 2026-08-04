@@ -1,8 +1,6 @@
 <script lang="ts">
   import { soundUrl } from "$lib/api";
-  import { session } from "$lib/stores/session.svelte";
-  import { nameFromFile, soundboard } from "$lib/stores/soundboard.svelte";
-  import { voice } from "$lib/stores/voice.svelte";
+  import { session, nameFromFile, soundboard, voice } from "$lib/stores";
   import { Button } from "&/button";
   import { Input } from "&/input";
   import * as Popover from "&/popover";

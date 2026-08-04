@@ -8,6 +8,7 @@ import { desc, eq, inArray } from "drizzle-orm";
 import { newId } from "../../auth.js";
 import { db } from "../../db/index.js";
 import { rolesTable, userRolesTable, usersTable, type User } from "../../db/schema";
+import { getById } from "../../db/query.js";
 import { httpError } from "../../http/errors.js";
 import { hub } from "../../hub.js";
 import { authLevel } from "../../permissions.js";
@@ -39,8 +40,7 @@ export function createRole({ name, color, permission }: CreateRoleBody): Role {
 }
 
 export function updateRole(id: string, patch: UpdateRoleBody): Role {
-  const existing = db.select().from(rolesTable).where(eq(rolesTable.id, id)).get();
-  if (!existing) httpError(404, "role not found");
+  const existing = getById(rolesTable, id, "role not found");
 
   db.update(rolesTable).set(patch).where(eq(rolesTable.id, id)).run();
   notify();
@@ -78,8 +78,7 @@ export function deleteRole(id: string) {
 }
 
 export function setUserRoles(userId: string, roleIds: string[], actor: User) {
-  const target = db.select().from(usersTable).where(eq(usersTable.id, userId)).get();
-  if (!target) httpError(404, "user not found");
+  const target = getById(usersTable, userId, "user not found");
   if (authLevel(target) > authLevel(actor)) httpError(403, "target outranks you");
 
   if (roleIds.length) {

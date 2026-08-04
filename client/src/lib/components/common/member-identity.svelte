@@ -2,7 +2,7 @@
   import { type Member } from "$lib/api";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { rankLabel } from "$lib/members";
-  import { appearance } from "$lib/stores/appearance.svelte";
+  import { appearance } from "$lib/stores";
   import type { Snippet } from "svelte";
 
   interface Props {

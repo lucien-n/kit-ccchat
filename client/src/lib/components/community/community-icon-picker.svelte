@@ -1,13 +1,12 @@
 <script lang="ts">
   import { api } from "$lib/api";
-  import { apiErrorMessage } from "$lib/forms";
+  import { attempt } from "$lib/forms";
   import { resizeImage } from "$lib/image";
-  import { community } from "$lib/stores/community.svelte";
+  import { community } from "$lib/stores";
   import { Button } from "&/button";
   import ImageIcon from "@lucide/svelte/icons/image";
   import Trash2 from "@lucide/svelte/icons/trash-2";
   import Upload from "@lucide/svelte/icons/upload";
-  import { toast } from "svelte-sonner";
 
   let fileInput: HTMLInputElement | null = $state(null);
   let busy = $state(false);
@@ -16,29 +15,28 @@
     const file = (e.currentTarget as HTMLInputElement).files?.[0];
     if (!file) return;
     busy = true;
-    try {
-      const dataUrl = await resizeImage(file, 256);
-      const { iconVersion } = await api.community.setIcon(dataUrl);
-      community.iconVersion = iconVersion;
-      toast.success("Community icon updated.");
-    } catch (err) {
-      toast.error(apiErrorMessage(err, "upload failed"));
-    } finally {
-      busy = false;
-      if (fileInput) fileInput.value = "";
-    }
+    await attempt(
+      async () => {
+        const dataUrl = await resizeImage(file, 256);
+        const { iconVersion } = await api.community.setIcon(dataUrl);
+        community.iconVersion = iconVersion;
+      },
+      { error: "upload failed", success: "Community icon updated." },
+    );
+    busy = false;
+    if (fileInput) fileInput.value = "";
   }
 
   async function remove() {
     busy = true;
-    try {
-      await api.community.removeIcon();
-      community.iconVersion = null;
-    } catch (err) {
-      toast.error(apiErrorMessage(err, "failed to remove"));
-    } finally {
-      busy = false;
-    }
+    await attempt(
+      async () => {
+        await api.community.removeIcon();
+        community.iconVersion = null;
+      },
+      { error: "failed to remove" },
+    );
+    busy = false;
   }
 </script>
 

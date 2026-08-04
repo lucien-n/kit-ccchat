@@ -74,6 +74,7 @@ export function seedCommunity(input: {
           name: "general",
           type: ChannelType.Text,
           position: 0,
+          isMain: 1,
           createdAt: now,
         },
         {

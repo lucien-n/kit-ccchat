@@ -1,30 +1,21 @@
 <script lang="ts">
   import { api } from "$lib/api";
   import CommunityIconPicker from "$lib/components/community/community-icon-picker.svelte";
-  import { apiErrorMessage, fail, ok, toastMessage } from "$lib/forms";
-  import { community } from "$lib/stores/community.svelte";
+  import { ok, setMessage, spaForm } from "$lib/forms";
+  import { community } from "$lib/stores";
   import * as Form from "&/form";
   import { Input } from "&/input";
   import { renameCommunityBody } from "@ccchat/shared";
-  import { defaults, setMessage, superForm } from "sveltekit-superforms";
-  import { zod4, zod4Client } from "sveltekit-superforms/adapters";
 
-  const form = superForm(
-    defaults({ communityName: community.name }, zod4(renameCommunityBody)),
+  const form = spaForm(
+    renameCommunityBody,
+    { communityName: community.name },
     {
-      SPA: true,
-      validators: zod4Client(renameCommunityBody),
-      resetForm: false,
-      onUpdate: async ({ form }) => {
-        if (!form.valid) return;
-        try {
-          await api.community.rename(form.data.communityName);
-          setMessage(form, ok("Community renamed."));
-        } catch (err) {
-          setMessage(form, fail(apiErrorMessage(err, "failed to save")));
-        }
+      fallback: "failed to save",
+      onValid: async (data, form) => {
+        await api.community.rename(data.communityName);
+        setMessage(form, ok("Community renamed."));
       },
-      onUpdated: toastMessage,
     },
   );
 

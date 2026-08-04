@@ -1,17 +1,16 @@
 <script lang="ts">
   import { api } from "$lib/api";
   import * as app from "$lib/app";
-  import { apiErrorMessage, fail } from "$lib/forms";
+  import { channelNameTaken } from "$lib/channels";
+  import { spaForm } from "$lib/forms";
   import { channelTypeSpecs } from "$lib/specs";
-  import { channels } from "$lib/stores/channels.svelte";
+  import { channels } from "$lib/stores";
   import { cn } from "$lib/utils";
   import { Button } from "&/button";
   import * as Dialog from "&/dialog";
   import * as Form from "&/form";
   import { Input } from "&/input";
-  import { ChannelType, channelNameKey, createChannelBody } from "@ccchat/shared";
-  import { defaults, setMessage, superForm } from "sveltekit-superforms";
-  import { zod4, zod4Client } from "sveltekit-superforms/adapters";
+  import { ChannelType, createChannelBody } from "@ccchat/shared";
 
   let {
     open = $bindable(false),
@@ -21,39 +20,26 @@
     initialType?: ChannelType;
   } = $props();
 
-  const form = superForm(
+  const form = spaForm(
+    createChannelBody,
     // eslint-disable-next-line svelte/no-unused-svelte-ignore
     // svelte-ignore state_referenced_locally
-    defaults({ name: "", type: initialType }, zod4(createChannelBody)),
+    { name: "", type: initialType },
     {
-      SPA: true,
-      validators: zod4Client(createChannelBody),
-      resetForm: false,
-      onUpdate: async ({ form }) => {
-        if (!form.valid) return;
-        try {
-          const { channel } = await api.channels.create(form.data);
-          await channels.load();
-          if (channel.type === ChannelType.Text) app.selectChannel(channel.id);
-          open = false;
-        } catch (err) {
-          setMessage(form, fail(apiErrorMessage(err, "failed to create channel")));
-        }
+      toast: false,
+      fallback: "failed to create channel",
+      onValid: async (data) => {
+        const { channel } = await api.channels.create(data);
+        await channels.load();
+        if (channel.type === ChannelType.Text) app.selectChannel(channel.id);
+        open = false;
       },
     },
   );
 
   const { form: formData, enhance, submitting } = form;
 
-  // Checked against the channel list the client already holds, so it answers on
-  // every keystroke without asking the server. The server checks again on submit.
-  const taken = $derived.by(() => {
-    const key = channelNameKey($formData.name);
-    if (!key) return false;
-    return channels.list.some(
-      (c) => c.type === $formData.type && channelNameKey(c.name) === key,
-    );
-  });
+  const taken = $derived(channelNameTaken($formData.name, $formData.type, channels.list));
 
   // One instance, reused for both the text and voice buttons, so reseed each
   // time it opens from whichever button was clicked.

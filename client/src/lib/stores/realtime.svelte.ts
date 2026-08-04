@@ -1,5 +1,5 @@
 import type { ClientEvent, ServerEvent } from "@ccchat/shared";
-import { apiBase } from "../api";
+import { apiBase } from "$lib/api";
 
 export type ConnectionStatus = "disconnected" | "connecting" | "connected";
 

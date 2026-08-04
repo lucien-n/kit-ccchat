@@ -1,6 +1,6 @@
 <script lang="ts">
   import { clearInviteFromUrl, readInviteFromUrl } from "$lib/invite";
-  import { community } from "$lib/stores/community.svelte";
+  import { community } from "$lib/stores";
   import { Button } from "&/button";
   import * as Card from "&/card";
   import { onMount } from "svelte";

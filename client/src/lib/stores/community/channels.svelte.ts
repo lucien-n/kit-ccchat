@@ -1,4 +1,4 @@
-import { api, type Channel } from "../api";
+import { api, type Channel } from "$lib/api";
 
 class Channels {
   list = $state<Channel[]>([]);
@@ -10,6 +10,12 @@ class Channels {
 
   async load() {
     this.list = (await api.channels.list()).channels;
+  }
+
+  /** Persist a new sidebar order (all channel ids, top-to-bottom) and refresh. */
+  async reorder(orderedIds: string[]) {
+    await api.channels.reorder(orderedIds);
+    await this.load();
   }
 
   clear() {

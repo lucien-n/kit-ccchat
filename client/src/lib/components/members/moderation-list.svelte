@@ -1,18 +1,15 @@
 <script lang="ts">
   import { ModAction } from "$lib/api";
   import MemberIdentity from "$lib/components/common/member-identity.svelte";
-  import { apiErrorMessage } from "$lib/forms";
+  import { attempt } from "$lib/forms";
   import { byRank, isMuted } from "$lib/members";
-  import { members } from "$lib/stores/members.svelte";
-  import { presence } from "$lib/stores/presence.svelte";
-  import { session } from "$lib/stores/session.svelte";
+  import { members, presence, session } from "$lib/stores";
   import { Badge } from "&/badge";
   import { Button } from "&/button";
   import { Checkbox } from "&/checkbox";
   import { Input } from "&/input";
   import { Label } from "&/label";
   import { onMount } from "svelte";
-  import { toast } from "svelte-sonner";
 
   let search = $state("");
   let showOnlyActiveMembers = $state(false);
@@ -29,11 +26,15 @@
   });
 
   async function act(id: string, action: ModAction) {
-    try {
-      await members.moderate(id, action, action === ModAction.Mute ? 60 : undefined);
-    } catch (e) {
-      toast.error(apiErrorMessage(e, "action failed"));
-    }
+    await attempt(
+      () =>
+        members.moderate(
+          id,
+          action,
+          action === ModAction.Mute ? { minutes: 60 } : undefined,
+        ),
+      { error: "action failed" },
+    );
   }
 
   onMount(() => members.load());

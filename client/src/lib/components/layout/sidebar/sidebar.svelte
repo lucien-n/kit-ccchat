@@ -2,14 +2,13 @@
   import * as app from "$lib/app";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import VoiceBar from "$lib/components/voice/voice-bar.svelte";
-  import { appearance } from "$lib/stores/appearance.svelte";
-  import { channels } from "$lib/stores/channels.svelte";
-  import { session } from "$lib/stores/session.svelte";
-  import { ui } from "$lib/stores/ui.svelte";
-  import { voice } from "$lib/stores/voice.svelte";
+  import { appearance, channels, session, ui, voice } from "$lib/stores";
   import { Button } from "&/button";
-  import { ChannelType } from "@ccchat/shared";
+  import { ScrollArea } from "&/scroll-area";
+  import { ChannelType, type Channel } from "@ccchat/shared";
   import { LogOut } from "@lucide/svelte";
+  import { dndzone, type DndEvent } from "svelte-dnd-action";
+  import { flip } from "$lib/motion";
   import { ChannelCategoryHeader, SingleChannel } from "./channel";
   import SidebarHeader from "./sidebar-header.svelte";
 
@@ -19,10 +18,48 @@
 
   const { withVoice = false }: Props = $props();
 
-  const textChannels = $derived(channels.list.filter((c) => c.type === ChannelType.Text));
-  const voiceChannels = $derived(
-    channels.list.filter((c) => c.type === ChannelType.Voice),
-  );
+  // Local mirrors the dnd zones reorder live; kept in sync with the store except
+  // while a drag (or its persisting request) is in flight, so a background load
+  // can't yank rows mid-drag.
+  let textChannels = $state<Channel[]>([]);
+  let voiceChannels = $state<Channel[]>([]);
+  let dragging = $state(false);
+  $effect(() => {
+    if (dragging) return;
+    textChannels = channels.list.filter((c) => c.type === ChannelType.Text);
+    voiceChannels = channels.list.filter((c) => c.type === ChannelType.Voice);
+  });
+
+  const dndOptions = $derived({
+    flipDurationMs: 150,
+    dropTargetStyle: {},
+    dragDisabled: !session.isAdmin,
+  });
+
+  async function persistOrder() {
+    try {
+      await channels.reorder([...textChannels, ...voiceChannels].map((c) => c.id));
+    } finally {
+      dragging = false;
+    }
+  }
+
+  function considerText(e: CustomEvent<DndEvent<Channel>>) {
+    dragging = true;
+    textChannels = e.detail.items;
+  }
+  function finalizeText(e: CustomEvent<DndEvent<Channel>>) {
+    textChannels = e.detail.items;
+    void persistOrder();
+  }
+  function considerVoice(e: CustomEvent<DndEvent<Channel>>) {
+    dragging = true;
+    voiceChannels = e.detail.items;
+  }
+  function finalizeVoice(e: CustomEvent<DndEvent<Channel>>) {
+    voiceChannels = e.detail.items;
+    void persistOrder();
+  }
 
   function handleSelectChannel(id: string) {
     app.selectChannel(id);
@@ -31,31 +68,50 @@
 
   function handleJoinVoice(channel: { id: string; name: string }) {
     voice.join(channel);
+    void app.selectChannel(channel.id);
     ui.nav = false;
   }
 </script>
 
 <SidebarHeader />
 
-<nav class="min-h-0 flex-1 overflow-y-auto p-2">
-  <ChannelCategoryHeader
-    title="Text"
-    onCreate={() => ui.openCreateChannel(ChannelType.Text)}
-  />
+<ScrollArea class="min-h-0 flex-1" scrollbarYClasses="my-1 mr-0.5">
+  <nav class="p-2">
+    <ChannelCategoryHeader
+      title="Text"
+      onCreate={() => ui.openCreateChannel(ChannelType.Text)}
+    />
 
-  {#each textChannels as channel (channel.id)}
-    <SingleChannel {channel} onSelect={() => handleSelectChannel(channel.id)} />
-  {/each}
+    <div
+      use:dndzone={{ items: textChannels, type: "text-channels", ...dndOptions }}
+      onconsider={considerText}
+      onfinalize={finalizeText}
+    >
+      {#each textChannels as channel (channel.id)}
+        <div animate:flip={{ duration: 150 }}>
+          <SingleChannel {channel} onSelect={() => handleSelectChannel(channel.id)} />
+        </div>
+      {/each}
+    </div>
 
-  <ChannelCategoryHeader
-    title="Voice"
-    onCreate={() => ui.openCreateChannel(ChannelType.Voice)}
-  />
+    <ChannelCategoryHeader
+      title="Voice"
+      onCreate={() => ui.openCreateChannel(ChannelType.Voice)}
+    />
 
-  {#each voiceChannels as channel (channel.id)}
-    <SingleChannel {channel} onSelect={() => handleJoinVoice(channel)} />
-  {/each}
-</nav>
+    <div
+      use:dndzone={{ items: voiceChannels, type: "voice-channels", ...dndOptions }}
+      onconsider={considerVoice}
+      onfinalize={finalizeVoice}
+    >
+      {#each voiceChannels as channel (channel.id)}
+        <div animate:flip={{ duration: 150 }}>
+          <SingleChannel {channel} onSelect={() => handleJoinVoice(channel)} />
+        </div>
+      {/each}
+    </div>
+  </nav>
+</ScrollArea>
 
 {#if withVoice && voice.inCall}
   <VoiceBar />

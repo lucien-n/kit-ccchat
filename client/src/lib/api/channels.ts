@@ -13,6 +13,14 @@ export const channels = {
   delete: async (id: string) =>
     (await client.api.channels[":id"].$delete({ param: { id } })).json(),
 
+  /** Channels top-to-bottom as shown in the sidebar; the server rewrites all
+   *  positions from this order. */
+  reorder: async (orderedIds: string[]) =>
+    (await client.api.channels.order.$put({ json: { orderedIds } })).json(),
+
+  setMain: async (id: string) =>
+    (await client.api.channels[":id"].main.$post({ param: { id } })).json(),
+
   unreads: async () => (await client.api.channels.unreads.$get()).json(),
 
   markRead: async (id: string) =>

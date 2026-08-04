@@ -33,15 +33,20 @@ export const member = memberRef.extend({
 });
 export type Member = z.infer<typeof member>;
 
+export const customTheme = z.object({
+  primary: hexColor.nullable(),
+  background: hexColor.nullable(),
+  radius: themeRadius.nullable(),
+});
+export type CustomTheme = z.infer<typeof customTheme>;
+
 /** A member's private appearance preferences, persisted server-side so they
  *  follow the account across devices rather than living only in localStorage. */
 export const appearanceView = z.object({
   mode: themeMode,
   theme,
   reducedMotion: z.boolean(),
-  customPrimary: hexColor.nullable(),
-  customBackground: hexColor.nullable(),
-  customRadius: themeRadius.nullable(),
+  customTheme,
 });
 export type AppearanceView = z.infer<typeof appearanceView>;
 
@@ -59,9 +64,14 @@ export const voiceMember = z.object({
   displayName: z.string(),
   avatarVersion: z.number().nullable(),
   sharing: z.boolean(),
-  /** Not transmitting audio - self-mute, mod-mute and denied mic are one flag
-   *  from the outside. */
+  /** Publishing a webcam feed. Independent of `sharing`; a member can do both. */
+  camera: z.boolean(),
+  /** Not transmitting audio by the member's own doing - self-mute or a denied
+   *  mic. Distinct from forceMuted so the two render differently. */
   muted: z.boolean(),
+  /** Silenced by a moderator. Shown red for everyone and cannot be cleared by
+   *  the member's own mic toggle. */
+  forceMuted: z.boolean(),
   /** Has silenced all incoming audio. Independent of muted, though deafening
    *  also mutes, so a deafened member is muted too. */
   deafened: z.boolean(),
@@ -73,6 +83,9 @@ export const channel = z.object({
   name: z.string(),
   type: channelType,
   position: z.number(),
+  /** The one text channel that receives member-join lines. Exactly one text
+   *  channel is main at any time; voice channels are never main. */
+  isMain: z.boolean(),
 });
 export type Channel = z.infer<typeof channel>;
 

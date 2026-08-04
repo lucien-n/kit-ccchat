@@ -1,59 +1,46 @@
 <script lang="ts">
   import { api } from "$lib/api";
+  import TextField from "$lib/components/common/text-field.svelte";
   import UserCardContent from "$lib/components/common/user-card/user-card-content.svelte";
-  import { apiErrorMessage, fail, ok, toastMessage } from "$lib/forms";
-  import { session } from "$lib/stores/session.svelte";
+  import { apiErrorMessage, ok, setError, setMessage, spaForm } from "$lib/forms";
+  import { session } from "$lib/stores";
   import * as Form from "&/form";
   import { Card } from "&/card";
   import { Input } from "&/input";
   import { Label } from "&/label";
   import { changePasswordBody, updateProfileBody } from "@ccchat/shared";
-  import { defaults, setError, setMessage, superForm } from "sveltekit-superforms";
-  import { zod4, zod4Client } from "sveltekit-superforms/adapters";
 
-  const nameForm = superForm(
-    defaults({ displayName: session.user?.displayName ?? "" }, zod4(updateProfileBody)),
+  const nameForm = spaForm(
+    updateProfileBody,
+    { displayName: session.user?.displayName ?? "" },
     {
-      SPA: true,
-      validators: zod4Client(updateProfileBody),
-      resetForm: false,
-      onUpdate: async ({ form }) => {
-        if (!form.valid) return;
-        try {
-          const { user } = await api.users.updateMe(form.data);
-          session.patchUser({ displayName: user.displayName });
-          setMessage(form, ok("Display name saved."));
-        } catch (err) {
-          setMessage(form, fail(apiErrorMessage(err, "failed to save")));
-        }
+      fallback: "failed to save",
+      onValid: async (data, form) => {
+        const { user } = await api.users.updateMe(data);
+        session.patchUser({ displayName: user.displayName });
+        setMessage(form, ok("Display name saved."));
       },
-      onUpdated: toastMessage,
     },
   );
   const { form: nameData, enhance: nameEnhance, submitting: nameBusy } = nameForm;
 
-  const passwordForm = superForm(
-    defaults({ currentPassword: "", newPassword: "" }, zod4(changePasswordBody)),
+  const passwordForm = spaForm(
+    changePasswordBody,
+    { currentPassword: "", newPassword: "" },
     {
-      SPA: true,
-      validators: zod4Client(changePasswordBody),
       resetForm: true,
-      onUpdate: async ({ form }) => {
-        if (!form.valid) return;
-        try {
-          await api.users.changePassword(form.data);
-          setMessage(form, ok("Password changed."));
-        } catch (err) {
-          // Stays inline rather than becoming a toast: this one names a field,
-          // and a toast can't point at the input you got wrong.
-          setError(
-            form,
-            "currentPassword",
-            apiErrorMessage(err, "failed to change password"),
-          );
-        }
+      onValid: async (data, form) => {
+        await api.users.changePassword(data);
+        setMessage(form, ok("Password changed."));
       },
-      onUpdated: toastMessage,
+      // Stays inline rather than becoming a toast: this one names a field,
+      // and a toast can't point at the input you got wrong.
+      onError: (err, form) =>
+        setError(
+          form,
+          "currentPassword",
+          apiErrorMessage(err, "failed to change password"),
+        ),
     },
   );
   const {
@@ -88,35 +75,23 @@
     <form method="POST" use:passwordEnhance class="space-y-2">
       <Label>Change password</Label>
 
-      <Form.Field form={passwordForm} name="currentPassword">
-        <Form.Control>
-          {#snippet children({ props })}
-            <Input
-              {...props}
-              type="password"
-              placeholder="current password"
-              bind:value={$passwordData.currentPassword}
-              autocomplete="current-password"
-            />
-          {/snippet}
-        </Form.Control>
-        <Form.FieldErrors />
-      </Form.Field>
+      <TextField
+        form={passwordForm}
+        name="currentPassword"
+        type="password"
+        placeholder="current password"
+        bind:value={$passwordData.currentPassword}
+        autocomplete="current-password"
+      />
 
-      <Form.Field form={passwordForm} name="newPassword">
-        <Form.Control>
-          {#snippet children({ props })}
-            <Input
-              {...props}
-              type="password"
-              placeholder="new password (min 8)"
-              bind:value={$passwordData.newPassword}
-              autocomplete="new-password"
-            />
-          {/snippet}
-        </Form.Control>
-        <Form.FieldErrors />
-      </Form.Field>
+      <TextField
+        form={passwordForm}
+        name="newPassword"
+        type="password"
+        placeholder="new password (min 8)"
+        bind:value={$passwordData.newPassword}
+        autocomplete="new-password"
+      />
 
       <Form.Button variant="secondary" disabled={$passwordBusy}>
         Update password

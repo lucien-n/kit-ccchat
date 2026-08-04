@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { voice } from "$lib/stores/voice.svelte";
+  import { voice } from "$lib/stores";
   import { Button } from "&/button";
   import MaximizeIcon from "@lucide/svelte/icons/maximize";
   import MinimizeIcon from "@lucide/svelte/icons/minimize";
@@ -11,12 +11,17 @@
   let shell = $state<HTMLElement | null>(null);
   let fullscreen = $state(false);
 
-  const track = $derived(voice.watching ? voice.screens[voice.watching] : null);
+  const track = $derived(
+    voice.share.watching ? voice.share.screens[voice.share.watching] : null,
+  );
   const name = $derived(
-    voice.participants.find((p) => p.identity === voice.watching)?.name ?? "someone",
+    voice.participants.find((p) => p.identity === voice.share.watching)?.name ??
+      "someone",
   );
   // Present only while the watched stream is publishing sound.
-  const audio = $derived(voice.watching ? voice.screenAudio[voice.watching] : undefined);
+  const audio = $derived(
+    voice.share.watching ? voice.share.audio[voice.share.watching] : undefined,
+  );
   const silent = $derived(!audio || audio.muted || audio.volume === 0);
 
   // adaptiveStream only pulls frames for an attached, visible element, so the
@@ -55,8 +60,8 @@
       Watching <span class="text-foreground font-medium">{name}</span>
     </span>
     <div class="flex shrink-0 items-center gap-0.5">
-      {#if audio && voice.watching}
-        {@const watching = voice.watching}
+      {#if audio && voice.share.watching}
+        {@const watching = voice.share.watching}
         <Button
           variant="ghost"
           size="icon-xs"

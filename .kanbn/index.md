@@ -14,15 +14,11 @@ columnSorting:
 
 ## Backlog
 
-- [unify-channel-type-icons-and-labels](tasks/unify-channel-type-icons-and-labels.md)
 - [mobile-app](tasks/mobile-app.md)
-- [use-channel-type-enum-values-in-channels-table](tasks/use-channel-type-enum-values-in-channels-table.md)
 - [backend-validation-cleaning](tasks/backend-validation-cleaning.md)
 - [push-notifications-for-messages](tasks/push-notifications-for-messages.md)
 - [allow-theme-change](tasks/allow-theme-change.md)
 - [avatar-overlays](tasks/avatar-overlays.md)
-- [webcams](tasks/webcams.md)
-- [channel-members-view](tasks/channel-members-view.md)
 - [profile-bio](tasks/profile-bio.md)
 
 ## Todo
@@ -31,6 +27,13 @@ columnSorting:
 
 ## Done
 
+- [livestreams-should-act-as-a-new-room-tile](tasks/livestreams-should-act-as-a-new-room-tile.md)
+- [webcams](tasks/webcams.md)
+- [switching-voice-channels-hides-the-voice-bar](tasks/switching-voice-channels-hides-the-voice-bar.md)
+- [collapse-custom-theme-properties-to-an-object](tasks/collapse-custom-theme-properties-to-an-object.md)
+- [channel-members-view](tasks/channel-members-view.md)
+- [unify-channel-type-icons-and-labels](tasks/unify-channel-type-icons-and-labels.md)
+- [use-channel-type-enum-values-in-channels-table](tasks/use-channel-type-enum-values-in-channels-table.md)
 - [profile-banner](tasks/profile-banner.md)
 - [control-mute-stream-volume](tasks/control-mute-stream-volume.md)
 - [soundboard](tasks/soundboard.md)

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { session } from "$lib/stores/session.svelte";
+  import { session } from "$lib/stores";
   import { Button } from "&/button";
   import PlusIcon from "@lucide/svelte/icons/plus";
 

@@ -1,9 +1,6 @@
 import type { MessageView } from "$lib/api";
 import { jumpToPresent, openMessage } from "$lib/app";
-import { channels } from "$lib/stores/channels.svelte";
-import { messages } from "$lib/stores/messages.svelte";
-import { search } from "$lib/stores/search.svelte";
-import { typing } from "$lib/stores/typing.svelte";
+import { appearance, channels, messages, search, typing } from "$lib/stores";
 import { getContext, setContext, tick } from "svelte";
 import { toast } from "svelte-sonner";
 
@@ -17,6 +14,7 @@ export class ChatContext {
   isDesktop = $state(false);
   showMembers = $state(false);
   stick = $state(true);
+  fromBottom = $state(0);
   flashId = $state<string | null>(null);
   replyTo = $state<MessageView | null>(null);
   composer = $state<{ focus: () => void } | null>(null);
@@ -54,7 +52,10 @@ export class ChatContext {
   scrollTo(id: string): boolean {
     const el = document.getElementById(`msg-${id}`);
     if (!el) return false;
-    el.scrollIntoView({ block: "center", behavior: "smooth" });
+    el.scrollIntoView({
+      block: "center",
+      behavior: appearance.motionReduced ? "auto" : "smooth",
+    });
     this.flash(id);
     return true;
   }

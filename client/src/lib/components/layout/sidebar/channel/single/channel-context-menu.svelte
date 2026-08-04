@@ -1,6 +1,9 @@
 <script lang="ts">
   import { getChannelContext } from "$lib/context/channel.svelte";
+  import { session } from "$lib/stores";
   import * as ContextMenu from "&/context-menu";
+  import { ChannelType } from "@ccchat/shared";
+  import HomeIcon from "@lucide/svelte/icons/home";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import TrashIcon from "@lucide/svelte/icons/trash";
   import type { Snippet } from "svelte";
@@ -14,6 +17,9 @@
   const { children }: Props = $props();
 
   const ctx = getChannelContext();
+  const canSetMain = $derived(
+    session.isAdmin && ctx.channel.type === ChannelType.Text && !ctx.channel.isMain,
+  );
 </script>
 
 <ContextMenu.Root>
@@ -23,6 +29,12 @@
 
   <ContextMenu.Content>
     <ContextMenu.Group>
+      {#if canSetMain}
+        <ContextMenu.Item onclick={() => ctx.setMain()}>
+          <HomeIcon />
+          Set as main channel
+        </ContextMenu.Item>
+      {/if}
       <ContextMenu.Item onclick={() => (ctx.renaming = true)}>
         <PencilIcon />
         Rename

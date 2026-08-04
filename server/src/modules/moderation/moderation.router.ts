@@ -1,4 +1,4 @@
-import { muteBody } from "@ccchat/shared";
+import { banBody, muteBody } from "@ccchat/shared";
 import { Hono } from "hono";
 import { requireAuth, requireCan } from "../../auth.js";
 import { validate } from "../../validate.js";
@@ -7,7 +7,12 @@ import * as moderationController from "./moderation.controller.js";
 const router = new Hono<moderationController.ModEnv>()
   .use("*", requireAuth, requireCan("moderateMembers"))
   .post("/:id/kick", moderationController.loadTarget, moderationController.kick)
-  .post("/:id/ban", moderationController.loadTarget, moderationController.ban)
+  .post(
+    "/:id/ban",
+    moderationController.loadTarget,
+    validate("json", banBody),
+    moderationController.ban,
+  )
   .post("/:id/unban", moderationController.loadTarget, moderationController.unban)
   .post(
     "/:id/mute",

@@ -1,16 +1,39 @@
-import type { ModeratedMember } from "@ccchat/shared";
-import { eq } from "drizzle-orm";
+import { DeleteSpan, ServerEventType, type ModeratedMember } from "@ccchat/shared";
+import { and, eq, gte } from "drizzle-orm";
 import { db } from "../../db/index.js";
-import { sessionsTable, usersTable, type User } from "../../db/schema";
+import {
+  messageReactionsTable,
+  messagesTable,
+  sessionsTable,
+  usersTable,
+  type User,
+} from "../../db/schema";
+import { getById } from "../../db/query.js";
 import { httpError } from "../../http/errors.js";
+import { hub } from "../../hub.js";
 import { authLevel } from "../../permissions.js";
 import { toModeratedMember } from "../../views.js";
+import { deleteImagesOf } from "../images/images.service.js";
+import { reactionsOf } from "../messages/reactions.js";
+import { setMemberAudioMuted } from "../voice/voice.service.js";
+
+/** Push a mod-mute onto the member's live LiveKit tracks. When lifting the mute
+ *  we restore to their own self-mute state, so unmuting never forces the mic of
+ *  someone who had muted themselves. Fire-and-forget: presence and the DB have
+ *  already been updated, this just silences the wire. */
+function syncVoiceAudio(userId: string, forceMuted: boolean) {
+  const room = hub.voiceChannelOf(userId);
+  if (!room) return;
+  const wantMuted = forceMuted || (hub.voiceMemberOf(userId)?.muted ?? false);
+  void setMemberAudioMuted(room, userId, wantMuted).catch((err) =>
+    console.error("livekit mute sync failed", err),
+  );
+}
 
 /** Nobody may act on their own rank or above, so an admin can't ban the owner or
  *  another admin. */
 export function resolveTarget(actor: User, targetId: string): User {
-  const target = db.select().from(usersTable).where(eq(usersTable.id, targetId)).get();
-  if (!target) httpError(404, "user not found");
+  const target = getById(usersTable, targetId, "user not found");
   if (target.id === actor.id) httpError(400, "you cannot moderate yourself");
   if (authLevel(target) >= authLevel(actor)) httpError(403, "target outranks you");
   return target;
@@ -29,9 +52,103 @@ export function kick(target: User) {
   endSessions(target.id);
 }
 
-export function ban(target: User) {
+const SPAN_MS: Record<DeleteSpan.Hour | DeleteSpan.Day | DeleteSpan.Week, number> = {
+  [DeleteSpan.Hour]: 3_600_000,
+  [DeleteSpan.Day]: 86_400_000,
+  [DeleteSpan.Week]: 604_800_000,
+};
+
+/** Oldest timestamp to purge, or null when nothing should be deleted. `All`
+ *  reaches back to 0 so every message and reaction goes. */
+function cutoffFor(span: DeleteSpan): number | null {
+  if (span === DeleteSpan.None) return null;
+  if (span === DeleteSpan.All) return 0;
+  return Date.now() - SPAN_MS[span];
+}
+
+/** Soft-delete every message the member posted since the cutoff. Reuses the same
+ *  `deleted` flag and per-message broadcast as a normal delete, so live clients
+ *  drop them the same way. */
+function purgeMessages(userId: string, cutoff: number) {
+  const rows = db
+    .select({ id: messagesTable.id, channelId: messagesTable.channelId })
+    .from(messagesTable)
+    .where(
+      and(
+        eq(messagesTable.authorId, userId),
+        eq(messagesTable.deleted, 0),
+        gte(messagesTable.createdAt, cutoff),
+      ),
+    )
+    .all();
+  if (!rows.length) return;
+
+  db.update(messagesTable)
+    .set({ deleted: 1 })
+    .where(
+      and(
+        eq(messagesTable.authorId, userId),
+        eq(messagesTable.deleted, 0),
+        gte(messagesTable.createdAt, cutoff),
+      ),
+    )
+    .run();
+
+  for (const { id, channelId } of rows) {
+    deleteImagesOf(id);
+    hub.broadcast({ type: ServerEventType.Message_Deleted, id, channelId });
+  }
+}
+
+/** Drop every reaction the member left on anyone's messages since the cutoff,
+ *  then repaint the counts on the messages that survive. */
+function purgeReactions(userId: string, cutoff: number) {
+  const affected = db
+    .select({ messageId: messageReactionsTable.messageId })
+    .from(messageReactionsTable)
+    .where(
+      and(
+        eq(messageReactionsTable.userId, userId),
+        gte(messageReactionsTable.createdAt, cutoff),
+      ),
+    )
+    .all();
+  const ids = [...new Set(affected.map((r) => r.messageId))];
+  if (!ids.length) return;
+
+  db.delete(messageReactionsTable)
+    .where(
+      and(
+        eq(messageReactionsTable.userId, userId),
+        gte(messageReactionsTable.createdAt, cutoff),
+      ),
+    )
+    .run();
+
+  for (const id of ids) {
+    const msg = db
+      .select({ channelId: messagesTable.channelId, deleted: messagesTable.deleted })
+      .from(messagesTable)
+      .where(eq(messagesTable.id, id))
+      .get();
+    if (!msg || msg.deleted) continue;
+    hub.broadcast({
+      type: ServerEventType.Message_Reacted,
+      id,
+      channelId: msg.channelId,
+      reactions: reactionsOf(id),
+    });
+  }
+}
+
+export function ban(target: User, span: DeleteSpan = DeleteSpan.None) {
   patchUser(target.id, { banned: 1 });
   endSessions(target.id);
+
+  const cutoff = cutoffFor(span);
+  if (cutoff === null) return;
+  purgeMessages(target.id, cutoff);
+  purgeReactions(target.id, cutoff);
 }
 
 export function unban(target: User) {
@@ -41,11 +158,15 @@ export function unban(target: User) {
 export function mute(target: User, minutes: number): number {
   const mutedUntil = Date.now() + minutes * 60_000;
   patchUser(target.id, { mutedUntil });
+  hub.setForceMuted(target.id, true);
+  syncVoiceAudio(target.id, true);
   return mutedUntil;
 }
 
 export function unmute(target: User) {
   patchUser(target.id, { mutedUntil: null });
+  hub.setForceMuted(target.id, false);
+  syncVoiceAudio(target.id, false);
 }
 
 export function listMembers(): ModeratedMember[] {

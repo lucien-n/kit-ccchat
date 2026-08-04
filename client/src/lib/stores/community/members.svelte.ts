@@ -1,5 +1,11 @@
-import { api, ModAction, type Member, type ModeratedMember } from "$lib/api";
-import { session } from "./session.svelte";
+import {
+  api,
+  ModAction,
+  type Member,
+  type ModeratedMember,
+  type ModOptions,
+} from "$lib/api";
+import { session } from "$lib/stores/session/session.svelte";
 
 // Non-admins load the plain roster; the moderation fields they can't see get
 // harmless defaults so the app has one member type.
@@ -27,13 +33,19 @@ class Members {
     return this.list.find((m) => m.id === id);
   }
 
+  /** Merge a live profile update into the roster, keeping the moderation fields
+   *  we already have (the broadcast only carries the public Member view). */
+  apply(member: Member) {
+    this.list = this.list.map((m) => (m.id === member.id ? { ...m, ...member } : m));
+  }
+
   async setRoles(userId: string, roleIds: string[]) {
     await api.roles.setForUser(userId, roleIds);
     await this.load(true);
   }
 
-  async moderate(userId: string, action: ModAction, minutes?: number) {
-    await api.moderation.act(userId, action, minutes);
+  async moderate(userId: string, action: ModAction, opts?: ModOptions) {
+    await api.moderation.act(userId, action, opts);
     await this.load(true);
   }
 

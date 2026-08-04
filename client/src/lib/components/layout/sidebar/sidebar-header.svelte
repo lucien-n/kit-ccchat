@@ -1,7 +1,5 @@
 <script lang="ts">
-  import { community } from "$lib/stores/community.svelte";
-  import { session } from "$lib/stores/session.svelte";
-  import { ui } from "$lib/stores/ui.svelte";
+  import { community, session, ui } from "$lib/stores";
   import { Button } from "&/button";
   import SettingsIcon from "@lucide/svelte/icons/settings";
 </script>

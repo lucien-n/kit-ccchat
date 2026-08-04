@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { appearance, Theme, ThemeMode } from "$lib/stores/appearance.svelte";
+  import { appearance, Theme, ThemeMode } from "$lib/stores";
   import { Button } from "&/button";
   import { Input } from "&/input";
   import { Label } from "&/label";
@@ -69,7 +69,7 @@
         <Input
           type="color"
           class="size-7 w-10"
-          value={appearance.effectivePrimary}
+          value={appearance.effectiveTheme.primary}
           oninput={(e) => appearance.setCustomPrimary(e.currentTarget.value)}
           aria-label="Primary color"
         />
@@ -85,7 +85,7 @@
         <Input
           type="color"
           class="size-7 w-10"
-          value={appearance.effectiveBackground}
+          value={appearance.effectiveTheme.background}
           oninput={(e) => appearance.setCustomBackground(e.currentTarget.value)}
           aria-label="Background color"
         />
@@ -95,7 +95,7 @@
         <div class="flex items-center justify-between">
           <Label>Corner radius</Label>
           <span class="text-muted-foreground text-xs tabular-nums">
-            {appearance.effectiveRadius.toFixed(2)}rem
+            {appearance.effectiveTheme.radius.toFixed(2)}rem
           </span>
         </div>
         <input
@@ -104,7 +104,7 @@
           min={themeRadius.minValue}
           max={themeRadius.maxValue}
           step="0.1"
-          value={appearance.effectiveRadius}
+          value={appearance.effectiveTheme.radius}
           oninput={(e) => appearance.setCustomRadius(Number(e.currentTarget.value))}
           aria-label="Corner radius"
         />

@@ -1,6 +1,6 @@
 import { ClientEventType, type Reaction } from "@ccchat/shared";
-import { api, type MessageView } from "../api";
-import { realtime } from "./realtime.svelte";
+import { api, type MessageView } from "$lib/api";
+import { realtime } from "$lib/stores/realtime.svelte";
 
 const PAGE = 20;
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { presence } from "$lib/stores/presence.svelte";
+  import { presence } from "$lib/stores";
   import { cn } from "$lib/utils";
 
   interface Props {

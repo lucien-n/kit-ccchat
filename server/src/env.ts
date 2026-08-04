@@ -48,6 +48,12 @@ export const SESSION_TTL_MS = 1000 * 60 * 60 * 24 * 30;
  *  Set it only for a LiveKit that is not behind our proxy. */
 export const LIVEKIT_URL = process.env.LIVEKIT_URL ?? "";
 export const LIVEKIT_PATH = process.env.LIVEKIT_PATH ?? "/livekit";
+
+/** Server-to-LiveKit HTTP endpoint for the management API (muting a member's
+ *  mic, etc). Unlike LIVEKIT_URL this never goes through the proxy: it is an
+ *  in-cluster call. Defaults to the native dev port; compose points it at the
+ *  livekit service. */
+export const LIVEKIT_HOST = process.env.LIVEKIT_HOST ?? "http://localhost:7880";
 export const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY ?? "ccchat";
 
 const DEV_LIVEKIT_SECRET = "dev-only-insecure-secret-set-LIVEKIT_API_SECRET";

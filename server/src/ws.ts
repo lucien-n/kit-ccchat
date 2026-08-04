@@ -7,14 +7,15 @@ import {
   TYPING_THROTTLE_MS,
   type ClientEvent,
 } from "@ccchat/shared";
-import { eq } from "drizzle-orm";
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
 import { WebSocketServer, type WebSocket } from "ws";
-import { newId, userForToken } from "./auth.js";
+import { can, newId, userForToken } from "./auth.js";
 import { db } from "./db/index.js";
+import { findById } from "./db/query.js";
 import { channelsTable, messagesTable, usersTable } from "./db/schema";
 import { hub, type Client } from "./hub.js";
+import { authLevel } from "./permissions.js";
 import { attachImages } from "./modules/images/images.service.js";
 import { resolveMentions, saveMentions } from "./modules/messages/mentions.js";
 import { toMessageView } from "./views.js";
@@ -103,8 +104,14 @@ function onConnection(ws: WebSocket, userId: string) {
       case ClientEventType.Voice_Leave:
         hub.voiceLeaveAll(client.userId);
         break;
+      case ClientEventType.Voice_Move:
+        handleVoiceMove(client, msg.userId, msg.channelId);
+        break;
       case ClientEventType.Screen_Share_Set:
         hub.setSharing(client.userId, msg.sharing);
+        break;
+      case ClientEventType.Camera_Set:
+        hub.setCamera(client.userId, msg.camera);
         break;
       case ClientEventType.Mic_Set:
         hub.setMuted(client.userId, msg.muted);
@@ -136,15 +143,11 @@ function handleTyping(client: Client, channelId: string) {
 
   // Same gate as posting: someone who cannot send a message must not be
   // advertised as about to send one.
-  const u = db.select().from(usersTable).where(eq(usersTable.id, client.userId)).get();
+  const u = findById(usersTable, client.userId);
   if (!u || u.banned) return;
   if (u.mutedUntil && u.mutedUntil > now) return;
 
-  const channel = db
-    .select()
-    .from(channelsTable)
-    .where(eq(channelsTable.id, channelId))
-    .get();
+  const channel = findById(channelsTable, channelId);
   if (!channel || channel.type !== ChannelType.Text) return;
 
   lastTyping.set(client.ws, now);
@@ -156,34 +159,44 @@ function handleTyping(client: Client, channelId: string) {
 }
 
 function handleVoiceJoin(client: Client, channelId: string) {
-  const channel = db
-    .select()
-    .from(channelsTable)
-    .where(eq(channelsTable.id, channelId))
-    .get();
+  const channel = findById(channelsTable, channelId);
   if (!channel || channel.type !== ChannelType.Voice) return;
 
-  const u = db.select().from(usersTable).where(eq(usersTable.id, client.userId)).get();
+  const u = findById(usersTable, client.userId);
   if (!u) return;
   hub.voiceJoin(channelId, {
     id: u.id,
     displayName: u.displayName,
     avatarVersion: u.avatarVersion ?? null,
     sharing: false,
-    // Seed from what we know rather than a blanket "muted" that would flash the
-    // icon on every joiner; the client's Mic_Set corrects it a moment later.
-    muted: isMuted(u),
+    camera: false,
+    // Self-mute starts off; the client's Mic_Set corrects it a moment later.
+    // A mod-mute is a separate overlay so it survives that correction.
+    muted: false,
+    forceMuted: isMuted(u),
     deafened: false,
   });
 }
 
+function handleVoiceMove(client: Client, targetUserId: string, channelId: string) {
+  const mover = findById(usersTable, client.userId);
+  if (!mover || !can(mover, "moderateMembers")) return;
+
+  const channel = findById(channelsTable, channelId);
+  if (!channel || channel.type !== ChannelType.Voice) return;
+
+  const target = findById(usersTable, targetUserId);
+  // Only move someone who's actually in a call, and never someone who outranks
+  // you, matching how role edits are gated.
+  if (!target || !hub.isInVoice(targetUserId)) return;
+  if (authLevel(target) > authLevel(mover)) return;
+
+  hub.sendToUser(targetUserId, { type: ServerEventType.Voice_Moved, channelId });
+}
+
 function replyTarget(replyToId: string | undefined, channelId: string): string | null {
   if (!replyToId) return null;
-  const target = db
-    .select()
-    .from(messagesTable)
-    .where(eq(messagesTable.id, replyToId))
-    .get();
+  const target = findById(messagesTable, replyToId);
   if (!target || target.deleted || target.channelId !== channelId) return null;
   return target.id;
 }
@@ -192,7 +205,7 @@ function handleCreate(
   client: Client,
   msg: Extract<ClientEvent, { type: ClientEventType.Message_Create }>,
 ) {
-  const user = db.select().from(usersTable).where(eq(usersTable.id, client.userId)).get();
+  const user = findById(usersTable, client.userId);
   if (!user) {
     return;
   }
@@ -207,11 +220,7 @@ function handleCreate(
   const imageIds = msg.imageIds ?? [];
   if (!content && !imageIds.length) return;
 
-  const channel = db
-    .select()
-    .from(channelsTable)
-    .where(eq(channelsTable.id, channelId))
-    .get();
+  const channel = findById(channelsTable, channelId);
   if (!channel || channel.type !== ChannelType.Text) return;
 
   const { userIds, everyone } = resolveMentions(content, client.userId);

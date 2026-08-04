@@ -39,6 +39,39 @@ class Hub {
     }
   }
 
+  /** Deliver to every socket a user has open (they may be on more than one
+   *  device). Returns whether any socket received it. */
+  sendToUser(userId: string, event: ServerEvent): boolean {
+    const data = JSON.stringify(event);
+    let sent = false;
+    for (const c of this.clients) {
+      if (c.userId === userId && c.ws.readyState === c.ws.OPEN) {
+        c.ws.send(data);
+        sent = true;
+      }
+    }
+    return sent;
+  }
+
+  isInVoice(userId: string): boolean {
+    return this.voiceChannelOf(userId) !== null;
+  }
+
+  /** The voice channel (== LiveKit room) a user is in, or null. */
+  voiceChannelOf(userId: string): string | null {
+    for (const [channelId, members] of this.voice)
+      if (members.has(userId)) return channelId;
+    return null;
+  }
+
+  voiceMemberOf(userId: string): VoiceMember | null {
+    for (const members of this.voice.values()) {
+      const member = members.get(userId);
+      if (member) return member;
+    }
+    return null;
+  }
+
   // ── voice presence ─────────────────────────────────────────────────────────
 
   voiceJoin(channelId: string, member: VoiceMember) {
@@ -61,8 +94,18 @@ class Hub {
     this.patchMember(userId, { sharing });
   }
 
+  setCamera(userId: string, camera: boolean) {
+    this.patchMember(userId, { camera });
+  }
+
   setMuted(userId: string, muted: boolean) {
     this.patchMember(userId, { muted });
+  }
+
+  /** Moderator silence overlay, kept apart from self-mute so the member's own
+   *  mic toggle can't clear it. No-op if they aren't in a call. */
+  setForceMuted(userId: string, forceMuted: boolean) {
+    this.patchMember(userId, { forceMuted });
   }
 
   setDeafened(userId: string, deafened: boolean) {

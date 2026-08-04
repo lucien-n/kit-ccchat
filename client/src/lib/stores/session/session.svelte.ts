@@ -1,5 +1,5 @@
 import { type RegisterBody } from "@ccchat/shared";
-import { api, authToken, type Member } from "../api";
+import { api, authToken, type Member } from "$lib/api";
 
 /** Who you are and what proves it. Everything else keys off `token`. */
 class Session {

@@ -1,8 +1,7 @@
 <script lang="ts">
   import { isEmojiOnly, render } from "$lib/markdown";
   import { mentionResolver } from "$lib/mentions";
-  import { externalLink } from "$lib/stores/externalLink.svelte";
-  import { mentionCard } from "$lib/stores/mention-card.svelte";
+  import { externalLink, mentionCard } from "$lib/stores";
 
   let { content, class: className = "" }: { content: string; class?: string } = $props();
 

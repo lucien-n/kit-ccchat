@@ -1,3 +1,7 @@
+import { api } from "$lib/api";
+import { apiErrorMessage, errorName } from "$lib/forms";
+import { playMute, playUnmute, playVoiceJoin, playVoiceLeave } from "$lib/notify";
+import { realtime } from "$lib/stores/realtime.svelte";
 import { ClientEventType } from "@ccchat/shared";
 import {
   Room,
@@ -6,29 +10,21 @@ import {
   type Participant,
   type RemoteTrack,
   type RemoteTrackPublication,
+  type TrackPublication,
 } from "livekit-client";
-import { api } from "../api";
-import { apiErrorMessage, errorName } from "../forms";
-import { playMute, playUnmute, playVoiceJoin, playVoiceLeave } from "../notify";
-import { realtime } from "./realtime.svelte";
+import { buildParticipants, type VoiceParticipant } from "./participants";
+import { SoundboardPlayer } from "./soundboard-player";
+
+export type { VoiceParticipant };
+
+/** dataTransfer key carrying the dragged member's id when moving someone
+ *  between voice channels; the value is only readable on drop, not dragover. */
+export const VOICE_DRAG_MIME = "application/x-ccchat-voice-user";
 
 /** Whether the browser can route audio to a chosen speaker. False on Firefox
  *  and iOS Safari, where enumerating and switching outputs is pointless. */
 const supportsAudioOutput = () =>
   typeof HTMLMediaElement !== "undefined" && "setSinkId" in HTMLMediaElement.prototype;
-
-/** Cap on decoded clips kept in memory. Each is multiple MB, so evict the
- *  least-recently-played once past this. */
-const MAX_CACHED_SOUNDS = 32;
-
-export interface VoiceParticipant {
-  identity: string;
-  name: string;
-  speaking: boolean;
-  muted: boolean;
-  sharing: boolean;
-  isLocal: boolean;
-}
 
 export enum VoiceStatus {
   Idle = "Idle",
@@ -43,48 +39,49 @@ export enum MicStatus {
   NotAllowed = "NotAllowed",
 }
 
+interface Channel {
+  id: string;
+  name: string;
+}
+
 /** The LiveKit voice session. One call at a time, independent of which text
  *  channel you're reading. */
 class VoiceStore {
-  channelId = $state<string | null>(null);
-  channelName = $state("");
+  /** The channel this call is in, or null when idle. */
+  channel = $state<Channel | null>(null);
   status = $state<VoiceStatus>(VoiceStatus.Idle);
   participants = $state<VoiceParticipant[]>([]);
   micStatus = $state<MicStatus>(MicStatus.Muted);
   canPublish = $state(true);
   error = $state("");
-  /** Available microphones. Labels only fill in once mic permission is granted,
-   *  so this stays empty until then. */
-  audioInputs = $state<MediaDeviceInfo[]>([]);
-  /** deviceId of the mic currently in use. "default" follows the OS default. */
-  audioInputId = $state("default");
-  /** Available speakers. Empty where the browser can't route output (no
-   *  setSinkId - Firefox, iOS Safari), which disables the picker. */
-  audioOutputs = $state<MediaDeviceInfo[]>([]);
-  /** deviceId of the speaker in use. "default" follows the OS default. */
-  audioOutputId = $state("default");
   /** Whether incoming audio is silenced. Deafening also stops your own mic. */
   deafened = $state(false);
-  /** Screen share tracks by publisher identity. A track only lands here once it
-   *  is subscribed, so anything in here is watchable right now. */
-  screens = $state<Record<string, Track>>({});
-  /** Whose screen fills the chat pane, if any. */
-  watching = $state<string | null>(null);
-  /** Per-stream screen-share audio, keyed by publisher identity. A key exists
-   *  only while that stream is publishing audio, so the watch view knows when to
-   *  offer a volume control. `volume` is 0..1; `muted` is independent of deafen. */
-  screenAudio = $state<Record<string, { volume: number; muted: boolean }>>({});
+  isCameraOn = $state(false);
+  isScreenSharing = $state(false);
+
+  devices = $state({
+    inputs: [] as MediaDeviceInfo[],
+    inputId: "default",
+    outputs: [] as MediaDeviceInfo[],
+    outputId: "default",
+  });
+
+  share = $state({
+    screens: {} as Record<string, Track>,
+    cameras: {} as Record<string, Track>,
+    watching: null as string | null,
+    audio: {} as Record<string, { volume: number; muted: boolean }>,
+  });
+
   /** Wanted to watch someone whose track has not been subscribed yet. */
-  private pendingWatch = $state<string | null>(null);
+  private pendingWatch: string | null = null;
 
   private room: Room | null = null;
   private audioEls = new Map<string, HTMLMediaElement>();
   /** The audio element carrying each stream's screen-share sound, so per-stream
-   *  volume changes can be applied to it. Keys mirror `screenAudio`. */
+   *  volume changes can be applied to it. Keys mirror `share.audio`. */
   private screenAudioEls = new Map<string, HTMLMediaElement>();
-  private soundboardCtx: AudioContext | null = null;
-  /** Decoded clips cached by url, since decode is costly and clips get spammed. */
-  private soundBuffers = new Map<string, Promise<AudioBuffer>>();
+  private soundboard = new SoundboardPlayer();
   /** Clips publishing right now; drives the local speaking ring that LiveKit's
    *  mic detection won't light. Only read from refresh(), so a plain field. */
   private playingSounds = 0;
@@ -92,14 +89,54 @@ class VoiceStore {
   private leaving = false;
   /** True when deafening is what muted the mic, so undeafening can restore it. */
   private mutedByDeafen = false;
+  /** True while a moderator mute is holding our mic down. LiveKit lets the server
+   *  silence our track but not turn it back on, so the client re-enables the mic
+   *  itself when the mute lifts. */
+  private mutedByMod = false;
+  /** Whether we were self-muted when a mod mute landed, so lifting it returns us
+   *  there instead of unmuting someone who wanted to stay quiet. */
+  private selfMutedBeforeMod = false;
+  /** Last camera on/off state we told the server, so publish, unpublish and mute
+   *  events don't re-announce a value that hasn't moved. */
+  private cameraAnnounced = false;
 
   get inCall(): boolean {
     return this.status !== VoiceStatus.Idle;
   }
 
-  get isSharing(): boolean {
-    const identity = this.room?.localParticipant.identity;
-    return !!identity && !!this.screens[identity];
+  /** The one video the floating window shows while you're away from the room:
+   *  the stream you're watching wins, otherwise the loudest camera in the call,
+   *  falling back to any camera that's on so a face is still visible in a lull. */
+  get spotlight(): {
+    identity: string;
+    name: string;
+    track: Track;
+    kind: "screen" | "camera";
+  } | null {
+    const named = (id: string) =>
+      this.participants.find((p) => p.identity === id)?.name ?? "someone";
+
+    const w = this.share.watching;
+    if (w && this.share.screens[w])
+      return {
+        identity: w,
+        name: named(w),
+        track: this.share.screens[w],
+        kind: "screen",
+      };
+
+    const cams = this.share.cameras;
+    const cam = (id: string) =>
+      ({ identity: id, name: named(id), track: cams[id], kind: "camera" }) as const;
+
+    const speaking = this.participants.find((p) => p.speaking && cams[p.identity]);
+    if (speaking) return cam(speaking.identity);
+
+    const remote = this.participants.find((p) => !p.isLocal && cams[p.identity]);
+    if (remote) return cam(remote.identity);
+
+    const anyId = Object.keys(cams)[0];
+    return anyId ? cam(anyId) : null;
   }
 
   /** Whether the local mic is off for any reason - the boolean form of micStatus
@@ -108,20 +145,29 @@ class VoiceStore {
     return this.micStatus !== MicStatus.Enabled;
   }
 
-  async join(channel: { id: string; name: string }) {
-    if (this.channelId === channel.id && this.inCall) return;
-    if (this.room) await this.leave();
+  async join(target: Channel) {
+    if (this.channel?.id === target.id && this.inCall) return;
+
+    // Switching straight from another channel keeps the bar up: show the new
+    // channel now and tear the old room down quietly, so status never drops to
+    // Idle (which unmounts the bar and plays its fly-out) between the two calls.
+    const previous = this.room;
+    this.room = null;
 
     this.status = VoiceStatus.Connecting;
-    this.channelId = channel.id;
-    this.channelName = channel.name;
+    this.channel = { id: target.id, name: target.name };
     this.error = "";
+
+    if (previous) await this.teardownRoom(previous);
 
     let url = "";
     try {
-      const res = await api.voice.token(channel.id);
+      const res = await api.voice.token(target.id);
       url = res.url;
       this.canPublish = res.canPublish;
+      // Joining while already mod-muted means the mute is holding the mic down,
+      // so a later unmute has to know to restore it.
+      this.mutedByMod = !res.canPublish;
       // Show the intended state up front so the icon doesn't flash muted while
       // the mic comes up. Corrected below only if capture is refused.
       this.micStatus = res.canPublish ? MicStatus.Enabled : MicStatus.MutedByMod;
@@ -132,7 +178,7 @@ class VoiceStore {
 
       await room.connect(url, res.token);
       this.status = VoiceStatus.Connected;
-      realtime.send({ type: ClientEventType.Voice_Join, channelId: channel.id });
+      realtime.send({ type: ClientEventType.Voice_Join, channelId: target.id });
       playVoiceJoin();
       this.refresh();
 
@@ -164,8 +210,11 @@ class VoiceStore {
       .on(RoomEvent.ParticipantConnected, rerender)
       .on(RoomEvent.ParticipantDisconnected, rerender)
       .on(RoomEvent.ActiveSpeakersChanged, rerender)
-      .on(RoomEvent.TrackMuted, rerender)
-      .on(RoomEvent.TrackUnmuted, rerender)
+      // Disabling a camera mutes its track rather than unpublishing it, so the
+      // mute events - not publish/unpublish - are what turn a webcam tile back
+      // into an avatar and clear the sharer's camera flag.
+      .on(RoomEvent.TrackMuted, (pub, p) => this.onCameraMaybeChanged(pub, p))
+      .on(RoomEvent.TrackUnmuted, (pub, p) => this.onCameraMaybeChanged(pub, p))
       .on(
         RoomEvent.TrackSubscribed,
         (track: RemoteTrack, pub: RemoteTrackPublication, p: Participant) => {
@@ -179,20 +228,22 @@ class VoiceStore {
             // in the watch view rather than riding the global deafen alone.
             if (pub.source === Track.Source.ScreenShareAudio) {
               this.screenAudioEls.set(p.identity, el);
-              this.screenAudio = {
-                ...this.screenAudio,
+              this.share.audio = {
+                ...this.share.audio,
                 [p.identity]: { volume: 1, muted: false },
               };
               this.applyStreamAudio(p.identity);
             }
           } else if (pub.source === Track.Source.ScreenShare) {
-            this.screens = { ...this.screens, [p.identity]: track };
+            this.share.screens = { ...this.share.screens, [p.identity]: track };
             // Clicking a stream from outside the channel joins first, so the
             // watch has to wait here for the track to actually arrive.
             if (this.pendingWatch === p.identity) {
-              this.watching = p.identity;
+              this.share.watching = p.identity;
               this.pendingWatch = null;
             }
+          } else if (pub.source === Track.Source.Camera) {
+            this.syncRemoteCamera(p.identity, pub);
           }
           this.refresh();
         },
@@ -205,25 +256,29 @@ class VoiceStore {
           if (pub.source === Track.Source.ScreenShare) this.dropScreen(p.identity);
           if (pub.source === Track.Source.ScreenShareAudio)
             this.dropScreenAudio(p.identity);
+          if (pub.source === Track.Source.Camera) this.dropCamera(p.identity);
           this.refresh();
         },
       )
       // The browser's own "Stop sharing" bar never touches our button, so the
       // publish events are the only honest signal for the local screen.
       .on(RoomEvent.LocalTrackPublished, (pub) => {
+        const identity = room.localParticipant.identity;
         if (pub.source === Track.Source.ScreenShare && pub.track) {
-          this.screens = {
-            ...this.screens,
-            [room.localParticipant.identity]: pub.track,
-          };
+          this.share.screens = { ...this.share.screens, [identity]: pub.track };
           this.announceSharing(true);
+        } else if (pub.source === Track.Source.Camera) {
+          this.syncLocalCamera();
         }
         this.refresh();
       })
       .on(RoomEvent.LocalTrackUnpublished, (pub) => {
+        const identity = room.localParticipant.identity;
         if (pub.source === Track.Source.ScreenShare) {
-          this.dropScreen(room.localParticipant.identity);
+          this.dropScreen(identity);
           this.announceSharing(false);
+        } else if (pub.source === Track.Source.Camera) {
+          this.syncLocalCamera();
         }
         this.refresh();
       })
@@ -231,16 +286,17 @@ class VoiceStore {
       // list and the active id kept honest.
       .on(RoomEvent.MediaDevicesChanged, () => this.loadDevices())
       .on(RoomEvent.ActiveDeviceChanged, (kind, deviceId) => {
-        if (kind === "audioinput") this.audioInputId = deviceId;
-        else if (kind === "audiooutput") this.audioOutputId = deviceId;
+        if (kind === "audioinput") this.devices.inputId = deviceId;
+        else if (kind === "audiooutput") this.devices.outputId = deviceId;
       })
       .on(RoomEvent.Disconnected, () => {
+        // A room we've already swapped away from (channel switch) tears itself
+        // down through teardownRoom; ignore its Disconnected so it can't reset
+        // the call we're now joining.
+        if (this.room !== room) return;
         const wasConnected = this.status === VoiceStatus.Connected;
         if (!this.leaving && wasConnected) {
-          this.error =
-            "Voice disconnected - the media connection dropped. If the server is " +
-            "in Docker Desktop on Windows/macOS, WebRTC UDP is blocked there; run " +
-            "it on a Linux host (see README).";
+          this.error = "Voice disconnected - the media connection dropped.";
         }
         if (wasConnected) {
           playVoiceLeave();
@@ -251,34 +307,14 @@ class VoiceStore {
   }
 
   private refresh() {
-    const room = this.room;
-    if (!room) {
-      this.participants = [];
-      return;
-    }
-    const speaking = new Set(room.activeSpeakers.map((p) => p.identity));
-    const lp = room.localParticipant;
-    const list: VoiceParticipant[] = [
-      {
-        identity: lp.identity,
-        name: lp.name || "me",
-        speaking: speaking.has(lp.identity) || this.playingSounds > 0,
-        muted: this.localMuted,
-        sharing: !!this.screens[lp.identity],
-        isLocal: true,
-      },
-    ];
-    for (const p of room.remoteParticipants.values()) {
-      list.push({
-        identity: p.identity,
-        name: p.name || p.identity,
-        speaking: speaking.has(p.identity),
-        muted: !p.isMicrophoneEnabled,
-        sharing: !!this.screens[p.identity],
-        isLocal: false,
-      });
-    }
-    this.participants = list;
+    this.participants = this.room
+      ? buildParticipants(this.room, {
+          screens: this.share.screens,
+          cameras: this.share.cameras,
+          localMuted: this.localMuted,
+          localSpeaking: this.playingSounds > 0,
+        })
+      : [];
   }
 
   /** Tell everyone else our mic state. Called only at real transitions, so there
@@ -288,24 +324,30 @@ class VoiceStore {
   }
 
   private dropScreen(identity: string) {
-    const next = { ...this.screens };
+    const next = { ...this.share.screens };
     delete next[identity];
-    this.screens = next;
-    if (this.watching === identity) this.watching = null;
+    this.share.screens = next;
+    if (this.share.watching === identity) this.share.watching = null;
+  }
+
+  private dropCamera(identity: string) {
+    const next = { ...this.share.cameras };
+    delete next[identity];
+    this.share.cameras = next;
   }
 
   private dropScreenAudio(identity: string) {
     this.screenAudioEls.delete(identity);
-    const next = { ...this.screenAudio };
+    const next = { ...this.share.audio };
     delete next[identity];
-    this.screenAudio = next;
+    this.share.audio = next;
   }
 
   /** Push a stream's stored volume/mute onto its audio element. Deafen still
    *  wins: it silences every stream regardless of the per-stream setting. */
   private applyStreamAudio(identity: string) {
     const element = this.screenAudioEls.get(identity);
-    const settings = this.screenAudio[identity];
+    const settings = this.share.audio[identity];
     if (!element || !settings) return;
     element.volume = settings.volume;
     element.muted = this.deafened || settings.muted;
@@ -314,109 +356,103 @@ class VoiceStore {
   /** Set how loud a stream plays for you only, 0..1. Muting clears once you
    *  raise the volume off zero, matching how a slider is expected to behave. */
   setStreamVolume(identity: string, volume: number) {
-    const settings = this.screenAudio[identity];
+    const settings = this.share.audio[identity];
     if (!settings) return;
     const clamped = Math.min(1, Math.max(0, volume));
-    this.screenAudio = {
-      ...this.screenAudio,
+    this.share.audio = {
+      ...this.share.audio,
       [identity]: { volume: clamped, muted: clamped === 0 },
     };
     this.applyStreamAudio(identity);
   }
 
   toggleStreamMute(identity: string) {
-    const settings = this.screenAudio[identity];
+    const settings = this.share.audio[identity];
     if (!settings) return;
-    this.screenAudio = {
-      ...this.screenAudio,
+    this.share.audio = {
+      ...this.share.audio,
       [identity]: { ...settings, muted: !settings.muted },
     };
     this.applyStreamAudio(identity);
   }
 
   private announceSharing(sharing: boolean) {
+    this.isScreenSharing = sharing;
+
     realtime.send({ type: ClientEventType.Screen_Share_Set, sharing });
+  }
+
+  private announceCamera(camera: boolean) {
+    realtime.send({ type: ClientEventType.Camera_Set, camera });
+  }
+
+  /** Reconcile a camera after a mute/unmute. Turning a webcam off mutes its
+   *  track (it stays published), so this is where a tile drops back to the
+   *  avatar and the camera flag clears. */
+  private onCameraMaybeChanged(pub: TrackPublication, p: Participant) {
+    if (pub.source === Track.Source.Camera) {
+      if (p.isLocal) this.syncLocalCamera();
+      else this.syncRemoteCamera(p.identity, pub as RemoteTrackPublication);
+    }
+    this.refresh();
+  }
+
+  /** A remote camera counts as on only while it's subscribed and unmuted. */
+  private syncRemoteCamera(identity: string, pub: RemoteTrackPublication) {
+    if (pub.track && !pub.isMuted)
+      this.share.cameras = { ...this.share.cameras, [identity]: pub.track };
+    else this.dropCamera(identity);
+  }
+
+  /** Mirror our own camera into the shared map and tell everyone, keyed off
+   *  isCameraEnabled (published and unmuted) so publish, unpublish and mute all
+   *  resolve to one truth. Announces only on a real change. */
+  private syncLocalCamera() {
+    const lp = this.room?.localParticipant;
+    if (!lp) return;
+
+    const on = lp.isCameraEnabled;
+    this.isCameraOn = on;
+
+    const pub = lp.getTrackPublication(Track.Source.Camera);
+    if (on && pub?.track)
+      this.share.cameras = { ...this.share.cameras, [lp.identity]: pub.track };
+    else this.dropCamera(lp.identity);
+
+    if (on !== this.cameraAnnounced) {
+      this.cameraAnnounced = on;
+      this.announceCamera(on);
+    }
   }
 
   /** Join the channel if needed, then watch as soon as the track lands. The
    *  pending id is set after joining because join() resets this store. */
-  async watch(channel: { id: string; name: string }, identity: string) {
-    if (!this.screens[identity] && this.channelId !== channel.id) {
-      await this.join(channel);
+  async watch(target: Channel, identity: string) {
+    if (!this.share.screens[identity] && this.channel?.id !== target.id) {
+      await this.join(target);
     }
-    if (this.screens[identity]) this.watching = identity;
+    if (this.share.screens[identity]) this.share.watching = identity;
     else this.pendingWatch = identity;
   }
 
   stopWatching() {
-    this.watching = null;
+    this.share.watching = null;
     this.pendingWatch = null;
   }
 
-  private loadSound(ctx: AudioContext, url: string): Promise<AudioBuffer> {
-    const cached = this.soundBuffers.get(url);
-    if (cached) {
-      // Re-insert to mark most-recently-played (Map keeps insertion order).
-      this.soundBuffers.delete(url);
-      this.soundBuffers.set(url, cached);
-      return cached;
-    }
-
-    const buffer = fetch(url)
-      .then((r) => r.arrayBuffer())
-      .then((bytes) => ctx.decodeAudioData(bytes));
-    buffer.catch(() => this.soundBuffers.delete(url)); // let a failed load retry
-    this.soundBuffers.set(url, buffer);
-    if (this.soundBuffers.size > MAX_CACHED_SOUNDS) {
-      const oldest = this.soundBuffers.keys().next().value;
-      if (oldest !== undefined) this.soundBuffers.delete(oldest);
-    }
-    return buffer;
-  }
-
-  /** Play a clip into the call. LiveKit won't loop your own audio back, so it's
-   *  routed to the local speakers too, then unpublished when the clip ends. */
+  /** Play a soundboard clip into the call. Muted means muted: a clip triggered
+   *  while muted plays only for you. */
   async playSound(url: string) {
     const lp = this.room?.localParticipant;
     if (!lp) return;
-    // Muted means muted: a clip triggered while muted plays only for you.
     const broadcast = !this.localMuted && this.canPublish;
     try {
-      const ctx = (this.soundboardCtx ??= new AudioContext());
-      // Fetch/decode doesn't need a running context, so overlap it with resume.
-      const bufferP = this.loadSound(ctx, url);
-      if (ctx.state === "suspended") await ctx.resume();
-
-      const buffer = await bufferP;
-
-      const src = ctx.createBufferSource();
-      src.buffer = buffer;
-      src.connect(ctx.destination); // -> so you always hear it yourself
-
-      if (!broadcast) {
-        src.start();
-        return;
-      }
-
-      const dest = ctx.createMediaStreamDestination();
-      src.connect(dest); // -> published to everyone else
-      const track = dest.stream.getAudioTracks()[0];
-      await lp.publishTrack(track, {
-        // Not Microphone: keeps the clip off the mic-state UI and mute logic.
-        source: Track.Source.Unknown,
-        name: "soundboard",
-      });
-      // LiveKit's active-speaker detection watches the mic, not this track, so
-      // light the speaking ring by hand for as long as the clip is publishing.
-      this.playingSounds++;
-      this.refresh();
-      src.onended = () => {
-        void lp.unpublishTrack(track);
-        track.stop();
-        this.playingSounds = Math.max(0, this.playingSounds - 1);
+      await this.soundboard.play(lp, url, broadcast, (delta) => {
+        // LiveKit's active-speaker detection watches the mic, not this track, so
+        // light the speaking ring by hand while the clip is publishing.
+        this.playingSounds = Math.max(0, this.playingSounds + delta);
         this.refresh();
-      };
-      src.start();
+      });
     } catch (e) {
       this.error = `Couldn't play that sound (${errorName(e)}).`;
     }
@@ -434,17 +470,29 @@ class VoiceStore {
     this.refresh();
   }
 
+  async toggleCamera() {
+    const lp = this.room?.localParticipant;
+    if (!lp || !this.canPublish) return;
+    try {
+      await lp.setCameraEnabled(!lp.isCameraEnabled);
+    } catch (e) {
+      if (errorName(e) !== "NotAllowedError")
+        this.error = `Couldn't turn on your camera (${errorName(e)}).`;
+    }
+    this.refresh();
+  }
+
   /** Refresh the mic list and which one is active. Cheap enough to call on any
    *  device change; labels stay blank until mic permission has been granted. */
   private async loadDevices() {
     try {
-      this.audioInputs = await Room.getLocalDevices("audioinput");
-      this.audioInputId = this.room?.getActiveDevice("audioinput") ?? "default";
+      this.devices.inputs = await Room.getLocalDevices("audioinput");
+      this.devices.inputId = this.room?.getActiveDevice("audioinput") ?? "default";
       // Output routing only exists where setSinkId does; elsewhere the list
       // stays empty so the speaker picker never offers a choice that can't work.
       if (supportsAudioOutput()) {
-        this.audioOutputs = await Room.getLocalDevices("audiooutput");
-        this.audioOutputId = this.room?.getActiveDevice("audiooutput") ?? "default";
+        this.devices.outputs = await Room.getLocalDevices("audiooutput");
+        this.devices.outputId = this.room?.getActiveDevice("audiooutput") ?? "default";
       }
     } catch {
       /* enumerateDevices can throw in locked-down contexts; leave the list as-is */
@@ -457,7 +505,7 @@ class VoiceStore {
     if (!this.room) return;
     try {
       await this.room.switchActiveDevice("audioinput", deviceId);
-      this.audioInputId = deviceId;
+      this.devices.inputId = deviceId;
     } catch (e) {
       this.error = `Couldn't switch microphone (${errorName(e)}).`;
     }
@@ -469,7 +517,7 @@ class VoiceStore {
     if (!this.room) return;
     try {
       await this.room.switchActiveDevice("audiooutput", deviceId);
-      this.audioOutputId = deviceId;
+      this.devices.outputId = deviceId;
     } catch (e) {
       this.error = `Couldn't switch speaker (${errorName(e)}).`;
     }
@@ -483,6 +531,38 @@ class VoiceStore {
     // people you've silenced. A plain unmute clears the deafen bookkeeping too.
     if (enabling && this.deafened) this.setDeafened(false);
     this.mutedByDeafen = false;
+  }
+
+  /** React to a moderator muting or unmuting us mid-call, driven by our own
+   *  `forceMuted` flag in voice presence. LiveKit can silence our track from the
+   *  server but can't turn it back on, so the client has to re-enable the mic
+   *  itself when the mute lifts - otherwise the mic stays dead until a manual
+   *  toggle. */
+  async applyModMute(forceMuted: boolean) {
+    if (!this.inCall || forceMuted === this.mutedByMod) return;
+    const lp = this.room?.localParticipant;
+
+    if (forceMuted) {
+      this.mutedByMod = true;
+      this.selfMutedBeforeMod = this.micStatus === MicStatus.Muted;
+      this.canPublish = false;
+      this.micStatus = MicStatus.MutedByMod;
+      await lp?.setMicrophoneEnabled(false).catch(() => {});
+      this.refresh();
+      return;
+    }
+
+    this.mutedByMod = false;
+    this.canPublish = true;
+    // Return someone who was already self-muted to that state rather than opening
+    // their mic for them; otherwise restore the mic the mute silenced.
+    if (this.selfMutedBeforeMod) {
+      this.micStatus = MicStatus.Muted;
+      this.announceMic();
+      this.refresh();
+    } else {
+      await this.applyMic(true);
+    }
   }
 
   /** Drive the LiveKit mic and record the outcome. Returns whether the state
@@ -537,6 +617,35 @@ class VoiceStore {
     this.refresh();
   }
 
+  /** Force another member into a voice channel (moderator action). The server
+   *  checks permission and tells their client to reconnect. */
+  moveMember(userId: string, channelId: string) {
+    realtime.send({ type: ClientEventType.Voice_Move, userId, channelId });
+  }
+
+  /** Disconnect a room we're switching away from and drop its media, without
+   *  touching the visible status or channel - the bar stays up for the next
+   *  call. The server clears our old voice presence when the new Voice_Join
+   *  lands, so there's no leave to send from here. */
+  private async teardownRoom(room: Room) {
+    try {
+      await room.disconnect();
+    } catch {
+      /* ignore */
+    }
+    for (const el of this.audioEls.values()) el.remove();
+    this.audioEls.clear();
+    this.screenAudioEls.clear();
+    this.share = { screens: {}, cameras: {}, watching: null, audio: {} };
+    this.pendingWatch = null;
+    this.deafened = false;
+    this.mutedByDeafen = false;
+    this.mutedByMod = false;
+    this.selfMutedBeforeMod = false;
+    this.cameraAnnounced = false;
+    this.playingSounds = 0;
+  }
+
   async leave() {
     this.leaving = true;
     try {
@@ -551,23 +660,19 @@ class VoiceStore {
     for (const el of this.audioEls.values()) el.remove();
     this.audioEls.clear();
     this.screenAudioEls.clear();
-    this.screenAudio = {};
-    this.screens = {};
-    this.watching = null;
+    this.share = { screens: {}, cameras: {}, watching: null, audio: {} };
     this.pendingWatch = null;
     this.room = null;
     this.status = VoiceStatus.Idle;
-    this.channelId = null;
-    this.channelName = "";
+    this.channel = null;
     this.participants = [];
     this.micStatus = MicStatus.Muted;
     this.canPublish = true;
-    this.audioInputs = [];
-    this.audioInputId = "default";
-    this.audioOutputs = [];
-    this.audioOutputId = "default";
+    this.devices = { inputs: [], inputId: "default", outputs: [], outputId: "default" };
     this.deafened = false;
     this.mutedByDeafen = false;
+    this.mutedByMod = false;
+    this.selfMutedBeforeMod = false;
     this.playingSounds = 0;
     this.leaving = false;
   }

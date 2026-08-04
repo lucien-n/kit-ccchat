@@ -1,5 +1,5 @@
 <script>
-  import { voice } from "$lib/stores/voice.svelte";
+  import { voice } from "$lib/stores";
   import { Button } from "&/button";
   import PhoneIcon from "@lucide/svelte/icons/phone";
 </script>
