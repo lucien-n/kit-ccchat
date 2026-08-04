@@ -13,11 +13,11 @@
     member: VoiceMember;
     channel: Channel;
     speaking: boolean;
-    mute: MuteState;
+    muteState: MuteState;
     screen: Track | null;
     camera: Track | null;
   }
-  const { member, channel, speaking, mute, screen, camera }: Props = $props();
+  const { member, channel, speaking, muteState, screen, camera }: Props = $props();
 
   // A screen share is the watchable content, so it wins the tile; the camera
   // fills it otherwise. Screens letterbox (object-contain), a webcam fills
@@ -77,12 +77,12 @@
     <div
       class="absolute bottom-2 left-2 flex max-w-[calc(100%-1rem)] items-center gap-1 rounded-lg bg-black/55 px-2 py-0.5 text-xs text-white"
     >
-      {#if mute === "forced"}
+      {#if muteState === "forced"}
         <MicOff
           class="size-3 shrink-0 text-amber-400"
           aria-label="muted by a moderator"
         />
-      {:else if mute === "self"}
+      {:else if muteState === "self"}
         <MicOff class="size-3 shrink-0" aria-label="muted" />
       {/if}
       {#if member.deafened}
