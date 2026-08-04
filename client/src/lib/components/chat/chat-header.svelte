@@ -37,9 +37,11 @@
       title={prefs.soundEnabled ? "Mute notification sound" : "Unmute notification sound"}
       onclick={() => prefs.toggleSound()}
     >
-      {#if prefs.soundEnabled}<Bell class="size-4" />{:else}<BellOff
-          class="size-4"
-        />{/if}
+      {#if prefs.soundEnabled}
+        <Bell class="size-4" />
+      {:else}
+        <BellOff class="size-4" />
+      {/if}
     </Button>
 
     <ToggleGroup.Root
