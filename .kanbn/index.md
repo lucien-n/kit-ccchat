@@ -26,11 +26,10 @@ columnSorting:
 
 ## In Progress
 
-- [collapse-custom-theme-properties-to-an-object](tasks/collapse-custom-theme-properties-to-an-object.md)
-
 ## Done
 
 - [switching-voice-channels-hides-the-voice-bar](tasks/switching-voice-channels-hides-the-voice-bar.md)
+- [collapse-custom-theme-properties-to-an-object](tasks/collapse-custom-theme-properties-to-an-object.md)
 - [channel-members-view](tasks/channel-members-view.md)
 - [unify-channel-type-icons-and-labels](tasks/unify-channel-type-icons-and-labels.md)
 - [use-channel-type-enum-values-in-channels-table](tasks/use-channel-type-enum-values-in-channels-table.md)
