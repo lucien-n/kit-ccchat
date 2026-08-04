@@ -94,6 +94,10 @@ class Hub {
     this.patchMember(userId, { sharing });
   }
 
+  setCamera(userId: string, camera: boolean) {
+    this.patchMember(userId, { camera });
+  }
+
   setMuted(userId: string, muted: boolean) {
     this.patchMember(userId, { muted });
   }

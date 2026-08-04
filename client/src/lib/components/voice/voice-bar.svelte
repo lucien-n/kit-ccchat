@@ -5,6 +5,7 @@
   import MicButton from "./mic-button.svelte";
   import DeafenButton from "./deafen-button.svelte";
   import HangupButton from "./hangup-button.svelte";
+  import CameraButton from "./camera-button.svelte";
   import ScreenShareButton from "./screen-share-button.svelte";
   import { SoundboardButton } from "./soundboard";
   import { fly } from "$lib/motion";
@@ -29,6 +30,7 @@
     <div class="flex gap-1.5">
       <MicButton />
       <DeafenButton />
+      <CameraButton />
       <ScreenShareButton />
       <SoundboardButton />
     </div>

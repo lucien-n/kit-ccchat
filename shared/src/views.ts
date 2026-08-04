@@ -64,6 +64,8 @@ export const voiceMember = z.object({
   displayName: z.string(),
   avatarVersion: z.number().nullable(),
   sharing: z.boolean(),
+  /** Publishing a webcam feed. Independent of `sharing`; a member can do both. */
+  camera: z.boolean(),
   /** Not transmitting audio by the member's own doing - self-mute or a denied
    *  mic. Distinct from forceMuted so the two render differently. */
   muted: z.boolean(),

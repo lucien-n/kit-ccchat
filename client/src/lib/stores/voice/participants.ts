@@ -6,11 +6,13 @@ export interface VoiceParticipant {
   speaking: boolean;
   muted: boolean;
   sharing: boolean;
+  camera: boolean;
   isLocal: boolean;
 }
 
 interface LocalState {
   screens: Record<string, Track>;
+  cameras: Record<string, Track>;
   localMuted: boolean;
   /** Speaking indicator for the local user beyond LiveKit's mic detection,
    *  e.g. while a soundboard clip is publishing. */
@@ -27,6 +29,7 @@ export function buildParticipants(room: Room, local: LocalState): VoiceParticipa
       speaking: speaking.has(lp.identity) || local.localSpeaking,
       muted: local.localMuted,
       sharing: !!local.screens[lp.identity],
+      camera: !!local.cameras[lp.identity],
       isLocal: true,
     },
   ];
@@ -37,6 +40,7 @@ export function buildParticipants(room: Room, local: LocalState): VoiceParticipa
       speaking: speaking.has(p.identity),
       muted: !p.isMicrophoneEnabled,
       sharing: !!local.screens[p.identity],
+      camera: !!local.cameras[p.identity],
       isLocal: false,
     });
   }

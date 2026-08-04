@@ -12,13 +12,13 @@
 
 {#if canScreenShare}
   <Button
-    variant={voice.isSharing ? "default" : "secondary"}
+    variant={voice.isScreenSharing ? "default" : "secondary"}
     size="icon"
     disabled={!voice.canPublish}
-    title={voice.isSharing ? "Stop sharing your screen" : "Share your screen"}
+    title={voice.isScreenSharing ? "Stop sharing your screen" : "Share your screen"}
     onclick={() => voice.toggleScreenShare()}
   >
-    {#if voice.isSharing}
+    {#if voice.isScreenSharing}
       <ScreenShareOffIcon class="size-4" />
     {:else}
       <ScreenShareIcon class="size-4" />

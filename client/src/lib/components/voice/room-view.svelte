@@ -10,6 +10,7 @@
   import HangupButton from "./hangup-button.svelte";
   import MicButton from "./mic-button.svelte";
   import RoomTile from "./room-tile.svelte";
+  import CameraButton from "./camera-button.svelte";
   import ScreenShareButton from "./screen-share-button.svelte";
   import { SoundboardButton } from "./soundboard";
 
@@ -33,7 +34,8 @@
         member,
         speaking: p?.speaking ?? false,
         mute: muteState(member, p?.muted),
-        track: voice.share.screens[member.id] ?? null,
+        screen: voice.share.screens[member.id] ?? null,
+        camera: voice.share.cameras[member.id] ?? null,
       };
     });
   });
@@ -69,7 +71,8 @@
               member={tile.member}
               speaking={tile.speaking}
               mute={tile.mute}
-              track={tile.track}
+              screen={tile.screen}
+              camera={tile.camera}
             />
           </div>
         {/each}
@@ -82,6 +85,7 @@
       <div class="flex items-center gap-1.5">
         <MicButton />
         <DeafenButton />
+        <CameraButton />
         <ScreenShareButton />
         <SoundboardButton />
         <HangupButton />

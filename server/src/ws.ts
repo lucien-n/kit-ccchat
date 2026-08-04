@@ -110,6 +110,9 @@ function onConnection(ws: WebSocket, userId: string) {
       case ClientEventType.Screen_Share_Set:
         hub.setSharing(client.userId, msg.sharing);
         break;
+      case ClientEventType.Camera_Set:
+        hub.setCamera(client.userId, msg.camera);
+        break;
       case ClientEventType.Mic_Set:
         hub.setMuted(client.userId, msg.muted);
         break;
@@ -166,6 +169,7 @@ function handleVoiceJoin(client: Client, channelId: string) {
     displayName: u.displayName,
     avatarVersion: u.avatarVersion ?? null,
     sharing: false,
+    camera: false,
     // Self-mute starts off; the client's Mic_Set corrects it a moment later.
     // A mod-mute is a separate overlay so it survives that correction.
     muted: false,

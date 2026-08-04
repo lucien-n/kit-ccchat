@@ -1,6 +1,7 @@
 <script lang="ts">
   import SidePanel from "$lib/components/layout/side-panel.svelte";
   import Sidebar from "$lib/components/layout/sidebar";
+  import FloatingVideo from "$lib/components/voice/floating-video.svelte";
   import RoomView from "$lib/components/voice/room-view.svelte";
   import StreamView from "$lib/components/voice/stream-view.svelte";
   import { setChatContext } from "$lib/context/chat.svelte";
@@ -101,3 +102,4 @@
 {/if}
 
 <ChatDialogs />
+<FloatingVideo />

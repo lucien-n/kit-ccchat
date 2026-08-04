@@ -14,9 +14,16 @@
     channel: Channel;
     speaking: boolean;
     mute: MuteState;
-    track: Track | null;
+    screen: Track | null;
+    camera: Track | null;
   }
-  const { member, channel, speaking, mute, track }: Props = $props();
+  const { member, channel, speaking, mute, screen, camera }: Props = $props();
+
+  // A screen share is the watchable content, so it wins the tile; the camera
+  // fills it otherwise. Screens letterbox (object-contain), a webcam fills
+  // (object-cover) the way a video call does.
+  const track = $derived(screen ?? camera);
+  const isScreen = $derived(!!screen);
 
   let videoEl = $state<HTMLVideoElement | null>(null);
 
@@ -46,17 +53,19 @@
         autoplay
         muted
         playsinline
-        class="h-full w-full bg-black object-contain"
+        class={cn("h-full w-full bg-black", isScreen ? "object-contain" : "object-cover")}
       ></video>
-      <Button
-        variant="secondary"
-        size="icon-sm"
-        class="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100"
-        title="Watch {member.displayName}'s stream"
-        onclick={() => voice.watch(channel, member.id)}
-      >
-        <Maximize class="size-4" />
-      </Button>
+      {#if isScreen}
+        <Button
+          variant="secondary"
+          size="icon-sm"
+          class="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100"
+          title="Watch {member.displayName}'s stream"
+          onclick={() => voice.watch(channel, member.id)}
+        >
+          <Maximize class="size-4" />
+        </Button>
+      {/if}
     {:else}
       <UserAvatar
         user={member}

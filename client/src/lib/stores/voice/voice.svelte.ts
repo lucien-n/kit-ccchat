@@ -10,6 +10,7 @@ import {
   type Participant,
   type RemoteTrack,
   type RemoteTrackPublication,
+  type TrackPublication,
 } from "livekit-client";
 import { buildParticipants, type VoiceParticipant } from "./participants";
 import { SoundboardPlayer } from "./soundboard-player";
@@ -55,6 +56,8 @@ class VoiceStore {
   error = $state("");
   /** Whether incoming audio is silenced. Deafening also stops your own mic. */
   deafened = $state(false);
+  isCameraOn = $state(false);
+  isScreenSharing = $state(false);
 
   devices = $state({
     inputs: [] as MediaDeviceInfo[],
@@ -65,6 +68,7 @@ class VoiceStore {
 
   share = $state({
     screens: {} as Record<string, Track>,
+    cameras: {} as Record<string, Track>,
     watching: null as string | null,
     audio: {} as Record<string, { volume: number; muted: boolean }>,
   });
@@ -92,14 +96,47 @@ class VoiceStore {
   /** Whether we were self-muted when a mod mute landed, so lifting it returns us
    *  there instead of unmuting someone who wanted to stay quiet. */
   private selfMutedBeforeMod = false;
+  /** Last camera on/off state we told the server, so publish, unpublish and mute
+   *  events don't re-announce a value that hasn't moved. */
+  private cameraAnnounced = false;
 
   get inCall(): boolean {
     return this.status !== VoiceStatus.Idle;
   }
 
-  get isSharing(): boolean {
-    const identity = this.room?.localParticipant.identity;
-    return !!identity && !!this.share.screens[identity];
+  /** The one video the floating window shows while you're away from the room:
+   *  the stream you're watching wins, otherwise the loudest camera in the call,
+   *  falling back to any camera that's on so a face is still visible in a lull. */
+  get spotlight(): {
+    identity: string;
+    name: string;
+    track: Track;
+    kind: "screen" | "camera";
+  } | null {
+    const named = (id: string) =>
+      this.participants.find((p) => p.identity === id)?.name ?? "someone";
+
+    const w = this.share.watching;
+    if (w && this.share.screens[w])
+      return {
+        identity: w,
+        name: named(w),
+        track: this.share.screens[w],
+        kind: "screen",
+      };
+
+    const cams = this.share.cameras;
+    const cam = (id: string) =>
+      ({ identity: id, name: named(id), track: cams[id], kind: "camera" }) as const;
+
+    const speaking = this.participants.find((p) => p.speaking && cams[p.identity]);
+    if (speaking) return cam(speaking.identity);
+
+    const remote = this.participants.find((p) => !p.isLocal && cams[p.identity]);
+    if (remote) return cam(remote.identity);
+
+    const anyId = Object.keys(cams)[0];
+    return anyId ? cam(anyId) : null;
   }
 
   /** Whether the local mic is off for any reason - the boolean form of micStatus
@@ -173,8 +210,11 @@ class VoiceStore {
       .on(RoomEvent.ParticipantConnected, rerender)
       .on(RoomEvent.ParticipantDisconnected, rerender)
       .on(RoomEvent.ActiveSpeakersChanged, rerender)
-      .on(RoomEvent.TrackMuted, rerender)
-      .on(RoomEvent.TrackUnmuted, rerender)
+      // Disabling a camera mutes its track rather than unpublishing it, so the
+      // mute events - not publish/unpublish - are what turn a webcam tile back
+      // into an avatar and clear the sharer's camera flag.
+      .on(RoomEvent.TrackMuted, (pub, p) => this.onCameraMaybeChanged(pub, p))
+      .on(RoomEvent.TrackUnmuted, (pub, p) => this.onCameraMaybeChanged(pub, p))
       .on(
         RoomEvent.TrackSubscribed,
         (track: RemoteTrack, pub: RemoteTrackPublication, p: Participant) => {
@@ -202,6 +242,8 @@ class VoiceStore {
               this.share.watching = p.identity;
               this.pendingWatch = null;
             }
+          } else if (pub.source === Track.Source.Camera) {
+            this.syncRemoteCamera(p.identity, pub);
           }
           this.refresh();
         },
@@ -214,25 +256,29 @@ class VoiceStore {
           if (pub.source === Track.Source.ScreenShare) this.dropScreen(p.identity);
           if (pub.source === Track.Source.ScreenShareAudio)
             this.dropScreenAudio(p.identity);
+          if (pub.source === Track.Source.Camera) this.dropCamera(p.identity);
           this.refresh();
         },
       )
       // The browser's own "Stop sharing" bar never touches our button, so the
       // publish events are the only honest signal for the local screen.
       .on(RoomEvent.LocalTrackPublished, (pub) => {
+        const identity = room.localParticipant.identity;
         if (pub.source === Track.Source.ScreenShare && pub.track) {
-          this.share.screens = {
-            ...this.share.screens,
-            [room.localParticipant.identity]: pub.track,
-          };
+          this.share.screens = { ...this.share.screens, [identity]: pub.track };
           this.announceSharing(true);
+        } else if (pub.source === Track.Source.Camera) {
+          this.syncLocalCamera();
         }
         this.refresh();
       })
       .on(RoomEvent.LocalTrackUnpublished, (pub) => {
+        const identity = room.localParticipant.identity;
         if (pub.source === Track.Source.ScreenShare) {
-          this.dropScreen(room.localParticipant.identity);
+          this.dropScreen(identity);
           this.announceSharing(false);
+        } else if (pub.source === Track.Source.Camera) {
+          this.syncLocalCamera();
         }
         this.refresh();
       })
@@ -264,6 +310,7 @@ class VoiceStore {
     this.participants = this.room
       ? buildParticipants(this.room, {
           screens: this.share.screens,
+          cameras: this.share.cameras,
           localMuted: this.localMuted,
           localSpeaking: this.playingSounds > 0,
         })
@@ -281,6 +328,12 @@ class VoiceStore {
     delete next[identity];
     this.share.screens = next;
     if (this.share.watching === identity) this.share.watching = null;
+  }
+
+  private dropCamera(identity: string) {
+    const next = { ...this.share.cameras };
+    delete next[identity];
+    this.share.cameras = next;
   }
 
   private dropScreenAudio(identity: string) {
@@ -324,7 +377,52 @@ class VoiceStore {
   }
 
   private announceSharing(sharing: boolean) {
+    this.isScreenSharing = sharing;
+
     realtime.send({ type: ClientEventType.Screen_Share_Set, sharing });
+  }
+
+  private announceCamera(camera: boolean) {
+    realtime.send({ type: ClientEventType.Camera_Set, camera });
+  }
+
+  /** Reconcile a camera after a mute/unmute. Turning a webcam off mutes its
+   *  track (it stays published), so this is where a tile drops back to the
+   *  avatar and the camera flag clears. */
+  private onCameraMaybeChanged(pub: TrackPublication, p: Participant) {
+    if (pub.source === Track.Source.Camera) {
+      if (p.isLocal) this.syncLocalCamera();
+      else this.syncRemoteCamera(p.identity, pub as RemoteTrackPublication);
+    }
+    this.refresh();
+  }
+
+  /** A remote camera counts as on only while it's subscribed and unmuted. */
+  private syncRemoteCamera(identity: string, pub: RemoteTrackPublication) {
+    if (pub.track && !pub.isMuted)
+      this.share.cameras = { ...this.share.cameras, [identity]: pub.track };
+    else this.dropCamera(identity);
+  }
+
+  /** Mirror our own camera into the shared map and tell everyone, keyed off
+   *  isCameraEnabled (published and unmuted) so publish, unpublish and mute all
+   *  resolve to one truth. Announces only on a real change. */
+  private syncLocalCamera() {
+    const lp = this.room?.localParticipant;
+    if (!lp) return;
+
+    const on = lp.isCameraEnabled;
+    this.isCameraOn = on;
+
+    const pub = lp.getTrackPublication(Track.Source.Camera);
+    if (on && pub?.track)
+      this.share.cameras = { ...this.share.cameras, [lp.identity]: pub.track };
+    else this.dropCamera(lp.identity);
+
+    if (on !== this.cameraAnnounced) {
+      this.cameraAnnounced = on;
+      this.announceCamera(on);
+    }
   }
 
   /** Join the channel if needed, then watch as soon as the track lands. The
@@ -368,6 +466,18 @@ class VoiceStore {
     } catch (e) {
       if (errorName(e) !== "NotAllowedError")
         this.error = `Couldn't share your screen (${errorName(e)}).`;
+    }
+    this.refresh();
+  }
+
+  async toggleCamera() {
+    const lp = this.room?.localParticipant;
+    if (!lp || !this.canPublish) return;
+    try {
+      await lp.setCameraEnabled(!lp.isCameraEnabled);
+    } catch (e) {
+      if (errorName(e) !== "NotAllowedError")
+        this.error = `Couldn't turn on your camera (${errorName(e)}).`;
     }
     this.refresh();
   }
@@ -526,12 +636,13 @@ class VoiceStore {
     for (const el of this.audioEls.values()) el.remove();
     this.audioEls.clear();
     this.screenAudioEls.clear();
-    this.share = { screens: {}, watching: null, audio: {} };
+    this.share = { screens: {}, cameras: {}, watching: null, audio: {} };
     this.pendingWatch = null;
     this.deafened = false;
     this.mutedByDeafen = false;
     this.mutedByMod = false;
     this.selfMutedBeforeMod = false;
+    this.cameraAnnounced = false;
     this.playingSounds = 0;
   }
 
@@ -549,7 +660,7 @@ class VoiceStore {
     for (const el of this.audioEls.values()) el.remove();
     this.audioEls.clear();
     this.screenAudioEls.clear();
-    this.share = { screens: {}, watching: null, audio: {} };
+    this.share = { screens: {}, cameras: {}, watching: null, audio: {} };
     this.pendingWatch = null;
     this.room = null;
     this.status = VoiceStatus.Idle;

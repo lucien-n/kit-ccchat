@@ -6,7 +6,7 @@
   import { muteState } from "$lib/voice-mute";
   import { Button } from "&/button";
   import type { Channel, VoiceMember } from "@ccchat/shared";
-  import { HeadphoneOff, MicOff, MonitorPlay } from "@lucide/svelte";
+  import { HeadphoneOff, MicOff, MonitorPlay, Video } from "@lucide/svelte";
 
   interface Props {
     member: VoiceMember;
@@ -55,6 +55,13 @@
     <HeadphoneOff
       class="text-muted-foreground/70 size-3.5 shrink-0"
       aria-label="{member.displayName} is deafened"
+    />
+  {/if}
+
+  {#if member.camera}
+    <Video
+      class="text-muted-foreground/70 size-3.5 shrink-0"
+      aria-label="{member.displayName} has their camera on"
     />
   {/if}
 

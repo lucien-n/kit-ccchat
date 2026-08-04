@@ -19,15 +19,17 @@ columnSorting:
 - [push-notifications-for-messages](tasks/push-notifications-for-messages.md)
 - [allow-theme-change](tasks/allow-theme-change.md)
 - [avatar-overlays](tasks/avatar-overlays.md)
-- [webcams](tasks/webcams.md)
 - [profile-bio](tasks/profile-bio.md)
 
 ## Todo
+
+- [livestreams-should-act-as-a-new-room-tile](tasks/livestreams-should-act-as-a-new-room-tile.md)
 
 ## In Progress
 
 ## Done
 
+- [webcams](tasks/webcams.md)
 - [switching-voice-channels-hides-the-voice-bar](tasks/switching-voice-channels-hides-the-voice-bar.md)
 - [collapse-custom-theme-properties-to-an-object](tasks/collapse-custom-theme-properties-to-an-object.md)
 - [channel-members-view](tasks/channel-members-view.md)
