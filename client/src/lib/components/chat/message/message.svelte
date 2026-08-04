@@ -2,22 +2,22 @@
   import { type MessageView } from "$lib/api";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { UserCard } from "$lib/components/common/user-card";
-  import { appearance, messages } from "$lib/stores";
   import Markdown from "$lib/components/markdown/markdown.svelte";
   import { getChatContext } from "$lib/context/chat.svelte";
   import { attempt } from "$lib/forms";
   import { pingsMe } from "$lib/mentions";
+  import { appearance, messages } from "$lib/stores";
   import { cn } from "$lib/utils";
   import { Textarea } from "&/textarea";
   import { MESSAGE_MAX_LENGTH, SystemEvent } from "@ccchat/shared";
   import ReplyIcon from "@lucide/svelte/icons/reply";
   import UserRoundPlusIcon from "@lucide/svelte/icons/user-round-plus";
   import { tick } from "svelte";
+  import { elasticInOut } from "svelte/easing";
+  import { scale } from "svelte/transition";
   import MessageActions from "./message-actions.svelte";
   import MessageImages from "./message-images.svelte";
   import MessageReactions from "./message-reactions.svelte";
-  import { fly } from "$lib/motion";
-  import { elasticInOut } from "svelte/easing";
 
   interface Props {
     message: MessageView;
@@ -91,7 +91,7 @@
   <div
     id="msg-{message.id}"
     class={cn(
-      "group hover:bg-muted/30 relative flex gap-3 rounded-2xl px-2 py-1 transition-colors duration-700",
+      "group hover:bg-muted/30 relative flex gap-3 rounded-2xl px-2 py-1 transition-colors duration-300",
       mentionsMe &&
         "bg-primary/8 hover:bg-primary/12 border-primary/70 rounded-l-none border-l-2",
       chat.flashId === message.id && "bg-primary/15",
@@ -192,7 +192,7 @@
     {#if showActions}
       <div
         class="absolute -top-3.5 right-2 flex opacity-100 transition-opacity duration-50 ease-in-out"
-        transition:fly={{ y: 20, duration: 100, easing: elasticInOut }}
+        transition:scale={{ duration: 100, easing: elasticInOut }}
       >
         <MessageActions {message} onedit={startEdit} />
       </div>
