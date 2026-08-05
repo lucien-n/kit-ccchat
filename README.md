@@ -78,7 +78,11 @@ You'll need:
 - Ports 80/tcp, 443/tcp and 7882/udp open. The UDP one carries voice and is the
   one people forget; without it calls never connect.
 
-Back up `data/` and you've backed up the whole community.
+Back up `data/` and you've backed up the whole community. motus also snapshots
+its database on a schedule into `data/backups` (interval and how many to keep are
+configurable; old ones are pruned), and the owner can watch, download or trigger
+those from the in-app system panel. They live under `data/`, so a copy of that
+folder already includes them.
 
 Or by hand:
 
@@ -90,6 +94,7 @@ docker compose up -d
 ## Roadmap
 
 - TURN for strict NATs, so voice survives worse networks.
-- Foreign keys and a proper backup story.
+- Foreign keys, so deleting a channel can't orphan its messages.
+- Off-site backup shipping, so snapshots can leave the box (e.g. to a home NAS).
 - A Capacitor mobile wrapper around the existing client.
 - Maybe optional end-to-end encryption, if the threat model ever calls for it.
