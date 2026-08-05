@@ -23,6 +23,7 @@ columnSorting:
 - [db-backups](tasks/db-backups.md)
 - [client-tests](tasks/client-tests.md)
 - [foreign-keys](tasks/foreign-keys.md)
+- [ability-to-crop-soundboard-sounds-also-cap-sound-length](tasks/ability-to-crop-soundboard-sounds-also-cap-sound-length.md)
 
 ## Todo
 
