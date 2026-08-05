@@ -12,6 +12,8 @@
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import StarIcon from "@lucide/svelte/icons/star";
   import UploadIcon from "@lucide/svelte/icons/upload";
+  import Volume2Icon from "@lucide/svelte/icons/volume-2";
+  import VolumeXIcon from "@lucide/svelte/icons/volume-x";
   import { untrack } from "svelte";
   import SetSoundDialog, { type DialogMode } from "./set-sound-dialog.svelte";
 
@@ -145,6 +147,26 @@
         {/if}
       </div>
     </ScrollArea>
+
+    <div class="flex items-center gap-2 border-t px-1 pt-2">
+      {#if soundboard.volume === 0}
+        <VolumeXIcon class="text-muted-foreground size-4 shrink-0" />
+      {:else}
+        <Volume2Icon class="text-muted-foreground size-4 shrink-0" />
+      {/if}
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+        value={soundboard.volume}
+        oninput={(e) => soundboard.setVolume(e.currentTarget.valueAsNumber)}
+        style="--fill: {soundboard.volume * 100}%"
+        class="soundboard-volume w-full cursor-pointer"
+        title="Soundboard volume"
+        aria-label="Soundboard volume"
+      />
+    </div>
   </Popover.Content>
 </Popover.Root>
 
@@ -187,3 +209,39 @@
     </div>
   </div>
 {/snippet}
+
+<style>
+  /* Native range styled to the theme, matching the stream-volume slider. */
+  .soundboard-volume {
+    height: 0.25rem;
+    appearance: none;
+    -webkit-appearance: none;
+    border-radius: 9999px;
+    /* Fill the track up to the thumb so it reads as a level, not a bare value. */
+    background: linear-gradient(
+      to right,
+      var(--primary) var(--fill, 0%),
+      var(--muted) var(--fill, 0%)
+    );
+  }
+  /* Firefox paints its own progress under the thumb; keep it in step. */
+  .soundboard-volume::-moz-range-progress {
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: var(--primary);
+  }
+  .soundboard-volume::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 0.75rem;
+    width: 0.75rem;
+    border-radius: 9999px;
+    background: var(--primary);
+  }
+  .soundboard-volume::-moz-range-thumb {
+    height: 0.75rem;
+    width: 0.75rem;
+    border: none;
+    border-radius: 9999px;
+    background: var(--primary);
+  }
+</style>

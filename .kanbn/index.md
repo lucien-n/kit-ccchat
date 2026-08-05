@@ -31,6 +31,7 @@ columnSorting:
 
 ## Done
 
+- [soundboard-volume-control](tasks/soundboard-volume-control.md)
 - [livestreams-should-act-as-a-new-room-tile](tasks/livestreams-should-act-as-a-new-room-tile.md)
 - [webcams](tasks/webcams.md)
 - [switching-voice-channels-hides-the-voice-bar](tasks/switching-voice-channels-hides-the-voice-bar.md)

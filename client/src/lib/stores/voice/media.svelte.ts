@@ -75,6 +75,7 @@ export class MediaController {
         track,
         this.core.deafened,
         pub.source === Track.Source.ScreenShareAudio,
+        pub.trackName === "soundboard",
       );
       if (pub.source === Track.Source.ScreenShareAudio) {
         this.share.audio = {

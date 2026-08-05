@@ -248,6 +248,13 @@ class VoiceStore implements VoiceCore {
     }
   }
 
+  /** Per-device soundboard listening volume (0..1): scales the clips you play
+   *  yourself and the ones others broadcast, never what others hear from you. */
+  applySoundboardVolume(volume: number) {
+    this.soundboard.setVolume(volume);
+    this.audio.setSoundboardVolume(volume);
+  }
+
   moveMember(userId: string, channelId: string) {
     realtime.send({ type: ClientEventType.Voice_Move, userId, channelId });
   }

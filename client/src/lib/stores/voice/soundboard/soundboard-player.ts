@@ -7,7 +7,16 @@ const MAX_CACHED_SOUNDS = 32;
  *  and decode cache, both kept alive across calls since clips get spammed. */
 export class SoundboardPlayer {
   #ctx: AudioContext | null = null;
+  #gain: GainNode | null = null;
+  #volume = 1;
   #cache = new SoundCache(MAX_CACHED_SOUNDS);
+
+  /** Per-device listening level for clips you play yourself. Only touches the
+   *  local monitor; the broadcast to everyone else always goes out at full. */
+  setVolume(volume: number) {
+    this.#volume = volume;
+    if (this.#gain) this.#gain.gain.value = volume;
+  }
 
   /** Play a clip. LiveKit won't loop your own audio back, so it's always routed
    *  to the local speakers; when `broadcast` it's also published to everyone
@@ -20,6 +29,7 @@ export class SoundboardPlayer {
     onActiveChange: (delta: number) => void,
   ): Promise<void> {
     const ctx = (this.#ctx ??= new AudioContext());
+    const gain = (this.#gain ??= this.#makeGain(ctx));
     // Fetch/decode doesn't need a running context, so overlap it with resume.
     const bufferP = this.#cache.load(ctx, url);
     if (ctx.state === "suspended") await ctx.resume();
@@ -28,7 +38,7 @@ export class SoundboardPlayer {
 
     const src = ctx.createBufferSource();
     src.buffer = buffer;
-    src.connect(ctx.destination); // -> so you always hear it yourself
+    src.connect(gain); // -> so you always hear it yourself, at your chosen volume
 
     if (!broadcast) {
       src.start();
@@ -50,5 +60,12 @@ export class SoundboardPlayer {
       onActiveChange(-1);
     };
     src.start();
+  }
+
+  #makeGain(ctx: AudioContext): GainNode {
+    const gain = ctx.createGain();
+    gain.gain.value = this.#volume;
+    gain.connect(ctx.destination);
+    return gain;
   }
 }
