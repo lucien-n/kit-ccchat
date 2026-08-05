@@ -29,8 +29,15 @@ export const AVATARS_DIR = join(DATA_DIR, "avatars");
 export const BANNERS_DIR = join(DATA_DIR, "banners");
 export const IMAGES_DIR = join(DATA_DIR, "images");
 export const SOUNDS_DIR = join(DATA_DIR, "sounds");
+export const BACKUPS_DIR = join(DATA_DIR, "backups");
 export const COMMUNITY_ICON_FILE = join(DATA_DIR, "community-icon");
 export const DB_FILE = join(DATA_DIR, "motus.sqlite");
+
+/** How often the database is snapshotted into BACKUPS_DIR, in hours. 0 disables
+ *  automatic backups (the owner can still trigger one by hand). */
+export const BACKUP_INTERVAL_HOURS = Number(process.env.BACKUP_INTERVAL_HOURS ?? 24);
+/** How many of the newest backups to keep; older ones are pruned. 0 keeps all. */
+export const BACKUP_RETENTION = Number(process.env.BACKUP_RETENTION ?? 7);
 export const COMMUNITY_NAME = process.env.COMMUNITY_NAME ?? "My Community";
 
 export const OWNER_USERNAME = process.env.OWNER_USERNAME ?? "owner";

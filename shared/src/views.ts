@@ -178,7 +178,30 @@ export enum DiskItem {
   ImagesDir = "ImagesDir",
   SoundsDir = "SoundsDir",
   DatabaseFile = "DatabaseFile",
+  BackupsDir = "BackupsDir",
 }
+
+/** One database snapshot on disk. `createdAt` is the file's mtime, which never
+ *  moves after the one-shot write. */
+export const backupItem = z.object({
+  name: z.string(),
+  sizeBytes: z.number(),
+  createdAt: z.number(),
+});
+export type BackupItem = z.infer<typeof backupItem>;
+
+export const backupStatus = z.object({
+  /** 0 = automatic backups disabled. */
+  intervalHours: z.number(),
+  /** 0 = keep all. */
+  retention: z.number(),
+  totalBytes: z.number(),
+  lastBackupAt: z.number().nullable(),
+  /** When the next automatic backup is due; null when disabled. */
+  nextBackupAt: z.number().nullable(),
+  items: z.array(backupItem),
+});
+export type BackupStatus = z.infer<typeof backupStatus>;
 
 const diskStats = z.object({
   totalBytes: z.number(),
@@ -212,6 +235,7 @@ export const systemStats = z.object({
   }),
   history: z.array(z.object({ t: z.number(), cpuPct: z.number(), memPct: z.number() })),
   sampleIntervalSec: z.number(),
+  backups: backupStatus,
 });
 export type SystemStats = z.infer<typeof systemStats>;
 

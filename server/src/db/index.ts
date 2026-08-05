@@ -25,6 +25,13 @@ export function migrate() {
   });
 }
 
+/** Online snapshot into a single self-contained file. WAL is checkpointed into
+ *  the copy, so the backup has no sidecar -wal/-shm and is safe to take while
+ *  the server keeps serving. */
+export function backupTo(destPath: string): Promise<unknown> {
+  return sqlite.backup(destPath);
+}
+
 export function closeDb() {
   sqlite.close();
 }

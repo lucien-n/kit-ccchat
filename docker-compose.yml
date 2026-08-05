@@ -47,6 +47,9 @@ services:
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?run ./install.sh, or set LIVEKIT_API_SECRET in .env}
       # Server-side management API (mod mutes), reached in-cluster by service name.
       LIVEKIT_HOST: http://livekit:7880
+      # Automatic database backups into data/backups (0 hours turns them off).
+      BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
+      BACKUP_RETENTION: ${BACKUP_RETENTION:-7}
     volumes:
       # Your entire community (accounts, channels, messages) is this one folder.
       # Back it up and you have backed up everything.
