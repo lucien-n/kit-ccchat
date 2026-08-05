@@ -8,6 +8,7 @@
     formatRelative,
   } from "$lib/format";
   import { apiErrorMessage } from "$lib/forms";
+  import * as Accordion from "&/accordion";
   import { Button } from "&/button";
   import * as Card from "&/card";
   import { ScrollArea } from "&/scroll-area";
@@ -94,16 +95,15 @@
     [DiskItem.BackupsDir]: { label: "Backups", color: "bg-rose-500" },
   };
 
-  const MIN_SEGMENT_PCT = 2;
-
-  const MAX_FLOOR_SHARE = 0.5;
-
   function otherColor(usedPct: number) {
     if (usedPct >= 90) return "bg-destructive";
     if (usedPct >= 75) return "bg-amber-500";
     return "bg-muted-foreground/40";
   }
 
+  // True proportions; a 4px min-width (applied in the markup) keeps a thin item
+  // from vanishing, and the legend gives its exact size. `pct` is a share of the
+  // whole volume.
   const segments = $derived.by(() => {
     const disk = stats?.disk;
     if (!disk || disk.totalBytes <= 0) return [];
@@ -116,29 +116,23 @@
         key: item as string,
         ...DISK_ITEM_SPECS[item],
         bytes,
-        pct: Math.max((bytes / disk.totalBytes) * 100, MIN_SEGMENT_PCT),
+        pct: (bytes / disk.totalBytes) * 100,
       };
     });
 
-    const fill = Math.min(100, usedPct);
-    const claimed = items.reduce((total, item) => total + item.pct, 0);
-    const budget = fill * MAX_FLOOR_SHARE;
-    const scale = claimed > budget ? budget / claimed : 1;
-    const otherPct = fill - claimed * scale;
+    const claimed = items.reduce((total, item) => total + item.bytes, 0);
+    const otherBytes = Math.max(0, disk.usedBytes - claimed);
 
     return [
-      ...items.map((item) => ({ ...item, pct: item.pct * scale })),
-      ...(otherPct > 0
+      ...items,
+      ...(otherBytes > 0
         ? [
             {
               key: "other",
               label: "Everything else on the volume",
               color: otherColor(usedPct),
-              bytes: Math.max(
-                0,
-                disk.usedBytes - items.reduce((total, item) => total + item.bytes, 0),
-              ),
-              pct: otherPct,
+              bytes: otherBytes,
+              pct: (otherBytes / disk.totalBytes) * 100,
             },
           ]
         : []),
@@ -190,37 +184,58 @@
         </Card.Content>
       </Card.Root>
 
-      <Card.Root>
-        <Card.Content>
-          <div class="mb-1.5 flex items-baseline justify-between gap-2">
-            <span class="text-sm font-medium">Disk (data dir volume)</span>
-            <span class="text-muted-foreground text-xs">
-              {stats.disk.totalBytes > 0
-                ? `${formatBytes(stats.disk.usedBytes)} / ${formatBytes(stats.disk.totalBytes)} · ${formatBytes(stats.disk.freeBytes)} free`
-                : "unavailable"}
-            </span>
-          </div>
-          <Tooltip.Provider delayDuration={80}>
-            <div class="bg-secondary flex h-2 w-full overflow-hidden rounded-full">
-              {#each segments as segment (segment.key)}
-                <Tooltip.Root>
-                  <Tooltip.Trigger
-                    class="{segment.color} h-full cursor-default transition-opacity hover:opacity-75"
-                    style="width: {segment.pct}%"
-                    aria-label="{segment.label}: {formatBytes(segment.bytes)}"
-                  />
-                  <Tooltip.Content>
+      <Card.Root class="gap-0 py-0">
+        <Accordion.Root type="single" class="rounded-none border-0">
+          <Accordion.Item value="disk" class="border-b-0 data-open:bg-transparent">
+            <Accordion.Trigger class="hover:bg-muted/50 hover:no-underline">
+              <span class="flex flex-1 items-baseline justify-between gap-2">
+                <span class="text-sm font-medium">Disk (data dir volume)</span>
+                <span class="text-muted-foreground text-xs font-normal">
+                  {stats.disk.totalBytes > 0
+                    ? `${formatBytes(stats.disk.usedBytes)} / ${formatBytes(stats.disk.totalBytes)} · ${formatBytes(stats.disk.freeBytes)} free`
+                    : "unavailable"}
+                </span>
+              </span>
+            </Accordion.Trigger>
+
+            <Tooltip.Provider delayDuration={80}>
+              <div class="px-4 pb-4">
+                <div class="bg-secondary flex h-2 w-full overflow-hidden rounded-full">
+                  {#each segments as segment (segment.key)}
+                    <Tooltip.Root>
+                      <Tooltip.Trigger
+                        class="{segment.color} h-full min-w-1 cursor-default transition-opacity hover:opacity-75"
+                        style="width: {segment.pct}%"
+                        aria-label="{segment.label}: {formatBytes(segment.bytes)}"
+                      />
+                      <Tooltip.Content>
+                        <span class="{segment.color} size-2 shrink-0 rounded-full"></span>
+                        <span>{segment.label}</span>
+                        <span class="tabular-nums opacity-70">
+                          {formatBytes(segment.bytes)}
+                        </span>
+                      </Tooltip.Content>
+                    </Tooltip.Root>
+                  {/each}
+                </div>
+              </div>
+            </Tooltip.Provider>
+
+            <Accordion.Content>
+              <ul class="flex flex-col gap-1.5">
+                {#each segments as segment (segment.key)}
+                  <li class="flex items-center gap-2 text-xs">
                     <span class="{segment.color} size-2 shrink-0 rounded-full"></span>
-                    <span>{segment.label}</span>
-                    <span class="tabular-nums opacity-70">
+                    <span class="flex-1 truncate">{segment.label}</span>
+                    <span class="text-muted-foreground shrink-0 tabular-nums">
                       {formatBytes(segment.bytes)}
                     </span>
-                  </Tooltip.Content>
-                </Tooltip.Root>
-              {/each}
-            </div>
-          </Tooltip.Provider>
-        </Card.Content>
+                  </li>
+                {/each}
+              </ul>
+            </Accordion.Content>
+          </Accordion.Item>
+        </Accordion.Root>
       </Card.Root>
 
       <Card.Root>
