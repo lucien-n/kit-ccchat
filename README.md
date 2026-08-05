@@ -1,4 +1,4 @@
-# ccchat
+# motus
 
 Self-hosted chat for you and your friends. Runs on one machine, keeps your data
 there, no company in the middle.
@@ -49,7 +49,7 @@ To test voice on Windows or macOS, run LiveKit natively instead
 (`winget install LiveKit.livekit` or `brew install livekit`):
 
 ```bash
-LIVEKIT_KEYS="ccchat: dev-only-insecure-secret-set-LIVEKIT_API_SECRET" \
+LIVEKIT_KEYS="motus: dev-only-insecure-secret-set-LIVEKIT_API_SECRET" \
   livekit-server --config livekit.yaml --node-ip 127.0.0.1
 ```
 
@@ -62,7 +62,7 @@ it properly.
 Linux on x86_64. The published image is amd64 only.
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/lucien-n/kit-ccchat/main/install.sh | sh
+curl -fsSL https://raw.githubusercontent.com/lucien-n/motus/main/install.sh | sh
 ```
 
 It asks for your domain, generates the secrets, pulls the image and starts
@@ -83,7 +83,7 @@ Back up `data/` and you've backed up the whole community.
 Or by hand:
 
 ```bash
-cp .env.example .env         # set CCCHAT_DOMAIN + LIVEKIT_API_SECRET
+cp .env.example .env         # set MOTUS_DOMAIN + LIVEKIT_API_SECRET
 docker compose up -d
 ```
 

@@ -4,7 +4,7 @@
   import { cn } from "$lib/utils";
   import { type MuteState } from "$lib/voice-mute";
   import { Button } from "&/button";
-  import type { Channel, VoiceMember } from "@ccchat/shared";
+  import type { Channel, VoiceMember } from "@motus/shared";
   import { HeadphoneOff, Maximize, MicOff } from "@lucide/svelte";
   import type { Track } from "livekit-client";
   import { UserCard } from "../common/user-card";

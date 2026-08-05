@@ -3,7 +3,7 @@ import {
   reorderRolesBody,
   setUserRolesBody,
   updateRoleBody,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { Hono } from "hono";
 import { requireAuth, requireCan, type Env } from "../../auth.js";
 import { validate } from "../../validate.js";

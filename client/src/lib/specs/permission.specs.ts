@@ -1,4 +1,4 @@
-import { Permission } from "@ccchat/shared";
+import { Permission } from "@motus/shared";
 import type { SpecsRecord } from "./types";
 
 export const permissionSpecs: SpecsRecord<Permission> = {

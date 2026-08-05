@@ -1,4 +1,4 @@
-import { DeleteSpan } from "@ccchat/shared";
+import { DeleteSpan } from "@motus/shared";
 import { client } from "./http";
 
 export enum ModAction {

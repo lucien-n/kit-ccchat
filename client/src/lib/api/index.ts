@@ -33,7 +33,7 @@ export { imageUrl } from "./images";
 export { soundUrl } from "./soundboard";
 export { apiBase, ApiError } from "./http";
 export { ModAction, type ModOptions } from "./moderation";
-export { DeleteSpan } from "@ccchat/shared";
+export { DeleteSpan } from "@motus/shared";
 export { authToken } from "./token.svelte";
 export { avatarUrl, bannerUrl } from "./users";
 
@@ -49,4 +49,4 @@ export type {
   Sound,
   SystemStats,
   VoiceMember,
-} from "@ccchat/shared";
+} from "@motus/shared";

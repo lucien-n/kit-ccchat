@@ -1,4 +1,4 @@
-import type { UpdateSoundBody, UploadSoundBody } from "@ccchat/shared";
+import type { UpdateSoundBody, UploadSoundBody } from "@motus/shared";
 import { apiBase, client } from "./http";
 
 export function soundUrl(id: string): string {

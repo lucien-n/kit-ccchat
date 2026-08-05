@@ -1,4 +1,4 @@
-import { parseMentions } from "@ccchat/shared";
+import { parseMentions } from "@motus/shared";
 import { describe, expect, it } from "vitest";
 
 describe("parseMentions", () => {

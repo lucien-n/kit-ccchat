@@ -1,4 +1,4 @@
-import type { CreateRoleBody, UpdateRoleBody } from "@ccchat/shared";
+import type { CreateRoleBody, UpdateRoleBody } from "@motus/shared";
 import { client } from "./http";
 
 export const roles = {

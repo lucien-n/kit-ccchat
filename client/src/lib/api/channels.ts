@@ -1,4 +1,4 @@
-import type { CreateChannelBody, RenameChannelBody } from "@ccchat/shared";
+import type { CreateChannelBody, RenameChannelBody } from "@motus/shared";
 import { client } from "./http";
 
 export const channels = {

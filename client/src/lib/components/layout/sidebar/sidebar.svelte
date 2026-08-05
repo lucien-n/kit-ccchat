@@ -7,7 +7,7 @@
   import { flip } from "$lib/motion";
   import { appearance, channels, session, ui, voice } from "$lib/stores";
   import { ScrollArea } from "&/scroll-area";
-  import { ChannelType, type Channel } from "@ccchat/shared";
+  import { ChannelType, type Channel } from "@motus/shared";
   import { dndzone, type DndEvent } from "svelte-dnd-action";
   import { ChannelCategoryHeader, SingleChannel } from "./channel";
   import SidebarHeader from "./sidebar-header.svelte";

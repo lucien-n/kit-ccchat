@@ -1,4 +1,4 @@
-import { setupBody } from "@ccchat/shared";
+import { setupBody } from "@motus/shared";
 import type { JsonContext } from "../../http/context.js";
 import * as setupService from "./setup.service.js";
 

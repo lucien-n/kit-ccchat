@@ -108,7 +108,7 @@ export const playCameraOff = () =>
     [523.25, 0.09],
   ]);
 
-let baseTitle = "ccchat";
+let baseTitle = "motus";
 export function setBaseTitle(title: string) {
   baseTitle = title;
   document.title = baseTitle;

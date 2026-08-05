@@ -1,4 +1,4 @@
-import { TYPING_TIMEOUT_MS } from "@ccchat/shared";
+import { TYPING_TIMEOUT_MS } from "@motus/shared";
 import { describe, expect, it } from "vitest";
 import {
   stillOnline,

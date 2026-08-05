@@ -1,4 +1,4 @@
-import { ServerEventType, type ServerEvent, type VoiceMember } from "@ccchat/shared";
+import { ServerEventType, type ServerEvent, type VoiceMember } from "@motus/shared";
 import type { WebSocket } from "ws";
 
 interface Client {

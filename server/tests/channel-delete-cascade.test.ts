@@ -4,7 +4,7 @@ import {
   ServerEventType,
   type Channel,
   type Member,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { eq } from "drizzle-orm";
 import type { Hono } from "hono";
 import { createServer, type Server } from "node:http";

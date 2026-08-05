@@ -1,4 +1,4 @@
-import { ChannelType } from "@ccchat/shared";
+import { ChannelType } from "@motus/shared";
 import { AccessToken, RoomServiceClient, TrackType } from "livekit-server-sdk";
 import { findById } from "../../db/query.js";
 import { channelsTable, type User } from "../../db/schema";

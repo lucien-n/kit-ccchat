@@ -1,4 +1,4 @@
-import { searchQuery } from "@ccchat/shared";
+import { searchQuery } from "@motus/shared";
 import { Hono } from "hono";
 import { requireAuth, type Env } from "../../auth.js";
 import { validate } from "../../validate.js";

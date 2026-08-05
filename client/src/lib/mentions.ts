@@ -1,5 +1,5 @@
 import type { MentionResolver } from "$lib/markdown";
-import { EVERYONE, USERNAME_CHARS } from "@ccchat/shared";
+import { EVERYONE, USERNAME_CHARS } from "@motus/shared";
 import { members, roles, session } from "$lib/stores";
 
 export function mentionResolver(): MentionResolver {

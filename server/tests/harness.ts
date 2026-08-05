@@ -10,7 +10,7 @@ process.env.NODE_ENV = "test";
 process.env.LIVEKIT_API_SECRET = "test-only-secret-not-a-real-one";
 process.env.COMMUNITY_NAME = "Test Community";
 
-const DIR = mkdtempSync(join(tmpdir(), "ccchat-test-"));
+const DIR = mkdtempSync(join(tmpdir(), "motus-test-"));
 process.env.DATA_DIR = DIR;
 
 export async function boot(): Promise<Hono<any>> {

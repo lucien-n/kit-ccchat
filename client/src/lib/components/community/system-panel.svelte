@@ -4,7 +4,7 @@
   import { apiErrorMessage } from "$lib/forms";
   import * as Card from "&/card";
   import * as Tooltip from "&/tooltip";
-  import { DiskItem } from "@ccchat/shared";
+  import { DiskItem } from "@motus/shared";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
   import Sparkline from "./sparkline.svelte";
@@ -163,7 +163,7 @@
       <Card.Content
         class="text-muted-foreground flex flex-wrap justify-between gap-x-4 gap-y-1 text-xs"
       >
-        <span>ccchat process</span>
+        <span>motus process</span>
         <span
           >{formatBytes(stats.app.rssBytes)} · up {formatDuration(
             stats.app.uptimeSec,

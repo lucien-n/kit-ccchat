@@ -3,7 +3,7 @@ import {
   type Sound,
   type UpdateSoundBody,
   type UploadSoundBody,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { desc, eq } from "drizzle-orm";
 import { newId } from "../../auth.js";
 import { db } from "../../db/index.js";

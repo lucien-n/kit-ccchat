@@ -1,7 +1,7 @@
 import { errorName } from "$lib/forms";
 import { playDeafen, playMute, playUndeafen, playUnmute } from "$lib/notify";
 import { realtime } from "$lib/stores/realtime.svelte";
-import { ClientEventType } from "@ccchat/shared";
+import { ClientEventType } from "@motus/shared";
 import { MicStatus, type VoiceCore } from "./context";
 
 export class MicController {

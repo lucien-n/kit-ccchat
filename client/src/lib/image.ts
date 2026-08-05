@@ -3,7 +3,7 @@ import {
   MAX_AVATAR_IMAGE_BYTES,
   MAX_BANNER_IMAGE_BYTES,
   MAX_MESSAGE_IMAGE_BYTES,
-} from "@ccchat/shared";
+} from "@motus/shared";
 
 export interface PreparedImage {
   image: string;

@@ -19,7 +19,7 @@
     IMAGE_MIME_TYPES,
     MAX_IMAGES_PER_MESSAGE,
     MESSAGE_MAX_LENGTH,
-  } from "@ccchat/shared";
+  } from "@motus/shared";
   import { Eye, EyeOff, ImagePlus, Reply, Send, X } from "@lucide/svelte";
   import { tick } from "svelte";
   import EmojiPicker from "./emoji-picker.svelte";

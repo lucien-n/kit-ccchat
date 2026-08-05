@@ -1,5 +1,5 @@
 {
-  "name": "ccchat-client",
+  "name": "motus-client",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -22,7 +22,7 @@
     "twemoji-colr-font": "^15.0.3"
   },
   "devDependencies": {
-    "@ccchat/shared": "*",
+    "@motus/shared": "*",
     "@fontsource-variable/figtree": "^5.2.10",
     "@internationalized/date": "^3.12.2",
     "@lucide/svelte": "^1.25.0",
@@ -34,7 +34,7 @@
     "@types/markdown-it": "^14.1.2",
     "@types/markdown-it-emoji": "^3.0.1",
     "bits-ui": "^2.18.1",
-    "ccchat-server": "*",
+    "motus-server": "*",
     "clsx": "^2.1.1",
     "emojibase-data": "^17.0.0",
     "fontkit": "^2.0.4",

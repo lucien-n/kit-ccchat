@@ -11,7 +11,7 @@ bootstrap();
 systemService.startSystemSampler();
 
 const server = serve({ fetch: app.fetch, port: PORT }, (info) => {
-  console.log(`ccchat server listening on http://localhost:${info.port}`);
+  console.log(`motus server listening on http://localhost:${info.port}`);
 });
 
 attachWebSocket(server as unknown as import("node:http").Server);

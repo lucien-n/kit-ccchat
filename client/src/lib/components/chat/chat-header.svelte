@@ -4,7 +4,7 @@
   import { channels, prefs, presence, ui, unread } from "$lib/stores";
   import { Button } from "&/button";
   import * as ToggleGroup from "&/toggle-group";
-  import { ChannelType } from "@ccchat/shared";
+  import { ChannelType } from "@motus/shared";
   import { Bell, BellOff, Menu, Users } from "@lucide/svelte";
   import SearchIcon from "@lucide/svelte/icons/search";
 

@@ -1,4 +1,4 @@
-import { InviteStatus } from "@ccchat/shared";
+import { InviteStatus } from "@motus/shared";
 import type { Hono } from "hono";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {

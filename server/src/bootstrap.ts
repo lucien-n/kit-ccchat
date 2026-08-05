@@ -1,4 +1,4 @@
-import { ChannelType } from "@ccchat/shared";
+import { ChannelType } from "@motus/shared";
 import { eq } from "drizzle-orm";
 import { hashPassword, newId } from "./auth.js";
 import { db } from "./db/index.js";
@@ -134,7 +134,7 @@ function resetOwnerPassword() {
     .run();
 
   console.log("\n" + "=".repeat(60));
-  console.log("  ccchat - owner password RESET from OWNER_PASSWORD");
+  console.log("  motus - owner password RESET from OWNER_PASSWORD");
   console.log(`  Login: ${username}`);
   console.log("  Unset RESET_OWNER_PASSWORD now so it does not run again.");
   console.log("=".repeat(60) + "\n");
@@ -142,7 +142,7 @@ function resetOwnerPassword() {
 
 function printBanner(title: string, username: string) {
   console.log("\n" + "=".repeat(60));
-  console.log(`  ccchat - ${title}`);
+  console.log(`  motus - ${title}`);
   console.log("=".repeat(60));
   console.log(`  Owner login : ${username}`);
   console.log(`  Owner pass  : (from OWNER_PASSWORD env)`);

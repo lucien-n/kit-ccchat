@@ -1,4 +1,4 @@
-import type { uploadImageBody } from "@ccchat/shared";
+import type { uploadImageBody } from "@motus/shared";
 import type { AppContext, JsonContext } from "../../http/context.js";
 import { sendBlob } from "../../http/blob.js";
 import * as imagesService from "./images.service.js";

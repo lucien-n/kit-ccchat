@@ -9,7 +9,7 @@
   import { channels, community, prefs, ui, unread, voice } from "$lib/stores";
   import * as Resizable from "&/resizable";
   import * as Sheet from "&/sheet";
-  import { ChannelType } from "@ccchat/shared";
+  import { ChannelType } from "@motus/shared";
   import { toast } from "svelte-sonner";
   import ChatDialogs from "./chat-dialogs.svelte";
   import ChatView from "./chat-view.svelte";

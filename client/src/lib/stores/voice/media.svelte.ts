@@ -1,7 +1,7 @@
 import { errorName } from "$lib/forms";
 import { playCameraOff, playCameraOn } from "$lib/notify";
 import { realtime } from "$lib/stores/realtime.svelte";
-import { ClientEventType } from "@ccchat/shared";
+import { ClientEventType } from "@motus/shared";
 import {
   Track,
   type LocalTrackPublication,

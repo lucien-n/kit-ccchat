@@ -1,4 +1,4 @@
-import { ClientEventType, TYPING_THROTTLE_MS } from "@ccchat/shared";
+import { ClientEventType, TYPING_THROTTLE_MS } from "@motus/shared";
 import {
   stillOnline,
   typistsIn,

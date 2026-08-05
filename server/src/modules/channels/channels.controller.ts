@@ -2,7 +2,7 @@ import {
   createChannelBody,
   renameChannelBody,
   reorderChannelsBody,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import type { AppContext, JsonContext } from "../../http/context.js";
 import * as channelsService from "./channels.service.js";
 

@@ -10,7 +10,7 @@
   import * as Form from "&/form";
   import { Input } from "&/input";
   import { Label } from "&/label";
-  import { changePasswordBody, updateProfileBody } from "@ccchat/shared";
+  import { changePasswordBody, updateProfileBody } from "@motus/shared";
   import LogOutIcon from "@lucide/svelte/icons/log-out";
 
   const nameForm = spaForm(

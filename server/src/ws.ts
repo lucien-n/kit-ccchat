@@ -6,7 +6,7 @@ import {
   ServerEventType,
   TYPING_THROTTLE_MS,
   type ClientEvent,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import type { IncomingMessage, Server } from "node:http";
 import type { Duplex } from "node:stream";
 import { WebSocketServer, type WebSocket } from "ws";

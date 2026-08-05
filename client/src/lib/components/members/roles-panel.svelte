@@ -10,7 +10,7 @@
   import { Input } from "&/input";
   import { Label } from "&/label";
   import { ScrollArea } from "&/scroll-area";
-  import { Permission } from "@ccchat/shared";
+  import { Permission } from "@motus/shared";
   import CheckIcon from "@lucide/svelte/icons/check";
   import GripVerticalIcon from "@lucide/svelte/icons/grip-vertical";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";

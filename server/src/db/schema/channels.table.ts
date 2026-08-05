@@ -1,4 +1,4 @@
-import { ChannelType } from "@ccchat/shared";
+import { ChannelType } from "@motus/shared";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const channelsTable = sqliteTable("channels", {

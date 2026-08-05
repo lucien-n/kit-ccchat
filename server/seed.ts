@@ -3,7 +3,7 @@ import {
   MAX_REACTIONS_PER_MESSAGE,
   Permission,
   username as usernamePrimitive,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { faker } from "@faker-js/faker";
 import { eq } from "drizzle-orm";
 import { EMOJI_GLYPHS } from "../shared/src/emoji-glyphs";

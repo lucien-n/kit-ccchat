@@ -1,10 +1,10 @@
-{$CCCHAT_DOMAIN} {
+{$MOTUS_DOMAIN} {
 	handle_path /livekit/* {
 		reverse_proxy livekit:7880
 	}
 
 	handle {
-		reverse_proxy ccchat:8080
+		reverse_proxy motus:8080
 	}
 
 	encode zstd gzip

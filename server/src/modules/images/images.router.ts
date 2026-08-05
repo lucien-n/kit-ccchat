@@ -1,4 +1,4 @@
-import { uploadImageBody } from "@ccchat/shared";
+import { uploadImageBody } from "@motus/shared";
 import { Hono } from "hono";
 import { requireAuth, type Env } from "../../auth.js";
 import { rateLimit } from "../../ratelimit.js";

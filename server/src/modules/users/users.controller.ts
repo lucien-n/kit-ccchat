@@ -4,7 +4,7 @@ import {
   changePasswordBody,
   updateAppearanceBody,
   updateProfileBody,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import type { AppContext, JsonContext } from "../../http/context.js";
 import * as usersService from "./users.service.js";
 

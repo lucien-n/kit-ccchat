@@ -3,7 +3,7 @@
   import { getChatContext } from "$lib/context/chat.svelte";
   import { channels, messages, voice } from "$lib/stores";
   import { Button } from "&/button";
-  import { ChannelType } from "@ccchat/shared";
+  import { ChannelType } from "@motus/shared";
   import ArrowDownIcon from "@lucide/svelte/icons/arrow-down";
   import { elasticOut } from "svelte/easing";
   import { fly } from "$lib/motion";

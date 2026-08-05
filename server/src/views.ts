@@ -8,7 +8,7 @@ import {
   type ReplyRef,
   type Role,
   type SystemEvent,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { eq } from "drizzle-orm";
 import { db } from "./db/index.js";
 import {

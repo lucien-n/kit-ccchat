@@ -3,7 +3,7 @@ import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import type { WebSocket as WsClient } from "ws";
 import { WebSocket } from "ws";
-import { ChannelType, ClientEventType, ServerEventType } from "@ccchat/shared";
+import { ChannelType, ClientEventType, ServerEventType } from "@motus/shared";
 import { boot, claim, cleanup, json, mkInvite, post, register } from "./harness.js";
 
 // Fast enough that a reap takes ~2 sweeps rather than a minute, slow enough that

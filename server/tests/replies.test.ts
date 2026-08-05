@@ -9,7 +9,7 @@ import {
   ServerEventType,
   type Channel,
   type MessageView,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { boot, claim, cleanup, get, json, uniq } from "./harness.js";
 
 let app: Awaited<ReturnType<typeof boot>>;

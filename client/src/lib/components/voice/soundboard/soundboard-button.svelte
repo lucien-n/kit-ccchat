@@ -6,7 +6,7 @@
   import { Input } from "&/input";
   import * as Popover from "&/popover";
   import { ScrollArea } from "&/scroll-area";
-  import type { Sound } from "@ccchat/shared";
+  import type { Sound } from "@motus/shared";
   import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
   import MegaphoneIcon from "@lucide/svelte/icons/megaphone";
   import PencilIcon from "@lucide/svelte/icons/pencil";

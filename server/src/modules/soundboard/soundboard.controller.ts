@@ -1,4 +1,4 @@
-import type { updateSoundBody, uploadSoundBody } from "@ccchat/shared";
+import type { updateSoundBody, uploadSoundBody } from "@motus/shared";
 import { sendBlob } from "../../http/blob.js";
 import type { AppContext, JsonContext } from "../../http/context.js";
 import * as soundboardService from "./soundboard.service.js";

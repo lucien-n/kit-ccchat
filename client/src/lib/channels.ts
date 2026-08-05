@@ -1,4 +1,4 @@
-import { channelNameKey, type ChannelType } from "@ccchat/shared";
+import { channelNameKey, type ChannelType } from "@motus/shared";
 
 type NamedChannel = { name: string; type: ChannelType };
 

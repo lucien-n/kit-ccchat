@@ -9,7 +9,7 @@
   import { appearance, messages } from "$lib/stores";
   import { cn } from "$lib/utils";
   import { Textarea } from "&/textarea";
-  import { MESSAGE_MAX_LENGTH, SystemEvent } from "@ccchat/shared";
+  import { MESSAGE_MAX_LENGTH, SystemEvent } from "@motus/shared";
   import ReplyIcon from "@lucide/svelte/icons/reply";
   import UserRoundPlusIcon from "@lucide/svelte/icons/user-round-plus";
   import { tick } from "svelte";

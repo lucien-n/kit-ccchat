@@ -3,7 +3,7 @@ import {
   MAX_MESSAGE_IMAGE_BYTES,
   type MessageImage,
   type UploadImageBody,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { and, eq, inArray, isNull } from "drizzle-orm";
 import { newId } from "../../auth.js";
 import { db } from "../../db/index.js";

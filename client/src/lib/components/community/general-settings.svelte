@@ -5,7 +5,7 @@
   import { community } from "$lib/stores";
   import * as Form from "&/form";
   import { Input } from "&/input";
-  import { renameCommunityBody } from "@ccchat/shared";
+  import { renameCommunityBody } from "@motus/shared";
 
   const form = spaForm(
     renameCommunityBody,

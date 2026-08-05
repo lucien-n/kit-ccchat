@@ -6,7 +6,7 @@ import {
   type Channel,
   type MessageView,
   type SearchResults,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";
 import { afterAll, beforeAll, expect, it } from "vitest";

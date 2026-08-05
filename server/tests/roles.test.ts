@@ -1,4 +1,4 @@
-import { Permission } from "@ccchat/shared";
+import { Permission } from "@motus/shared";
 import type { Hono } from "hono";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {

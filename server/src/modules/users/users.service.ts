@@ -12,7 +12,7 @@ import {
   type Role,
   type UpdateAppearanceBody,
   type UpdateProfileBody,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { desc, eq } from "drizzle-orm";
 import { hashPassword, verifyPassword } from "../../auth.js";
 import { db } from "../../db/index.js";

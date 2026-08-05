@@ -1,4 +1,4 @@
-import { editMessageBody, messageAroundQuery, messageHistoryQuery } from "@ccchat/shared";
+import { editMessageBody, messageAroundQuery, messageHistoryQuery } from "@motus/shared";
 import type { AppContext, JsonContext, QueryContext } from "../../http/context.js";
 import { httpError } from "../../http/errors.js";
 import * as messagesService from "./messages.service.js";

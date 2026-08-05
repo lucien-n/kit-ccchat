@@ -4,7 +4,7 @@ import {
   trimUsername,
   USERNAME_BODY,
   USERNAME_MIN_LEN,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import type { PluginSimple } from "markdown-it";
 
 export interface ResolvedMention {
@@ -35,7 +35,7 @@ const AT = 0x40;
 const LT = 0x3c;
 
 // Anchored at the cursor for inline scanning, but the same grammar the shared
-// parser uses (see @ccchat/shared mentions).
+// parser uses (see @motus/shared mentions).
 const USER_AT = new RegExp(`^@(${USERNAME_BODY})`);
 const ROLE_AT = new RegExp(`^<@&(${ROLE_ID_BODY})>`);
 

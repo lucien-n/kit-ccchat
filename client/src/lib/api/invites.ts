@@ -1,4 +1,4 @@
-import type { CreateInviteBody } from "@ccchat/shared";
+import type { CreateInviteBody } from "@motus/shared";
 import { client } from "./http";
 
 export const invites = {

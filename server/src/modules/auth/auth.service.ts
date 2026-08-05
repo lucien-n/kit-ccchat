@@ -1,4 +1,4 @@
-import { SystemEvent, type LoginBody, type RegisterBody } from "@ccchat/shared";
+import { SystemEvent, type LoginBody, type RegisterBody } from "@motus/shared";
 import { eq, sql } from "drizzle-orm";
 import { createSession, hashPassword, newId, verifyPassword } from "../../auth.js";
 import { db } from "../../db/index.js";

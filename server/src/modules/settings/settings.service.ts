@@ -2,7 +2,7 @@ import {
   MAX_AVATAR_IMAGE_BYTES,
   ServerEventType,
   type CommunityIconBody,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { eq } from "drizzle-orm";
 import { existsSync, rmSync, writeFileSync } from "node:fs";
 import { db } from "../../db/index.js";

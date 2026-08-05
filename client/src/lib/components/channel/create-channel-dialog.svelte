@@ -10,7 +10,7 @@
   import * as Dialog from "&/dialog";
   import * as Form from "&/form";
   import { Input } from "&/input";
-  import { ChannelType, createChannelBody } from "@ccchat/shared";
+  import { ChannelType, createChannelBody } from "@motus/shared";
 
   let {
     open = $bindable(false),

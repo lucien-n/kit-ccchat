@@ -9,7 +9,7 @@ import {
   playVoiceLeave,
 } from "$lib/notify";
 import { realtime } from "$lib/stores/realtime.svelte";
-import { ClientEventType } from "@ccchat/shared";
+import { ClientEventType } from "@motus/shared";
 import { Room, RoomEvent, Track } from "livekit-client";
 import { AudioSink, type StreamAudio } from "./audio-sink";
 import { MicStatus, VoiceStatus, type Channel, type VoiceCore } from "./context";
@@ -22,7 +22,7 @@ import { SoundboardPlayer } from "./soundboard/soundboard-player";
 export { MicStatus, VoiceStatus };
 export type { VoiceParticipant };
 
-export const VOICE_DRAG_MIME = "application/x-ccchat-voice-user";
+export const VOICE_DRAG_MIME = "application/x-motus-voice-user";
 
 class VoiceStore implements VoiceCore {
   channel = $state<Channel | null>(null);

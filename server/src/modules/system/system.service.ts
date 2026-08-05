@@ -1,4 +1,4 @@
-import { DiskItem, type SystemStats } from "@ccchat/shared";
+import { DiskItem, type SystemStats } from "@motus/shared";
 import { readdir, stat, statfs } from "node:fs/promises";
 import os from "node:os";
 import { join } from "node:path";

@@ -11,7 +11,7 @@
   import { Badge } from "&/badge";
   import { Button } from "&/button";
   import { Input } from "&/input";
-  import { ChannelType } from "@ccchat/shared";
+  import { ChannelType } from "@motus/shared";
   import AtSignIcon from "@lucide/svelte/icons/at-sign";
   import SearchIcon from "@lucide/svelte/icons/search";
   import XIcon from "@lucide/svelte/icons/x";

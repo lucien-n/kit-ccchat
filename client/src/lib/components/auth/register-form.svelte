@@ -5,7 +5,7 @@
   import * as Card from "&/card";
   import * as Form from "&/form";
   import { Input } from "&/input";
-  import { registerBody } from "@ccchat/shared";
+  import { registerBody } from "@motus/shared";
   import { untrack } from "svelte";
 
   let { invite = "" }: { invite?: string } = $props();

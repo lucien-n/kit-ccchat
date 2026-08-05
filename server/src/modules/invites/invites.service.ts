@@ -1,4 +1,4 @@
-import { InviteStatus, type CreateInviteBody, type Invite } from "@ccchat/shared";
+import { InviteStatus, type CreateInviteBody, type Invite } from "@motus/shared";
 import { desc, eq } from "drizzle-orm";
 import { randomToken } from "../../auth.js";
 import { db } from "../../db/index.js";

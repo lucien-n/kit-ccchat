@@ -6,7 +6,7 @@ import {
   MAX_SOUNDBOARD_DURATION_MS,
   MAX_SOUNDBOARD_NAME,
   type Sound,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { SvelteSet } from "svelte/reactivity";
 
 const FAVORITES_KEY = "soundboardFavorites";

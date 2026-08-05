@@ -1,4 +1,4 @@
-import type { MessageHistoryQuery } from "@ccchat/shared";
+import type { MessageHistoryQuery } from "@motus/shared";
 import { client } from "./http";
 
 export const messages = {
