@@ -21,13 +21,13 @@ export function update(c: JsonContext<typeof updateSoundBody, "/:id">) {
   return c.json({
     sound: soundboardService.updateSound(
       c.req.param("id"),
-      c.get("user").id,
+      c.get("user"),
       c.req.valid("json"),
     ),
   });
 }
 
 export function remove(c: AppContext<"/:id">) {
-  soundboardService.deleteSound(c.req.param("id"), c.get("user").id);
+  soundboardService.deleteSound(c.req.param("id"), c.get("user"));
   return c.json({ ok: true });
 }

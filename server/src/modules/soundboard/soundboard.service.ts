@@ -5,10 +5,10 @@ import {
   type UploadSoundBody,
 } from "@motus/shared";
 import { desc, eq } from "drizzle-orm";
-import { newId } from "../../auth.js";
+import { can, newId } from "../../auth.js";
 import { db } from "../../db/index.js";
 import { getById } from "../../db/query.js";
-import { soundboardSoundsTable } from "../../db/schema";
+import { soundboardSoundsTable, type User } from "../../db/schema";
 import { SOUNDS_DIR } from "../../env.js";
 import { httpError } from "../../http/errors.js";
 import { decodeSoundUpload, soundStore, type StoredSound } from "../../sounds.js";
@@ -55,9 +55,11 @@ export function saveSound(uploaderId: string, body: UploadSoundBody): Sound {
   return toView(row);
 }
 
-export function updateSound(id: string, userId: string, body: UpdateSoundBody): Sound {
+export function updateSound(id: string, user: User, body: UpdateSoundBody): Sound {
   const row = getById(soundboardSoundsTable, id, "not found");
-  if (row.uploaderId !== userId) httpError(403, "not your sound");
+  if (row.uploaderId !== user.id && !can(user, "manageSounds")) {
+    httpError(403, "not your sound");
+  }
 
   const updated = { ...row, name: body.name, emoji: body.emoji ?? null };
   db.update(soundboardSoundsTable)
@@ -68,9 +70,11 @@ export function updateSound(id: string, userId: string, body: UpdateSoundBody): 
   return toView(updated);
 }
 
-export function deleteSound(id: string, userId: string) {
+export function deleteSound(id: string, user: User) {
   const row = getById(soundboardSoundsTable, id, "not found");
-  if (row.uploaderId !== userId) httpError(403, "not your sound");
+  if (row.uploaderId !== user.id && !can(user, "manageSounds")) {
+    httpError(403, "not your sound");
+  }
 
   db.delete(soundboardSoundsTable).where(eq(soundboardSoundsTable.id, id)).run();
   sounds.remove(id);

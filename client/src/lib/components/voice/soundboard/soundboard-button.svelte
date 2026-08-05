@@ -196,7 +196,7 @@
             : ''}"
         />
       </button>
-      {#if sound.uploaderId === session.user?.id}
+      {#if sound.uploaderId === session.user?.id || session.isAdmin}
         <button
           type="button"
           class="hover:text-foreground text-muted-foreground rounded p-1 opacity-0 group-hover:opacity-100"
