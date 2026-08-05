@@ -46,7 +46,8 @@ export class MicController {
 
   // Others default to hearing us, so only a standing deafen needs sending on join.
   announceDeafen() {
-    if (this.deafened) realtime.send({ type: ClientEventType.Deafen_Set, deafened: true });
+    if (this.deafened)
+      realtime.send({ type: ClientEventType.Deafen_Set, deafened: true });
   }
 
   async toggle() {
@@ -142,7 +143,8 @@ export class MicController {
     if (this.deafened === value) return;
     this.deafened = value;
     this.core.audio.setDeafened(value, this.core.streamAudio);
-    if (this.core.inCall) realtime.send({ type: ClientEventType.Deafen_Set, deafened: value });
+    if (this.core.inCall)
+      realtime.send({ type: ClientEventType.Deafen_Set, deafened: value });
     if (!silent) {
       if (value) playDeafen();
       else playUndeafen();

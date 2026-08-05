@@ -9,7 +9,5 @@ export const system = {
     (await client.api.system.backups[":name"].$delete({ param: { name } })).json(),
   /** Fetch a backup file's bytes (auth flows through the signed client). */
   downloadBackup: async (name: string) =>
-    (
-      await client.api.system.backups[":name"].download.$get({ param: { name } })
-    ).blob(),
+    (await client.api.system.backups[":name"].download.$get({ param: { name } })).blob(),
 };

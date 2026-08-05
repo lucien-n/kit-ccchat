@@ -89,7 +89,9 @@ describe("database backups", () => {
     expect(del.status).toBe(200);
 
     const after = await get(app, "/api/system", ownerToken).then(json);
-    expect(after.stats.backups.items.some((b: any) => b.name === backup.name)).toBe(false);
+    expect(after.stats.backups.items.some((b: any) => b.name === backup.name)).toBe(
+      false,
+    );
   });
 
   it("rejects a traversal-style backup name", async () => {

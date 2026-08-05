@@ -23,10 +23,13 @@ export class DeviceController {
       this.state.inputs = await Room.getLocalDevices("audioinput");
       // In a call the room is authoritative; before joining, keep the id the user
       // picked so re-enumerating (mount, hotplug) doesn't reset it to default.
-      if (room) this.state.inputId = room.getActiveDevice("audioinput") ?? this.state.inputId;
+      if (room)
+        this.state.inputId = room.getActiveDevice("audioinput") ?? this.state.inputId;
       if (supportsAudioOutput()) {
         this.state.outputs = await Room.getLocalDevices("audiooutput");
-        if (room) this.state.outputId = room.getActiveDevice("audiooutput") ?? this.state.outputId;
+        if (room)
+          this.state.outputId =
+            room.getActiveDevice("audiooutput") ?? this.state.outputId;
       }
     } catch {
       // ignore

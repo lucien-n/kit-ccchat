@@ -93,8 +93,7 @@ export async function backupStatus(): Promise<BackupStatus> {
     retention: BACKUP_RETENTION,
     totalBytes: items.reduce((total, item) => total + item.sizeBytes, 0),
     lastBackupAt,
-    nextBackupAt:
-      INTERVAL_MS > 0 ? (lastBackupAt ?? Date.now()) + INTERVAL_MS : null,
+    nextBackupAt: INTERVAL_MS > 0 ? (lastBackupAt ?? Date.now()) + INTERVAL_MS : null,
     items,
   };
 }

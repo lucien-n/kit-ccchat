@@ -1,8 +1,4 @@
-import {
-  createChannelBody,
-  renameChannelBody,
-  reorderChannelsBody,
-} from "@motus/shared";
+import { createChannelBody, renameChannelBody, reorderChannelsBody } from "@motus/shared";
 import type { AppContext, JsonContext } from "../../http/context.js";
 import * as channelsService from "./channels.service.js";
 
