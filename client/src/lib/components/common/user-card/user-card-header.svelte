@@ -7,9 +7,11 @@
   import { appearance, session, ui } from "$lib/stores";
   import { Button } from "&/button";
   import { Input } from "&/input";
+  import { Textarea } from "&/textarea";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import UploadIcon from "@lucide/svelte/icons/upload";
+  import { BIO_MAX_LEN } from "@motus/shared";
   import { toast } from "svelte-sonner";
   import UserAvatar from "../user-avatar.svelte";
 
@@ -48,6 +50,81 @@
       toast.error(apiErrorMessage(err, "failed to save color"));
       await ctx.loadProfile();
     }
+  }
+
+  // Seed the editable drafts once per profile so an unrelated live update (a
+  // color preview reassigning ctx.profile) never clobbers what's being typed.
+  let nameDraft = $state("");
+  let bioDraft = $state("");
+  let seededFor: string | null = $state(null);
+
+  $effect(() => {
+    const p = ctx.profile;
+    if (p && seededFor !== p.id) {
+      nameDraft = p.displayName;
+      bioDraft = p.bio ?? "";
+      seededFor = p.id;
+    }
+  });
+
+  async function commitProfile(
+    patch: { displayName: string } | { bio: string },
+    fallback: string,
+  ) {
+    try {
+      const { user } = await api.users.updateMe(patch);
+      session.patchUser(user);
+      if (ctx.profile) ctx.profile = { ...ctx.profile, ...user };
+      return user;
+    } catch (err) {
+      toast.error(apiErrorMessage(err, fallback));
+      return null;
+    }
+  }
+
+  async function saveName() {
+    const displayName = nameDraft.trim();
+    if (!displayName || displayName === ctx.profile?.displayName) {
+      nameDraft = ctx.profile?.displayName ?? "";
+      return;
+    }
+    const user = await commitProfile({ displayName }, "failed to save name");
+    nameDraft = user?.displayName ?? ctx.profile?.displayName ?? "";
+  }
+
+  async function saveBio() {
+    const bio = bioDraft.trim();
+    if (bio === (ctx.profile?.bio ?? "")) return;
+    const user = await commitProfile({ bio }, "failed to save bio");
+    bioDraft = user?.bio ?? ctx.profile?.bio ?? "";
+  }
+
+  let bioCountEl: HTMLElement | null = $state(null);
+  const bioAtMax = $derived(bioDraft.length >= BIO_MAX_LEN);
+
+  function shakeBio() {
+    if (appearance.motionReduced) return;
+    bioCountEl?.animate(
+      [
+        { transform: "translateX(0)" },
+        { transform: "translateX(-4px)" },
+        { transform: "translateX(4px)" },
+        { transform: "translateX(-3px)" },
+        { transform: "translateX(3px)" },
+        { transform: "translateX(0)" },
+      ],
+      { duration: 300, easing: "ease-in-out" },
+    );
+  }
+
+  // maxlength silently swallows the keystroke at the cap; the shake is the only
+  // signal the character didn't land. Fires only for keys that would actually
+  // add one - not navigation, shortcuts, or typing over a selection.
+  function onBioKeydown(e: KeyboardEvent) {
+    const el = e.currentTarget as HTMLTextAreaElement;
+    const printable = e.key.length === 1 && !e.ctrlKey && !e.metaKey;
+    const replacingSelection = el.selectionStart !== el.selectionEnd;
+    if (bioAtMax && printable && !replacingSelection) shakeBio();
   }
 
   function handleOpenSettings() {
@@ -181,13 +258,24 @@
       />
     {/if}
     <div class="mt-30 flex w-full flex-col gap-3 px-4">
-      <div class="flex flex-col">
-        <p
-          class="truncate text-lg font-semibold"
-          style={appearance.nameStyle(ctx.profile.color)}
-        >
-          {ctx.profile.displayName}
-        </p>
+      <div class="flex flex-col gap-1">
+        {#if editable}
+          <Input
+            bind:value={nameDraft}
+            maxlength={32}
+            class="h-8 text-lg font-semibold"
+            onblur={saveName}
+            onkeydown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+            aria-label="Display name"
+          />
+        {:else}
+          <p
+            class="truncate text-lg font-semibold"
+            style={appearance.nameStyle(ctx.profile.color)}
+          >
+            {ctx.profile.displayName}
+          </p>
+        {/if}
         <div class="text-muted-foreground flex items-center gap-1">
           <p class="truncate text-xs">@{ctx.profile.username}</p>
           <span>·</span>
@@ -198,6 +286,28 @@
       </div>
 
       {#if editable}
+        <div class="relative">
+          <Textarea
+            bind:value={bioDraft}
+            maxlength={BIO_MAX_LEN}
+            rows={3}
+            placeholder="a little about you"
+            class="resize-none pb-6"
+            onblur={saveBio}
+            onkeydown={onBioKeydown}
+            aria-label="Bio"
+          />
+          <span
+            bind:this={bioCountEl}
+            class={[
+              "pointer-events-none absolute right-2 bottom-2 text-[10px] tabular-nums",
+              bioAtMax ? "text-destructive" : "text-muted-foreground",
+            ]}
+          >
+            {bioDraft.length}/{BIO_MAX_LEN}
+          </span>
+        </div>
+
         <div class="flex items-center gap-2">
           <span class="text-muted-foreground flex-1 text-xs font-medium">
             Accent color
@@ -223,11 +333,18 @@
             {/if}
           </div>
         </div>
-      {:else if isMine}
-        <Button onclick={handleOpenSettings} class="w-full">
-          <PencilIcon />
-          Edit Profile
-        </Button>
+      {:else}
+        {#if ctx.profile.bio}
+          <p class="text-muted-foreground text-sm wrap-break-word whitespace-pre-wrap">
+            {ctx.profile.bio}
+          </p>
+        {/if}
+        {#if isMine}
+          <Button onclick={handleOpenSettings} class="w-full">
+            <PencilIcon />
+            Edit Profile
+          </Button>
+        {/if}
       {/if}
     </div>
   </div>

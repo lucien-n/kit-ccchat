@@ -14,6 +14,9 @@ export const password = z.string().min(8, "password must be at least 8 character
 
 export const displayName = z.string().trim().min(1).max(32);
 
+export const BIO_MAX_LEN = 190;
+export const bio = z.string().trim().max(BIO_MAX_LEN);
+
 export const optionalDisplayName = z.union([z.literal(""), displayName]).optional();
 
 export const communityName = z.string().trim().min(1).max(60);

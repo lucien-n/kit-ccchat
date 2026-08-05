@@ -8,24 +8,9 @@
   import { Button } from "&/button";
   import { Card } from "&/card";
   import * as Form from "&/form";
-  import { Input } from "&/input";
   import { Label } from "&/label";
-  import { changePasswordBody, updateProfileBody } from "@motus/shared";
+  import { changePasswordBody } from "@motus/shared";
   import LogOutIcon from "@lucide/svelte/icons/log-out";
-
-  const nameForm = spaForm(
-    updateProfileBody,
-    { displayName: session.user?.displayName ?? "" },
-    {
-      fallback: "failed to save",
-      onValid: async (data, form) => {
-        const { user } = await api.users.updateMe(data);
-        session.patchUser({ displayName: user.displayName });
-        setMessage(form, ok("Display name saved."));
-      },
-    },
-  );
-  const { form: nameData, enhance: nameEnhance, submitting: nameBusy } = nameForm;
 
   const passwordForm = spaForm(
     changePasswordBody,
@@ -55,26 +40,6 @@
 
 <div class="flex flex-col gap-8 sm:flex-row sm:gap-10">
   <div class="flex-1 space-y-6 sm:min-w-0">
-    <form method="POST" use:nameEnhance>
-      <Form.Field form={nameForm} name="displayName">
-        <Form.Control>
-          {#snippet children({ props })}
-            <Form.Label>Display name</Form.Label>
-            <div class="flex gap-2">
-              <Input
-                {...props}
-                bind:value={$nameData.displayName}
-                maxlength={32}
-                class="flex-1"
-              />
-              <Form.Button disabled={$nameBusy}>Save</Form.Button>
-            </div>
-          {/snippet}
-        </Form.Control>
-        <Form.FieldErrors />
-      </Form.Field>
-    </form>
-
     <form method="POST" use:passwordEnhance class="space-y-2">
       <Label>Change password</Label>
 

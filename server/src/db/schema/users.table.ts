@@ -21,6 +21,8 @@ export const usersTable = sqliteTable("users", {
   bannerVersion: integer("banner_version"),
   // The member's own profile color (hex). null = none chosen.
   accentColor: text("accent_color"),
+  // A short "about me" the member sets on their own profile. null = unset.
+  bio: text("bio"),
   // Per-user appearance prefs, persisted so they follow the account across
   // devices. null = the client's default for that setting.
   themeMode: text("theme_mode"),

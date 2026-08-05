@@ -30,6 +30,8 @@ export const member = memberRef.extend({
    *  `color`. Roles still win for the name; this fills in when they have none,
    *  and tints the profile card's banner fallback. */
   accentColor: hexColor.nullable(),
+  /** A short "about me" the member sets on their own profile. null = unset. */
+  bio: z.string().nullable(),
 });
 export type Member = z.infer<typeof member>;
 

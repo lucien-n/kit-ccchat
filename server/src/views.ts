@@ -31,6 +31,7 @@ export function toMember(u: {
   avatarVersion?: number | null;
   bannerVersion?: number | null;
   accentColor?: string | null;
+  bio?: string | null;
 }): Member {
   return {
     id: u.id,
@@ -42,6 +43,7 @@ export function toMember(u: {
     avatarVersion: u.avatarVersion ?? null,
     bannerVersion: u.bannerVersion ?? null,
     accentColor: u.accentColor ?? null,
+    bio: u.bio ?? null,
   };
 }
 

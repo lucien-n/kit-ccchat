@@ -23,7 +23,6 @@ columnSorting:
 - [push-notifications-for-messages](tasks/push-notifications-for-messages.md)
 - [allow-theme-change](tasks/allow-theme-change.md)
 - [avatar-overlays](tasks/avatar-overlays.md)
-- [profile-bio](tasks/profile-bio.md)
 - [client-tests](tasks/client-tests.md)
 - [foreign-keys](tasks/foreign-keys.md)
 - [ability-to-crop-soundboard-sounds-also-cap-sound-length](tasks/ability-to-crop-soundboard-sounds-also-cap-sound-length.md)
@@ -45,6 +44,7 @@ columnSorting:
 
 ## Done
 
+- [profile-bio](tasks/profile-bio.md)
 - [db-backups](tasks/db-backups.md)
 - [soundboard-volume-control](tasks/soundboard-volume-control.md)
 - [livestreams-should-act-as-a-new-room-tile](tasks/livestreams-should-act-as-a-new-room-tile.md)
