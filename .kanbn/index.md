@@ -20,6 +20,9 @@ columnSorting:
 - [allow-theme-change](tasks/allow-theme-change.md)
 - [avatar-overlays](tasks/avatar-overlays.md)
 - [profile-bio](tasks/profile-bio.md)
+- [db-backups](tasks/db-backups.md)
+- [client-tests](tasks/client-tests.md)
+- [foreign-keys](tasks/foreign-keys.md)
 
 ## Todo
 
