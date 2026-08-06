@@ -34,18 +34,22 @@ columnSorting:
 - [custom-emojis](tasks/custom-emojis.md)
 - [voice-activity-sensitivity](tasks/voice-activity-sensitivity.md)
 - [soundboard-cooldown](tasks/soundboard-cooldown.md)
+- [send-audio-messages](tasks/send-audio-messages.md)
+- [fix-message-actions-emoji-reaction-close-on-actions-mouse-hover-leave](tasks/fix-message-actions-emoji-reaction-close-on-actions-mouse-hover-leave.md)
 - [data-export](tasks/data-export.md)
 - [push-to-talk](tasks/push-to-talk.md)
 - [admin-audit-log](tasks/admin-audit-log.md)
 
 ## Todo
 
-## In Progress
+- [allow-playing-video-attachments](tasks/allow-playing-video-attachments.md)
 
-- [arbitrary-file-attachments](tasks/arbitrary-file-attachments.md)
+## In Progress
 
 ## Done
 
+- [allow-playing-audio-attachments](tasks/allow-playing-audio-attachments.md)
+- [arbitrary-file-attachments](tasks/arbitrary-file-attachments.md)
 - [profile-bio](tasks/profile-bio.md)
 - [db-backups](tasks/db-backups.md)
 - [soundboard-volume-control](tasks/soundboard-volume-control.md)
