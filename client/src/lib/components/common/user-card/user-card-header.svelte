@@ -104,7 +104,8 @@
   const bioAtMax = $derived(bioDraft.length >= BIO_MAX_LEN);
 
   function onBioKeydown(e: KeyboardEvent) {
-    if (isRejectedAtLimit(e, bioAtMax)) shakeAtLimit(bioCountEl, appearance.motionReduced);
+    if (isRejectedAtLimit(e, bioAtMax))
+      shakeAtLimit(bioCountEl, appearance.motionReduced);
   }
 
   function handleOpenSettings() {

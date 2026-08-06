@@ -16,7 +16,7 @@ import { httpError } from "../../http/errors.js";
 import { hub } from "../../hub.js";
 import { toMessageView } from "../../views.js";
 import { mainTextChannel } from "../channels/channels.service.js";
-import { deleteImagesOf } from "../images/images.service.js";
+import { deleteAttachmentsOf } from "../attachments/attachments.service.js";
 import { resolveMentions, saveMentions } from "./mentions.js";
 import { emojiOn, reactionsOf } from "./reactions.js";
 
@@ -142,7 +142,7 @@ export function deleteMessage(id: string, user: User) {
   }
 
   db.update(messagesTable).set({ deleted: 1 }).where(eq(messagesTable.id, id)).run();
-  deleteImagesOf(id);
+  deleteAttachmentsOf(id);
   hub.broadcast({ type: ServerEventType.Message_Deleted, id, channelId: msg.channelId });
 }
 

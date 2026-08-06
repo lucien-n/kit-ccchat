@@ -1,9 +1,10 @@
 <script lang="ts">
-  import { api, imageUrl, type MessageImage, type MessageView } from "$lib/api";
+  import { api, attachmentUrl, type MessageAttachment, type MessageView } from "$lib/api";
   import Markdown from "$lib/components/markdown/markdown.svelte";
-  import { attempt } from "$lib/forms";
+  import { apiErrorMessage } from "$lib/forms";
+  import { formatBytes } from "$lib/format";
+  import { isCompressibleImageType, isImageType } from "$lib/image";
   import { isRejectedAtLimit, shakeAtLimit } from "$lib/length";
-  import { prepareImage } from "$lib/image";
   import {
     emojiLabel,
     loadEmoji,
@@ -16,22 +17,41 @@
   import { appearance } from "$lib/stores";
   import { Button } from "&/button";
   import { Textarea } from "&/textarea";
+  import { MAX_ATTACHMENTS_PER_MESSAGE, MESSAGE_MAX_LENGTH } from "@motus/shared";
   import {
-    IMAGE_MIME_TYPES,
-    MAX_IMAGES_PER_MESSAGE,
-    MESSAGE_MAX_LENGTH,
-  } from "@motus/shared";
-  import { Eye, EyeOff, ImagePlus, Reply, Send, X } from "@lucide/svelte";
+    Eye,
+    EyeOff,
+    File as FileIcon,
+    Paperclip,
+    Reply,
+    Send,
+    Sparkles,
+    X,
+  } from "@lucide/svelte";
   import { tick } from "svelte";
+  import { toast } from "svelte-sonner";
   import EmojiPicker from "./emoji-picker.svelte";
 
   interface Props {
     placeholder: string;
     disabled?: boolean;
-    onsend: (text: string, imageIds?: string[]) => boolean;
+    onsend: (text: string, attachmentIds?: string[]) => boolean;
     ontyping?: () => void;
     replyingTo?: MessageView | null;
     oncancelreply?: () => void;
+  }
+
+  /** A file the composer is uploading or has uploaded, before it is bound to a
+   *  sent message. `attachment` is null until the upload finishes; `controller`
+   *  aborts the in-flight request when the chip is removed or its quality toggled.
+   *  The original `file` is kept so a toggle can re-upload it. */
+  interface Pending {
+    key: string;
+    file: File;
+    keepOriginal: boolean;
+    progress: number;
+    attachment: MessageAttachment | null;
+    controller: AbortController | null;
   }
 
   let {
@@ -52,9 +72,10 @@
   let countEl = $state<HTMLElement | null>(null);
   let index = $state<EmojiIndex | null>(null);
   let preview = $state(false);
-  let pending = $state<MessageImage[]>([]);
-  let uploading = $state(false);
+  let pending = $state<Pending[]>([]);
   let fileEl = $state<HTMLInputElement | null>(null);
+
+  const uploading = $derived(pending.some((p) => !p.attachment));
 
   type Suggestion =
     { kind: "emoji"; entry: EmojiEntry } | { kind: "mention"; entry: MentionSuggestion };
@@ -146,26 +167,72 @@
     if (draft.trim()) ontyping?.();
   }
 
-  async function addFiles(files: Iterable<File>) {
-    const room = MAX_IMAGES_PER_MESSAGE - pending.length;
-    const picked = [...files]
-      .filter((f) => IMAGE_MIME_TYPES.includes(f.type))
-      .slice(0, room);
-    if (!picked.length) return;
+  function addFiles(files: Iterable<File>) {
+    const room = MAX_ATTACHMENTS_PER_MESSAGE - pending.length;
+    for (const file of [...files].slice(0, room)) {
+      const key = crypto.randomUUID();
+      pending = [
+        ...pending,
+        {
+          key,
+          file,
+          keepOriginal: false,
+          progress: 0,
+          attachment: null,
+          controller: null,
+        },
+      ];
+      void uploadOne(file, key, false);
+    }
+  }
 
-    uploading = true;
-    await attempt(
-      async () => {
-        const uploaded = await Promise.all(
-          picked.map(
-            async (file) => (await api.images.upload(await prepareImage(file))).image,
-          ),
-        );
-        pending = [...pending, ...uploaded];
-      },
-      { error: "failed to upload image" },
-    );
-    uploading = false;
+  async function uploadOne(file: File, key: string, keepOriginal: boolean) {
+    const controller = new AbortController();
+    patchPending(key, { controller, attachment: null, progress: 0 });
+
+    try {
+      const attachment = await api.attachments.upload(file, {
+        keepOriginal,
+        signal: controller.signal,
+        onProgress: (frac) => {
+          // The bar only renders whole percents; skip ticks that wouldn't move it.
+          const p = pending.find((p) => p.key === key);
+          if (p && Math.round(frac * 100) !== Math.round(p.progress * 100))
+            patchPending(key, { progress: frac });
+        },
+      });
+      // A later toggle or removal may have superseded this upload - ignore its result.
+      const p = pending.find((p) => p.key === key);
+      if (!p || p.controller !== controller) return;
+      patchPending(key, { attachment, controller: null });
+    } catch (e) {
+      // A toggle/removal aborts the request on purpose, so stay silent for that.
+      if (e instanceof DOMException && e.name === "AbortError") return;
+      const p = pending.find((p) => p.key === key);
+      if (p && p.controller === controller) removePending(key);
+      toast.error(apiErrorMessage(e, "failed to upload attachment"));
+    }
+  }
+
+  /** Re-upload an image at the opposite quality, cancelling the in-flight request.
+   *  Only offered for compressible images (animated/other files are always sent
+   *  as-is). */
+  function toggleOriginal(key: string) {
+    const p = pending.find((p) => p.key === key);
+    if (!p) return;
+    p.controller?.abort();
+    const keepOriginal = !p.keepOriginal;
+    patchPending(key, { keepOriginal, attachment: null, progress: 0, controller: null });
+    void uploadOne(p.file, key, keepOriginal);
+  }
+
+  function patchPending(key: string, changes: Partial<Pending>) {
+    pending = pending.map((p) => (p.key === key ? { ...p, ...changes } : p));
+  }
+
+  function removePending(key: string) {
+    pending.find((p) => p.key === key)?.controller?.abort();
+    pending = pending.filter((p) => p.key !== key);
   }
 
   function onpaste(e: ClipboardEvent) {
@@ -185,12 +252,14 @@
   }
 
   function submit() {
+    if (uploading) return; // let in-flight uploads finish before sending
     const text = draft.trim();
-    if (!text && !pending.length) return;
+    const ready = pending.filter((p) => p.attachment);
+    if (!text && !ready.length) return;
     if (
       onsend(
         text,
-        pending.map((p) => p.id),
+        ready.map((p) => p.attachment!.id),
       )
     ) {
       draft = "";
@@ -294,33 +363,71 @@
     </div>
   {/if}
 
-  {#if pending.length || uploading}
+  {#if pending.length}
     <div class="mb-2 flex flex-wrap gap-2">
-      {#each pending as image (image.id)}
+      {#each pending as item (item.key)}
+        {@const file = item.file}
         <div class="relative">
-          <img
-            src={imageUrl(image.id)}
-            alt=""
-            class="h-20 w-20 rounded-xl border object-cover"
-          />
+          {#if item.attachment?.image}
+            <img
+              src={attachmentUrl(item.attachment.id)}
+              alt={file.name}
+              class="h-20 w-20 rounded-xl border object-cover"
+            />
+          {:else if !item.attachment && isImageType(file.type)}
+            <div class="bg-muted/40 h-20 w-20 rounded-xl border"></div>
+          {:else}
+            <div
+              class="bg-muted/40 flex h-20 w-44 flex-col justify-center gap-1 rounded-xl border px-3"
+            >
+              <div class="flex items-center gap-2">
+                <FileIcon class="size-4 shrink-0" />
+                <span class="truncate text-xs font-medium" title={file.name}>
+                  {file.name}
+                </span>
+              </div>
+              <span class="text-muted-foreground text-[10px]">
+                {formatBytes(file.size)}
+              </span>
+            </div>
+          {/if}
+
+          {#if !item.attachment}
+            <div class="bg-background/50 absolute inset-0 flex items-end rounded-xl">
+              <div class="bg-muted mx-1.5 mb-1.5 h-1 flex-1 overflow-hidden rounded-full">
+                <div
+                  class="bg-primary h-full rounded-full transition-[width] duration-150"
+                  style="width:{Math.round(item.progress * 100)}%"
+                ></div>
+              </div>
+            </div>
+          {/if}
+
+          {#if isCompressibleImageType(file.type)}
+            <Button
+              variant={item.keepOriginal ? "default" : "secondary"}
+              size="icon-xs"
+              class="absolute -top-1.5 -left-1.5 rounded-full"
+              title={item.keepOriginal
+                ? "Sending the original. Click to compress and save space"
+                : "Compressed to save space. Click to send the original quality"}
+              onclick={() => toggleOriginal(item.key)}
+            >
+              <Sparkles class="size-3" />
+            </Button>
+          {/if}
+
           <Button
             variant="secondary"
             size="icon-xs"
             class="absolute -top-1.5 -right-1.5 rounded-full"
-            title="Remove image"
-            onclick={() => (pending = pending.filter((p) => p.id !== image.id))}
+            title="Remove attachment"
+            onclick={() => removePending(item.key)}
           >
             <X class="size-3" />
           </Button>
         </div>
       {/each}
-      {#if uploading}
-        <div
-          class="bg-muted/40 text-muted-foreground flex h-20 w-20 items-center justify-center rounded-xl border text-xs"
-        >
-          Uploading
-        </div>
-      {/if}
     </div>
   {/if}
 
@@ -364,22 +471,15 @@
       onfocus={ensureIndex}
       onblur={close}
     />
-    <input
-      bind:this={fileEl}
-      type="file"
-      accept={IMAGE_MIME_TYPES.join(",")}
-      multiple
-      class="hidden"
-      onchange={onpick}
-    />
+    <input bind:this={fileEl} type="file" multiple class="hidden" onchange={onpick} />
     <Button
       variant="ghost"
       size="icon"
-      disabled={disabled || pending.length >= MAX_IMAGES_PER_MESSAGE}
-      title="Attach images"
+      disabled={disabled || pending.length >= MAX_ATTACHMENTS_PER_MESSAGE}
+      title="Attach files"
       onclick={() => fileEl?.click()}
     >
-      <ImagePlus class="size-4" />
+      <Paperclip class="size-4" />
     </Button>
     <Button
       variant="ghost"
@@ -391,7 +491,12 @@
       {#if preview}<EyeOff class="size-4" />{:else}<Eye class="size-4" />{/if}
     </Button>
     <EmojiPicker {disabled} onpick={insertAtCaret} />
-    <Button size="icon" {disabled} onclick={submit} title="Send">
+    <Button
+      size="icon"
+      disabled={disabled || uploading}
+      onclick={submit}
+      title={uploading ? "Waiting for uploads…" : "Send"}
+    >
       <Send class="size-4" />
     </Button>
 

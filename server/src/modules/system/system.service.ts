@@ -3,11 +3,11 @@ import { readdir, stat, statfs } from "node:fs/promises";
 import os from "node:os";
 import { join } from "node:path";
 import {
+  ATTACHMENTS_DIR,
   AVATARS_DIR,
   BACKUPS_DIR,
   DATA_DIR,
   DB_FILE,
-  IMAGES_DIR,
   SOUNDS_DIR,
 } from "../../env.js";
 import { backupStatus } from "./backups.service.js";
@@ -64,7 +64,7 @@ async function cpuPctOnce(sampleMs = 200): Promise<number> {
  *  the journal alone can outgrow it between checkpoints. */
 const DISK_ITEM_PATH_MAP: Record<DiskItem, string[]> = {
   [DiskItem.AvatarDir]: [AVATARS_DIR],
-  [DiskItem.ImagesDir]: [IMAGES_DIR],
+  [DiskItem.AttachmentsDir]: [ATTACHMENTS_DIR],
   [DiskItem.SoundsDir]: [SOUNDS_DIR],
   [DiskItem.DatabaseFile]: [DB_FILE, `${DB_FILE}-wal`, `${DB_FILE}-shm`],
   [DiskItem.BackupsDir]: [BACKUPS_DIR],

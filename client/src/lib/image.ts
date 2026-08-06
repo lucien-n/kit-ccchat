@@ -1,19 +1,27 @@
 import {
   IMAGE_MAX_DIMENSION,
+  IMAGE_MIME_TYPES,
   MAX_AVATAR_IMAGE_BYTES,
   MAX_BANNER_IMAGE_BYTES,
-  MAX_MESSAGE_IMAGE_BYTES,
 } from "@motus/shared";
-
-export interface PreparedImage {
-  image: string;
-  width: number;
-  height: number;
-}
 
 /** Formats we upload untouched. Redrawing one onto a canvas keeps a single
  *  frame, so a GIF would arrive as a still and a WebP would lose its alpha. */
 const PASSTHROUGH = new Set(["image/gif", "image/webp"]);
+
+/** The single client-side definition of "this is an image", kept in step with the
+ *  server's `sniffMime` gate. Decides whether an upload runs the image prepare path
+ *  and whether the composer renders an image chip rather than a file chip. */
+export function isImageType(type: string): boolean {
+  return IMAGE_MIME_TYPES.includes(type);
+}
+
+/** Whether prepareImageUpload would actually shrink this type rather than upload
+ *  it as-is. Animated/alpha formats always pass through, so a "keep original"
+ *  toggle is meaningless for them - the composer only offers it for the rest. */
+export function isCompressibleImageType(type: string): boolean {
+  return isImageType(type) && !PASSTHROUGH.has(type);
+}
 
 function tooLargeError(file: File, maxBytes: number): Error {
   const kind = file.type === "image/gif" ? "gif" : "image";
@@ -50,17 +58,40 @@ export function fileToDataUrl(file: File): Promise<string> {
   });
 }
 
-export async function prepareImage(file: File): Promise<PreparedImage> {
+export interface PreparedImageUpload {
+  blob: Blob;
+  mime: string;
+  width: number;
+  height: number;
+}
+
+function canvasToBlob(canvas: HTMLCanvasElement, type: string): Promise<Blob> {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob(
+      (blob) => (blob ? resolve(blob) : reject(new Error("could not encode image"))),
+      type,
+      0.85,
+    );
+  });
+}
+
+/** Turn an image File into the resized bytes we upload as an attachment, plus its
+ *  final dimensions. Animated formats (see PASSTHROUGH) upload untouched so they
+ *  keep playing, and `keepOriginal` opts any image out of the compress pass;
+ *  everything else is redrawn onto a capped canvas. Returns a Blob rather than a
+ *  data URL because attachments are streamed, not base64-inlined. */
+export async function prepareImageUpload(
+  file: File,
+  keepOriginal = false,
+): Promise<PreparedImageUpload> {
   const { el, url } = await measure(file);
   const { width: naturalWidth, height: naturalHeight } = el;
   URL.revokeObjectURL(url);
 
-  if (PASSTHROUGH.has(file.type)) {
-    return {
-      image: await passthroughDataUrl(file, MAX_MESSAGE_IMAGE_BYTES),
-      width: naturalWidth,
-      height: naturalHeight,
-    };
+  if (keepOriginal || PASSTHROUGH.has(file.type)) {
+    // Uploaded untouched - the sender opted out, or redrawing would flatten an
+    // animation. The only ceiling is MAX_ATTACHMENT_BYTES the upload enforces.
+    return { blob: file, mime: file.type, width: naturalWidth, height: naturalHeight };
   }
 
   const scale = Math.min(1, IMAGE_MAX_DIMENSION / Math.max(naturalWidth, naturalHeight));
@@ -74,8 +105,8 @@ export async function prepareImage(file: File): Promise<PreparedImage> {
   if (!ctx) throw new Error("canvas unavailable");
 
   ctx.drawImage(el, 0, 0, width, height);
-  const type = file.type === "image/png" ? "image/png" : "image/jpeg";
-  return { image: canvas.toDataURL(type, 0.85), width, height };
+  const mime = file.type === "image/png" ? "image/png" : "image/jpeg";
+  return { blob: await canvasToBlob(canvas, mime), mime, width, height };
 }
 
 /** Load a File, center-crop to a square, resize to `size`×`size`, and return a

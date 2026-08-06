@@ -1,7 +1,7 @@
+import { attachments } from "./attachments";
 import { auth } from "./auth";
 import { channels } from "./channels";
 import { community } from "./community";
-import { images } from "./images";
 import { invites } from "./invites";
 import { messages } from "./messages";
 import { moderation } from "./moderation";
@@ -13,10 +13,10 @@ import { users } from "./users";
 import { voice } from "./voice";
 
 export const api = {
+  attachments,
   auth,
   channels,
   community,
-  images,
   invites,
   messages,
   moderation,
@@ -29,7 +29,7 @@ export const api = {
 };
 
 export { communityIconUrl } from "./community";
-export { imageUrl } from "./images";
+export { attachmentUrl } from "./attachments";
 export { soundUrl } from "./soundboard";
 export { apiBase, ApiError } from "./http";
 export { ModAction, type ModOptions } from "./moderation";
@@ -41,7 +41,7 @@ export type {
   Channel,
   Invite,
   Member,
-  MessageImage,
+  MessageAttachment,
   MessageView,
   ModeratedMember,
   Role,

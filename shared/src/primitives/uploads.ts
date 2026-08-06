@@ -4,11 +4,7 @@ import { z } from "zod";
 export const dataUrl = z.string().min(1);
 export const imageDataUrl = dataUrl;
 
-export const MAX_IMAGES_PER_MESSAGE = 4;
-
 export const IMAGE_MAX_DIMENSION = 1600;
-
-export const MAX_MESSAGE_IMAGE_BYTES = 8_000_000;
 
 export const MAX_AVATAR_IMAGE_BYTES = 2_000_000;
 
@@ -20,6 +16,22 @@ export const IMAGE_MIME_TYPES: readonly string[] = [
   "image/webp",
   "image/gif",
 ];
+
+// ── Arbitrary file attachments ───────────────────────────────────────────────
+// Images are a subset of attachments: an image file keeps its resized bytes and
+// dimensions and renders inline, everything else is a download.
+
+export const MAX_ATTACHMENTS_PER_MESSAGE = 4;
+
+/** Hard ceiling on a single attachment. Uploads are streamed to disk, so this
+ *  guards the disk rather than memory; the client rejects earlier for feedback. */
+export const MAX_ATTACHMENT_BYTES = 2_000_000_000; // 2 GB
+
+// The TTL policy (size threshold + lifetime) is server-only and operator-tunable;
+// it lives in the server's env.ts, not here - the client only ever displays the
+// server-computed expiresAt.
+
+export const MAX_ATTACHMENT_FILENAME = 255;
 
 export const MAX_SOUNDBOARD_BYTES = 2_000_000;
 export const MAX_SOUNDBOARD_DURATION_MS = 10_000;

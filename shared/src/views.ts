@@ -102,12 +102,20 @@ export const replyRef = z.object({
 });
 export type ReplyRef = z.infer<typeof replyRef>;
 
-export const messageImage = z.object({
+/** A file hung off a message. Images (`image: true`) carry their pixel
+ *  dimensions and render inline; everything else is a download card. `expiresAt`
+ *  is set only on large files the sweeper will eventually reclaim. */
+export const messageAttachment = z.object({
   id: z.uuid(),
-  width: z.number(),
-  height: z.number(),
+  filename: z.string(),
+  sizeBytes: z.number(),
+  mime: z.string(),
+  image: z.boolean(),
+  width: z.number().nullable(),
+  height: z.number().nullable(),
+  expiresAt: z.number().nullable(),
 });
-export type MessageImage = z.infer<typeof messageImage>;
+export type MessageAttachment = z.infer<typeof messageAttachment>;
 
 export const sound = z.object({
   id: z.uuid(),
@@ -139,7 +147,7 @@ export const messageView = z.object({
   mentions: z.array(z.string()),
   mentionsEveryone: z.boolean(),
   reactions: z.array(reaction),
-  images: z.array(messageImage),
+  attachments: z.array(messageAttachment),
 });
 export type MessageView = z.infer<typeof messageView>;
 
@@ -177,7 +185,7 @@ export type ModeratedMember = z.infer<typeof moderatedMember>;
 
 export enum DiskItem {
   AvatarDir = "AvatarDir",
-  ImagesDir = "ImagesDir",
+  AttachmentsDir = "AttachmentsDir",
   SoundsDir = "SoundsDir",
   DatabaseFile = "DatabaseFile",
   BackupsDir = "BackupsDir",

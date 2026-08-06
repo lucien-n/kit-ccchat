@@ -160,13 +160,13 @@ class Messages {
     channelId: string,
     content: string,
     replyToId?: string,
-    imageIds?: string[],
+    attachmentIds?: string[],
   ): boolean {
     return realtime.send({
       type: ClientEventType.Message_Create,
       channelId,
       content,
-      imageIds,
+      attachmentIds,
       replyToId,
     });
   }

@@ -19,6 +19,15 @@ if (process.env.NODE_ENV !== "test") {
   }
 }
 
+/** Parse a numeric env var, falling back when it is unset, blank, or malformed.
+ *  Bare `Number("60m")` yields NaN, which slips past `<= 0` guards and poisons
+ *  timers (`setInterval(fn, NaN)` busy-loops), so every knob goes through here. */
+function numEnv(value: string | undefined, fallback: number): number {
+  if (value === undefined || value.trim() === "") return fallback;
+  const n = Number(value);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 export const PORT = Number(process.env.PORT ?? 8080);
 export const DATA_DIR = resolve(process.env.DATA_DIR ?? "./data");
 export const CLIENT_DIR = resolve(process.env.CLIENT_DIR ?? "../client/build");
@@ -27,9 +36,31 @@ export const CLIENT_DIR = resolve(process.env.CLIENT_DIR ?? "../client/build");
  *  usage panel has to measure what the other modules own. */
 export const AVATARS_DIR = join(DATA_DIR, "avatars");
 export const BANNERS_DIR = join(DATA_DIR, "banners");
-export const IMAGES_DIR = join(DATA_DIR, "images");
 export const SOUNDS_DIR = join(DATA_DIR, "sounds");
 export const BACKUPS_DIR = join(DATA_DIR, "backups");
+
+/** Where message attachments (big files included) are written. Kept separate and
+ *  independently configurable so a self-hoster can point it at a large external
+ *  disk while the database and small assets stay on the primary volume. Resolved
+ *  as an absolute path so an external mount like /mnt/ssd/motus works. */
+export const ATTACHMENTS_DIR = resolve(
+  process.env.ATTACHMENTS_DIR ?? join(DATA_DIR, "attachments"),
+);
+
+/** Files larger than this (bytes) get an expiry; smaller ones are kept forever.
+ *  Override with ATTACHMENT_TTL_THRESHOLD_MB. */
+export const ATTACHMENT_TTL_THRESHOLD_BYTES =
+  numEnv(process.env.ATTACHMENT_TTL_THRESHOLD_MB, 25) * 1_000_000;
+
+/** How long a large attachment lives before the sweeper reclaims it. 0 disables
+ *  expiry (everything is kept regardless of size). */
+export const ATTACHMENT_TTL_DAYS = numEnv(process.env.ATTACHMENT_TTL_DAYS, 30);
+
+/** How often the sweeper scans for expired attachments, in minutes. */
+export const ATTACHMENT_SWEEP_INTERVAL_MIN = numEnv(
+  process.env.ATTACHMENT_SWEEP_INTERVAL_MIN,
+  60,
+);
 export const COMMUNITY_ICON_FILE = join(DATA_DIR, "community-icon");
 export const DB_FILE = join(DATA_DIR, "motus.sqlite");
 

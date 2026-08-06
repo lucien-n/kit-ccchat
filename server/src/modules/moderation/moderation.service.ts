@@ -13,7 +13,7 @@ import { httpError } from "../../http/errors.js";
 import { hub } from "../../hub.js";
 import { authLevel } from "../../permissions.js";
 import { toModeratedMember } from "../../views.js";
-import { deleteImagesOf } from "../images/images.service.js";
+import { deleteAttachmentsOf } from "../attachments/attachments.service.js";
 import { reactionsOf } from "../messages/reactions.js";
 import { setMemberAudioMuted } from "../voice/voice.service.js";
 
@@ -95,7 +95,7 @@ function purgeMessages(userId: string, cutoff: number) {
     .run();
 
   for (const { id, channelId } of rows) {
-    deleteImagesOf(id);
+    deleteAttachmentsOf(id);
     hub.broadcast({ type: ServerEventType.Message_Deleted, id, channelId });
   }
 }

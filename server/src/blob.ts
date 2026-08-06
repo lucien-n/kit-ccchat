@@ -6,6 +6,13 @@ export type SniffMime = (buf: Buffer) => string | null;
 
 export type StoredBlob = { bytes: Uint8Array<ArrayBuffer>; mime: string };
 
+/** Absolute path for `id` inside `dir`, or null if the resolved path would escape
+ *  `dir`. The single traversal guard shared by every on-disk store. */
+export function safePathOf(dir: string, id: string): string | null {
+  const path = resolve(dir, id);
+  return dirname(path) === dir ? path : null;
+}
+
 /** The data: mime is only the uploader's claim; the sniffed bytes are the gate. */
 export function decodeDataUrl(
   data: string,
@@ -34,11 +41,7 @@ export function readBlobFile(path: string, sniff: SniffMime): StoredBlob | null 
 export function blobStore(dir: string, sniff: SniffMime) {
   mkdirSync(dir, { recursive: true });
 
-  // null unless the resolved path stays directly inside dir: blocks id traversal.
-  const pathOf = (id: string): string | null => {
-    const path = resolve(dir, id);
-    return dirname(path) === dir ? path : null;
-  };
+  const pathOf = (id: string): string | null => safePathOf(dir, id);
 
   return {
     read(id: string): StoredBlob {
