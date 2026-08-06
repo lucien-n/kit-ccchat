@@ -40,7 +40,10 @@
           class="size-2 shrink-0 rounded-full"
           style="background:{match.entry.color ?? 'var(--muted-foreground)'}"
         ></span>
-        <span class="truncate font-medium" style={appearance.nameStyle(match.entry.color)}>
+        <span
+          class="truncate font-medium"
+          style={appearance.nameStyle(match.entry.color)}
+        >
           {match.entry.label}
         </span>
         <span class="text-muted-foreground ml-auto truncate text-xs">
