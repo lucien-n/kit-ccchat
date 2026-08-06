@@ -25,6 +25,6 @@ export function isRejectedAtLimit(e: KeyboardEvent, atMax: boolean): boolean {
   const el = e.currentTarget as HTMLTextAreaElement | HTMLInputElement;
   const printable = e.key.length === 1 && !e.ctrlKey && !e.metaKey;
   const replacingSelection = el.selectionStart !== el.selectionEnd;
-  
+
   return printable && !replacingSelection;
 }

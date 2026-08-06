@@ -16,7 +16,7 @@ import { findById } from "./db/query.js";
 import { channelsTable, messagesTable, usersTable } from "./db/schema";
 import { hub, type Client } from "./hub.js";
 import { authLevel } from "./permissions.js";
-import { attachImages } from "./modules/images/images.service.js";
+import { attachMessage } from "./modules/attachments/attachments.service.js";
 import { resolveMentions, saveMentions } from "./modules/messages/mentions.js";
 import { toMessageView } from "./views.js";
 
@@ -217,8 +217,8 @@ function handleCreate(
   }
 
   const { channelId, content } = msg;
-  const imageIds = msg.imageIds ?? [];
-  if (!content && !imageIds.length) return;
+  const attachmentIds = msg.attachmentIds ?? [];
+  if (!content && !attachmentIds.length) return;
 
   const channel = findById(channelsTable, channelId);
   if (!channel || channel.type !== ChannelType.Text) return;
@@ -238,6 +238,6 @@ function handleCreate(
   };
   db.insert(messagesTable).values(row).run();
   saveMentions(row.id, userIds);
-  attachImages(row.id, client.userId, imageIds);
+  attachMessage(row.id, client.userId, attachmentIds);
   hub.broadcast({ type: ServerEventType.Message_New, message: toMessageView(row) });
 }

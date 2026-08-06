@@ -50,10 +50,19 @@ services:
       # Automatic database backups into data/backups (0 hours turns them off).
       BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
       BACKUP_RETENTION: ${BACKUP_RETENTION:-7}
+      # Message attachments. Defaults inside /app/data so it just works; point it
+      # at the mounted external disk below to keep big files off the main volume.
+      ATTACHMENTS_DIR: ${ATTACHMENTS_DIR:-/app/data/attachments}
+      ATTACHMENT_TTL_THRESHOLD_MB: ${ATTACHMENT_TTL_THRESHOLD_MB:-25}
+      ATTACHMENT_TTL_DAYS: ${ATTACHMENT_TTL_DAYS:-30}
+      ATTACHMENT_SWEEP_INTERVAL_MIN: ${ATTACHMENT_SWEEP_INTERVAL_MIN:-60}
     volumes:
       # Your entire community (accounts, channels, messages) is this one folder.
       # Back it up and you have backed up everything.
       - ./data:/app/data
+      # To store attachments on an external disk, mount it here and set
+      # ATTACHMENTS_DIR=/app/attachments in .env:
+      # - /mnt/ssd/motus/attachments:/app/attachments
     depends_on:
       - livekit
 

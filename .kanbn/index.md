@@ -30,10 +30,10 @@ columnSorting:
 - [session-device-management](tasks/session-device-management.md)
 - [two-factor-auth](tasks/two-factor-auth.md)
 - [pinned-messages](tasks/pinned-messages.md)
-- [arbitrary-file-attachments](tasks/arbitrary-file-attachments.md)
 - [link-embeds](tasks/link-embeds.md)
 - [custom-emojis](tasks/custom-emojis.md)
 - [voice-activity-sensitivity](tasks/voice-activity-sensitivity.md)
+- [soundboard-cooldown](tasks/soundboard-cooldown.md)
 - [data-export](tasks/data-export.md)
 - [push-to-talk](tasks/push-to-talk.md)
 - [admin-audit-log](tasks/admin-audit-log.md)
@@ -41,6 +41,8 @@ columnSorting:
 ## Todo
 
 ## In Progress
+
+- [arbitrary-file-attachments](tasks/arbitrary-file-attachments.md)
 
 ## Done
 

@@ -16,7 +16,7 @@
   import { elasticInOut } from "svelte/easing";
   import { scale } from "svelte/transition";
   import MessageActions from "./message-actions.svelte";
-  import MessageImages from "./message-images.svelte";
+  import MessageAttachments from "./message-attachments.svelte";
   import MessageReactions from "./message-reactions.svelte";
 
   interface Props {
@@ -185,7 +185,7 @@
         {/if}
       </div>
 
-      <MessageImages {message} />
+      <MessageAttachments {message} />
 
       <MessageReactions {message} />
     </div>

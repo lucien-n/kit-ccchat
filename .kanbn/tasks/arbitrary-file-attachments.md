@@ -1,9 +1,10 @@
 ---
 created: 2026-08-05T18:36:37.000Z
-updated: 2026-08-05T18:36:37.000Z
+updated: 2026-08-06T12:37:38.564Z
 assigned: ""
 progress: 0
 tags: []
+started: 2026-08-06T12:37:38.564Z
 ---
 
 # arbitrary file attachments
@@ -20,3 +21,7 @@ Images keep their current rich inline preview; everything else shows as a chip.
   column: Backlog
   fromProgress: 0
   toProgress: 0
+- type: moved
+  date: 2026-08-06T12:37:38.564Z
+  fromColumn: Backlog
+  toColumn: In Progress

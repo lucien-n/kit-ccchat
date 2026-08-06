@@ -1,5 +1,9 @@
 import z from "zod";
-import { channelId, MAX_IMAGES_PER_MESSAGE, MESSAGE_MAX_LENGTH } from "../primitives";
+import {
+  channelId,
+  MAX_ATTACHMENTS_PER_MESSAGE,
+  MESSAGE_MAX_LENGTH,
+} from "../primitives";
 
 export enum ClientEventType {
   Message_Create = "message_create",
@@ -18,7 +22,7 @@ export const clientEvent = z.discriminatedUnion("type", [
     type: z.literal(ClientEventType.Message_Create),
     channelId,
     content: z.string().trim().max(MESSAGE_MAX_LENGTH),
-    imageIds: z.array(z.uuid()).max(MAX_IMAGES_PER_MESSAGE).optional(),
+    attachmentIds: z.array(z.uuid()).max(MAX_ATTACHMENTS_PER_MESSAGE).optional(),
     replyToId: z.string().min(1).optional(),
   }),
   z.object({
