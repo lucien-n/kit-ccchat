@@ -18,6 +18,10 @@ columnSorting:
 
 ## Backlog
 
+- [breakdown-roles-panel](tasks/breakdown-roles-panel.md)
+- [breakdown-user-card-header](tasks/breakdown-user-card-header.md)
+- [breakdown-image-gallery](tasks/breakdown-image-gallery.md)
+- [breakdown-system-panel](tasks/breakdown-system-panel.md)
 - [mobile-app](tasks/mobile-app.md)
 - [backend-validation-cleaning](tasks/backend-validation-cleaning.md)
 - [push-notifications-for-messages](tasks/push-notifications-for-messages.md)
