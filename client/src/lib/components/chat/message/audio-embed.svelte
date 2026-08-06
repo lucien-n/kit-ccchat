@@ -126,7 +126,9 @@
         onpointercancel={onScrubEnd}
         onkeydown={onKey}
       >
-        <div class="bg-muted-foreground/25 absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full">
+        <div
+          class="bg-muted-foreground/25 absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full"
+        >
           <div
             class="bg-primary h-full rounded-full"
             style={`width:${fraction * 100}%`}
@@ -135,7 +137,9 @@
         <div
           class={cn(
             "bg-primary absolute top-1/2 size-3 -translate-x-1/2 -translate-y-1/2 rounded-full shadow-sm transition-opacity",
-            scrubbing ? "opacity-100" : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100",
+            scrubbing
+              ? "opacity-100"
+              : "opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100",
           )}
           style={`left:${fraction * 100}%`}
         ></div>
