@@ -34,6 +34,7 @@ columnSorting:
 - [custom-emojis](tasks/custom-emojis.md)
 - [voice-activity-sensitivity](tasks/voice-activity-sensitivity.md)
 - [soundboard-cooldown](tasks/soundboard-cooldown.md)
+- [send-audio-messages](tasks/send-audio-messages.md)
 - [data-export](tasks/data-export.md)
 - [push-to-talk](tasks/push-to-talk.md)
 - [admin-audit-log](tasks/admin-audit-log.md)
@@ -42,10 +43,11 @@ columnSorting:
 
 ## In Progress
 
-- [arbitrary-file-attachments](tasks/arbitrary-file-attachments.md)
+- [allow-playing-audio-attachments](tasks/allow-playing-audio-attachments.md)
 
 ## Done
 
+- [arbitrary-file-attachments](tasks/arbitrary-file-attachments.md)
 - [profile-bio](tasks/profile-bio.md)
 - [db-backups](tasks/db-backups.md)
 - [soundboard-volume-control](tasks/soundboard-volume-control.md)
