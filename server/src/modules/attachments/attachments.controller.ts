@@ -1,4 +1,4 @@
-import type { uploadAttachmentQuery } from "@motus/shared";
+import { isAudioType, type uploadAttachmentQuery } from "@motus/shared";
 import { createReadStream } from "node:fs";
 import { stat } from "node:fs/promises";
 import { Readable } from "node:stream";
@@ -48,7 +48,8 @@ function parseRange(header: string | undefined, size: number): Range | null | "i
 /** Streamed from disk with Range support so large files resume and seek without
  *  the server holding the whole thing in memory. Served without auth (a media tag
  *  or a download link can't send a bearer token) but only by an unguessable id,
- *  and always as a forced download unless the bytes really are an image. */
+ *  and as a forced download unless the bytes are a type that's both safe to serve
+ *  inline and useful played there - images, and audio for the inline player. */
 export async function download(c: AppContext<"/:id">) {
   const found = attachmentsService.readAttachment(c.req.param("id"));
   if (!found) return httpError(404, "not found");
@@ -71,7 +72,9 @@ export async function download(c: AppContext<"/:id">) {
     return c.body(null, 416);
   }
 
-  const inline = row.image === 1;
+  // Audio subtypes are non-executable, so serving them inline under their own mime
+  // is as safe as an image and lets the browser's media element decode and seek.
+  const inline = row.image === 1 || isAudioType(row.mime);
   const disposition = `${inline ? "inline" : "attachment"}; filename*=UTF-8''${encodeURIComponent(
     row.filename,
   )}`;

@@ -43,3 +43,12 @@ export const SOUNDBOARD_MIME_TYPES: readonly string[] = [
   "audio/wav",
   "audio/webm",
 ];
+
+/** A message audio attachment: rendered inline with a player, and served inline
+ *  by the API under its own mime (safe - audio subtypes are non-executable).
+ *  Deliberately broad: any `audio/*` qualifies, unlike the strict soundboard
+ *  allowlist above. Shared so the client's partition and the server's inline
+ *  decision can't drift. */
+export function isAudioType(mime: string): boolean {
+  return mime.startsWith("audio/");
+}

@@ -41,12 +41,13 @@ columnSorting:
 
 ## Todo
 
-## In Progress
+- [allow-playing-video-attachments](tasks/allow-playing-video-attachments.md)
 
-- [allow-playing-audio-attachments](tasks/allow-playing-audio-attachments.md)
+## In Progress
 
 ## Done
 
+- [allow-playing-audio-attachments](tasks/allow-playing-audio-attachments.md)
 - [arbitrary-file-attachments](tasks/arbitrary-file-attachments.md)
 - [profile-bio](tasks/profile-bio.md)
 - [db-backups](tasks/db-backups.md)

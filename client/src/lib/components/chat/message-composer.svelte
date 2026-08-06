@@ -17,7 +17,11 @@
   import { appearance } from "$lib/stores";
   import { Button } from "&/button";
   import { Textarea } from "&/textarea";
-  import { MAX_ATTACHMENTS_PER_MESSAGE, MESSAGE_MAX_LENGTH } from "@motus/shared";
+  import {
+    isAudioType,
+    MAX_ATTACHMENTS_PER_MESSAGE,
+    MESSAGE_MAX_LENGTH,
+  } from "@motus/shared";
   import {
     Eye,
     EyeOff,
@@ -31,6 +35,7 @@
   import { tick } from "svelte";
   import { toast } from "svelte-sonner";
   import EmojiPicker from "./emoji-picker.svelte";
+  import AudioEmbed from "./message/audio-embed.svelte";
 
   interface Props {
     placeholder: string;
@@ -374,6 +379,8 @@
               alt={file.name}
               class="h-20 w-20 rounded-xl border object-cover"
             />
+          {:else if item.attachment && isAudioType(item.attachment.mime)}
+            <AudioEmbed attachment={item.attachment} compact />
           {:else if !item.attachment && isImageType(file.type)}
             <div class="bg-muted/40 h-20 w-20 rounded-xl border"></div>
           {:else}

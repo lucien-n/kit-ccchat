@@ -24,6 +24,17 @@ export function formatRelative(ms: number): string {
   return deltaSec < 0 ? `${span} ago` : `in ${span}`;
 }
 
+/** A media position as a clock: "1:05", growing to "1:02:03" past the hour. Used
+ *  by inline media players for the current-time / duration readout and scrub. */
+export function formatTimecode(seconds: number): string {
+  const s = Math.max(0, Math.floor(Number.isFinite(seconds) ? seconds : 0));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const r = s % 60;
+  const mm = h ? String(m).padStart(2, "0") : String(m);
+  return `${h ? `${h}:` : ""}${mm}:${String(r).padStart(2, "0")}`;
+}
+
 export function formatDuration(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
   const parts: string[] = [];
