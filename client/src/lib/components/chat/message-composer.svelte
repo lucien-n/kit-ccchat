@@ -2,6 +2,7 @@
   import { api, imageUrl, type MessageImage, type MessageView } from "$lib/api";
   import Markdown from "$lib/components/markdown/markdown.svelte";
   import { attempt } from "$lib/forms";
+  import { isRejectedAtLimit, shakeAtLimit } from "$lib/length";
   import { prepareImage } from "$lib/image";
   import {
     emojiLabel,
@@ -48,6 +49,7 @@
 
   let draft = $state("");
   let el = $state<HTMLTextAreaElement | null>(null);
+  let countEl = $state<HTMLElement | null>(null);
   let index = $state<EmojiIndex | null>(null);
   let preview = $state(false);
   let pending = $state<MessageImage[]>([]);
@@ -198,6 +200,9 @@
   }
 
   function onkeydown(e: KeyboardEvent) {
+    if (isRejectedAtLimit(e, remaining <= 0))
+      shakeAtLimit(countEl, appearance.motionReduced);
+
     if (open) {
       if (e.key === "ArrowDown") {
         e.preventDefault();
@@ -340,18 +345,8 @@
     </div>
   {/if}
 
-  {#if showCount}
-    <div
-      class="text-muted-foreground absolute -top-1 right-4 text-xs sm:right-6"
-      class:text-destructive={remaining <= 0}
-      aria-live="polite"
-    >
-      {remaining}
-    </div>
-  {/if}
-
   <div
-    class="bg-input/50 focus-within:border-ring focus-within:ring-ring/30 flex items-end gap-0.5 rounded-2xl border border-transparent p-1 transition-[color,box-shadow] duration-200 focus-within:ring-3"
+    class="bg-input/50 focus-within:border-ring focus-within:ring-ring/30 relative flex items-start gap-0.5 rounded-2xl border border-transparent p-1 transition-[color,box-shadow] duration-200 focus-within:ring-3"
   >
     <Textarea
       bind:ref={el}
@@ -399,5 +394,18 @@
     <Button size="icon" {disabled} onclick={submit} title="Send">
       <Send class="size-4" />
     </Button>
+
+    {#if showCount}
+      <div
+        bind:this={countEl}
+        class={[
+          "pointer-events-none absolute right-3 bottom-1.5 text-xs tabular-nums",
+          remaining <= 0 ? "text-destructive" : "text-muted-foreground",
+        ]}
+        aria-live="polite"
+      >
+        {remaining}
+      </div>
+    {/if}
   </div>
 </div>

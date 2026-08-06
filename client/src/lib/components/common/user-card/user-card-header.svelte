@@ -3,6 +3,7 @@
   import { refreshMemberColors } from "$lib/app";
   import { getUserContext } from "$lib/context/user.svelte";
   import { apiErrorMessage, attempt } from "$lib/forms";
+  import { isRejectedAtLimit, shakeAtLimit } from "$lib/length";
   import { resizeBanner, resizeImage } from "$lib/image";
   import { appearance, session, ui } from "$lib/stores";
   import { Button } from "&/button";
@@ -102,29 +103,8 @@
   let bioCountEl: HTMLElement | null = $state(null);
   const bioAtMax = $derived(bioDraft.length >= BIO_MAX_LEN);
 
-  function shakeBio() {
-    if (appearance.motionReduced) return;
-    bioCountEl?.animate(
-      [
-        { transform: "translateX(0)" },
-        { transform: "translateX(-4px)" },
-        { transform: "translateX(4px)" },
-        { transform: "translateX(-3px)" },
-        { transform: "translateX(3px)" },
-        { transform: "translateX(0)" },
-      ],
-      { duration: 300, easing: "ease-in-out" },
-    );
-  }
-
-  // maxlength silently swallows the keystroke at the cap; the shake is the only
-  // signal the character didn't land. Fires only for keys that would actually
-  // add one - not navigation, shortcuts, or typing over a selection.
   function onBioKeydown(e: KeyboardEvent) {
-    const el = e.currentTarget as HTMLTextAreaElement;
-    const printable = e.key.length === 1 && !e.ctrlKey && !e.metaKey;
-    const replacingSelection = el.selectionStart !== el.selectionEnd;
-    if (bioAtMax && printable && !replacingSelection) shakeBio();
+    if (isRejectedAtLimit(e, bioAtMax)) shakeAtLimit(bioCountEl, appearance.motionReduced);
   }
 
   function handleOpenSettings() {
