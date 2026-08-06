@@ -8,7 +8,7 @@
   import { elasticOut } from "svelte/easing";
   import { fly } from "$lib/motion";
   import ChatHeader from "./chat-header.svelte";
-  import MessageComposer from "./message-composer.svelte";
+  import { MessageComposer } from "./message-composer";
   import MessageList from "./message-list.svelte";
   import TypingIndicator from "./typing-indicator.svelte";
 
