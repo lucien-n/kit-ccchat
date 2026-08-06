@@ -4,7 +4,6 @@
   import { apiErrorMessage, fail, setError, setMessage, spaForm } from "$lib/forms";
   import * as Card from "&/card";
   import * as Form from "&/form";
-  import { Input } from "&/input";
   import { registerBody } from "@motus/shared";
   import { untrack } from "svelte";
 
@@ -52,22 +51,17 @@
       autocomplete="username"
     />
 
-    <Form.Field {form} name="displayName">
-      <Form.Control>
-        {#snippet children({ props })}
-          <Form.Label>
-            Display name
-            <span class="text-muted-foreground font-normal">(optional)</span>
-          </Form.Label>
-          <Input
-            {...props}
-            bind:value={$formData.displayName}
-            placeholder="how others see you"
-          />
-        {/snippet}
-      </Form.Control>
-      <Form.FieldErrors />
-    </Form.Field>
+    <TextField
+      {form}
+      name="displayName"
+      bind:value={$formData.displayName}
+      placeholder="how others see you"
+    >
+      {#snippet label()}
+        Display name
+        <span class="text-muted-foreground font-normal">(optional)</span>
+      {/snippet}
+    </TextField>
 
     <TextField
       {form}
