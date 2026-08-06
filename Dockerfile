@@ -42,7 +42,7 @@ WORKDIR /app
 
 COPY --from=build /app/node_modules ./node_modules
 COPY --from=build /app/package.json ./package.json
-# node_modules/@ccchat/shared is a workspace symlink to ../shared, so the real
+# node_modules/@motus/shared is a workspace symlink to ../shared, so the real
 # directory has to come along or every import of it dangles at runtime.
 COPY --from=build /app/shared ./shared
 COPY --from=build /app/server ./server

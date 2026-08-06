@@ -3,7 +3,7 @@
   import { UserCard } from "$lib/components/common/user-card";
   import { byRank } from "$lib/members";
   import { members, presence } from "$lib/stores";
-  import type { Member } from "@ccchat/shared";
+  import type { Member } from "@motus/shared";
   import { onMount } from "svelte";
   import { PresenceGroup } from ".";
   import { SvelteMap } from "svelte/reactivity";

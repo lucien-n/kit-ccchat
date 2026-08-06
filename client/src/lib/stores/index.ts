@@ -16,7 +16,7 @@ export * from "./chat/messages.svelte";
 export * from "./chat/search.svelte";
 export * from "./chat/typing.svelte";
 
-export * from "./voice/soundboard.svelte";
+export * from "./voice/soundboard/soundboard.svelte";
 export * from "./voice/voice.svelte";
 
 export * from "./ui/external-link.svelte";

@@ -7,7 +7,7 @@
   import * as Dialog from "&/dialog";
   import * as Form from "&/form";
   import { Input } from "&/input";
-  import { renameChannelBody } from "@ccchat/shared";
+  import { renameChannelBody } from "@motus/shared";
 
   const ctx = getChannelContext();
 

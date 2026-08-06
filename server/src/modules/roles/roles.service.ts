@@ -3,7 +3,7 @@ import {
   type CreateRoleBody,
   type Role,
   type UpdateRoleBody,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { desc, eq, inArray } from "drizzle-orm";
 import { newId } from "../../auth.js";
 import { db } from "../../db/index.js";

@@ -1,4 +1,4 @@
-name: ccchat
+name: motus
 
 x-logging: &logging
   driver: json-file
@@ -9,7 +9,7 @@ x-logging: &logging
 services:
   caddy:
     image: caddy:2-alpine
-    container_name: ccchat-caddy
+    container_name: motus-caddy
     restart: unless-stopped
     logging: *logging
     deploy:
@@ -21,20 +21,20 @@ services:
       - "443:443"
       - "443:443/udp"
     environment:
-      CCCHAT_DOMAIN: ${CCCHAT_DOMAIN:?set CCCHAT_DOMAIN in .env (e.g. chat.example.com)}
+      MOTUS_DOMAIN: ${MOTUS_DOMAIN:?set MOTUS_DOMAIN in .env (e.g. chat.example.com)}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
     depends_on:
-      ccchat:
+      motus:
         condition: service_healthy
       livekit:
         condition: service_started
 
-  ccchat:
-    image: ${CCCHAT_IMAGE:-ghcr.io/lucien-n/kit-ccchat:latest}
-    container_name: ccchat
+  motus:
+    image: ${MOTUS_IMAGE:-ghcr.io/lucien-n/motus:latest}
+    container_name: motus
     restart: unless-stopped
     logging: *logging
     deploy:
@@ -43,10 +43,13 @@ services:
           memory: 512M
     environment:
       DATA_DIR: /app/data
-      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-ccchat}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY:-motus}
       LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET:?run ./install.sh, or set LIVEKIT_API_SECRET in .env}
       # Server-side management API (mod mutes), reached in-cluster by service name.
       LIVEKIT_HOST: http://livekit:7880
+      # Automatic database backups into data/backups (0 hours turns them off).
+      BACKUP_INTERVAL_HOURS: ${BACKUP_INTERVAL_HOURS:-24}
+      BACKUP_RETENTION: ${BACKUP_RETENTION:-7}
     volumes:
       # Your entire community (accounts, channels, messages) is this one folder.
       # Back it up and you have backed up everything.
@@ -56,7 +59,7 @@ services:
 
   livekit:
     image: livekit/livekit-server:latest
-    container_name: ccchat-livekit
+    container_name: motus-livekit
     restart: unless-stopped
     logging: *logging
     deploy:
@@ -65,7 +68,7 @@ services:
           memory: 512M
     command: --config /etc/livekit.yaml
     environment:
-      LIVEKIT_KEYS: "${LIVEKIT_API_KEY:-ccchat}: ${LIVEKIT_API_SECRET:?run ./install.sh, or set LIVEKIT_API_SECRET in .env}"
+      LIVEKIT_KEYS: "${LIVEKIT_API_KEY:-motus}: ${LIVEKIT_API_SECRET:?run ./install.sh, or set LIVEKIT_API_SECRET in .env}"
     ports:
       - "7882:7882/udp"
       - "7881:7881"

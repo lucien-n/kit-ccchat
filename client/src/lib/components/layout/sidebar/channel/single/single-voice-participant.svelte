@@ -5,7 +5,7 @@
   import { cn } from "$lib/utils";
   import { muteState } from "$lib/voice-mute";
   import { Button } from "&/button";
-  import type { Channel, VoiceMember } from "@ccchat/shared";
+  import type { Channel, VoiceMember } from "@motus/shared";
   import { HeadphoneOff, MicOff, MonitorPlay, Video } from "@lucide/svelte";
 
   interface Props {

@@ -1,4 +1,4 @@
-import type { UploadImageBody } from "@ccchat/shared";
+import type { UploadImageBody } from "@motus/shared";
 import { apiBase, client } from "./http";
 
 export function imageUrl(id: string): string {

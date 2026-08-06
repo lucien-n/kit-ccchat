@@ -1,15 +1,17 @@
+import { api } from "$lib/api";
+import { apiErrorMessage } from "$lib/forms";
+import { fileToDataUrl } from "$lib/image";
 import {
   MAX_SOUNDBOARD_BYTES,
   MAX_SOUNDBOARD_DURATION_MS,
   MAX_SOUNDBOARD_NAME,
   type Sound,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { SvelteSet } from "svelte/reactivity";
-import { api } from "$lib/api";
-import { apiErrorMessage } from "$lib/forms";
-import { fileToDataUrl } from "$lib/image";
+import { voice } from "../voice.svelte";
 
 const FAVORITES_KEY = "soundboardFavorites";
+const VOLUME_KEY = "soundboardVolume";
 
 export function nameFromFile(filename: string): string {
   return filename
@@ -44,6 +46,8 @@ class SoundboardStore {
   busy = $state(false);
   /** Starred ids, persisted per-browser in localStorage rather than server-side. */
   favorites = new SvelteSet<string>();
+  /** Listening volume for soundboard clips (0..1), per-device, not synced. */
+  volume = $state(1);
 
   init() {
     try {
@@ -51,6 +55,20 @@ class SoundboardStore {
       if (raw) for (const id of JSON.parse(raw) as string[]) this.favorites.add(id);
     } catch {
       /* corrupt value - start with no favorites */
+    }
+    const raw = localStorage.getItem(VOLUME_KEY);
+    const stored = raw === null ? NaN : Number(raw);
+    if (Number.isFinite(stored)) this.volume = Math.min(1, Math.max(0, stored));
+    voice.applySoundboardVolume(this.volume);
+  }
+
+  setVolume(volume: number) {
+    this.volume = Math.min(1, Math.max(0, volume));
+    voice.applySoundboardVolume(this.volume);
+    try {
+      localStorage.setItem(VOLUME_KEY, String(this.volume));
+    } catch {
+      /* storage full or blocked - volume is a nicety, never fatal */
     }
   }
 

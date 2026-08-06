@@ -1,4 +1,4 @@
-import { loginBody, registerBody, type LoginBody } from "@ccchat/shared";
+import { loginBody, registerBody, type LoginBody } from "@motus/shared";
 import { Hono } from "hono";
 import { requireAuth, type Env } from "../../auth.js";
 import { rateLimit } from "../../ratelimit.js";

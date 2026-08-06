@@ -1,4 +1,4 @@
-import { banBody, muteBody } from "@ccchat/shared";
+import { banBody, muteBody } from "@motus/shared";
 import type { Context, Next } from "hono";
 import type { Env } from "../../auth.js";
 import type { User } from "../../db/schema";

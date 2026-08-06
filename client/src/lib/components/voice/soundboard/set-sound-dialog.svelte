@@ -5,7 +5,7 @@
   import * as Dialog from "&/dialog";
   import { Input } from "&/input";
   import { Label } from "&/label";
-  import { MAX_SOUNDBOARD_NAME } from "@ccchat/shared";
+  import { MAX_SOUNDBOARD_NAME } from "@motus/shared";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
 
   export type DialogMode =

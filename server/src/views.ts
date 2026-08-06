@@ -8,7 +8,7 @@ import {
   type ReplyRef,
   type Role,
   type SystemEvent,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { eq } from "drizzle-orm";
 import { db } from "./db/index.js";
 import {
@@ -31,6 +31,7 @@ export function toMember(u: {
   avatarVersion?: number | null;
   bannerVersion?: number | null;
   accentColor?: string | null;
+  bio?: string | null;
 }): Member {
   return {
     id: u.id,
@@ -42,6 +43,7 @@ export function toMember(u: {
     avatarVersion: u.avatarVersion ?? null,
     bannerVersion: u.bannerVersion ?? null,
     accentColor: u.accentColor ?? null,
+    bio: u.bio ?? null,
   };
 }
 

@@ -1,4 +1,4 @@
-import { Permission } from "@ccchat/shared";
+import { Permission } from "@motus/shared";
 import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { db } from "./db/index.js";
 import { rolesTable, userRolesTable } from "./db/schema";

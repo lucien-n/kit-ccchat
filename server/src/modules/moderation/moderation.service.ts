@@ -1,4 +1,4 @@
-import { DeleteSpan, ServerEventType, type ModeratedMember } from "@ccchat/shared";
+import { DeleteSpan, ServerEventType, type ModeratedMember } from "@motus/shared";
 import { and, eq, gte } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import {

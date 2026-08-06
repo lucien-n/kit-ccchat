@@ -1,4 +1,4 @@
-import { banBody, muteBody } from "@ccchat/shared";
+import { banBody, muteBody } from "@motus/shared";
 import { Hono } from "hono";
 import { requireAuth, requireCan } from "../../auth.js";
 import { validate } from "../../validate.js";

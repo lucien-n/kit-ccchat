@@ -1,4 +1,4 @@
-import { parseMentions } from "@ccchat/shared";
+import { parseMentions } from "@motus/shared";
 import { eq, inArray } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { messageMentionsTable, userRolesTable, usersTable } from "../../db/schema";

@@ -1,4 +1,4 @@
-import type { SearchQuery } from "@ccchat/shared";
+import type { SearchQuery } from "@motus/shared";
 import { client } from "./http";
 
 export const search = {

@@ -4,7 +4,7 @@ import {
   SearchSort,
   type SearchQuery,
   type SearchResults,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { and, count, desc, eq, isNull, sql, type SQL } from "drizzle-orm";
 import { db } from "../../db/index.js";
 import { messagesTable, type Message } from "../../db/schema";

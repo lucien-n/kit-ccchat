@@ -1,4 +1,4 @@
-import { createInviteBody } from "@ccchat/shared";
+import { createInviteBody } from "@motus/shared";
 import type { AppContext, JsonContext } from "../../http/context.js";
 import * as invitesService from "./invites.service.js";
 

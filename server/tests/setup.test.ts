@@ -1,4 +1,4 @@
-import { ChannelType } from "@ccchat/shared";
+import { ChannelType } from "@motus/shared";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Hono } from "hono";
 import { boot, cleanup, get, json, post } from "./harness.js";

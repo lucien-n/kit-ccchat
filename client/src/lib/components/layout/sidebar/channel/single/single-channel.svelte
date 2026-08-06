@@ -12,7 +12,7 @@
   import { cn } from "$lib/utils";
   import { Badge } from "&/badge";
   import { buttonVariants } from "&/button";
-  import { ChannelType, type Channel } from "@ccchat/shared";
+  import { ChannelType, type Channel } from "@motus/shared";
   import HomeIcon from "@lucide/svelte/icons/home";
   import { fly } from "$lib/motion";
   import ChannelContextMenu from "./channel-context-menu.svelte";

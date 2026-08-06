@@ -2,7 +2,7 @@ import type {
   ChangePasswordBody,
   UpdateAppearanceBody,
   UpdateProfileBody,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { apiBase, client } from "./http";
 
 /** `version` doubles as a cache-buster. */

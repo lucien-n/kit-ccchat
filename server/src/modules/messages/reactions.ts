@@ -1,4 +1,4 @@
-import type { Reaction } from "@ccchat/shared";
+import type { Reaction } from "@motus/shared";
 import { asc, eq } from "drizzle-orm";
 import { db } from "../../db";
 import { messageReactionsTable, type User } from "../../db/schema";

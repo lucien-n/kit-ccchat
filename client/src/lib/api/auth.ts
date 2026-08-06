@@ -1,4 +1,4 @@
-import type { LoginBody, RegisterBody, SetupBody } from "@ccchat/shared";
+import type { LoginBody, RegisterBody, SetupBody } from "@motus/shared";
 import { asToken, client, publicClient } from "./http";
 
 export const auth = {

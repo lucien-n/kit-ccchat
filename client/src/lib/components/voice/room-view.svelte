@@ -4,7 +4,7 @@
   import { presence, voice } from "$lib/stores";
   import { muteState } from "$lib/voice-mute";
   import { Button } from "&/button";
-  import { ChannelType, type Channel } from "@ccchat/shared";
+  import { ChannelType, type Channel } from "@motus/shared";
   import { backOut } from "svelte/easing";
   import CameraButton from "./camera-button.svelte";
   import DeafenButton from "./deafen-button.svelte";

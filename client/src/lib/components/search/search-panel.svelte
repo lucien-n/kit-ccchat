@@ -7,7 +7,7 @@
   import * as Empty from "&/empty";
   import { ScrollArea } from "&/scroll-area";
   import * as ToggleGroup from "&/toggle-group";
-  import { SearchSort } from "@ccchat/shared";
+  import { SearchSort } from "@motus/shared";
   import SearchIcon from "@lucide/svelte/icons/search";
   import SearchXIcon from "@lucide/svelte/icons/search-x";
   import SearchInput from "./search-input.svelte";

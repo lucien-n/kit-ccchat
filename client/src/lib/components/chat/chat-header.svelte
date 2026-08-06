@@ -4,7 +4,7 @@
   import { channels, prefs, presence, ui, unread } from "$lib/stores";
   import { Button } from "&/button";
   import * as ToggleGroup from "&/toggle-group";
-  import { ChannelType } from "@ccchat/shared";
+  import { ChannelType } from "@motus/shared";
   import { Bell, BellOff, Menu, Users } from "@lucide/svelte";
   import SearchIcon from "@lucide/svelte/icons/search";
 
@@ -37,9 +37,11 @@
       title={prefs.soundEnabled ? "Mute notification sound" : "Unmute notification sound"}
       onclick={() => prefs.toggleSound()}
     >
-      {#if prefs.soundEnabled}<Bell class="size-4" />{:else}<BellOff
-          class="size-4"
-        />{/if}
+      {#if prefs.soundEnabled}
+        <Bell class="size-4" />
+      {:else}
+        <BellOff class="size-4" />
+      {/if}
     </Button>
 
     <ToggleGroup.Root

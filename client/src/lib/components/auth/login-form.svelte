@@ -4,7 +4,7 @@
   import { spaForm } from "$lib/forms";
   import * as Card from "&/card";
   import * as Form from "&/form";
-  import { loginBody } from "@ccchat/shared";
+  import { loginBody } from "@motus/shared";
 
   const form = spaForm(
     loginBody,

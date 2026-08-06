@@ -1,4 +1,4 @@
-import { searchQuery } from "@ccchat/shared";
+import { searchQuery } from "@motus/shared";
 import type { QueryContext } from "../../http/context.js";
 import * as searchService from "./search.service.js";
 

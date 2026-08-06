@@ -1,4 +1,4 @@
-import { SOUNDBOARD_MIME_TYPES } from "@ccchat/shared";
+import { SOUNDBOARD_MIME_TYPES } from "@motus/shared";
 import { blobStore, decodeDataUrl, readBlobFile, type StoredBlob } from "./blob.js";
 
 export function sniffAudioMime(buf: Buffer): string | null {

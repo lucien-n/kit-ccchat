@@ -1,4 +1,4 @@
-import { loginBody, registerBody } from "@ccchat/shared";
+import { loginBody, registerBody } from "@motus/shared";
 import { destroySession } from "../../auth.js";
 import type { AppContext, JsonContext } from "../../http/context.js";
 import { toMember } from "../../views.js";

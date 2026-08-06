@@ -6,6 +6,24 @@ export function formatBytes(bytes: number): string {
   return `${(bytes / 1024 ** i).toFixed(i === 0 ? 0 : 1)} ${UNITS[i]}`;
 }
 
+const DATE_TIME_FMT = new Intl.DateTimeFormat(undefined, {
+  dateStyle: "medium",
+  timeStyle: "short",
+});
+
+/** Absolute local date + time, e.g. "5 Aug 2026, 15:30". */
+export function formatDateTime(ms: number): string {
+  return DATE_TIME_FMT.format(new Date(ms));
+}
+
+/** A signed gap from now as words, e.g. "3h ago" or "in 21h". */
+export function formatRelative(ms: number): string {
+  const deltaSec = Math.round((ms - Date.now()) / 1000);
+  if (Math.abs(deltaSec) < 45) return "just now";
+  const span = formatDuration(Math.abs(deltaSec));
+  return deltaSec < 0 ? `${span} ago` : `in ${span}`;
+}
+
 export function formatDuration(seconds: number): string {
   const s = Math.max(0, Math.floor(seconds));
   const parts: string[] = [];

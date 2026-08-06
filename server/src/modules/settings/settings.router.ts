@@ -1,4 +1,4 @@
-import { communityIconBody, renameCommunityBody } from "@ccchat/shared";
+import { communityIconBody, renameCommunityBody } from "@motus/shared";
 import { Hono } from "hono";
 import { requireAuth, requireCan, type Env } from "../../auth.js";
 import { validate } from "../../validate.js";

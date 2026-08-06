@@ -3,7 +3,7 @@ import {
   channelNameKey,
   type Channel,
   type CreateChannelBody,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { and, asc, count, eq, gt, isNull, ne, sql } from "drizzle-orm";
 import { newId } from "../../auth.js";
 import { db } from "../../db/index.js";

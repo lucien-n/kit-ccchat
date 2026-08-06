@@ -12,7 +12,7 @@ import {
   type Role,
   type UpdateAppearanceBody,
   type UpdateProfileBody,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { desc, eq } from "drizzle-orm";
 import { hashPassword, verifyPassword } from "../../auth.js";
 import { db } from "../../db/index.js";
@@ -91,9 +91,10 @@ export function deleteBanner(userId: string) {
 export function updateProfile(user: User, patch: UpdateProfileBody): Member {
   // Only the keys the request actually carried are written, so saving one field
   // never wipes another the caller left untouched.
-  const fields: Partial<Pick<User, "displayName" | "accentColor">> = {};
+  const fields: Partial<Pick<User, "displayName" | "accentColor" | "bio">> = {};
   if (patch.displayName !== undefined) fields.displayName = patch.displayName;
   if (patch.accentColor !== undefined) fields.accentColor = patch.accentColor;
+  if (patch.bio !== undefined) fields.bio = patch.bio || null;
 
   if (!Object.keys(fields).length) return toMember(user);
 

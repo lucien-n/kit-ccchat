@@ -1,8 +1,16 @@
-import { DiskItem, type SystemStats } from "@ccchat/shared";
+import { DiskItem, type SystemStats } from "@motus/shared";
 import { readdir, stat, statfs } from "node:fs/promises";
 import os from "node:os";
 import { join } from "node:path";
-import { AVATARS_DIR, DATA_DIR, DB_FILE, IMAGES_DIR, SOUNDS_DIR } from "../../env.js";
+import {
+  AVATARS_DIR,
+  BACKUPS_DIR,
+  DATA_DIR,
+  DB_FILE,
+  IMAGES_DIR,
+  SOUNDS_DIR,
+} from "../../env.js";
+import { backupStatus } from "./backups.service.js";
 
 const SAMPLE_INTERVAL_SEC = 5;
 const HISTORY_SIZE = 180;
@@ -59,6 +67,7 @@ const DISK_ITEM_PATH_MAP: Record<DiskItem, string[]> = {
   [DiskItem.ImagesDir]: [IMAGES_DIR],
   [DiskItem.SoundsDir]: [SOUNDS_DIR],
   [DiskItem.DatabaseFile]: [DB_FILE, `${DB_FILE}-wal`, `${DB_FILE}-shm`],
+  [DiskItem.BackupsDir]: [BACKUPS_DIR],
 };
 
 /** Walking the image tree costs one stat per file, and the panel polls every
@@ -143,5 +152,6 @@ export async function collectSystemStats(): Promise<SystemStats> {
     },
     history: history.slice(),
     sampleIntervalSec: SAMPLE_INTERVAL_SEC,
+    backups: await backupStatus(),
   };
 }

@@ -1,28 +1,16 @@
 <script lang="ts">
   import { api } from "$lib/api";
+  import { logout } from "$lib/app";
   import TextField from "$lib/components/common/text-field.svelte";
   import UserCardContent from "$lib/components/common/user-card/user-card-content.svelte";
   import { apiErrorMessage, ok, setError, setMessage, spaForm } from "$lib/forms";
   import { session } from "$lib/stores";
-  import * as Form from "&/form";
+  import { Button } from "&/button";
   import { Card } from "&/card";
-  import { Input } from "&/input";
+  import * as Form from "&/form";
   import { Label } from "&/label";
-  import { changePasswordBody, updateProfileBody } from "@ccchat/shared";
-
-  const nameForm = spaForm(
-    updateProfileBody,
-    { displayName: session.user?.displayName ?? "" },
-    {
-      fallback: "failed to save",
-      onValid: async (data, form) => {
-        const { user } = await api.users.updateMe(data);
-        session.patchUser({ displayName: user.displayName });
-        setMessage(form, ok("Display name saved."));
-      },
-    },
-  );
-  const { form: nameData, enhance: nameEnhance, submitting: nameBusy } = nameForm;
+  import { changePasswordBody } from "@motus/shared";
+  import LogOutIcon from "@lucide/svelte/icons/log-out";
 
   const passwordForm = spaForm(
     changePasswordBody,
@@ -52,26 +40,6 @@
 
 <div class="flex flex-col gap-8 sm:flex-row sm:gap-10">
   <div class="flex-1 space-y-6 sm:min-w-0">
-    <form method="POST" use:nameEnhance>
-      <Form.Field form={nameForm} name="displayName">
-        <Form.Control>
-          {#snippet children({ props })}
-            <Form.Label>Display name</Form.Label>
-            <div class="flex gap-2">
-              <Input
-                {...props}
-                bind:value={$nameData.displayName}
-                maxlength={32}
-                class="flex-1"
-              />
-              <Form.Button disabled={$nameBusy}>Save</Form.Button>
-            </div>
-          {/snippet}
-        </Form.Control>
-        <Form.FieldErrors />
-      </Form.Field>
-    </form>
-
     <form method="POST" use:passwordEnhance class="space-y-2">
       <Label>Change password</Label>
 
@@ -97,6 +65,16 @@
         Update password
       </Form.Button>
     </form>
+
+    <Button
+      variant="destructive"
+      class="w-full shrink-0"
+      title="Log out"
+      onclick={logout}
+    >
+      <LogOutIcon class="size-4" />
+      Log Out
+    </Button>
   </div>
 
   {#if session.user}

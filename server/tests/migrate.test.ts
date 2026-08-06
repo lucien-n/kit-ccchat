@@ -8,7 +8,7 @@ import Database from "better-sqlite3";
 // is what happens to a database on boot, including one that predates migrations.
 const dirs: string[] = [];
 const freshDir = () => {
-  const d = mkdtempSync(join(tmpdir(), "ccchat-mig-"));
+  const d = mkdtempSync(join(tmpdir(), "motus-mig-"));
   dirs.push(d);
   return d;
 };
@@ -53,7 +53,7 @@ describe("a fresh database", () => {
     const { closeDb } = await bootAt(dir);
     closeDb();
 
-    const names = tables(join(dir, "ccchat.sqlite"));
+    const names = tables(join(dir, "motus.sqlite"));
     for (const t of [
       "users",
       "invites",
@@ -72,7 +72,7 @@ describe("a fresh database", () => {
     const { closeDb } = await bootAt(dir);
     closeDb();
 
-    const raw = new Database(join(dir, "ccchat.sqlite"), { readonly: true });
+    const raw = new Database(join(dir, "motus.sqlite"), { readonly: true });
     const idx = raw
       .prepare(
         "SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='messages'",

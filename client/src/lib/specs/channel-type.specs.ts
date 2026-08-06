@@ -1,4 +1,4 @@
-import { ChannelType } from "@ccchat/shared";
+import { ChannelType } from "@motus/shared";
 import type { LucideIconType, SpecsRecord } from "./types";
 import HashIcon from "@lucide/svelte/icons/hash";
 import Volume2Icon from "@lucide/svelte/icons/volume-2";

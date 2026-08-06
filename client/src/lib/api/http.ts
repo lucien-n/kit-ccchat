@@ -1,4 +1,4 @@
-import type { AppType } from "ccchat-server";
+import type { AppType } from "motus-server";
 import { hc } from "hono/client";
 import { authToken } from "./token.svelte";
 

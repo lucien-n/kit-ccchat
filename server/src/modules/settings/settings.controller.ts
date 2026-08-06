@@ -1,4 +1,4 @@
-import { communityIconBody, renameCommunityBody } from "@ccchat/shared";
+import { communityIconBody, renameCommunityBody } from "@motus/shared";
 import type { AppContext, JsonContext } from "../../http/context.js";
 import { sendBlob } from "../../http/blob.js";
 import * as settingsService from "./settings.service.js";

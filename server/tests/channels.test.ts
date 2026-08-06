@@ -1,4 +1,4 @@
-import { ChannelType, type Channel } from "@ccchat/shared";
+import { ChannelType, type Channel } from "@motus/shared";
 import type { Hono } from "hono";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import {

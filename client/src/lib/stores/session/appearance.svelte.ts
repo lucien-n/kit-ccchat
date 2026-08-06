@@ -13,7 +13,7 @@ import {
   ThemeMode,
   type AppearanceView,
   type CustomTheme,
-} from "@ccchat/shared";
+} from "@motus/shared";
 
 // Re-exported so components can keep importing the enums from the store.
 export { Theme, ThemeMode };

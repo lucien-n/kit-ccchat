@@ -4,7 +4,7 @@ import {
   type Channel,
   type Member,
   type Role,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import type { Hono } from "hono";
 import { createServer, type Server } from "node:http";
 import type { AddressInfo } from "node:net";

@@ -1,4 +1,4 @@
-import { IMAGE_MIME_TYPES } from "@ccchat/shared";
+import { IMAGE_MIME_TYPES } from "@motus/shared";
 import { blobStore, decodeDataUrl, readBlobFile, type StoredBlob } from "./blob.js";
 
 export function sniffMime(buf: Buffer): string | null {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createInviteBody, loginBody, registerBody, username } from "@ccchat/shared";
+import { createInviteBody, loginBody, registerBody, username } from "@motus/shared";
 
 // The shared schemas are the contract both sides validate against, so their
 // edges are worth pinning down here rather than discovering in a form.

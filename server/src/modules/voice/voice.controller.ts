@@ -1,4 +1,4 @@
-import { voiceTokenBody } from "@ccchat/shared";
+import { voiceTokenBody } from "@motus/shared";
 import type { Context } from "hono";
 import { LIVEKIT_PATH, LIVEKIT_URL } from "../../env.js";
 import type { AppContext, JsonContext } from "../../http/context.js";

@@ -23,14 +23,21 @@ export const PORT = Number(process.env.PORT ?? 8080);
 export const DATA_DIR = resolve(process.env.DATA_DIR ?? "./data");
 export const CLIENT_DIR = resolve(process.env.CLIENT_DIR ?? "../client/build");
 
-/** Everything ccchat writes inside DATA_DIR. Declared here because the disk
+/** Everything motus writes inside DATA_DIR. Declared here because the disk
  *  usage panel has to measure what the other modules own. */
 export const AVATARS_DIR = join(DATA_DIR, "avatars");
 export const BANNERS_DIR = join(DATA_DIR, "banners");
 export const IMAGES_DIR = join(DATA_DIR, "images");
 export const SOUNDS_DIR = join(DATA_DIR, "sounds");
+export const BACKUPS_DIR = join(DATA_DIR, "backups");
 export const COMMUNITY_ICON_FILE = join(DATA_DIR, "community-icon");
-export const DB_FILE = join(DATA_DIR, "ccchat.sqlite");
+export const DB_FILE = join(DATA_DIR, "motus.sqlite");
+
+/** How often the database is snapshotted into BACKUPS_DIR, in hours. 0 disables
+ *  automatic backups (the owner can still trigger one by hand). */
+export const BACKUP_INTERVAL_HOURS = Number(process.env.BACKUP_INTERVAL_HOURS ?? 24);
+/** How many of the newest backups to keep; older ones are pruned. 0 keeps all. */
+export const BACKUP_RETENTION = Number(process.env.BACKUP_RETENTION ?? 7);
 export const COMMUNITY_NAME = process.env.COMMUNITY_NAME ?? "My Community";
 
 export const OWNER_USERNAME = process.env.OWNER_USERNAME ?? "owner";
@@ -54,7 +61,7 @@ export const LIVEKIT_PATH = process.env.LIVEKIT_PATH ?? "/livekit";
  *  in-cluster call. Defaults to the native dev port; compose points it at the
  *  livekit service. */
 export const LIVEKIT_HOST = process.env.LIVEKIT_HOST ?? "http://localhost:7880";
-export const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY ?? "ccchat";
+export const LIVEKIT_API_KEY = process.env.LIVEKIT_API_KEY ?? "motus";
 
 const DEV_LIVEKIT_SECRET = "dev-only-insecure-secret-set-LIVEKIT_API_SECRET";
 // `||`, not `??`: an empty LIVEKIT_API_SECRET='' is as insecure as an unset one,

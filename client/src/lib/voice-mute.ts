@@ -1,4 +1,4 @@
-import type { VoiceMember } from "@ccchat/shared";
+import type { VoiceMember } from "@motus/shared";
 
 export type MuteState = "forced" | "self" | null;
 

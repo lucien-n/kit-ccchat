@@ -6,7 +6,7 @@ import {
   type ServerEvent,
   type SetupBody,
   type VoiceMember,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { toast } from "svelte-sonner";
 import { api, type MessageView } from "./api";
 import { pingsMe } from "./mentions";

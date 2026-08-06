@@ -2,7 +2,7 @@
   import { avatarUrl } from "$lib/api";
   import { cn, getInitials } from "$lib/utils";
   import * as Avatar from "&/avatar";
-  import type { Member } from "@ccchat/shared";
+  import type { Member } from "@motus/shared";
   import PresenceDot from "./presence-dot.svelte";
 
   interface Props {

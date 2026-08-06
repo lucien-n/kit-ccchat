@@ -3,7 +3,7 @@
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { channelTypeSpecs } from "$lib/specs";
   import { appearance, channels } from "$lib/stores";
-  import { ChannelType, MATCH_CLOSE, MATCH_OPEN } from "@ccchat/shared";
+  import { ChannelType, MATCH_CLOSE, MATCH_OPEN } from "@motus/shared";
 
   interface Props {
     hit: SearchHit;

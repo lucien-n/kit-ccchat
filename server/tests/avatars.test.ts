@@ -68,7 +68,7 @@ describe("avatar upload and fetch", () => {
 
 /** The id lands in a filesystem path, and this route is deliberately public, so
  *  a traversal here is an unauthenticated read of anything the process can see -
- *  including ccchat.sqlite, which holds every password hash and session token. */
+ *  including motus.sqlite, which holds every password hash and session token. */
 describe("avatar path traversal", () => {
   const secret = "TOP-SECRET-CONTENTS";
   const escaped = "ESCAPED-THE-DATA-DIR";
@@ -79,14 +79,14 @@ describe("avatar path traversal", () => {
     // ... and two, i.e. outside DATA_DIR entirely. Without a target that really
     // exists up there, an "escape the data dir" case 404s on a broken
     // implementation too and proves nothing.
-    writeFileSync(join(process.env.DATA_DIR!, "..", "ccchat-escaped.txt"), escaped);
+    writeFileSync(join(process.env.DATA_DIR!, "..", "motus-escaped.txt"), escaped);
   });
 
   const attacks = [
     ["encoded slash", "..%2Fsecret.txt"],
     ["fully encoded dots and slash", "%2e%2e%2fsecret.txt"],
-    ["the database itself", "..%2Fccchat.sqlite"],
-    ["escaping the data dir", "..%2F..%2Fccchat-escaped.txt"],
+    ["the database itself", "..%2Fmotus.sqlite"],
+    ["escaping the data dir", "..%2F..%2Fmotus-escaped.txt"],
     ["absolute-ish nesting", "avatars%2F..%2F..%2Fsecret.txt"],
   ] as const;
 
@@ -101,7 +101,7 @@ describe("avatar path traversal", () => {
   }
 
   it("does not leak the database", async () => {
-    const res = await app.request("/api/users/..%2Fccchat.sqlite/avatar");
+    const res = await app.request("/api/users/..%2Fmotus.sqlite/avatar");
     expect(await res.text()).not.toContain("SQLite format");
   });
 });

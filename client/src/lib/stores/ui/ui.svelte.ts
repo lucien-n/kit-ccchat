@@ -1,4 +1,4 @@
-import { ChannelType } from "@ccchat/shared";
+import { ChannelType } from "@motus/shared";
 
 class Ui {
   isSettingsDialogOpen = $state(false);

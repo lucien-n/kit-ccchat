@@ -1,4 +1,4 @@
-import type { ClientEvent, ServerEvent } from "@ccchat/shared";
+import type { ClientEvent, ServerEvent } from "@motus/shared";
 import { apiBase } from "$lib/api";
 
 export type ConnectionStatus = "disconnected" | "connecting" | "connected";

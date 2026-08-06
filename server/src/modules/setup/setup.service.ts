@@ -1,4 +1,4 @@
-import type { SetupBody } from "@ccchat/shared";
+import type { SetupBody } from "@motus/shared";
 import { createSession } from "../../auth.js";
 import { needsSetup, seedCommunity } from "../../bootstrap.js";
 import { httpError } from "../../http/errors.js";

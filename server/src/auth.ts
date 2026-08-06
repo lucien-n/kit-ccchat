@@ -89,6 +89,7 @@ export type Capability =
   | "manageInvites"
   | "manageRoles"
   | "deleteAnyMessage"
+  | "manageSounds"
   | "manageCommunity";
 
 const OWNER_ONLY = new Set<Capability>(["manageCommunity"]);

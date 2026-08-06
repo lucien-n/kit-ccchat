@@ -3,7 +3,7 @@ import {
   reorderRolesBody,
   setUserRolesBody,
   updateRoleBody,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import type { AppContext, JsonContext } from "../../http/context.js";
 import * as rolesService from "./roles.service.js";
 

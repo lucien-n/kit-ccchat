@@ -1,4 +1,4 @@
-import { ChannelType } from "@ccchat/shared";
+import { ChannelType } from "@motus/shared";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Hono } from "hono";
 import { boot, claim, cleanup, get, json } from "./harness.js";
@@ -45,7 +45,7 @@ describe("LiveKit URL derivation", () => {
     const res = await config({
       "x-forwarded-proto": "https",
       "x-forwarded-host": "chat.example.com",
-      host: "ccchat:8080",
+      host: "motus:8080",
     });
     expect((await json(res)).url).toBe("wss://chat.example.com/livekit");
   });

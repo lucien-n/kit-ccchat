@@ -6,7 +6,7 @@ import {
   type MessageView,
   type MessageWindow,
   type SystemEvent,
-} from "@ccchat/shared";
+} from "@motus/shared";
 import { and, asc, desc, eq, gt, lt, lte } from "drizzle-orm";
 import { can, newId } from "../../auth.js";
 import { db } from "../../db/index.js";

@@ -4,7 +4,7 @@
   import { Input } from "&/input";
   import { Label } from "&/label";
   import { Switch } from "&/switch";
-  import { themeRadius } from "@ccchat/shared";
+  import { themeRadius } from "@motus/shared";
   import { Monitor, Moon, Palette, Sun } from "@lucide/svelte";
 
   const modes = [

@@ -1,4 +1,4 @@
-import { SystemEvent, type Channel, type MessageView } from "@ccchat/shared";
+import { SystemEvent, type Channel, type MessageView } from "@motus/shared";
 import { afterAll, beforeAll, expect, it } from "vitest";
 import {
   boot,

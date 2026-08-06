@@ -6,7 +6,7 @@
   import { spaForm } from "$lib/forms";
   import * as Card from "&/card";
   import * as Form from "&/form";
-  import { setupBody } from "@ccchat/shared";
+  import { setupBody } from "@motus/shared";
 
   const form = spaForm(
     setupBody,
@@ -25,7 +25,7 @@
 <div class="grid min-h-dvh place-items-center p-4">
   <Card.Root class="w-full max-w-md">
     <Card.Header class="text-center">
-      <Card.Title class="text-2xl">Welcome to ccchat</Card.Title>
+      <Card.Title class="text-2xl">Welcome to motus</Card.Title>
       <Card.Description>
         This community is brand new. Name it and create your owner account - you'll get an
         invite code for your friends.

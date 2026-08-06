@@ -14,8 +14,6 @@ interface LocalState {
   screens: Record<string, Track>;
   cameras: Record<string, Track>;
   localMuted: boolean;
-  /** Speaking indicator for the local user beyond LiveKit's mic detection,
-   *  e.g. while a soundboard clip is publishing. */
   localSpeaking: boolean;
 }
 

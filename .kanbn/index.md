@@ -8,9 +8,13 @@ columnSorting:
     -
       field: completed
       order: descending
+  Backlog:
+    -
+      field: countTags
+      order: ascending
 ---
 
-# ccchat
+# motus
 
 ## Backlog
 
@@ -19,7 +23,20 @@ columnSorting:
 - [push-notifications-for-messages](tasks/push-notifications-for-messages.md)
 - [allow-theme-change](tasks/allow-theme-change.md)
 - [avatar-overlays](tasks/avatar-overlays.md)
-- [profile-bio](tasks/profile-bio.md)
+- [client-tests](tasks/client-tests.md)
+- [foreign-keys](tasks/foreign-keys.md)
+- [ability-to-crop-soundboard-sounds-also-cap-sound-length](tasks/ability-to-crop-soundboard-sounds-also-cap-sound-length.md)
+- [offsite-backup-shipping](tasks/offsite-backup-shipping.md)
+- [session-device-management](tasks/session-device-management.md)
+- [two-factor-auth](tasks/two-factor-auth.md)
+- [pinned-messages](tasks/pinned-messages.md)
+- [arbitrary-file-attachments](tasks/arbitrary-file-attachments.md)
+- [link-embeds](tasks/link-embeds.md)
+- [custom-emojis](tasks/custom-emojis.md)
+- [voice-activity-sensitivity](tasks/voice-activity-sensitivity.md)
+- [data-export](tasks/data-export.md)
+- [push-to-talk](tasks/push-to-talk.md)
+- [admin-audit-log](tasks/admin-audit-log.md)
 
 ## Todo
 
@@ -27,6 +44,9 @@ columnSorting:
 
 ## Done
 
+- [profile-bio](tasks/profile-bio.md)
+- [db-backups](tasks/db-backups.md)
+- [soundboard-volume-control](tasks/soundboard-volume-control.md)
 - [livestreams-should-act-as-a-new-room-tile](tasks/livestreams-should-act-as-a-new-room-tile.md)
 - [webcams](tasks/webcams.md)
 - [switching-voice-channels-hides-the-voice-bar](tasks/switching-voice-channels-hides-the-voice-bar.md)

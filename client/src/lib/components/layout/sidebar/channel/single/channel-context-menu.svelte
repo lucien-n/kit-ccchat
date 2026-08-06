@@ -2,7 +2,7 @@
   import { getChannelContext } from "$lib/context/channel.svelte";
   import { session } from "$lib/stores";
   import * as ContextMenu from "&/context-menu";
-  import { ChannelType } from "@ccchat/shared";
+  import { ChannelType } from "@motus/shared";
   import HomeIcon from "@lucide/svelte/icons/home";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import TrashIcon from "@lucide/svelte/icons/trash";

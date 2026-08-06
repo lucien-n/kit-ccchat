@@ -4,6 +4,11 @@
   import ScreenShareIcon from "@lucide/svelte/icons/screen-share";
   import ScreenShareOffIcon from "@lucide/svelte/icons/screen-share-off";
 
+  interface Props {
+    class?: string;
+  }
+  const { class: className }: Props = $props();
+
   // getDisplayMedia does not exist on iOS Safari or Android Chrome, so the
   // button would only ever throw there.
   const canScreenShare =
@@ -17,6 +22,7 @@
     disabled={!voice.canPublish}
     title={voice.isScreenSharing ? "Stop sharing your screen" : "Share your screen"}
     onclick={() => voice.toggleScreenShare()}
+    class={className}
   >
     {#if voice.isScreenSharing}
       <ScreenShareOffIcon class="size-4" />

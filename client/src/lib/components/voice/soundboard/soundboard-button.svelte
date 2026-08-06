@@ -1,16 +1,26 @@
 <script lang="ts">
   import { soundUrl } from "$lib/api";
-  import { session, nameFromFile, soundboard, voice } from "$lib/stores";
+  import { nameFromFile, session, soundboard, voice } from "$lib/stores";
   import { Button } from "&/button";
+  import * as Empty from "&/empty";
   import { Input } from "&/input";
   import * as Popover from "&/popover";
   import { ScrollArea } from "&/scroll-area";
-  import type { Sound } from "@ccchat/shared";
+  import type { Sound } from "@motus/shared";
+  import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
   import MegaphoneIcon from "@lucide/svelte/icons/megaphone";
   import PencilIcon from "@lucide/svelte/icons/pencil";
   import StarIcon from "@lucide/svelte/icons/star";
   import UploadIcon from "@lucide/svelte/icons/upload";
+  import Volume2Icon from "@lucide/svelte/icons/volume-2";
+  import VolumeXIcon from "@lucide/svelte/icons/volume-x";
+  import { untrack } from "svelte";
   import SetSoundDialog, { type DialogMode } from "./set-sound-dialog.svelte";
+
+  interface Props {
+    class?: string;
+  }
+  const { class: className }: Props = $props();
 
   let isOpen = $state(false);
   let query = $state("");
@@ -20,8 +30,9 @@
   let mode = $state<DialogMode | null>(null);
 
   $effect(() => {
-    // Refresh on every open so newly uploaded clips from others show up.
-    if (isOpen) void soundboard.load();
+    if (!isOpen) return;
+
+    untrack(() => soundboard.load());
   });
 
   const results = $derived(soundboard.search(query));
@@ -55,7 +66,13 @@
 <Popover.Root bind:open={isOpen}>
   <Popover.Trigger>
     {#snippet child({ props })}
-      <Button {...props} variant="secondary" size="icon" title="Soundboard">
+      <Button
+        {...props}
+        variant="secondary"
+        size="icon"
+        title="Soundboard"
+        class={className}
+      >
         <MegaphoneIcon class="size-4" />
       </Button>
     {/snippet}
@@ -104,20 +121,52 @@
             {/each}
           </div>
         {:else if soundboard.loading}
-          <div class="text-muted-foreground py-8 text-center text-sm">
+          <div
+            class="text-muted-foreground flex flex-col items-center justify-center gap-3 py-8 text-sm"
+          >
             Loading sounds…
+            <LoaderCircleIcon class="animate-spin" />
           </div>
         {:else if query.trim()}
           <div class="text-muted-foreground py-8 text-center text-sm">
             No sound matches "{query.trim()}"
           </div>
         {:else}
-          <div class="text-muted-foreground py-8 text-center text-sm">
-            No sounds yet — upload one to get started.
-          </div>
+          <Empty.Root>
+            <Empty.Header>
+              <Empty.Title>No sounds yet</Empty.Title>
+              <Empty.Description>Upload one to get started.</Empty.Description>
+            </Empty.Header>
+            <Empty.Content>
+              <Button variant="outline" onclick={() => fileInput?.click()}>
+                <UploadIcon class="size-4" />
+                Upload
+              </Button>
+            </Empty.Content>
+          </Empty.Root>
         {/if}
       </div>
     </ScrollArea>
+
+    <div class="flex items-center gap-2 border-t px-1 pt-2">
+      {#if soundboard.volume === 0}
+        <VolumeXIcon class="text-muted-foreground size-4 shrink-0" />
+      {:else}
+        <Volume2Icon class="text-muted-foreground size-4 shrink-0" />
+      {/if}
+      <input
+        type="range"
+        min="0"
+        max="1"
+        step="0.01"
+        value={soundboard.volume}
+        oninput={(e) => soundboard.setVolume(e.currentTarget.valueAsNumber)}
+        style="--fill: {soundboard.volume * 100}%"
+        class="soundboard-volume w-full cursor-pointer"
+        title="Soundboard volume"
+        aria-label="Soundboard volume"
+      />
+    </div>
   </Popover.Content>
 </Popover.Root>
 
@@ -147,7 +196,7 @@
             : ''}"
         />
       </button>
-      {#if sound.uploaderId === session.user?.id}
+      {#if sound.uploaderId === session.user?.id || session.isAdmin}
         <button
           type="button"
           class="hover:text-foreground text-muted-foreground rounded p-1 opacity-0 group-hover:opacity-100"
@@ -160,3 +209,39 @@
     </div>
   </div>
 {/snippet}
+
+<style>
+  /* Native range styled to the theme, matching the stream-volume slider. */
+  .soundboard-volume {
+    height: 0.25rem;
+    appearance: none;
+    -webkit-appearance: none;
+    border-radius: 9999px;
+    /* Fill the track up to the thumb so it reads as a level, not a bare value. */
+    background: linear-gradient(
+      to right,
+      var(--primary) var(--fill, 0%),
+      var(--muted) var(--fill, 0%)
+    );
+  }
+  /* Firefox paints its own progress under the thumb; keep it in step. */
+  .soundboard-volume::-moz-range-progress {
+    height: 0.25rem;
+    border-radius: 9999px;
+    background: var(--primary);
+  }
+  .soundboard-volume::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 0.75rem;
+    width: 0.75rem;
+    border-radius: 9999px;
+    background: var(--primary);
+  }
+  .soundboard-volume::-moz-range-thumb {
+    height: 0.75rem;
+    width: 0.75rem;
+    border: none;
+    border-radius: 9999px;
+    background: var(--primary);
+  }
+</style>

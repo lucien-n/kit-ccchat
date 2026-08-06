@@ -1,14 +1,14 @@
 <script lang="ts">
   import * as app from "$lib/app";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
+  import DeafenButton from "$lib/components/voice/deafen-button.svelte";
+  import MicButton from "$lib/components/voice/mic-button.svelte";
   import VoiceBar from "$lib/components/voice/voice-bar.svelte";
-  import { appearance, channels, session, ui, voice } from "$lib/stores";
-  import { Button } from "&/button";
-  import { ScrollArea } from "&/scroll-area";
-  import { ChannelType, type Channel } from "@ccchat/shared";
-  import { LogOut } from "@lucide/svelte";
-  import { dndzone, type DndEvent } from "svelte-dnd-action";
   import { flip } from "$lib/motion";
+  import { appearance, channels, session, ui, voice } from "$lib/stores";
+  import { ScrollArea } from "&/scroll-area";
+  import { ChannelType, type Channel } from "@motus/shared";
+  import { dndzone, type DndEvent } from "svelte-dnd-action";
   import { ChannelCategoryHeader, SingleChannel } from "./channel";
   import SidebarHeader from "./sidebar-header.svelte";
 
@@ -17,6 +17,11 @@
   }
 
   const { withVoice = false }: Props = $props();
+
+  // Populate the device pickers so mic/headphone selection works before joining.
+  $effect(() => {
+    if (withVoice) voice.loadDevices();
+  });
 
   // Local mirrors the dnd zones reorder live; kept in sync with the store except
   // while a drag (or its persisting request) is in flight, so a background load
@@ -141,13 +146,8 @@
       </div>
     </div>
   </button>
-  <Button
-    variant="ghost"
-    size="icon"
-    class="shrink-0"
-    title="Log out"
-    onclick={() => app.logout()}
-  >
-    <LogOut class="size-4" />
-  </Button>
+  {#if withVoice}
+    <MicButton />
+    <DeafenButton />
+  {/if}
 </div>

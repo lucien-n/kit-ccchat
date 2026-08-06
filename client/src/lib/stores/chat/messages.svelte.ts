@@ -1,4 +1,4 @@
-import { ClientEventType, type Reaction } from "@ccchat/shared";
+import { ClientEventType, type Reaction } from "@motus/shared";
 import { api, type MessageView } from "$lib/api";
 import { realtime } from "$lib/stores/realtime.svelte";
 

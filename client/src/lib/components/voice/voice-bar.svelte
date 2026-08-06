@@ -1,15 +1,13 @@
 <script lang="ts">
+  import { fly } from "$lib/motion";
   import { voice, VoiceStatus } from "$lib/stores";
   import { Card } from "&/card";
   import Volume2Icon from "@lucide/svelte/icons/volume-2";
-  import MicButton from "./mic-button.svelte";
-  import DeafenButton from "./deafen-button.svelte";
-  import HangupButton from "./hangup-button.svelte";
+  import { elasticInOut } from "svelte/easing";
   import CameraButton from "./camera-button.svelte";
+  import HangupButton from "./hangup-button.svelte";
   import ScreenShareButton from "./screen-share-button.svelte";
   import { SoundboardButton } from "./soundboard";
-  import { fly } from "$lib/motion";
-  import { elasticInOut } from "svelte/easing";
 </script>
 
 <div transition:fly={{ y: 20, easing: elasticInOut }}>
@@ -24,15 +22,13 @@
           {voice.status === VoiceStatus.Connected ? "Connected" : "Connecting…"}
         </div>
       </div>
-      <HangupButton />
+      <HangupButton variant="ghost" />
     </div>
 
     <div class="flex gap-1.5">
-      <MicButton />
-      <DeafenButton />
-      <CameraButton />
-      <ScreenShareButton />
-      <SoundboardButton />
+      <CameraButton class="flex-1" />
+      <ScreenShareButton class="flex-1" />
+      <SoundboardButton class="flex-1" />
     </div>
   </Card>
 </div>

@@ -1,4 +1,4 @@
-import { SEARCH_PAGE, SearchSort } from "@ccchat/shared";
+import { SEARCH_PAGE, SearchSort } from "@motus/shared";
 import { api, type SearchHit } from "$lib/api";
 
 export interface SearchFilters {
