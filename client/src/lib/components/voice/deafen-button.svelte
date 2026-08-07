@@ -1,7 +1,8 @@
 <script lang="ts">
   import { voice } from "$lib/stores";
   import { type ButtonVariant } from "&/button";
-  import { Headphones, HeadphoneOff } from "@lucide/svelte";
+  import HeadphoneOffIcon from "@lucide/svelte/icons/headphone-off";
+  import HeadphonesIcon from "@lucide/svelte/icons/headphones";
   import DevicePickerButton from "./device-picker-button.svelte";
 
   const variant: ButtonVariant = $derived(voice.deafened ? "destructive" : "secondary");
@@ -17,8 +18,8 @@
   fallbackLabel="Speaker"
 >
   {#if voice.deafened}
-    <HeadphoneOff class="size-4" />
+    <HeadphoneOffIcon class="size-4" />
   {:else}
-    <Headphones class="size-4" />
+    <HeadphonesIcon class="size-4" />
   {/if}
 </DevicePickerButton>

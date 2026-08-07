@@ -3,8 +3,11 @@
   import Markdown from "$lib/components/markdown/markdown.svelte";
   import { Button } from "&/button";
   import { Textarea } from "&/textarea";
+  import EyeIcon from "@lucide/svelte/icons/eye";
+  import EyeOffIcon from "@lucide/svelte/icons/eye-off";
+  import PaperclipIcon from "@lucide/svelte/icons/paperclip";
+  import SendIcon from "@lucide/svelte/icons/send";
   import { MAX_ATTACHMENTS_PER_MESSAGE, MESSAGE_MAX_LENGTH } from "@motus/shared";
-  import { Eye, EyeOff, Paperclip, Send } from "@lucide/svelte";
   import EmojiPicker from "../emoji-picker.svelte";
   import AttachmentChip from "./attachment-chip.svelte";
   import { Composer } from "./composer.svelte";
@@ -101,7 +104,7 @@
       title="Attach files"
       onclick={() => c.fileEl?.click()}
     >
-      <Paperclip class="size-4" />
+      <PaperclipIcon class="size-4" />
     </Button>
     <Button
       variant="ghost"
@@ -110,7 +113,7 @@
       title={c.preview ? "Hide preview" : "Show preview"}
       onclick={() => (c.preview = !c.preview)}
     >
-      {#if c.preview}<EyeOff class="size-4" />{:else}<Eye class="size-4" />{/if}
+      {#if c.preview}<EyeOffIcon class="size-4" />{:else}<EyeIcon class="size-4" />{/if}
     </Button>
     <EmojiPicker {disabled} onpick={c.insertAtCaret} />
     <Button
@@ -119,7 +122,7 @@
       onclick={c.submit}
       title={c.uploading ? "Waiting for uploads…" : "Send"}
     >
-      <Send class="size-4" />
+      <SendIcon class="size-4" />
     </Button>
 
     {#if c.showCount}

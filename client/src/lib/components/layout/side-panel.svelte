@@ -5,7 +5,7 @@
   import { Button } from "&/button";
   import * as Resizable from "&/resizable";
   import * as Sheet from "&/sheet";
-  import { X } from "@lucide/svelte";
+  import XIcon from "@lucide/svelte/icons/x";
 
   const chat = getChatContext();
 
@@ -40,7 +40,7 @@
             title="Close {title.toLowerCase()}"
             onclick={() => (chat.panel = "")}
           >
-            <X class="size-4" />
+            <XIcon class="size-4" />
           </Button>
         </div>
         {@render body()}

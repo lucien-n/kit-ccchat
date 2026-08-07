@@ -5,8 +5,11 @@
   import { cn } from "$lib/utils";
   import { muteState } from "$lib/voice-mute";
   import { Button } from "&/button";
+  import HeadphoneOffIcon from "@lucide/svelte/icons/headphone-off";
+  import MicOffIcon from "@lucide/svelte/icons/mic-off";
+  import MonitorPlayIcon from "@lucide/svelte/icons/monitor-play";
+  import VideoIcon from "@lucide/svelte/icons/video";
   import type { Channel, VoiceMember } from "@motus/shared";
-  import { HeadphoneOff, MicOff, MonitorPlay, Video } from "@lucide/svelte";
 
   interface Props {
     member: VoiceMember;
@@ -40,7 +43,7 @@
   </UserCard>
 
   {#if mute}
-    <MicOff
+    <MicOffIcon
       class={cn(
         "size-3.5 shrink-0",
         mute === "forced" ? "text-amber-400" : "text-muted-foreground/70",
@@ -52,14 +55,14 @@
   {/if}
 
   {#if member.deafened}
-    <HeadphoneOff
+    <HeadphoneOffIcon
       class="text-muted-foreground/70 size-3.5 shrink-0"
       aria-label="{member.displayName} is deafened"
     />
   {/if}
 
   {#if member.camera}
-    <Video
+    <VideoIcon
       class="text-muted-foreground/70 size-3.5 shrink-0"
       aria-label="{member.displayName} has their camera on"
     />
@@ -73,7 +76,7 @@
       title="{member.displayName} is streaming - click to watch"
       onclick={() => voice.watch(channel, member.id)}
     >
-      <MonitorPlay class="size-3.5" />
+      <MonitorPlayIcon class="size-3.5" />
       <span class="sr-only">Watch {member.displayName}'s stream</span>
     </Button>
   {/if}

@@ -4,9 +4,12 @@
   import { channels, prefs, presence, ui, unread } from "$lib/stores";
   import { Button } from "&/button";
   import * as ToggleGroup from "&/toggle-group";
-  import { ChannelType } from "@motus/shared";
-  import { Bell, BellOff, Menu, Users } from "@lucide/svelte";
+  import BellIcon from "@lucide/svelte/icons/bell";
+  import BellOff from "@lucide/svelte/icons/bell-off";
+  import MenuIcon from "@lucide/svelte/icons/menu";
   import SearchIcon from "@lucide/svelte/icons/search";
+  import UsersIcon from "@lucide/svelte/icons/users";
+  import { ChannelType } from "@motus/shared";
   import PinnedList from "./pinned-list.svelte";
 
   const chat = getChatContext();
@@ -22,7 +25,7 @@
       title="Channels"
       onclick={() => (ui.nav = true)}
     >
-      <Menu class="size-5" />
+      <MenuIcon class="size-5" />
       {#if unread.total > 0}
         <span class="bg-destructive absolute top-1.5 right-1.5 size-2 rounded-full"
         ></span>
@@ -41,7 +44,7 @@
       onclick={() => prefs.toggleSound()}
     >
       {#if prefs.soundEnabled}
-        <Bell class="size-4" />
+        <BellIcon class="size-4" />
       {:else}
         <BellOff class="size-4" />
       {/if}
@@ -57,7 +60,7 @@
         <SearchIcon class="size-4" />
       </ToggleGroup.Item>
       <ToggleGroup.Item value="members" title="Members, {presence.online.size} online">
-        <Users class="size-4" />
+        <UsersIcon class="size-4" />
         <span class="text-xs">
           {presence.online.size} online
         </span>

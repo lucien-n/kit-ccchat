@@ -4,14 +4,17 @@
   import { Input } from "&/input";
   import { Label } from "&/label";
   import { Switch } from "&/switch";
+  import MonitorIcon from "@lucide/svelte/icons/monitor";
+  import MoonIcon from "@lucide/svelte/icons/moon";
+  import PaletteIcon from "@lucide/svelte/icons/palette";
+  import SunIcon from "@lucide/svelte/icons/sun";
   import { themeRadius } from "@motus/shared";
-  import { Monitor, Moon, Palette, Sun } from "@lucide/svelte";
 
   const modes = [
-    { value: ThemeMode.Light, label: "Light", icon: Sun },
-    { value: ThemeMode.Dark, label: "Dark", icon: Moon },
-    { value: ThemeMode.System, label: "System", icon: Monitor },
-  ] satisfies { value: ThemeMode; label: string; icon: typeof Sun }[];
+    { value: ThemeMode.Light, label: "Light", icon: SunIcon },
+    { value: ThemeMode.Dark, label: "Dark", icon: MoonIcon },
+    { value: ThemeMode.System, label: "System", icon: MonitorIcon },
+  ] satisfies { value: ThemeMode; label: string; icon: typeof SunIcon }[];
 
   const themes = [
     { value: Theme.Default, label: "Default" },
@@ -52,7 +55,7 @@
           variant={appearance.theme === theme.value ? "default" : "outline"}
           onclick={() => appearance.setTheme(theme.value)}
         >
-          <Palette class="mr-2 size-4" />
+          <PaletteIcon class="mr-2 size-4" />
           {theme.label}
         </Button>
       {/each}

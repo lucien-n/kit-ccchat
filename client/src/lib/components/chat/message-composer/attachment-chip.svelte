@@ -3,8 +3,10 @@
   import { formatBytes } from "$lib/format";
   import { isCompressibleImageType, isImageType } from "$lib/image";
   import { Button } from "&/button";
+  import FileIcon from "@lucide/svelte/icons/file";
+  import SparklesIcon from "@lucide/svelte/icons/sparkles";
+  import XIcon from "@lucide/svelte/icons/x";
   import { isAudioType } from "@motus/shared";
-  import { File as FileIcon, Sparkles, X } from "@lucide/svelte";
   import AudioEmbed from "../message/audio-embed.svelte";
   import type { Pending } from "./composer.types";
 
@@ -65,7 +67,7 @@
         : "Compressed to save space. Click to send the original quality"}
       onclick={ontoggle}
     >
-      <Sparkles class="size-3" />
+      <SparklesIcon class="size-3" />
     </Button>
   {/if}
 
@@ -76,6 +78,6 @@
     title="Remove attachment"
     onclick={onremove}
   >
-    <X class="size-3" />
+    <XIcon class="size-3" />
   </Button>
 </div>

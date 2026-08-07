@@ -6,7 +6,10 @@
   import { Badge } from "&/badge";
   import { Button } from "&/button";
   import { Label } from "&/label";
-  import { Check, Copy, Link2, Trash2 } from "@lucide/svelte";
+  import CheckIcon from "@lucide/svelte/icons/check";
+  import CopyIcon from "@lucide/svelte/icons/copy";
+  import Link2Icon from "@lucide/svelte/icons/link-2";
+  import Trash2Icon from "@lucide/svelte/icons/trash-2";
   import { onMount } from "svelte";
 
   let invites = $state<Invite[]>([]);
@@ -119,7 +122,7 @@
     {#each invites as i (i.code)}
       <div class={cn("rounded-lg border p-3", !i.active && "opacity-50")}>
         <div class="flex items-center gap-2">
-          <Link2 class="text-muted-foreground size-4 shrink-0" />
+          <Link2Icon class="text-muted-foreground size-4 shrink-0" />
           <code class="min-w-0 flex-1 truncate font-mono text-xs"
             >{inviteLink(i.code)}</code
           >
@@ -131,9 +134,9 @@
             onclick={() => copy(i.code)}
           >
             {#if copied === i.code}
-              <Check class="size-4 text-emerald-500" />
+              <CheckIcon class="size-4 text-emerald-500" />
             {:else}
-              <Copy class="size-4" />
+              <CopyIcon class="size-4" />
             {/if}
           </Button>
           {#if i.active}
@@ -144,7 +147,7 @@
               title="Revoke"
               onclick={() => revoke(i.code)}
             >
-              <Trash2 class="size-4" />
+              <Trash2Icon class="size-4" />
             </Button>
           {/if}
         </div>

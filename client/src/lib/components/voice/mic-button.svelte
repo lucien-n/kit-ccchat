@@ -1,7 +1,8 @@
 <script lang="ts">
   import { MicStatus, voice } from "$lib/stores";
   import { type ButtonProps } from "&/button";
-  import { Mic, MicOff } from "@lucide/svelte";
+  import MicIcon from "@lucide/svelte/icons/mic";
+  import MicOffIcon from "@lucide/svelte/icons/mic-off";
   import ConfirmDialog from "../common/confirm-dialog.svelte";
   import DevicePickerButton from "./device-picker-button.svelte";
 
@@ -48,9 +49,9 @@
   fallbackLabel="Microphone"
 >
   {#if micOff}
-    <MicOff class="size-4" />
+    <MicOffIcon class="size-4" />
   {:else}
-    <Mic class="size-4" />
+    <MicIcon class="size-4" />
   {/if}
 </DevicePickerButton>
 
