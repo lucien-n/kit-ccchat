@@ -21,7 +21,7 @@ export const IMAGE_MIME_TYPES: readonly string[] = [
 // Images are a subset of attachments: an image file keeps its resized bytes and
 // dimensions and renders inline, everything else is a download.
 
-export const MAX_ATTACHMENTS_PER_MESSAGE = 4;
+export const MAX_ATTACHMENTS_PER_MESSAGE = 12;
 
 /** Hard ceiling on a single attachment. Uploads are streamed to disk, so this
  *  guards the disk rather than memory; the client rejects earlier for feedback. */
