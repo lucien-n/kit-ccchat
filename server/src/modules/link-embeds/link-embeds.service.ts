@@ -113,7 +113,9 @@ export function embedsOf(messageId: string): MessageEmbed[] {
   return db
     .select()
     .from(messageEmbedsTable)
-    .where(and(eq(messageEmbedsTable.messageId, messageId), eq(messageEmbedsTable.removed, 0)))
+    .where(
+      and(eq(messageEmbedsTable.messageId, messageId), eq(messageEmbedsTable.removed, 0)),
+    )
     .orderBy(asc(messageEmbedsTable.position))
     .all()
     .map(toEmbedView);
@@ -191,7 +193,12 @@ export async function unfurlMessage(
   db.transaction((tx) => {
     // Replace the live cards; keep dismissed tombstones so they keep suppressing.
     tx.delete(messageEmbedsTable)
-      .where(and(eq(messageEmbedsTable.messageId, messageId), eq(messageEmbedsTable.removed, 0)))
+      .where(
+        and(
+          eq(messageEmbedsTable.messageId, messageId),
+          eq(messageEmbedsTable.removed, 0),
+        ),
+      )
       .run();
     if (rows.length) tx.insert(messageEmbedsTable).values(rows).run();
   });

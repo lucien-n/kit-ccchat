@@ -30,7 +30,10 @@ function decodeEntities(s: string): string {
     const key = body.toLowerCase();
     if (key in ENTITIES) return ENTITIES[key];
     if (body[0] === "#") {
-      const code = body[1] === "x" || body[1] === "X" ? parseInt(body.slice(2), 16) : Number(body.slice(1));
+      const code =
+        body[1] === "x" || body[1] === "X"
+          ? parseInt(body.slice(2), 16)
+          : Number(body.slice(1));
       if (Number.isFinite(code) && code > 0 && code <= 0x10ffff) {
         try {
           return String.fromCodePoint(code);
@@ -77,7 +80,13 @@ export function parseOpenGraph(html: string, pageUrl: string): OgData {
 
   const pick = (...keys: string[]) => keys.map((k) => meta.get(k)).find((v) => v);
 
-  const rawImage = pick("og:image", "og:image:url", "og:image:secure_url", "twitter:image", "twitter:image:src");
+  const rawImage = pick(
+    "og:image",
+    "og:image:url",
+    "og:image:secure_url",
+    "twitter:image",
+    "twitter:image:src",
+  );
   let imageUrl: string | null = null;
   if (rawImage) {
     try {
@@ -88,8 +97,12 @@ export function parseOpenGraph(html: string, pageUrl: string): OgData {
   }
 
   return {
-    title: clean(pick("og:title", "twitter:title"), TITLE_MAX) ?? clean(titleTag, TITLE_MAX),
-    description: clean(pick("og:description", "twitter:description", "description"), DESCRIPTION_MAX),
+    title:
+      clean(pick("og:title", "twitter:title"), TITLE_MAX) ?? clean(titleTag, TITLE_MAX),
+    description: clean(
+      pick("og:description", "twitter:description", "description"),
+      DESCRIPTION_MAX,
+    ),
     siteName: clean(pick("og:site_name", "application-name"), SITE_NAME_MAX),
     imageUrl,
   };

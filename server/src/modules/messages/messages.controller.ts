@@ -36,11 +36,7 @@ export function remove(c: AppContext<"/:id">) {
 }
 
 export function removeEmbed(c: AppContext<"/:id/embeds/:embedId">) {
-  messagesService.removeEmbed(
-    c.req.param("id"),
-    c.req.param("embedId"),
-    c.get("user"),
-  );
+  messagesService.removeEmbed(c.req.param("id"), c.req.param("embedId"), c.get("user"));
   return c.json({ ok: true });
 }
 

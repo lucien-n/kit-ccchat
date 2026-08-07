@@ -243,9 +243,8 @@ describe("booted server", () => {
   describe("embed removal (soft-delete)", () => {
     beforeAll(async () => {
       const { db } = await import("../src/db/index.js");
-      const { channelsTable, messagesTable, messageEmbedsTable } = await import(
-        "../src/db/schema/index.js"
-      );
+      const { channelsTable, messagesTable, messageEmbedsTable } =
+        await import("../src/db/schema/index.js");
       db.insert(channelsTable)
         .values({ id: "c-rm", name: "general", createdAt: Date.now() })
         .run();
@@ -265,7 +264,9 @@ describe("booted server", () => {
         position,
         createdAt: Date.now(),
       });
-      db.insert(messageEmbedsTable).values([embed("e1", 0), embed("e2", 1)]).run();
+      db.insert(messageEmbedsTable)
+        .values([embed("e1", 0), embed("e2", 1)])
+        .run();
     });
 
     it("drops a dismissed embed from embedsOf, keeping the rest in order", () => {

@@ -23,7 +23,11 @@ import { hub } from "../../hub.js";
 import { toMessageView } from "../../views.js";
 import { mainTextChannel } from "../channels/channels.service.js";
 import { deleteAttachmentsOf } from "../attachments/attachments.service.js";
-import { embedsOf, markEmbedRemoved, unfurlMessage } from "../link-embeds/link-embeds.service.js";
+import {
+  embedsOf,
+  markEmbedRemoved,
+  unfurlMessage,
+} from "../link-embeds/link-embeds.service.js";
 import { resolveMentions, saveMentions } from "./mentions.js";
 import { isPinned, pinCount, pinnedRows } from "./pins.js";
 import { emojiOn, reactionsOf } from "./reactions.js";
