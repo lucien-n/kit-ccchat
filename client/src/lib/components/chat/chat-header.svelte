@@ -7,6 +7,7 @@
   import { ChannelType } from "@motus/shared";
   import { Bell, BellOff, Menu, Users } from "@lucide/svelte";
   import SearchIcon from "@lucide/svelte/icons/search";
+  import PinnedList from "./pinned-list.svelte";
 
   const chat = getChatContext();
   const Icon = channelTypeSpecs[ChannelType.Text].icon;
@@ -31,6 +32,8 @@
     <span class="truncate">{channels.current?.name ?? "no channel"}</span>
   </div>
   <div class="flex shrink-0 items-center gap-1 sm:gap-2">
+    <PinnedList />
+
     <Button
       variant="ghost"
       size="icon"

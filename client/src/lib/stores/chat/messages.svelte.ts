@@ -156,6 +156,10 @@ class Messages {
     this.list = this.list.map((m) => (m.id === id ? { ...m, reactions } : m));
   }
 
+  applyPinned(id: string, pinned: boolean) {
+    this.list = this.list.map((m) => (m.id === id ? { ...m, pinned } : m));
+  }
+
   send(
     channelId: string,
     content: string,
@@ -177,6 +181,14 @@ class Messages {
 
   async delete(id: string) {
     await api.messages.delete(id);
+  }
+
+  async pin(id: string) {
+    await api.messages.pin(id);
+  }
+
+  async unpin(id: string) {
+    await api.messages.unpin(id);
   }
 
   async react(id: string, emoji: string) {

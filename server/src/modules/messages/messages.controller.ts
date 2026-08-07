@@ -35,6 +35,20 @@ export function remove(c: AppContext<"/:id">) {
   return c.json({ ok: true });
 }
 
+export function pins(c: AppContext<"/:channelId/pins">) {
+  return c.json({ pins: messagesService.listPins(c.req.param("channelId")) });
+}
+
+export function pin(c: AppContext<"/:id/pin">) {
+  messagesService.pinMessage(c.req.param("id"), c.get("user"));
+  return c.json({ ok: true });
+}
+
+export function unpin(c: AppContext<"/:id/pin">) {
+  messagesService.unpinMessage(c.req.param("id"), c.get("user"));
+  return c.json({ ok: true });
+}
+
 export function react(c: AppContext<"/:id/reactions/:emoji">) {
   messagesService.reactMessage(c.req.param("id"), c.get("user"), c.req.param("emoji"));
 

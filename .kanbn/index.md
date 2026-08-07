@@ -29,7 +29,6 @@ columnSorting:
 - [offsite-backup-shipping](tasks/offsite-backup-shipping.md)
 - [session-device-management](tasks/session-device-management.md)
 - [two-factor-auth](tasks/two-factor-auth.md)
-- [pinned-messages](tasks/pinned-messages.md)
 - [link-embeds](tasks/link-embeds.md)
 - [custom-emojis](tasks/custom-emojis.md)
 - [voice-activity-sensitivity](tasks/voice-activity-sensitivity.md)
@@ -49,8 +48,8 @@ columnSorting:
 
 ## Done
 
+- [pinned-messages](tasks/pinned-messages.md)
 - [fix-message-actions-emoji-reaction-close-on-actions-mouse-hover-leave](tasks/fix-message-actions-emoji-reaction-close-on-actions-mouse-hover-leave.md)
-
 - [allow-playing-video-attachments](tasks/allow-playing-video-attachments.md)
 - [allow-playing-audio-attachments](tasks/allow-playing-audio-attachments.md)
 - [arbitrary-file-attachments](tasks/arbitrary-file-attachments.md)

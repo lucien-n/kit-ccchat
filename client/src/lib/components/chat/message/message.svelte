@@ -10,6 +10,7 @@
   import { cn } from "$lib/utils";
   import { Textarea } from "&/textarea";
   import { MESSAGE_MAX_LENGTH, SystemEvent } from "@motus/shared";
+  import PinIcon from "@lucide/svelte/icons/pin";
   import ReplyIcon from "@lucide/svelte/icons/reply";
   import UserRoundPlusIcon from "@lucide/svelte/icons/user-round-plus";
   import { tick } from "svelte";
@@ -114,6 +115,12 @@
     {/if}
     <div class="flex w-full min-w-0 flex-col">
       <div class="min-w-0">
+        {#if message.pinned}
+          <div class="text-muted-foreground flex items-center gap-1.5 text-xs">
+            <PinIcon class="size-3 shrink-0" />
+            <span class="font-medium">Pinned</span>
+          </div>
+        {/if}
         {#if message.replyTo}
           {@const reply = message.replyTo}
           {#if reply.deleted}

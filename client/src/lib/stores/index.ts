@@ -13,6 +13,7 @@ export * from "./community/unread.svelte";
 
 export * from "./chat/mention-card.svelte";
 export * from "./chat/messages.svelte";
+export * from "./chat/pins.svelte";
 export * from "./chat/search.svelte";
 export * from "./chat/typing.svelte";
 

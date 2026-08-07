@@ -1,23 +1,18 @@
 <script lang="ts">
   import { api, type SystemStats } from "$lib/api";
   import ConfirmDialog from "$lib/components/common/confirm-dialog.svelte";
-  import {
-    formatBytes,
-    formatDateTime,
-    formatDuration,
-    formatRelative,
-  } from "$lib/format";
+  import { formatBytes, formatDate, formatDuration, formatRelative } from "$lib/format";
   import { apiErrorMessage } from "$lib/forms";
   import * as Accordion from "&/accordion";
   import { Button } from "&/button";
   import * as Card from "&/card";
   import { ScrollArea } from "&/scroll-area";
   import * as Tooltip from "&/tooltip";
-  import { DiskItem } from "@motus/shared";
   import DatabaseBackupIcon from "@lucide/svelte/icons/database-backup";
   import DownloadIcon from "@lucide/svelte/icons/download";
   import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
   import Trash2Icon from "@lucide/svelte/icons/trash-2";
+  import { DiskItem } from "@motus/shared";
   import { onMount } from "svelte";
   import { toast } from "svelte-sonner";
   import Sparkline from "./sparkline.svelte";
@@ -300,7 +295,7 @@
                     class="hover:bg-accent group flex items-center gap-2 rounded-md px-2 py-1.5 text-sm"
                   >
                     <div class="min-w-0 flex-1">
-                      <div class="truncate">{formatDateTime(backup.createdAt)}</div>
+                      <div class="truncate">{formatDate(backup.createdAt, true)}</div>
                       <div class="text-muted-foreground text-xs tabular-nums">
                         {formatBytes(backup.sizeBytes)}
                       </div>

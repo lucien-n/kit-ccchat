@@ -23,6 +23,14 @@ export const messages = {
   delete: async (id: string) =>
     (await client.api.messages[":id"].$delete({ param: { id } })).json(),
 
+  pins: async (channelId: string) =>
+    (await client.api.messages[":channelId"].pins.$get({ param: { channelId } })).json(),
+
+  pin: async (id: string) => await client.api.messages[":id"].pin.$put({ param: { id } }),
+
+  unpin: async (id: string) =>
+    await client.api.messages[":id"].pin.$delete({ param: { id } }),
+
   react: async (id: string, emoji: string) =>
     await client.api.messages[":id"].reactions[":emoji"].$put({ param: { id, emoji } }),
 

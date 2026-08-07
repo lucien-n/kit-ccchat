@@ -1,6 +1,7 @@
 <script lang="ts">
   import type { SearchHit } from "$lib/api";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
+  import { formatDate } from "$lib/format";
   import { channelTypeSpecs } from "$lib/specs";
   import { appearance, channels } from "$lib/stores";
   import { ChannelType, MATCH_CLOSE, MATCH_OPEN } from "@motus/shared";
@@ -30,14 +31,6 @@
     return out.filter((s) => s.text.length > 0);
   }
 
-  function fmtDate(ts: number) {
-    return new Date(ts).toLocaleDateString([], {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  }
-
   const TextChannelIcon = channelTypeSpecs[ChannelType.Text].icon;
 </script>
 
@@ -50,7 +43,7 @@
     <TextChannelIcon class="size-3 shrink-0" />
     <span class="truncate font-medium">{channelName}</span>
     <span class="shrink-0">·</span>
-    <span class="shrink-0">{fmtDate(hit.message.createdAt)}</span>
+    <span class="shrink-0">{formatDate(hit.message.createdAt)}</span>
   </div>
 
   <div class="flex min-w-0 gap-2">

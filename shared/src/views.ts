@@ -148,6 +148,9 @@ export const messageView = z.object({
   mentionsEveryone: z.boolean(),
   reactions: z.array(reaction),
   attachments: z.array(messageAttachment),
+  /** Pinned in its channel. The pinned-list popover browses these; the message
+   *  itself carries the flag so its actions and badge stay in step live. */
+  pinned: z.boolean(),
 });
 export type MessageView = z.infer<typeof messageView>;
 

@@ -73,6 +73,7 @@ function withBody(method: string) {
 
 export const put = withBody("PUT");
 export const patch = withBody("PATCH");
+export const del = withBody("DELETE");
 
 /** Claim the instance and return the owner's token. One shot per database. */
 export async function claim(app: Hono<any>, username = "owner") {

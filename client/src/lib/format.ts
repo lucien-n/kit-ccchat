@@ -10,10 +10,13 @@ const DATE_TIME_FMT = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
   timeStyle: "short",
 });
+const DATE_FMT = new Intl.DateTimeFormat(undefined, {
+  dateStyle: "medium",
+});
 
-/** Absolute local date + time, e.g. "5 Aug 2026, 15:30". */
-export function formatDateTime(ms: number): string {
-  return DATE_TIME_FMT.format(new Date(ms));
+export function formatDate(ms: number, withTime?: boolean): string {
+  const FMT = withTime ? DATE_TIME_FMT : DATE_FMT;
+  return FMT.format(new Date(ms));
 }
 
 /** A signed gap from now as words, e.g. "3h ago" or "in 21h". */
