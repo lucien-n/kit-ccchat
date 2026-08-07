@@ -23,6 +23,11 @@ export const messages = {
   delete: async (id: string) =>
     (await client.api.messages[":id"].$delete({ param: { id } })).json(),
 
+  removeEmbed: async (id: string, embedId: string) =>
+    await client.api.messages[":id"].embeds[":embedId"].$delete({
+      param: { id, embedId },
+    }),
+
   pins: async (channelId: string) =>
     (await client.api.messages[":channelId"].pins.$get({ param: { channelId } })).json(),
 

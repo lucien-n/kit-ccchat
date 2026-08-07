@@ -1,17 +1,8 @@
-import { mkdtempSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { rmSync } from "node:fs";
 import type { Hono } from "hono";
-
-// Runs at import time, before any dynamic import of the db, which builds its
-// SQLite handle from DATA_DIR at *its* import time. A static import of the app
-// here would open the developer's real database.
-process.env.NODE_ENV = "test";
-process.env.LIVEKIT_API_SECRET = "test-only-secret-not-a-real-one";
-process.env.COMMUNITY_NAME = "Test Community";
-
-const DIR = mkdtempSync(join(tmpdir(), "motus-test-"));
-process.env.DATA_DIR = DIR;
+// DIR / DATA_DIR are set by env-setup, loaded via setupFiles before any test
+// module (and thus before the db opens), so it is safe against import ordering.
+import { DIR } from "./env-setup.js";
 
 export async function boot(): Promise<Hono<any>> {
   const { migrate } = await import("../src/db/index.js");

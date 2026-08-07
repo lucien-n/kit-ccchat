@@ -35,6 +35,15 @@ export function remove(c: AppContext<"/:id">) {
   return c.json({ ok: true });
 }
 
+export function removeEmbed(c: AppContext<"/:id/embeds/:embedId">) {
+  messagesService.removeEmbed(
+    c.req.param("id"),
+    c.req.param("embedId"),
+    c.get("user"),
+  );
+  return c.json({ ok: true });
+}
+
 export function pins(c: AppContext<"/:channelId/pins">) {
   return c.json({ pins: messagesService.listPins(c.req.param("channelId")) });
 }

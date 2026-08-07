@@ -14,6 +14,7 @@ import settingsRouter from "./modules/settings/settings.router.js";
 import authRouter from "./modules/auth/auth.router.js";
 import attachmentsRouter from "./modules/attachments/attachments.router.js";
 import invitesRouter from "./modules/invites/invites.router.js";
+import linkEmbedsRouter from "./modules/link-embeds/link-embeds.router.js";
 import channelsRouter from "./modules/channels/channels.router.js";
 import messagesRouter from "./modules/messages/messages.router.js";
 import moderationRouter from "./modules/moderation/moderation.router.js";
@@ -43,6 +44,7 @@ export const app = new Hono<Env>()
   .route("/api/invites", invitesRouter)
   .route("/api/channels", channelsRouter)
   .route("/api/attachments", attachmentsRouter)
+  .route("/api/embeds", linkEmbedsRouter)
   .route("/api/messages", messagesRouter)
   .route("/api/moderation", moderationRouter)
   .route("/api/roles", rolesRouter)

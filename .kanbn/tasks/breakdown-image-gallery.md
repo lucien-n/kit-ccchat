@@ -19,9 +19,9 @@ to test where it sits:
 
 Target shape:
 
-- `image-gallery/zoom-controller.svelte.ts` — the pan/zoom math + keyboard map
+- `image-gallery/zoom-controller.svelte.ts` - the pan/zoom math + keyboard map
   as a class
-- `image-gallery/gallery-grid.svelte` — the thumbnail grid
-- `image-gallery/lightbox.svelte` — the zoomed overlay
+- `image-gallery/gallery-grid.svelte` - the thumbnail grid
+- `image-gallery/lightbox.svelte` - the zoomed overlay
 
 Behaviour must stay identical; follow with `/simplify` on the resulting diff.

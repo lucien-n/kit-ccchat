@@ -18,6 +18,7 @@
   import { scale } from "svelte/transition";
   import MessageActions from "./message-actions.svelte";
   import MessageAttachments from "./message-attachments.svelte";
+  import MessageEmbeds from "./message-embeds.svelte";
   import MessageReactions from "./message-reactions.svelte";
 
   interface Props {
@@ -193,6 +194,8 @@
           <Markdown content={message.content} />
         {/if}
       </div>
+
+      <MessageEmbeds {message} />
 
       <MessageAttachments {message} />
 

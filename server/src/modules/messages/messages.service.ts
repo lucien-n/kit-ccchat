@@ -23,6 +23,7 @@ import { hub } from "../../hub.js";
 import { toMessageView } from "../../views.js";
 import { mainTextChannel } from "../channels/channels.service.js";
 import { deleteAttachmentsOf } from "../attachments/attachments.service.js";
+import { embedsOf, markEmbedRemoved, unfurlMessage } from "../link-embeds/link-embeds.service.js";
 import { resolveMentions, saveMentions } from "./mentions.js";
 import { isPinned, pinCount, pinnedRows } from "./pins.js";
 import { emojiOn, reactionsOf } from "./reactions.js";
@@ -136,6 +137,9 @@ export function editMessage(id: string, user: User, { content }: EditMessageBody
   saveMentions(id, userIds);
   const view = toMessageView({ ...msg, content, editedAt, mentionsEveryone });
   hub.broadcast({ type: ServerEventType.Message_Edited, message: view });
+
+  // Re-unfurl: the edit may have added or removed a link. Fire-and-forget.
+  void unfurlMessage(id, msg.channelId, content);
   return view;
 }
 
@@ -192,6 +196,29 @@ export function reactMessage(id: string, user: User, emoji: string) {
     id,
     channelId: msg.channelId,
     reactions: reactionsOf(id),
+  });
+}
+
+/** Dismiss one link preview from a message, like Slack/Discord. Author or
+ *  moderator only; broadcasts the trimmed embed list so every client drops it. */
+export function removeEmbed(messageId: string, embedId: string, user: User) {
+  const msg = findById(messagesTable, messageId);
+  if (!msg || msg.deleted) {
+    httpError(404, "not found");
+  }
+  if (!canModerate(msg, user)) {
+    httpError(403, "forbidden");
+  }
+
+  if (!markEmbedRemoved(embedId, messageId)) {
+    return; // unknown or already-dismissed embed; nothing to broadcast
+  }
+
+  hub.broadcast({
+    type: ServerEventType.Message_Embeds,
+    id: messageId,
+    channelId: msg.channelId,
+    embeds: embedsOf(messageId),
   });
 }
 

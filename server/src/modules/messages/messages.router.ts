@@ -20,6 +20,7 @@ const router = new Hono<Env>()
   .get("/:channelId/pins", messagesController.pins)
   .patch("/:id", validate("json", editMessageBody), messagesController.edit)
   .delete("/:id", messagesController.remove)
+  .delete("/:id/embeds/:embedId", messagesController.removeEmbed)
   .put("/:id/pin", messagesController.pin)
   .delete("/:id/pin", messagesController.unpin)
   .put(

@@ -10,7 +10,7 @@ tags:
 
 # breakdown system-panel
 
-Lower-ROI than the other breakdowns — `community/system-panel.svelte` (362
+Lower-ROI than the other breakdowns - `community/system-panel.svelte` (362
 lines, ~141 script, 7 runes) is less tangled, mostly one concern. Worth doing
 mainly if the separate SSD disk gauge lands (see attachments follow-ups), since
 that grows the disk section.

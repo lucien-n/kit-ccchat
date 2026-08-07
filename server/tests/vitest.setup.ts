@@ -1,3 +1,4 @@
+import "./env-setup.js"; // must be first: sets DATA_DIR before any db import
 import { beforeEach } from "vitest";
 import { resetRateLimits } from "../src/ratelimit.js";
 

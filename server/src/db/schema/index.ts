@@ -2,6 +2,7 @@ export * from "./channel-reads.table";
 export * from "./channels.table";
 export * from "./invites.table";
 export * from "./message-attachments.table";
+export * from "./message-embeds.table";
 export * from "./message-mentions.table";
 export * from "./message-pins.table";
 export * from "./message-reactions.table";

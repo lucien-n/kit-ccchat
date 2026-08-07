@@ -1,6 +1,6 @@
-import { ClientEventType, type Reaction } from "@motus/shared";
 import { api, type MessageView } from "$lib/api";
 import { realtime } from "$lib/stores/realtime.svelte";
+import { ClientEventType, type MessageEmbed, type Reaction } from "@motus/shared";
 
 const PAGE = 20;
 
@@ -152,12 +152,20 @@ class Messages {
     }
   }
 
+  #patch(id: string, patch: Partial<MessageView>) {
+    this.list = this.list.map((m) => (m.id === id ? { ...m, ...patch } : m));
+  }
+
   applyReactions(id: string, reactions: Reaction[]) {
-    this.list = this.list.map((m) => (m.id === id ? { ...m, reactions } : m));
+    this.#patch(id, { reactions });
   }
 
   applyPinned(id: string, pinned: boolean) {
-    this.list = this.list.map((m) => (m.id === id ? { ...m, pinned } : m));
+    this.#patch(id, { pinned });
+  }
+
+  applyEmbeds(id: string, embeds: MessageEmbed[]) {
+    this.#patch(id, { embeds });
   }
 
   send(
@@ -181,6 +189,10 @@ class Messages {
 
   async delete(id: string) {
     await api.messages.delete(id);
+  }
+
+  async removeEmbed(id: string, embedId: string) {
+    await api.messages.removeEmbed(id, embedId);
   }
 
   async pin(id: string) {

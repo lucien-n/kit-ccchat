@@ -145,6 +145,9 @@ function dispatch(event: ServerEvent) {
       messages.applyPinned(event.id, event.pinned);
       pins.invalidate(event.channelId);
       break;
+    case ServerEventType.Message_Embeds:
+      messages.applyEmbeds(event.id, event.embeds);
+      break;
     case ServerEventType.Presence:
       presence.setOnline(event.online);
       typing.keepOnly(event.online);

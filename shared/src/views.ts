@@ -117,6 +117,19 @@ export const messageAttachment = z.object({
 });
 export type MessageAttachment = z.infer<typeof messageAttachment>;
 
+// A link unfurled from a message's text into a preview card - the digested shape
+// the client sees (never the raw destination beyond `url`).
+export const messageEmbed = z.object({
+  id: z.uuid(),
+  url: z.string(),
+  title: z.string().nullable(),
+  description: z.string().nullable(),
+  siteName: z.string().nullable(),
+  // true when the server captured a thumbnail, served via the image proxy.
+  image: z.boolean(),
+});
+export type MessageEmbed = z.infer<typeof messageEmbed>;
+
 export const sound = z.object({
   id: z.uuid(),
   name: z.string(),
@@ -148,6 +161,8 @@ export const messageView = z.object({
   mentionsEveryone: z.boolean(),
   reactions: z.array(reaction),
   attachments: z.array(messageAttachment),
+  // Empty at send time; filled a moment later by a Message_Embeds event.
+  embeds: z.array(messageEmbed),
   /** Pinned in its channel. The pinned-list popover browses these; the message
    *  itself carries the flag so its actions and badge stay in step live. */
   pinned: z.boolean(),

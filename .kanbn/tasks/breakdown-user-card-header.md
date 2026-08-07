@@ -12,17 +12,17 @@ tags:
 Split `common/user-card/user-card-header.svelte` (349 lines, ~160 script, 9
 runes). It glues four independent editing flows together:
 
-- Accent colour — `previewAccent`, `saveAccent`, `resolveColor`
-- Name / bio drafts — `nameDraft`, `bioDraft`, the seeding `$effect`,
+- Accent colour - `previewAccent`, `saveAccent`, `resolveColor`
+- Name / bio drafts - `nameDraft`, `bioDraft`, the seeding `$effect`,
   `commitProfile`, `saveName`, `saveBio`, bio length limit
-- Avatar upload / remove — `onAvatarFile`, `removeAvatar`
-- Banner upload / remove — `onBannerFile`, `removeBanner`
+- Avatar upload / remove - `onAvatarFile`, `removeAvatar`
+- Banner upload / remove - `onBannerFile`, `removeBanner`
 
 Target shape:
 
-- `user-card/profile-editor.svelte.ts` — a `ProfileEditor` class for the draft
+- `user-card/profile-editor.svelte.ts` - a `ProfileEditor` class for the draft
   state and the async save/upload actions
-- `user-card/avatar-edit.svelte` and `user-card/banner-edit.svelte` — the two
+- `user-card/avatar-edit.svelte` and `user-card/banner-edit.svelte` - the two
   image flows as subcomponents
 
 The folder already uses the `index.ts` + subcomponent convention
