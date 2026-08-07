@@ -33,6 +33,7 @@ columnSorting:
 - [voice-activity-sensitivity](tasks/voice-activity-sensitivity.md)
 - [soundboard-cooldown](tasks/soundboard-cooldown.md)
 - [send-audio-messages](tasks/send-audio-messages.md)
+- [stream-disabled-by-default-opt-in-to-watch](tasks/stream-disabled-by-default-opt-in-to-watch.md)
 - [breakdown-roles-panel](tasks/breakdown-roles-panel.md)
 - [breakdown-user-card-header](tasks/breakdown-user-card-header.md)
 - [breakdown-image-gallery](tasks/breakdown-image-gallery.md)
@@ -45,10 +46,9 @@ columnSorting:
 
 ## In Progress
 
-- [command-palette](tasks/command-palette.md)
-
 ## Done
 
+- [command-palette](tasks/command-palette.md)
 - [link-embeds](tasks/link-embeds.md)
 - [pinned-messages](tasks/pinned-messages.md)
 - [fix-message-actions-emoji-reaction-close-on-actions-mouse-hover-leave](tasks/fix-message-actions-emoji-reaction-close-on-actions-mouse-hover-leave.md)
