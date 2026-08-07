@@ -15,11 +15,15 @@
   interface Props {
     onpick: (emoji: string) => void;
     disabled?: boolean;
+    open?: boolean;
     class?: string;
   }
-  const { onpick, disabled = false, class: className }: Props = $props();
-
-  let open = $state(false);
+  let {
+    onpick,
+    disabled = false,
+    open = $bindable(false),
+    class: className,
+  }: Props = $props();
   let index = $state<EmojiIndex | null>(null);
   let query = $state("");
   let group = $state(0);

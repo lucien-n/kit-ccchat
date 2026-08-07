@@ -14,8 +14,9 @@
   interface Props {
     message: MessageView;
     onedit: () => void;
+    menuOpen?: boolean;
   }
-  const { message, onedit }: Props = $props();
+  let { message, onedit, menuOpen = $bindable(false) }: Props = $props();
 
   const chat = getChatContext();
 
@@ -47,7 +48,11 @@
     <Separator orientation="vertical" />
   </div>
 
-  <EmojiPicker onpick={(emoji) => toggleReaction(message, emoji)} class="size-7" />
+  <EmojiPicker
+    bind:open={menuOpen}
+    onpick={(emoji) => toggleReaction(message, emoji)}
+    class="size-7"
+  />
 
   <Button
     variant="ghost"

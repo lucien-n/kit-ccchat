@@ -34,7 +34,9 @@
   let draft = $state("");
   let editEl = $state<HTMLTextAreaElement | null>(null);
 
-  let showActions = $state(false);
+  let hovering = $state(false);
+  let menuOpen = $state(false);
+  const showActions = $derived(hovering || menuOpen);
 
   async function startEdit() {
     draft = message.content;
@@ -96,8 +98,8 @@
         "bg-primary/8 hover:bg-primary/12 border-primary/70 rounded-l-none border-l-2",
       chat.flashId === message.id && "bg-primary/15",
     )}
-    onmouseenter={() => (showActions = true)}
-    onmouseleave={() => (showActions = false)}
+    onmouseenter={() => (hovering = true)}
+    onmouseleave={() => (hovering = false)}
   >
     {#if message.author}
       <UserCard userId={message.author.id} class="h-fit">
@@ -194,7 +196,7 @@
         class="absolute -top-3.5 right-2 flex opacity-100 transition-opacity duration-50 ease-in-out"
         transition:scale={{ duration: 100, easing: elasticInOut }}
       >
-        <MessageActions {message} onedit={startEdit} />
+        <MessageActions {message} onedit={startEdit} bind:menuOpen />
       </div>
     {/if}
   </div>
