@@ -223,7 +223,12 @@
             <ZoomInIcon class="size-4" />
           {/if}
         </Button>
-        <Button variant="ghost" size="icon" title={m.gallery_save_image()} onclick={saveImage}>
+        <Button
+          variant="ghost"
+          size="icon"
+          title={m.gallery_save_image()}
+          onclick={saveImage}
+        >
           <DownloadIcon class="size-4" />
         </Button>
         <Button
@@ -239,7 +244,12 @@
           <Separator orientation="vertical" />
         </div>
 
-        <Button variant="ghost" size="icon" title={m.common_close()} onclick={() => show(null)}>
+        <Button
+          variant="ghost"
+          size="icon"
+          title={m.common_close()}
+          onclick={() => show(null)}
+        >
           <XIcon class="size-5" />
         </Button>
       </div>

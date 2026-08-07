@@ -170,7 +170,11 @@
         class="group absolute inset-x-0 top-0 h-20 cursor-pointer overflow-hidden rounded-t-2xl"
       >
         {#if banner}
-          <img class="h-full w-full object-cover" src={banner} alt={m.user_banner_alt()} />
+          <img
+            class="h-full w-full object-cover"
+            src={banner}
+            alt={m.user_banner_alt()}
+          />
         {:else}
           <div
             class="bg-primary/30 h-full w-full"

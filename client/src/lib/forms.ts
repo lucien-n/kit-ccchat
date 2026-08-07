@@ -89,7 +89,9 @@ export function spaForm<S extends Schema>(
         else
           setMessage(
             form,
-            fail(apiErrorMessage(err, options.fallback ?? m.common_something_went_wrong())),
+            fail(
+              apiErrorMessage(err, options.fallback ?? m.common_something_went_wrong()),
+            ),
           );
       }
     },

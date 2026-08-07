@@ -122,7 +122,9 @@
   description={ctx.confirming === ModAction.Ban
     ? m.moderation_ban_confirm_desc()
     : m.moderation_kick_confirm_desc()}
-  confirmLabel={ctx.confirming === ModAction.Ban ? m.moderation_ban() : m.moderation_kick()}
+  confirmLabel={ctx.confirming === ModAction.Ban
+    ? m.moderation_ban()
+    : m.moderation_kick()}
   busy={ctx.busy}
   onConfirm={() => ctx.confirming && ctx.moderate(ctx.confirming, { deleteSpan })}
 >

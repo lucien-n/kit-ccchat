@@ -62,8 +62,10 @@
           class="hover:bg-muted/50 flex items-center justify-between gap-2 rounded-2xl p-2"
         >
           <MemberIdentity {member} showMemberRank>
-            {#if member.banned}<Badge variant="destructive">{m.status_banned()}</Badge>{/if}
-            {#if isMuted(member)}<Badge variant="secondary">{m.status_muted()}</Badge>{/if}
+            {#if member.banned}<Badge variant="destructive">{m.status_banned()}</Badge
+              >{/if}
+            {#if isMuted(member)}<Badge variant="secondary">{m.status_muted()}</Badge
+              >{/if}
           </MemberIdentity>
 
           {#if member.id !== session.user?.id && !member.isOwner}

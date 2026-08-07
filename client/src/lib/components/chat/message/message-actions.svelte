@@ -85,13 +85,25 @@
   {/if}
 
   {#if canEdit}
-    <Button variant="ghost" size="icon" class="size-7" title={m.message_edit()} onclick={onedit}>
+    <Button
+      variant="ghost"
+      size="icon"
+      class="size-7"
+      title={m.message_edit()}
+      onclick={onedit}
+    >
       <PencilIcon class="size-4" />
     </Button>
   {/if}
 
   {#if canDelete}
-    <Button variant="ghost" size="icon" class="size-7" title={m.message_delete()} onclick={remove}>
+    <Button
+      variant="ghost"
+      size="icon"
+      class="size-7"
+      title={m.message_delete()}
+      onclick={remove}
+    >
       <Trash2Icon class="size-4" />
     </Button>
   {/if}

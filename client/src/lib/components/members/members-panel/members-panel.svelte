@@ -60,7 +60,9 @@
     >
       {#if row.kind === "header"}
         <p class="text-muted-foreground px-2 text-xs" transition:fade={{ duration: 200 }}>
-          {row.group === PresenceGroup.Online ? m.presence_online() : m.presence_offline()}
+          {row.group === PresenceGroup.Online
+            ? m.presence_online()
+            : m.presence_offline()}
         </p>
       {:else}
         <div

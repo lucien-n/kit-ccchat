@@ -46,13 +46,18 @@ export function search(params: SearchQuery): SearchResults {
 /** Turn a user's text into a safe LIKE pattern: the wildcards `%` `_` and the
  *  escape `\` are neutered so a filename with an underscore matches literally. */
 function likePattern(q: string): string {
-  const escaped = q.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_");
+  const escaped = q
+    .replaceAll("\\", "\\\\")
+    .replaceAll("%", "\\%")
+    .replaceAll("_", "\\_");
   return `%${escaped}%`;
 }
 
 /** Attachments are searched by filename, not by the FTS content index. Only files
  *  bound to a live message are returned, so every hit can open where it lives. */
-export function searchAttachments(params: AttachmentSearchQuery): AttachmentSearchResults {
+export function searchAttachments(
+  params: AttachmentSearchQuery,
+): AttachmentSearchResults {
   const q = params.q.trim();
   if (q.length < MIN_TERM_LENGTH) return EMPTY_ATTACHMENTS;
 

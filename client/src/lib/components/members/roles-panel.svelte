@@ -172,7 +172,11 @@
   disabled: boolean,
 )}
   <Label>{label}</Label>
-  <Input placeholder={m.roles_name_placeholder()} bind:value={model.name} class="w-full" />
+  <Input
+    placeholder={m.roles_name_placeholder()}
+    bind:value={model.name}
+    class="w-full"
+  />
   <div class="flex flex-wrap items-center gap-2">
     <Input
       type="color"

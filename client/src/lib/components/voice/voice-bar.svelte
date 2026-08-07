@@ -20,7 +20,9 @@
           <span class="truncate">{voice.channel?.name}</span>
         </div>
         <div class="text-xs text-green-500">
-          {voice.status === VoiceStatus.Connected ? m.voice_connected() : m.voice_connecting()}
+          {voice.status === VoiceStatus.Connected
+            ? m.voice_connected()
+            : m.voice_connecting()}
         </div>
       </div>
       <HangupButton variant="ghost" />

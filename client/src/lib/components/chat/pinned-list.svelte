@@ -45,7 +45,9 @@
     {#if pins.loading && pins.list.length === 0}
       <div class="text-muted-foreground py-8 text-center text-sm">{m.pins_loading()}</div>
     {:else if pins.list.length === 0}
-      <div class="text-muted-foreground px-4 py-8 text-center text-sm">{m.pins_empty()}</div>
+      <div class="text-muted-foreground px-4 py-8 text-center text-sm">
+        {m.pins_empty()}
+      </div>
     {:else}
       <ScrollArea class="max-h-96">
         <div class="flex flex-col gap-0.5 p-1">

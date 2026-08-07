@@ -37,7 +37,8 @@
         {m.common_cancel()}
       </Button>
       <Button onclick={() => externalLink.visit()}>
-        {m.external_link_visit()} <ExternalLinkIcon />
+        {m.external_link_visit()}
+        <ExternalLinkIcon />
       </Button>
     </Dialog.Footer>
   </Dialog.Content>

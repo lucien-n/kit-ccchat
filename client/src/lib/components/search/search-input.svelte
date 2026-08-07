@@ -112,7 +112,11 @@
       <Badge variant="secondary" class="gap-1">
         <AtSignIcon />
         {parsed.from}
-        <button type="button" title={m.search_clear_author()} onclick={() => drop("from")}>
+        <button
+          type="button"
+          title={m.search_clear_author()}
+          onclick={() => drop("from")}
+        >
           <XIcon class="size-3" />
         </button>
       </Badge>

@@ -64,7 +64,9 @@
         <Button type="button" variant="ghost" onclick={() => (ctx.renaming = false)}>
           {m.common_cancel()}
         </Button>
-        <Form.Button disabled={$submitting || taken}>{m.channel_rename_action()}</Form.Button>
+        <Form.Button disabled={$submitting || taken}
+          >{m.channel_rename_action()}</Form.Button
+        >
       </Dialog.Footer>
     </form>
   </Dialog.Content>
