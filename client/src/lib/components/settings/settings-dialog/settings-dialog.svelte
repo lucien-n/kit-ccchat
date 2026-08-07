@@ -2,6 +2,7 @@
   import { m } from "$lib/paraglide/messages";
   import * as Dialog from "&/dialog";
   import * as Tabs from "&/tabs";
+  import type { LocalizedString } from "@inlang/paraglide-js";
   import { SETTINGS_DIALOG_TAB_SPECS, SettingsDialogTab } from ".";
 
   interface Props {
@@ -10,7 +11,7 @@
 
   let { open = $bindable(false) }: Props = $props();
 
-  const tabTitles = $derived({
+  const tabTitles = $derived<Record<SettingsDialogTab, LocalizedString>>({
     [SettingsDialogTab.Profile]: m.settings_tab_profile(),
     [SettingsDialogTab.Appearance]: m.settings_tab_appearance(),
   });
@@ -24,7 +25,7 @@
 
     <Tabs.Root value={SettingsDialogTab.Profile} class="w-full">
       <Tabs.List class="w-full">
-        {#each Object.entries(SETTINGS_DIALOG_TAB_SPECS) as [tab, spec] (tab)}
+        {#each Object.values(SettingsDialogTab) as [tab] (tab)}
           <Tabs.Trigger value={tab}>{tabTitles[tab as SettingsDialogTab]}</Tabs.Trigger>
         {/each}
       </Tabs.List>
