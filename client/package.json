@@ -7,12 +7,14 @@
     "dev": "vite dev",
     "build": "vite build",
     "preview": "vite preview",
-    "check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+    "paraglide:compile": "paraglide-js compile --project ./project.inlang --outdir ./src/lib/paraglide",
+    "check": "npm run paraglide:compile && svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "emoji:gen": "node scripts/generate-emoji.js"
   },
   "dependencies": {
+    "@inlang/paraglide-js": "^2.23.2",
     "@mdit/plugin-spoiler": "^2.0.0",
     "culori": "^4.0.2",
     "livekit-client": "^2.7.5",

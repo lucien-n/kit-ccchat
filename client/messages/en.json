@@ -1,0 +1,43 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+
+  "settings_title": "Settings",
+  "settings_tab_profile": "Profile",
+  "settings_tab_appearance": "Appearance",
+
+  "appearance_mode_heading": "Appearance",
+  "appearance_mode_light": "Light",
+  "appearance_mode_dark": "Dark",
+  "appearance_mode_system": "System",
+
+  "appearance_theme_heading": "Theme",
+  "appearance_theme_default": "Default",
+  "appearance_theme_tangerine": "Tangerine",
+  "appearance_theme_notebook": "Notebook",
+  "appearance_theme_whatsapp": "Whatsapp",
+  "appearance_theme_neobrutalism": "Neobrutalism",
+  "appearance_theme_custom": "Custom",
+
+  "appearance_custom_primary": "Primary",
+  "appearance_custom_primary_desc": "Buttons, links and accents.",
+  "appearance_custom_primary_aria": "Primary color",
+  "appearance_custom_background": "Background",
+  "appearance_custom_background_desc": "Sets the surface tone; light or dark follows from it.",
+  "appearance_custom_background_aria": "Background color",
+  "appearance_custom_radius": "Corner radius",
+  "appearance_custom_radius_aria": "Corner radius",
+
+  "appearance_reduced_motion": "Reduced motion",
+  "appearance_reduced_motion_desc": "Minimize animations and transitions.",
+
+  "appearance_language_heading": "Language",
+
+  "profile_change_password": "Change password",
+  "profile_current_password_placeholder": "current password",
+  "profile_new_password_placeholder": "new password (min 8)",
+  "profile_update_password": "Update password",
+  "profile_password_changed": "Password changed.",
+  "profile_change_password_failed": "failed to change password",
+  "profile_log_out": "Log Out",
+  "profile_log_out_title": "Log out"
+}

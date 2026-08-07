@@ -1,6 +1,7 @@
 export * from "./realtime.svelte";
 
 export * from "./session/appearance.svelte";
+export * from "./session/locale.svelte";
 export * from "./session/prefs.svelte";
 export * from "./session/session.svelte";
 

@@ -2,6 +2,7 @@ import {
   appearance,
   channels,
   community,
+  locale,
   members,
   messages,
   pins,
@@ -31,6 +32,7 @@ import { pingsMe } from "./mentions";
 import { playPing, unlockAudio } from "./notify";
 
 export async function init() {
+  locale.init();
   prefs.init();
   soundboard.init();
   window.addEventListener("focus", () => {

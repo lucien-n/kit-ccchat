@@ -1,6 +1,7 @@
 node_modules
 client/build
 client/.svelte-kit
+client/src/lib/paraglide
 server/data
 data
 package-lock.json

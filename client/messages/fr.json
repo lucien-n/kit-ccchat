@@ -1,0 +1,43 @@
+{
+  "$schema": "https://inlang.com/schema/inlang-message-format",
+
+  "settings_title": "Paramètres",
+  "settings_tab_profile": "Profil",
+  "settings_tab_appearance": "Apparence",
+
+  "appearance_mode_heading": "Apparence",
+  "appearance_mode_light": "Clair",
+  "appearance_mode_dark": "Sombre",
+  "appearance_mode_system": "Système",
+
+  "appearance_theme_heading": "Thème",
+  "appearance_theme_default": "Par défaut",
+  "appearance_theme_tangerine": "Mandarine",
+  "appearance_theme_notebook": "Carnet",
+  "appearance_theme_whatsapp": "Whatsapp",
+  "appearance_theme_neobrutalism": "Néobrutalisme",
+  "appearance_theme_custom": "Personnalisé",
+
+  "appearance_custom_primary": "Primaire",
+  "appearance_custom_primary_desc": "Boutons, liens et accents.",
+  "appearance_custom_primary_aria": "Couleur primaire",
+  "appearance_custom_background": "Arrière-plan",
+  "appearance_custom_background_desc": "Définit la teinte de la surface ; le clair ou le sombre en découle.",
+  "appearance_custom_background_aria": "Couleur d'arrière-plan",
+  "appearance_custom_radius": "Rayon des coins",
+  "appearance_custom_radius_aria": "Rayon des coins",
+
+  "appearance_reduced_motion": "Animations réduites",
+  "appearance_reduced_motion_desc": "Réduire les animations et les transitions.",
+
+  "appearance_language_heading": "Langue",
+
+  "profile_change_password": "Changer le mot de passe",
+  "profile_current_password_placeholder": "mot de passe actuel",
+  "profile_new_password_placeholder": "nouveau mot de passe (min. 8)",
+  "profile_update_password": "Mettre à jour le mot de passe",
+  "profile_password_changed": "Mot de passe modifié.",
+  "profile_change_password_failed": "échec du changement de mot de passe",
+  "profile_log_out": "Se déconnecter",
+  "profile_log_out_title": "Se déconnecter"
+}

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { api } from "$lib/api";
   import { logout } from "$lib/app";
   import TextField from "$lib/components/common/text-field.svelte";
@@ -19,7 +20,7 @@
       resetForm: true,
       onValid: async (data, form) => {
         await api.users.changePassword(data);
-        setMessage(form, ok("Password changed."));
+        setMessage(form, ok(m.profile_password_changed()));
       },
       // Stays inline rather than becoming a toast: this one names a field,
       // and a toast can't point at the input you got wrong.
@@ -27,7 +28,7 @@
         setError(
           form,
           "currentPassword",
-          apiErrorMessage(err, "failed to change password"),
+          apiErrorMessage(err, m.profile_change_password_failed()),
         ),
     },
   );
@@ -41,13 +42,13 @@
 <div class="flex flex-col gap-8 sm:flex-row sm:gap-10">
   <div class="flex-1 space-y-6 sm:min-w-0">
     <form method="POST" use:passwordEnhance class="space-y-2">
-      <Label>Change password</Label>
+      <Label>{m.profile_change_password()}</Label>
 
       <TextField
         form={passwordForm}
         name="currentPassword"
         type="password"
-        placeholder="current password"
+        placeholder={m.profile_current_password_placeholder()}
         bind:value={$passwordData.currentPassword}
         autocomplete="current-password"
       />
@@ -56,24 +57,24 @@
         form={passwordForm}
         name="newPassword"
         type="password"
-        placeholder="new password (min 8)"
+        placeholder={m.profile_new_password_placeholder()}
         bind:value={$passwordData.newPassword}
         autocomplete="new-password"
       />
 
       <Form.Button variant="secondary" disabled={$passwordBusy}>
-        Update password
+        {m.profile_update_password()}
       </Form.Button>
     </form>
 
     <Button
       variant="destructive"
       class="w-full shrink-0"
-      title="Log out"
+      title={m.profile_log_out_title()}
       onclick={logout}
     >
       <LogOutIcon class="size-4" />
-      Log Out
+      {m.profile_log_out()}
     </Button>
   </div>
 

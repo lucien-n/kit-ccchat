@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import * as Dialog from "&/dialog";
   import * as Tabs from "&/tabs";
   import { SETTINGS_DIALOG_TAB_SPECS, SettingsDialogTab } from ".";
@@ -13,13 +14,13 @@
 <Dialog.Root bind:open>
   <Dialog.Content class="w-full sm:max-w-3xl">
     <Dialog.Header>
-      <Dialog.Title>Settings</Dialog.Title>
+      <Dialog.Title>{m.settings_title()}</Dialog.Title>
     </Dialog.Header>
 
     <Tabs.Root value={SettingsDialogTab.Profile} class="w-full">
       <Tabs.List class="w-full">
         {#each Object.entries(SETTINGS_DIALOG_TAB_SPECS) as [tab, spec] (tab)}
-          <Tabs.Trigger value={tab}>{spec.title}</Tabs.Trigger>
+          <Tabs.Trigger value={tab}>{spec.title()}</Tabs.Trigger>
         {/each}
       </Tabs.List>
 
