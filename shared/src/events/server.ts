@@ -1,10 +1,12 @@
-import type { Member, MessageView, Reaction, VoiceMember } from "../views";
+import type { Member, MessageEmbed, MessageView, Reaction, VoiceMember } from "../views";
 
 export enum ServerEventType {
   Message_New = "message_new",
   Message_Edited = "message_edited",
   Message_Deleted = "message_deleted",
   Message_Reacted = "message_reacted",
+  Message_Pinned = "message_pinned",
+  Message_Embeds = "message_embeds",
   Presence = "presence",
   Member_Updated = "member_updated",
   Typing_Started = "typing_started",
@@ -35,6 +37,18 @@ export type ServerEvent =
       id: string;
       channelId: string;
       reactions: Reaction[];
+    }
+  | {
+      type: ServerEventType.Message_Pinned;
+      id: string;
+      channelId: string;
+      pinned: boolean;
+    }
+  | {
+      type: ServerEventType.Message_Embeds;
+      id: string;
+      channelId: string;
+      embeds: MessageEmbed[];
     }
   | {
       type: ServerEventType.Presence;

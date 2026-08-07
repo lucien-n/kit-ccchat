@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { type MessageView } from "$lib/api";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { UserCard } from "$lib/components/common/user-card";
@@ -10,6 +11,7 @@
   import { cn } from "$lib/utils";
   import { Textarea } from "&/textarea";
   import { MESSAGE_MAX_LENGTH, SystemEvent } from "@motus/shared";
+  import PinIcon from "@lucide/svelte/icons/pin";
   import ReplyIcon from "@lucide/svelte/icons/reply";
   import UserRoundPlusIcon from "@lucide/svelte/icons/user-round-plus";
   import { tick } from "svelte";
@@ -17,6 +19,7 @@
   import { scale } from "svelte/transition";
   import MessageActions from "./message-actions.svelte";
   import MessageAttachments from "./message-attachments.svelte";
+  import MessageEmbeds from "./message-embeds.svelte";
   import MessageReactions from "./message-reactions.svelte";
 
   interface Props {
@@ -28,13 +31,15 @@
 
   const mentionsMe = $derived(!message.systemEvent && pingsMe(message));
 
-  const subject = $derived(message.author?.displayName ?? "someone");
+  const subject = $derived(message.author?.displayName ?? m.common_someone());
 
   let editing = $state(false);
   let draft = $state("");
   let editEl = $state<HTMLTextAreaElement | null>(null);
 
-  let showActions = $state(false);
+  let hovering = $state(false);
+  let menuOpen = $state(false);
+  const showActions = $derived(hovering || menuOpen);
 
   async function startEdit() {
     draft = message.content;
@@ -54,7 +59,7 @@
         await messages.edit(message.id, text);
         editing = false;
       },
-      { error: "failed to edit message" },
+      { error: m.message_edit_failed() },
     );
   }
 
@@ -82,7 +87,10 @@
   <div id="msg-{message.id}" class="text-muted-foreground flex gap-1.5 py-1 text-xs">
     {#if message.systemEvent === SystemEvent.Member_Join}
       <UserRoundPlusIcon class="size-3.5 shrink-0" />
-      <span><span class="text-foreground font-medium">{subject}</span> joined</span>
+      <span>
+        <span class="text-foreground font-medium">{subject}</span>
+        {m.system_member_joined()}
+      </span>
     {/if}
     <span class="opacity-70">{fmtTime(message.createdAt)}</span>
   </div>
@@ -96,8 +104,8 @@
         "bg-primary/8 hover:bg-primary/12 border-primary/70 rounded-l-none border-l-2",
       chat.flashId === message.id && "bg-primary/15",
     )}
-    onmouseenter={() => (showActions = true)}
-    onmouseleave={() => (showActions = false)}
+    onmouseenter={() => (hovering = true)}
+    onmouseleave={() => (hovering = false)}
   >
     {#if message.author}
       <UserCard userId={message.author.id} class="h-fit">
@@ -112,12 +120,18 @@
     {/if}
     <div class="flex w-full min-w-0 flex-col">
       <div class="min-w-0">
+        {#if message.pinned}
+          <div class="text-muted-foreground flex items-center gap-1.5 text-xs">
+            <PinIcon class="size-3 shrink-0" />
+            <span class="font-medium">{m.message_pinned_label()}</span>
+          </div>
+        {/if}
         {#if message.replyTo}
           {@const reply = message.replyTo}
           {#if reply.deleted}
             <div class="text-muted-foreground flex items-center gap-1.5 text-xs italic">
               <ReplyIcon class="size-3 shrink-0" />
-              Original message was deleted
+              {m.message_reply_deleted()}
             </div>
           {:else}
             <button
@@ -132,7 +146,7 @@
                 fallbackClass="text-[0.5rem]"
               />
               <span class="shrink-0 font-medium">
-                {reply.author?.displayName ?? "unknown"}
+                {reply.author?.displayName ?? m.common_unknown()}
               </span>
               <span class="text-foreground truncate">{reply.content}</span>
             </button>
@@ -149,11 +163,11 @@
               </span>
             </UserCard>
           {:else}
-            <span class="font-semibold">unknown</span>
+            <span class="font-semibold">{m.common_unknown()}</span>
           {/if}
           <span class="text-muted-foreground text-xs">{fmtTime(message.createdAt)}</span>
           {#if message.editedAt}
-            <span class="text-muted-foreground text-[10px]">(edited)</span>
+            <span class="text-muted-foreground text-[10px]">{m.message_edited()}</span>
           {/if}
         </div>
         {#if editing}
@@ -168,22 +182,24 @@
             />
             <div class="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
               <button type="button" class="hover:text-foreground" onclick={saveEdit}>
-                save
+                {m.message_edit_save()}
               </button>
               <button
                 type="button"
                 class="hover:text-foreground"
                 onclick={() => (editing = false)}
               >
-                cancel
+                {m.message_edit_cancel()}
               </button>
-              <span class="opacity-70">escape to cancel &middot; enter to save</span>
+              <span class="opacity-70">{m.message_edit_hint()}</span>
             </div>
           </div>
         {:else}
           <Markdown content={message.content} />
         {/if}
       </div>
+
+      <MessageEmbeds {message} />
 
       <MessageAttachments {message} />
 
@@ -194,7 +210,7 @@
         class="absolute -top-3.5 right-2 flex opacity-100 transition-opacity duration-50 ease-in-out"
         transition:scale={{ duration: 100, easing: elasticInOut }}
       >
-        <MessageActions {message} onedit={startEdit} />
+        <MessageActions {message} onedit={startEdit} bind:menuOpen />
       </div>
     {/if}
   </div>

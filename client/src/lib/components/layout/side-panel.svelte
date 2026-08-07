@@ -1,16 +1,17 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { MembersPanel } from "$lib/components/members/members-panel";
   import SearchPanel from "$lib/components/search/search-panel.svelte";
   import { getChatContext } from "$lib/context/chat.svelte";
   import { Button } from "&/button";
   import * as Resizable from "&/resizable";
   import * as Sheet from "&/sheet";
-  import { X } from "@lucide/svelte";
+  import XIcon from "@lucide/svelte/icons/x";
 
   const chat = getChatContext();
 
   const searching = $derived(chat.panel === "search");
-  const title = $derived(searching ? "Search" : "Members");
+  const title = $derived(searching ? m.panel_search() : m.panel_members());
 </script>
 
 {#snippet body()}
@@ -37,10 +38,10 @@
           <Button
             variant="ghost"
             size="icon"
-            title="Close {title.toLowerCase()}"
+            title={searching ? m.panel_close_search() : m.panel_close_members()}
             onclick={() => (chat.panel = "")}
           >
-            <X class="size-4" />
+            <XIcon class="size-4" />
           </Button>
         </div>
         {@render body()}

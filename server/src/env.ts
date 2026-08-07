@@ -61,6 +61,12 @@ export const ATTACHMENT_SWEEP_INTERVAL_MIN = numEnv(
   process.env.ATTACHMENT_SWEEP_INTERVAL_MIN,
   60,
 );
+// LINK_EMBEDS=0 disables outbound metadata fetches entirely (self-hoster who
+// wants the server to never reach third-party sites).
+export const LINK_EMBEDS_ENABLED = process.env.LINK_EMBEDS !== "0";
+
+export const LINK_EMBED_CACHE_MIN = numEnv(process.env.LINK_EMBED_CACHE_MIN, 60);
+
 export const COMMUNITY_ICON_FILE = join(DATA_DIR, "community-icon");
 export const DB_FILE = join(DATA_DIR, "motus.sqlite");
 

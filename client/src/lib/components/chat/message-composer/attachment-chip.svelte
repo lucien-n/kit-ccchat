@@ -1,10 +1,13 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { attachmentUrl } from "$lib/api";
   import { formatBytes } from "$lib/format";
   import { isCompressibleImageType, isImageType } from "$lib/image";
   import { Button } from "&/button";
+  import FileIcon from "@lucide/svelte/icons/file";
+  import SparklesIcon from "@lucide/svelte/icons/sparkles";
+  import XIcon from "@lucide/svelte/icons/x";
   import { isAudioType } from "@motus/shared";
-  import { File as FileIcon, Sparkles, X } from "@lucide/svelte";
   import AudioEmbed from "../message/audio-embed.svelte";
   import type { Pending } from "./composer.types";
 
@@ -61,11 +64,11 @@
       size="icon-xs"
       class="absolute -top-1.5 -left-1.5 rounded-full"
       title={item.keepOriginal
-        ? "Sending the original. Click to compress and save space"
-        : "Compressed to save space. Click to send the original quality"}
+        ? m.attachment_sending_original()
+        : m.attachment_compressed()}
       onclick={ontoggle}
     >
-      <Sparkles class="size-3" />
+      <SparklesIcon class="size-3" />
     </Button>
   {/if}
 
@@ -73,9 +76,9 @@
     variant="secondary"
     size="icon-xs"
     class="absolute -top-1.5 -right-1.5 rounded-full"
-    title="Remove attachment"
+    title={m.attachment_remove()}
     onclick={onremove}
   >
-    <X class="size-3" />
+    <XIcon class="size-3" />
   </Button>
 </div>

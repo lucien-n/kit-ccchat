@@ -2,6 +2,7 @@ node_modules/
 dist/
 build/
 .svelte-kit/
+client/src/lib/paraglide/
 data/
 *.sqlite
 *.sqlite-*

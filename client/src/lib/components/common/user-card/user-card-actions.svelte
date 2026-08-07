@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { DeleteSpan, ModAction } from "$lib/api";
   import ConfirmDialog from "$lib/components/common/confirm-dialog.svelte";
   import { Select } from "$lib/components/common/select";
@@ -19,20 +20,20 @@
 
   const ctx = getUserContext();
 
-  const MUTE_DURATIONS = [
-    { minutes: 5, label: "5 minutes" },
-    { minutes: 60, label: "1 hour" },
-    { minutes: 1440, label: "1 day" },
-    { minutes: 10080, label: "1 week" },
-  ];
+  const MUTE_DURATIONS = $derived([
+    { minutes: 5, label: m.duration_5_minutes() },
+    { minutes: 60, label: m.duration_1_hour() },
+    { minutes: 1440, label: m.duration_1_day() },
+    { minutes: 10080, label: m.duration_1_week() },
+  ]);
 
-  const DELETE_SPANS = [
-    { value: DeleteSpan.None, label: "Don't delete any" },
-    { value: DeleteSpan.Hour, label: "Previous hour" },
-    { value: DeleteSpan.Day, label: "Previous 24 hours" },
-    { value: DeleteSpan.Week, label: "Previous 7 days" },
-    { value: DeleteSpan.All, label: "All messages" },
-  ];
+  const DELETE_SPANS = $derived([
+    { value: DeleteSpan.None, label: m.delete_span_none() },
+    { value: DeleteSpan.Hour, label: m.delete_span_hour() },
+    { value: DeleteSpan.Day, label: m.delete_span_day() },
+    { value: DeleteSpan.Week, label: m.delete_span_week() },
+    { value: DeleteSpan.All, label: m.delete_span_all() },
+  ]);
 
   let deleteSpan = $state<DeleteSpan>(DeleteSpan.None);
 </script>
@@ -46,27 +47,27 @@
     <ContextMenu.Group>
       <ContextMenu.Item onSelect={() => ctx.copyId()}>
         <CopyIcon />
-        Copy user id
+        {m.user_copy_id()}
       </ContextMenu.Item>
     </ContextMenu.Group>
 
     {#if ctx.showModeration}
       <ContextMenu.Separator />
       <ContextMenu.Group>
-        <ContextMenu.GroupHeading>Moderation</ContextMenu.GroupHeading>
+        <ContextMenu.GroupHeading>{m.moderation_heading()}</ContextMenu.GroupHeading>
         {#if ctx.muted}
           <ContextMenu.Item
             disabled={ctx.busy}
             onSelect={() => ctx.moderate(ModAction.Unmute)}
           >
             <Volume2Icon />
-            Unmute
+            {m.moderation_unmute()}
           </ContextMenu.Item>
         {:else}
           <ContextMenu.Sub>
             <ContextMenu.SubTrigger class="gap-2" disabled={ctx.busy}>
               <VolumeXIcon />
-              Mute
+              {m.moderation_mute()}
             </ContextMenu.SubTrigger>
             <ContextMenu.SubContent class="z-100">
               {#each MUTE_DURATIONS as d (d.minutes)}
@@ -84,7 +85,7 @@
           onSelect={() => (ctx.confirming = ModAction.Kick)}
         >
           <LogOutIcon />
-          Kick
+          {m.moderation_kick()}
         </ContextMenu.Item>
         {#if ctx.member?.banned}
           <ContextMenu.Item
@@ -92,7 +93,7 @@
             onSelect={() => ctx.moderate(ModAction.Unban)}
           >
             <BanIcon />
-            Unban
+            {m.moderation_unban()}
           </ContextMenu.Item>
         {:else}
           <ContextMenu.Item
@@ -101,7 +102,7 @@
             onSelect={() => (ctx.confirming = ModAction.Ban)}
           >
             <BanIcon />
-            Ban
+            {m.moderation_ban()}
           </ContextMenu.Item>
         {/if}
       </ContextMenu.Group>
@@ -115,17 +116,21 @@
     if (!v) ctx.confirming = null;
     deleteSpan = DeleteSpan.None;
   }}
-  title={ctx.confirming === ModAction.Ban ? `Ban ${ctx.name}?` : `Kick ${ctx.name}?`}
+  title={ctx.confirming === ModAction.Ban
+    ? m.moderation_ban_confirm_title({ name: ctx.name })
+    : m.moderation_kick_confirm_title({ name: ctx.name })}
   description={ctx.confirming === ModAction.Ban
-    ? "They lose every active session and cannot sign back in until unbanned."
-    : "They lose every active session and need a fresh invite to return."}
-  confirmLabel={ctx.confirming === ModAction.Ban ? "Ban" : "Kick"}
+    ? m.moderation_ban_confirm_desc()
+    : m.moderation_kick_confirm_desc()}
+  confirmLabel={ctx.confirming === ModAction.Ban
+    ? m.moderation_ban()
+    : m.moderation_kick()}
   busy={ctx.busy}
   onConfirm={() => ctx.confirming && ctx.moderate(ctx.confirming, { deleteSpan })}
 >
   {#if ctx.confirming === ModAction.Ban}
     <div class="grid gap-2">
-      <span class="text-sm font-medium">Delete message history</span>
+      <span class="text-sm font-medium">{m.moderation_delete_history()}</span>
       <Select
         bind:value={deleteSpan}
         options={DELETE_SPANS}
@@ -133,8 +138,7 @@
       />
       {#if deleteSpan !== DeleteSpan.None}
         <span class="text-muted-foreground text-xs">
-          Permanently removes their messages and reactions in that span. This can't be
-          undone.
+          {m.moderation_delete_history_warning()}
         </span>
       {/if}
     </div>

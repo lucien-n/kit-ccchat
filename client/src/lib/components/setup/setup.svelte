@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { goto } from "$app/navigation";
   import { resolve } from "$app/paths";
   import { setup } from "$lib/app";
@@ -25,11 +26,8 @@
 <div class="grid min-h-dvh place-items-center p-4">
   <Card.Root class="w-full max-w-md">
     <Card.Header class="text-center">
-      <Card.Title class="text-2xl">Welcome to motus</Card.Title>
-      <Card.Description>
-        This community is brand new. Name it and create your owner account - you'll get an
-        invite code for your friends.
-      </Card.Description>
+      <Card.Title class="text-2xl">{m.setup_title()}</Card.Title>
+      <Card.Description>{m.setup_description()}</Card.Description>
     </Card.Header>
 
     <form method="POST" use:enhance>
@@ -37,40 +35,37 @@
         <TextField
           {form}
           name="communityName"
-          label="Community name"
+          label={m.setup_community_name_label()}
           bind:value={$formData.communityName}
-          placeholder="e.g. The Group Chat"
+          placeholder={m.setup_community_name_placeholder()}
           autocomplete="off"
         />
 
         <TextField
           {form}
           name="username"
-          label="Your username"
+          label={m.setup_username_label()}
           bind:value={$formData.username}
-          placeholder="lowercase, 2–24 chars"
+          placeholder={m.auth_username_rules_placeholder()}
           autocomplete="username"
         />
 
         <TextField
           {form}
           name="password"
-          label="Your password"
+          label={m.setup_password_label()}
           type="password"
           bind:value={$formData.password}
-          placeholder="at least 8 characters"
+          placeholder={m.auth_password_rules_placeholder()}
           autocomplete="new-password"
         />
       </Card.Content>
 
       <Card.Footer class="mt-6 flex-col gap-3">
         <Form.Button class="w-full" disabled={$submitting}>
-          {$submitting ? "Creating…" : "Create community"}
+          {$submitting ? m.setup_creating() : m.setup_create_community()}
         </Form.Button>
-        <p class="text-muted-foreground text-center text-xs">
-          Whoever fills this in first becomes the owner, so do it now - before you share
-          the address.
-        </p>
+        <p class="text-muted-foreground text-center text-xs">{m.setup_owner_note()}</p>
       </Card.Footer>
     </form>
   </Card.Root>

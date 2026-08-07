@@ -19,13 +19,13 @@ export class SoundboardPlayer {
   }
 
   /** Play a clip. LiveKit won't loop your own audio back, so it's always routed
-   *  to the local speakers; when `broadcast` it's also published to everyone
-   *  else, then unpublished when the clip ends. `onActiveChange(±1)` brackets
+   *  to the local speakers; with a `publishTarget` it's also published to everyone
+   *  else, then unpublished when the clip ends. A null target is a local preview
+   *  (previewing outside a call, or while muted). `onActiveChange(±1)` brackets
    *  that publish so the caller can light its own speaking ring meanwhile. */
   async play(
-    lp: LocalParticipant,
+    publishTarget: LocalParticipant | null,
     url: string,
-    broadcast: boolean,
     onActiveChange: (delta: number) => void,
   ): Promise<void> {
     const ctx = (this.#ctx ??= new AudioContext());
@@ -40,7 +40,8 @@ export class SoundboardPlayer {
     src.buffer = buffer;
     src.connect(gain); // -> so you always hear it yourself, at your chosen volume
 
-    if (!broadcast) {
+    // No target: local-only. You hear it, no one else does.
+    if (!publishTarget) {
       src.start();
       return;
     }
@@ -48,14 +49,14 @@ export class SoundboardPlayer {
     const dest = ctx.createMediaStreamDestination();
     src.connect(dest); // -> published to everyone else
     const track = dest.stream.getAudioTracks()[0];
-    await lp.publishTrack(track, {
+    await publishTarget.publishTrack(track, {
       // Not Microphone: keeps the clip off the mic-state UI and mute logic.
       source: Track.Source.Unknown,
       name: "soundboard",
     });
     onActiveChange(1);
     src.onended = () => {
-      void lp.unpublishTrack(track);
+      void publishTarget.unpublishTrack(track);
       track.stop();
       onActiveChange(-1);
     };

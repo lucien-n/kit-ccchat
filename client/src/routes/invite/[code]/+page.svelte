@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { goto } from "$app/navigation";
   import { resolve } from "$app/paths";
   import { page } from "$app/state";
@@ -15,5 +16,5 @@
 </script>
 
 <div class="text-muted-foreground grid min-h-dvh place-items-center">
-  Opening your invite…
+  {m.invite_opening()}
 </div>

@@ -1,3 +1,4 @@
+import { m } from "$lib/paraglide/messages";
 import { TYPING_TIMEOUT_MS } from "@motus/shared";
 
 export interface Typist {
@@ -60,12 +61,12 @@ export function typingLabel(names: string[]): string {
     case 0:
       return "";
     case 1:
-      return `${a} is typing...`;
+      return m.typing_one({ a });
     case 2:
-      return `${a} and ${b} are typing...`;
+      return m.typing_two({ a, b });
     case 3:
-      return `${a}, ${b} and ${c} are typing...`;
+      return m.typing_three({ a, b, c });
     default:
-      return "Several people are typing...";
+      return m.typing_many();
   }
 }

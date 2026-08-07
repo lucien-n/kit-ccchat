@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { attachmentUrl, type MessageAttachment } from "$lib/api";
   import { formatBytes, formatTimecode } from "$lib/format";
   import { cn } from "$lib/utils";
@@ -11,8 +12,6 @@
 
   interface Props {
     attachment: MessageAttachment;
-    /** Drops the download control - used in the composer preview, where the file
-     *  hasn't been sent yet so downloading it back is pointless. */
     compact?: boolean;
   }
   const { attachment, compact = false }: Props = $props();
@@ -95,7 +94,7 @@
     variant="secondary"
     size="icon"
     class="size-9 shrink-0 rounded-full"
-    aria-label={paused ? "Play" : "Pause"}
+    aria-label={paused ? m.audio_play() : m.audio_pause()}
     onclick={toggle}
   >
     {#if paused}
@@ -114,7 +113,7 @@
       <div
         role="slider"
         tabindex="0"
-        aria-label="Seek"
+        aria-label={m.audio_seek()}
         aria-valuemin={0}
         aria-valuemax={Math.round(total)}
         aria-valuenow={Math.round(position)}
@@ -154,8 +153,8 @@
   <button
     type="button"
     class="text-muted-foreground hover:text-foreground shrink-0 transition-colors"
-    aria-label={muted ? "Unmute" : "Mute"}
-    title={muted ? "Unmute" : "Mute"}
+    aria-label={muted ? m.audio_unmute() : m.audio_mute()}
+    title={muted ? m.audio_unmute() : m.audio_mute()}
     onclick={() => (muted = !muted)}
   >
     {#if muted}
@@ -173,8 +172,8 @@
       href={attachmentUrl(attachment.id)}
       download={attachment.filename}
       class="text-muted-foreground hover:text-foreground shrink-0 transition-colors"
-      aria-label="Download"
-      title={`Download · ${formatBytes(attachment.sizeBytes)}`}
+      aria-label={m.common_download()}
+      title={m.common_download_with_size({ size: formatBytes(attachment.sizeBytes) })}
     >
       <DownloadIcon class="size-4" />
     </a>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { Skeleton } from "&/skeleton";
 
   interface Props {
@@ -14,7 +15,7 @@
   ];
 </script>
 
-<div class="flex flex-col gap-0.5" role="status" aria-label="Loading messages">
+<div class="flex flex-col gap-0.5" role="status" aria-label={m.messages_loading()}>
   {#each { length: count }, i}
     {@const shape = shapes[i % shapes.length]}
     <div class="flex gap-3 px-2 py-1">

@@ -1,3 +1,4 @@
+import { m } from "$lib/paraglide/messages";
 import { errorName } from "$lib/forms";
 import { playCameraOff, playCameraOn } from "$lib/notify";
 import { realtime } from "$lib/stores/realtime.svelte";
@@ -43,7 +44,7 @@ export class MediaController {
     kind: "screen" | "camera";
   } | null {
     const named = (id: string) =>
-      this.core.participants.find((p) => p.identity === id)?.name ?? "someone";
+      this.core.participants.find((p) => p.identity === id)?.name ?? m.common_someone();
 
     const w = this.share.watching;
     if (w && this.share.screens[w])

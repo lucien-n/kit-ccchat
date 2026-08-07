@@ -1,4 +1,23 @@
 import {
+  appearance,
+  channels,
+  community,
+  locale,
+  members,
+  messages,
+  pins,
+  prefs,
+  presence,
+  realtime,
+  roles,
+  search,
+  session,
+  soundboard,
+  typing,
+  unread,
+  voice,
+} from "$lib/stores";
+import {
   ChannelType,
   ServerEventType,
   type Member,
@@ -11,25 +30,9 @@ import { toast } from "svelte-sonner";
 import { api, type MessageView } from "./api";
 import { pingsMe } from "./mentions";
 import { playPing, unlockAudio } from "./notify";
-import {
-  appearance,
-  channels,
-  community,
-  members,
-  messages,
-  prefs,
-  presence,
-  realtime,
-  roles,
-  search,
-  session,
-  soundboard,
-  typing,
-  unread,
-  voice,
-} from "$lib/stores";
 
 export async function init() {
+  locale.init();
   prefs.init();
   soundboard.init();
   window.addEventListener("focus", () => {
@@ -88,6 +91,7 @@ export async function logout() {
   realtime.stop();
   unread.clear();
   messages.clear();
+  pins.clear();
   channels.clear();
   presence.clear();
   typing.clear();
@@ -138,6 +142,13 @@ function dispatch(event: ServerEvent) {
       break;
     case ServerEventType.Message_Reacted:
       messages.applyReactions(event.id, event.reactions);
+      break;
+    case ServerEventType.Message_Pinned:
+      messages.applyPinned(event.id, event.pinned);
+      pins.invalidate(event.channelId);
+      break;
+    case ServerEventType.Message_Embeds:
+      messages.applyEmbeds(event.id, event.embeds);
       break;
     case ServerEventType.Presence:
       presence.setOnline(event.online);

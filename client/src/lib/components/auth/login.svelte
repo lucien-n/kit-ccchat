@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { clearInviteFromUrl, readInviteFromUrl } from "$lib/invite";
   import { community } from "$lib/stores";
   import { Button } from "&/button";
@@ -23,11 +24,11 @@
       <Card.Title class="text-2xl">{community.name}</Card.Title>
       <Card.Description>
         {#if mode === "login"}
-          Welcome back.
+          {m.auth_welcome_back()}
         {:else if linkedInvite}
-          You've been invited. Pick a username and password to join.
+          {m.auth_invited()}
         {:else}
-          Join with an invite code from the server owner.
+          {m.auth_join_prompt()}
         {/if}
       </Card.Description>
     </Card.Header>
@@ -45,9 +46,7 @@
         class="text-muted-foreground"
         onclick={toggleMode}
       >
-        {mode === "login"
-          ? "Have an invite code? Register"
-          : "Already have an account? Log in"}
+        {mode === "login" ? m.auth_have_invite() : m.auth_have_account()}
       </Button>
     </Card.Footer>
   </Card.Root>

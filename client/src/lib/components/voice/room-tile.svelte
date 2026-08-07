@@ -1,11 +1,14 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { voice } from "$lib/stores";
   import { cn } from "$lib/utils";
   import { type MuteState } from "$lib/voice-mute";
   import { Button } from "&/button";
+  import HeadphoneOffIcon from "@lucide/svelte/icons/headphone-off";
+  import MaximizeIcon from "@lucide/svelte/icons/maximize";
+  import MicOffIcon from "@lucide/svelte/icons/mic-off";
   import type { Channel, VoiceMember } from "@motus/shared";
-  import { HeadphoneOff, Maximize, MicOff } from "@lucide/svelte";
   import type { Track } from "livekit-client";
   import { UserCard } from "../common/user-card";
 
@@ -60,10 +63,10 @@
           variant="secondary"
           size="icon-sm"
           class="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100"
-          title="Watch {member.displayName}'s stream"
+          title={m.voice_watch_stream({ name: member.displayName })}
           onclick={() => voice.watch(channel, member.id)}
         >
-          <Maximize class="size-4" />
+          <MaximizeIcon class="size-4" />
         </Button>
       {/if}
     {:else}
@@ -78,15 +81,15 @@
       class="absolute bottom-2 left-2 flex max-w-[calc(100%-1rem)] items-center gap-1 rounded-lg bg-black/55 px-2 py-0.5 text-xs text-white"
     >
       {#if muteState === "forced"}
-        <MicOff
+        <MicOffIcon
           class="size-3 shrink-0 text-amber-400"
-          aria-label="muted by a moderator"
+          aria-label={m.voice_muted_by_mod_short()}
         />
       {:else if muteState === "self"}
-        <MicOff class="size-3 shrink-0" aria-label="muted" />
+        <MicOffIcon class="size-3 shrink-0" aria-label={m.status_muted()} />
       {/if}
       {#if member.deafened}
-        <HeadphoneOff class="size-3 shrink-0" aria-label="deafened" />
+        <HeadphoneOffIcon class="size-3 shrink-0" aria-label={m.voice_deafened_short()} />
       {/if}
       <span class="truncate font-medium">{member.displayName}</span>
     </div>

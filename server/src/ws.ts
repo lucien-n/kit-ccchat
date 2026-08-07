@@ -17,6 +17,7 @@ import { channelsTable, messagesTable, usersTable } from "./db/schema";
 import { hub, type Client } from "./hub.js";
 import { authLevel } from "./permissions.js";
 import { attachMessage } from "./modules/attachments/attachments.service.js";
+import { unfurlMessage } from "./modules/link-embeds/link-embeds.service.js";
 import { resolveMentions, saveMentions } from "./modules/messages/mentions.js";
 import { toMessageView } from "./views.js";
 
@@ -240,4 +241,8 @@ function handleCreate(
   saveMentions(row.id, userIds);
   attachMessage(row.id, client.userId, attachmentIds);
   hub.broadcast({ type: ServerEventType.Message_New, message: toMessageView(row) });
+
+  // Fire-and-forget: outbound fetches must not delay delivery; cards follow via
+  // a Message_Embeds event.
+  void unfurlMessage(row.id, channelId, content);
 }

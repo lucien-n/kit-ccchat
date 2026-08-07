@@ -1,6 +1,7 @@
 export * from "./realtime.svelte";
 
 export * from "./session/appearance.svelte";
+export * from "./session/locale.svelte";
 export * from "./session/prefs.svelte";
 export * from "./session/session.svelte";
 
@@ -11,8 +12,10 @@ export * from "./community/presence.svelte";
 export * from "./community/roles.svelte";
 export * from "./community/unread.svelte";
 
+export * from "./chat/attachment-search.svelte";
 export * from "./chat/mention-card.svelte";
 export * from "./chat/messages.svelte";
+export * from "./chat/pins.svelte";
 export * from "./chat/search.svelte";
 export * from "./chat/typing.svelte";
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import InvitesPanel from "$lib/components/members/invites-panel.svelte";
   import ModerationList from "$lib/components/members/moderation-list.svelte";
   import { session } from "$lib/stores";
@@ -30,28 +31,28 @@
   >([
     {
       value: "general",
-      label: "General",
+      label: m.community_tab_general(),
       component: GeneralSettings,
       isHidden: !isOwner,
     },
     {
       value: "moderation",
-      label: "Moderation",
+      label: m.community_tab_moderation(),
       component: ModerationList,
     },
     {
       value: "invites",
-      label: "Invites",
+      label: m.community_tab_invites(),
       component: InvitesPanel,
     },
     {
       value: "roles",
-      label: "Roles",
+      label: m.community_tab_roles(),
       component: RolesPanel,
     },
     {
       value: "system",
-      label: "System",
+      label: m.community_tab_system(),
       component: SystemPanel,
       isHidden: !isOwner,
     },
@@ -61,7 +62,7 @@
 <Dialog.Root bind:open>
   <Dialog.Content class="w-full max-sm:gap-4 max-sm:p-4 sm:max-w-6xl">
     <Dialog.Header>
-      <Dialog.Title>Community settings</Dialog.Title>
+      <Dialog.Title>{m.community_settings_title()}</Dialog.Title>
     </Dialog.Header>
 
     <Tabs.Root

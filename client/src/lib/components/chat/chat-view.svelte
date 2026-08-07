@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import VoiceBar from "$lib/components/voice/voice-bar.svelte";
   import { getChatContext } from "$lib/context/chat.svelte";
   import { channels, messages, voice } from "$lib/stores";
@@ -39,7 +40,7 @@
         onclick={() => chat.backToPresent()}
       >
         <ArrowDownIcon data-icon="inline-start" />
-        Jump to present
+        {m.chat_jump_to_present()}
       </Button>
     </div>
   {/if}
@@ -48,7 +49,7 @@
 
   <MessageComposer
     bind:this={chat.composer}
-    placeholder={`Message #${channels.current?.name ?? ""}`}
+    placeholder={m.chat_message_placeholder({ channel: channels.current?.name ?? "" })}
     disabled={channels.current?.type !== ChannelType.Text}
     onsend={(text, attachmentIds) => chat.send(text, attachmentIds)}
     ontyping={() => chat.typing()}

@@ -1,0 +1,1 @@
+ALTER TABLE `message_embeds` ADD `removed` integer DEFAULT 0 NOT NULL;

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { ModAction } from "$lib/api";
   import MemberIdentity from "$lib/components/common/member-identity.svelte";
   import { attempt } from "$lib/forms";
@@ -33,7 +34,7 @@
           action,
           action === ModAction.Mute ? { minutes: 60 } : undefined,
         ),
-      { error: "action failed" },
+      { error: m.moderation_action_failed() },
     );
   }
 
@@ -42,11 +43,15 @@
 
 <div class="flex min-h-0 flex-1 flex-col">
   <div class="flex flex-wrap gap-2 pb-2">
-    <Input placeholder="Search members" bind:value={search} class="min-w-40 flex-1" />
+    <Input
+      placeholder={m.members_search_placeholder()}
+      bind:value={search}
+      class="min-w-40 flex-1"
+    />
 
     <section class="flex items-center gap-1">
       <Checkbox id="cb-mod-only-active" bind:checked={showOnlyActiveMembers} />
-      <Label for="cb-mod-only-active">Only active</Label>
+      <Label for="cb-mod-only-active">{m.moderation_only_active()}</Label>
     </section>
   </div>
 
@@ -57,8 +62,10 @@
           class="hover:bg-muted/50 flex items-center justify-between gap-2 rounded-2xl p-2"
         >
           <MemberIdentity {member} showMemberRank>
-            {#if member.banned}<Badge variant="destructive">banned</Badge>{/if}
-            {#if isMuted(member)}<Badge variant="secondary">muted</Badge>{/if}
+            {#if member.banned}<Badge variant="destructive">{m.status_banned()}</Badge
+              >{/if}
+            {#if isMuted(member)}<Badge variant="secondary">{m.status_muted()}</Badge
+              >{/if}
           </MemberIdentity>
 
           {#if member.id !== session.user?.id && !member.isOwner}
@@ -68,35 +75,40 @@
                   variant="outline"
                   size="sm"
                   class="h-7"
-                  onclick={() => act(member.id, ModAction.Unmute)}>unmute</Button
+                  onclick={() => act(member.id, ModAction.Unmute)}
+                  >{m.moderation_unmute()}</Button
                 >
               {:else}
                 <Button
                   variant="outline"
                   size="sm"
                   class="h-7"
-                  onclick={() => act(member.id, ModAction.Mute)}>mute</Button
+                  onclick={() => act(member.id, ModAction.Mute)}
+                  >{m.moderation_mute()}</Button
                 >
               {/if}
               <Button
                 variant="outline"
                 size="sm"
                 class="h-7"
-                onclick={() => act(member.id, ModAction.Kick)}>kick</Button
+                onclick={() => act(member.id, ModAction.Kick)}
+                >{m.moderation_kick()}</Button
               >
               {#if member.banned}
                 <Button
                   variant="outline"
                   size="sm"
                   class="h-7"
-                  onclick={() => act(member.id, ModAction.Unban)}>unban</Button
+                  onclick={() => act(member.id, ModAction.Unban)}
+                  >{m.moderation_unban()}</Button
                 >
               {:else}
                 <Button
                   variant="destructive"
                   size="sm"
                   class="h-7"
-                  onclick={() => act(member.id, ModAction.Ban)}>ban</Button
+                  onclick={() => act(member.id, ModAction.Ban)}
+                  >{m.moderation_ban()}</Button
                 >
               {/if}
             </div>
@@ -104,7 +116,7 @@
         </div>
       {/each}
     {:else}
-      <p class="text-muted-foreground text-center">No members found</p>
+      <p class="text-muted-foreground text-center">{m.members_none_found()}</p>
     {/if}
   </div>
 </div>

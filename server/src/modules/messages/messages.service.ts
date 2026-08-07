@@ -1,5 +1,6 @@
 import {
   isMuted,
+  MAX_PINS_PER_CHANNEL,
   MAX_REACTIONS_PER_MESSAGE,
   ServerEventType,
   type EditMessageBody,
@@ -10,14 +11,25 @@ import {
 import { and, asc, desc, eq, gt, lt, lte } from "drizzle-orm";
 import { can, newId } from "../../auth.js";
 import { db } from "../../db/index.js";
-import { messageReactionsTable, messagesTable, type User } from "../../db/schema";
+import {
+  messagePinsTable,
+  messageReactionsTable,
+  messagesTable,
+  type User,
+} from "../../db/schema";
 import { findById } from "../../db/query.js";
 import { httpError } from "../../http/errors.js";
 import { hub } from "../../hub.js";
 import { toMessageView } from "../../views.js";
 import { mainTextChannel } from "../channels/channels.service.js";
 import { deleteAttachmentsOf } from "../attachments/attachments.service.js";
+import {
+  embedsOf,
+  markEmbedRemoved,
+  unfurlMessage,
+} from "../link-embeds/link-embeds.service.js";
 import { resolveMentions, saveMentions } from "./mentions.js";
+import { isPinned, pinCount, pinnedRows } from "./pins.js";
 import { emojiOn, reactionsOf } from "./reactions.js";
 
 export function postSystemMessage(event: SystemEvent, subjectId: string) {
@@ -129,7 +141,16 @@ export function editMessage(id: string, user: User, { content }: EditMessageBody
   saveMentions(id, userIds);
   const view = toMessageView({ ...msg, content, editedAt, mentionsEveryone });
   hub.broadcast({ type: ServerEventType.Message_Edited, message: view });
+
+  // Re-unfurl: the edit may have added or removed a link. Fire-and-forget.
+  void unfurlMessage(id, msg.channelId, content);
   return view;
+}
+
+/** The author-or-moderator gate: your own message, or a moderator on anyone's.
+ *  Shared by deletion and pinning, which both curate a channel. */
+function canModerate(msg: { authorId: string }, user: User): boolean {
+  return msg.authorId === user.id || can(user, "deleteAnyMessage");
 }
 
 export function deleteMessage(id: string, user: User) {
@@ -137,7 +158,7 @@ export function deleteMessage(id: string, user: User) {
   if (!msg || msg.deleted) {
     httpError(404, "not found");
   }
-  if (msg.authorId !== user.id && !can(user, "deleteAnyMessage")) {
+  if (!canModerate(msg, user)) {
     httpError(403, "forbidden");
   }
 
@@ -179,6 +200,94 @@ export function reactMessage(id: string, user: User, emoji: string) {
     id,
     channelId: msg.channelId,
     reactions: reactionsOf(id),
+  });
+}
+
+/** Dismiss one link preview from a message, like Slack/Discord. Author or
+ *  moderator only; broadcasts the trimmed embed list so every client drops it. */
+export function removeEmbed(messageId: string, embedId: string, user: User) {
+  const msg = findById(messagesTable, messageId);
+  if (!msg || msg.deleted) {
+    httpError(404, "not found");
+  }
+  if (!canModerate(msg, user)) {
+    httpError(403, "forbidden");
+  }
+
+  if (!markEmbedRemoved(embedId, messageId)) {
+    return; // unknown or already-dismissed embed; nothing to broadcast
+  }
+
+  hub.broadcast({
+    type: ServerEventType.Message_Embeds,
+    id: messageId,
+    channelId: msg.channelId,
+    embeds: embedsOf(messageId),
+  });
+}
+
+export function listPins(channelId: string): MessageView[] {
+  return pinnedRows(channelId).map(toMessageView);
+}
+
+export function pinMessage(id: string, user: User) {
+  const msg = findById(messagesTable, id);
+  if (!msg || msg.deleted) {
+    httpError(404, "not found");
+  }
+  if (msg.systemEvent) {
+    httpError(400, "cannot pin a system message");
+  }
+  if (!canModerate(msg, user)) {
+    httpError(403, "forbidden");
+  }
+
+  if (isPinned(id)) {
+    return; // already pinned; nothing to broadcast
+  }
+  if (pinCount(msg.channelId) >= MAX_PINS_PER_CHANNEL) {
+    httpError(409, `a channel can only hold ${MAX_PINS_PER_CHANNEL} pins`);
+  }
+
+  db.insert(messagePinsTable)
+    .values({
+      messageId: id,
+      channelId: msg.channelId,
+      pinnedBy: user.id,
+      pinnedAt: Date.now(),
+    })
+    .onConflictDoNothing()
+    .run();
+  hub.broadcast({
+    type: ServerEventType.Message_Pinned,
+    id,
+    channelId: msg.channelId,
+    pinned: true,
+  });
+}
+
+export function unpinMessage(id: string, user: User) {
+  const msg = findById(messagesTable, id);
+  if (!msg) {
+    httpError(404, "not found");
+  }
+  if (!canModerate(msg, user)) {
+    httpError(403, "forbidden");
+  }
+
+  const deleted = db
+    .delete(messagePinsTable)
+    .where(eq(messagePinsTable.messageId, id))
+    .run();
+  if (deleted.changes === 0) {
+    return;
+  }
+
+  hub.broadcast({
+    type: ServerEventType.Message_Pinned,
+    id,
+    channelId: msg.channelId,
+    pinned: false,
   });
 }
 

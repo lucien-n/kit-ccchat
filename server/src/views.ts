@@ -19,7 +19,9 @@ import {
   type User,
 } from "./db/schema";
 import { attachmentsOf } from "./modules/attachments/attachments.service.js";
+import { embedsOf } from "./modules/link-embeds/link-embeds.service.js";
 import { mentionsOf } from "./modules/messages/mentions.js";
+import { isPinned } from "./modules/messages/pins.js";
 import { reactionsOf } from "./modules/messages/reactions.js";
 import { colorFor, isAdmin, isOwner, roleIdsOf } from "./permissions.js";
 
@@ -128,5 +130,7 @@ export function toMessageView(m: Message): MessageView {
     mentionsEveryone: m.mentionsEveryone === 1,
     reactions: reactionsOf(m.id),
     attachments: attachmentsOf(m.id),
+    embeds: embedsOf(m.id),
+    pinned: isPinned(m.id),
   };
 }

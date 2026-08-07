@@ -1,10 +1,14 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { type MessageView } from "$lib/api";
   import Markdown from "$lib/components/markdown/markdown.svelte";
   import { Button } from "&/button";
   import { Textarea } from "&/textarea";
+  import EyeIcon from "@lucide/svelte/icons/eye";
+  import EyeOffIcon from "@lucide/svelte/icons/eye-off";
+  import PaperclipIcon from "@lucide/svelte/icons/paperclip";
+  import SendIcon from "@lucide/svelte/icons/send";
   import { MAX_ATTACHMENTS_PER_MESSAGE, MESSAGE_MAX_LENGTH } from "@motus/shared";
-  import { Eye, EyeOff, Paperclip, Send } from "@lucide/svelte";
   import EmojiPicker from "../emoji-picker.svelte";
   import AttachmentChip from "./attachment-chip.svelte";
   import { Composer } from "./composer.svelte";
@@ -50,7 +54,9 @@
     <div
       class="thin-scrollbar bg-muted/40 mb-2 max-h-40 overflow-y-auto rounded-xl border px-3 py-2"
     >
-      <div class="text-muted-foreground mb-1 text-xs font-medium">Preview</div>
+      <div class="text-muted-foreground mb-1 text-xs font-medium">
+        {m.composer_preview()}
+      </div>
       <Markdown content={c.draft} class="text-sm" />
     </div>
   {/if}
@@ -69,7 +75,7 @@
 
   {#if replyingTo}
     <ReplyBanner
-      name={replyingTo.author?.displayName ?? "unknown"}
+      name={replyingTo.author?.displayName ?? m.common_unknown()}
       oncancel={() => oncancelreply?.()}
     />
   {/if}
@@ -98,28 +104,28 @@
       variant="ghost"
       size="icon"
       disabled={disabled || c.pending.length >= MAX_ATTACHMENTS_PER_MESSAGE}
-      title="Attach files"
+      title={m.composer_attach_files()}
       onclick={() => c.fileEl?.click()}
     >
-      <Paperclip class="size-4" />
+      <PaperclipIcon class="size-4" />
     </Button>
     <Button
       variant="ghost"
       size="icon"
       {disabled}
-      title={c.preview ? "Hide preview" : "Show preview"}
+      title={c.preview ? m.composer_hide_preview() : m.composer_show_preview()}
       onclick={() => (c.preview = !c.preview)}
     >
-      {#if c.preview}<EyeOff class="size-4" />{:else}<Eye class="size-4" />{/if}
+      {#if c.preview}<EyeOffIcon class="size-4" />{:else}<EyeIcon class="size-4" />{/if}
     </Button>
     <EmojiPicker {disabled} onpick={c.insertAtCaret} />
     <Button
       size="icon"
       disabled={disabled || c.uploading}
       onclick={c.submit}
-      title={c.uploading ? "Waiting for uploads…" : "Send"}
+      title={c.uploading ? m.composer_waiting_uploads() : m.composer_send()}
     >
-      <Send class="size-4" />
+      <SendIcon class="size-4" />
     </Button>
 
     {#if c.showCount}

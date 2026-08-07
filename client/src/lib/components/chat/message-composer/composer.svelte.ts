@@ -1,3 +1,4 @@
+import { m } from "$lib/paraglide/messages";
 import { api } from "$lib/api";
 import { loadEmoji, searchEmoji, shortcodeQuery, type EmojiIndex } from "$lib/emoji";
 import { apiErrorMessage } from "$lib/forms";
@@ -164,7 +165,7 @@ export class Composer {
       if (e instanceof DOMException && e.name === "AbortError") return;
       const p = this.pending.find((p) => p.key === key);
       if (p && p.controller === controller) this.removePending(key);
-      toast.error(apiErrorMessage(e, "failed to upload attachment"));
+      toast.error(apiErrorMessage(e, m.composer_upload_failed()));
     }
   };
 

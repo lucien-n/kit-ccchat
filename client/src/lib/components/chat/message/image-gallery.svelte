@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { attachmentUrl, type MessageAttachment } from "$lib/api";
   import { fly, scale } from "$lib/motion";
   import { cn } from "$lib/utils";
@@ -163,7 +164,7 @@
         <div class="absolute inset-0 flex items-center justify-center overflow-hidden">
           <button
             type="button"
-            aria-label="Zoom out"
+            aria-label={m.gallery_zoom_out()}
             class={cn("touch-none", panning ? "cursor-grabbing" : "cursor-zoom-out")}
             style={`transform:translate(${panX}px,${panY}px)`}
             onpointerdown={onPanStart}
@@ -186,13 +187,13 @@
       {:else}
         <button
           type="button"
-          aria-label="Close"
+          aria-label={m.common_close()}
           class="absolute inset-0 cursor-default"
           onclick={() => show(null)}
         ></button>
         <button
           type="button"
-          aria-label="Zoom in"
+          aria-label={m.gallery_zoom_in()}
           class="relative z-10"
           onclick={() => setZoom(true)}
         >
@@ -213,7 +214,7 @@
         <Button
           variant="ghost"
           size="icon"
-          title={scaled ? "Zoom out" : "Zoom in"}
+          title={scaled ? m.gallery_zoom_out() : m.gallery_zoom_in()}
           onclick={() => setZoom(!scaled)}
         >
           {#if scaled}
@@ -222,13 +223,18 @@
             <ZoomInIcon class="size-4" />
           {/if}
         </Button>
-        <Button variant="ghost" size="icon" title="Save image" onclick={saveImage}>
+        <Button
+          variant="ghost"
+          size="icon"
+          title={m.gallery_save_image()}
+          onclick={saveImage}
+        >
           <DownloadIcon class="size-4" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          title="Open in browser"
+          title={m.gallery_open_in_browser()}
           onclick={openInBrowser}
         >
           <ExternalLinkIcon class="size-4" />
@@ -238,7 +244,12 @@
           <Separator orientation="vertical" />
         </div>
 
-        <Button variant="ghost" size="icon" title="Close" onclick={() => show(null)}>
+        <Button
+          variant="ghost"
+          size="icon"
+          title={m.common_close()}
+          onclick={() => show(null)}
+        >
           <XIcon class="size-5" />
         </Button>
       </div>
@@ -247,7 +258,7 @@
         <Button
           variant="secondary"
           size="icon"
-          title="Previous"
+          title={m.common_previous()}
           class="absolute left-4 z-20 my-auto"
           onclick={() => stepZoom(-1)}
         >
@@ -256,7 +267,7 @@
         <Button
           variant="secondary"
           size="icon"
-          title="Next"
+          title={m.common_next()}
           class="absolute right-4 z-20 my-auto"
           onclick={() => stepZoom(1)}
         >

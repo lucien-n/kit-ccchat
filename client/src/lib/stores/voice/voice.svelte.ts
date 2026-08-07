@@ -1,3 +1,4 @@
+import { m } from "$lib/paraglide/messages";
 import { api } from "$lib/api";
 import { apiErrorMessage, errorName } from "$lib/forms";
 import {
@@ -212,7 +213,7 @@ class VoiceStore implements VoiceCore {
     if (this.roomRef !== room) return;
     const wasConnected = this.status === VoiceStatus.Connected;
     if (!this.leaving && wasConnected) {
-      this.error = "Voice disconnected - the media connection dropped.";
+      this.error = m.voice_disconnected_error();
     }
     if (wasConnected) {
       playVoiceLeave();
@@ -233,11 +234,12 @@ class VoiceStore implements VoiceCore {
   }
 
   async playSound(url: string) {
-    const lp = this.roomRef?.localParticipant;
-    if (!lp) return;
-    const broadcast = !this.micCtl.localMuted && this.canPublish;
+    // Publish into the call only when we're in one and allowed to; otherwise a
+    // null target previews the clip locally (only you hear it).
+    const lp = this.roomRef?.localParticipant ?? null;
+    const target = lp && !this.micCtl.localMuted && this.canPublish ? lp : null;
     try {
-      await this.soundboard.play(lp, url, broadcast, (delta) => {
+      await this.soundboard.play(target, url, (delta) => {
         // LiveKit's speaker detection watches the mic, not this clip, so light
         // the speaking ring by hand while it plays.
         this.playingSounds = Math.max(0, this.playingSounds + delta);

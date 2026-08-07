@@ -13,6 +13,7 @@
   import { toast } from "svelte-sonner";
   import ChatDialogs from "./chat-dialogs.svelte";
   import ChatView from "./chat-view.svelte";
+  import { CommandPalette } from "./command-palette";
 
   const desktopNow =
     typeof window !== "undefined" && window.matchMedia("(min-width: 640px)").matches;
@@ -63,43 +64,46 @@
   </main>
 {/snippet}
 
-{#if chat.isDesktop}
-  <div class="h-dvh">
-    <Resizable.PaneGroup direction="horizontal" autoSaveId="app-layout">
-      <Resizable.Pane
-        defaultSize={18}
-        minSize={12}
-        maxSize={28}
-        class="bg-sidebar text-sidebar-foreground flex min-h-0 flex-col border-r"
+<div class="relative">
+  {#if chat.isDesktop}
+    <div class="h-dvh">
+      <Resizable.PaneGroup direction="horizontal" autoSaveId="app-layout">
+        <Resizable.Pane
+          defaultSize={18}
+          minSize={12}
+          maxSize={28}
+          class="bg-sidebar text-sidebar-foreground flex min-h-0 flex-col border-r"
+        >
+          <Sidebar withVoice />
+        </Resizable.Pane>
+
+        <Resizable.Handle />
+
+        <Resizable.Pane minSize={30} class="flex min-w-0 flex-col">
+          {@render mainView()}
+        </Resizable.Pane>
+
+        <SidePanel />
+      </Resizable.PaneGroup>
+    </div>
+  {:else}
+    <div class="flex h-dvh flex-col">
+      {@render mainView()}
+    </div>
+
+    <Sheet.Root bind:open={ui.nav}>
+      <Sheet.Content
+        side="left"
+        class="bg-sidebar text-sidebar-foreground flex w-72 flex-col p-0 sm:max-w-xs"
       >
-        <Sidebar withVoice />
-      </Resizable.Pane>
+        <Sidebar />
+      </Sheet.Content>
+    </Sheet.Root>
 
-      <Resizable.Handle />
+    <SidePanel />
+  {/if}
 
-      <Resizable.Pane minSize={30} class="flex min-w-0 flex-col">
-        {@render mainView()}
-      </Resizable.Pane>
-
-      <SidePanel />
-    </Resizable.PaneGroup>
-  </div>
-{:else}
-  <div class="flex h-dvh flex-col">
-    {@render mainView()}
-  </div>
-
-  <Sheet.Root bind:open={ui.nav}>
-    <Sheet.Content
-      side="left"
-      class="bg-sidebar text-sidebar-foreground flex w-72 flex-col p-0 sm:max-w-xs"
-    >
-      <Sidebar />
-    </Sheet.Content>
-  </Sheet.Root>
-
-  <SidePanel />
-{/if}
-
-<ChatDialogs />
-<FloatingVideo />
+  <ChatDialogs />
+  <FloatingVideo />
+  <CommandPalette />
+</div>

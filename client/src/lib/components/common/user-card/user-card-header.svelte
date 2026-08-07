@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { api, bannerUrl } from "$lib/api";
   import { refreshMemberColors } from "$lib/app";
   import { getUserContext } from "$lib/context/user.svelte";
@@ -48,7 +49,7 @@
       if (ctx.profile) ctx.profile = { ...ctx.profile, accentColor, color: user.color };
       await refreshMemberColors();
     } catch (err) {
-      toast.error(apiErrorMessage(err, "failed to save color"));
+      toast.error(apiErrorMessage(err, m.user_save_color_failed()));
       await ctx.loadProfile();
     }
   }
@@ -89,14 +90,14 @@
       nameDraft = ctx.profile?.displayName ?? "";
       return;
     }
-    const user = await commitProfile({ displayName }, "failed to save name");
+    const user = await commitProfile({ displayName }, m.user_save_name_failed());
     nameDraft = user?.displayName ?? ctx.profile?.displayName ?? "";
   }
 
   async function saveBio() {
     const bio = bioDraft.trim();
     if (bio === (ctx.profile?.bio ?? "")) return;
-    const user = await commitProfile({ bio }, "failed to save bio");
+    const user = await commitProfile({ bio }, m.user_save_bio_failed());
     bioDraft = user?.bio ?? ctx.profile?.bio ?? "";
   }
 
@@ -125,7 +126,7 @@
         session.patchUser({ avatarVersion });
         await ctx.loadProfile();
       },
-      { error: "upload failed" },
+      { error: m.user_upload_failed() },
     );
     input.value = "";
   }
@@ -147,7 +148,7 @@
         session.patchUser({ bannerVersion });
         await ctx.loadProfile();
       },
-      { error: "upload failed" },
+      { error: m.user_upload_failed() },
     );
     input.value = "";
   }
@@ -169,7 +170,11 @@
         class="group absolute inset-x-0 top-0 h-20 cursor-pointer overflow-hidden rounded-t-2xl"
       >
         {#if banner}
-          <img class="h-full w-full object-cover" src={banner} alt="banner" />
+          <img
+            class="h-full w-full object-cover"
+            src={banner}
+            alt={m.user_banner_alt()}
+          />
         {:else}
           <div
             class="bg-primary/30 h-full w-full"
@@ -180,7 +185,7 @@
           class="absolute inset-0 flex items-center justify-center gap-2 bg-black/50 text-white opacity-0 transition-opacity group-hover:opacity-100"
         >
           <UploadIcon class="size-4" />
-          <span class="text-sm font-medium">Change banner</span>
+          <span class="text-sm font-medium">{m.user_change_banner()}</span>
         </div>
       </button>
       {#if ctx.profile.bannerVersion}
@@ -197,7 +202,7 @@
       <img
         class="absolute h-20 w-full rounded-t-2xl object-cover"
         src={banner}
-        alt="banner"
+        alt={m.user_banner_alt()}
       />
     {:else}
       <div
@@ -247,7 +252,7 @@
             class="h-8 text-lg font-semibold"
             onblur={saveName}
             onkeydown={(e) => e.key === "Enter" && e.currentTarget.blur()}
-            aria-label="Display name"
+            aria-label={m.auth_display_name_label()}
           />
         {:else}
           <p
@@ -272,11 +277,11 @@
             bind:value={bioDraft}
             maxlength={BIO_MAX_LEN}
             rows={3}
-            placeholder="a little about you"
+            placeholder={m.user_bio_placeholder()}
             class="resize-none pb-6"
             onblur={saveBio}
             onkeydown={onBioKeydown}
-            aria-label="Bio"
+            aria-label={m.user_bio_aria()}
           />
           <span
             bind:this={bioCountEl}
@@ -291,7 +296,7 @@
 
         <div class="flex items-center gap-2">
           <span class="text-muted-foreground flex-1 text-xs font-medium">
-            Accent color
+            {m.user_accent_color()}
           </span>
           <div class="flex gap-1">
             <Input
@@ -300,14 +305,14 @@
               value={ctx.profile.accentColor}
               onchange={(e) => saveAccent(e.currentTarget.value)}
               oninput={(e) => previewAccent(e.currentTarget.value)}
-              aria-label="Accent color"
+              aria-label={m.user_accent_color()}
             />
             {#if ctx.profile.accentColor}
               <Button
                 variant="secondary"
                 size="icon-sm"
                 onclick={() => saveAccent(null)}
-                aria-label="Clear accent color"
+                aria-label={m.user_clear_accent_color()}
               >
                 <Trash2Icon class="size-3" />
               </Button>
@@ -323,7 +328,7 @@
         {#if isMine}
           <Button onclick={handleOpenSettings} class="w-full">
             <PencilIcon />
-            Edit Profile
+            {m.user_edit_profile()}
           </Button>
         {/if}
       {/if}

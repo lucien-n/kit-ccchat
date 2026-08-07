@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { init } from "$lib/app";
   import Login from "$lib/components/auth/login.svelte";
   import Chat from "$lib/components/chat/chat.svelte";
@@ -19,7 +20,9 @@
 </script>
 
 {#if !ready}
-  <div class="text-muted-foreground grid min-h-dvh place-items-center">Connecting…</div>
+  <div class="text-muted-foreground grid min-h-dvh place-items-center">
+    {m.common_connecting()}
+  </div>
 {:else if community.needsSetup}
   <Setup />
 {:else if !session.user}

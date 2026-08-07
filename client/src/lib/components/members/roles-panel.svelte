@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { api, type ModeratedMember, type Role } from "$lib/api";
   import MemberIdentity from "$lib/components/common/member-identity.svelte";
   import { Select } from "$lib/components/common/select";
@@ -87,7 +88,7 @@
         await rolesStore.load(true);
         select(role);
       },
-      { error: "failed to create role" },
+      { error: m.roles_create_failed() },
     );
     busy = false;
   }
@@ -104,7 +105,7 @@
         });
         await rolesStore.load(true);
       },
-      { error: "failed to update role" },
+      { error: m.roles_update_failed() },
     );
     busy = false;
   }
@@ -133,7 +134,7 @@
         await api.roles.reorder(order);
         await rolesStore.load(true);
       },
-      { error: "failed to reorder roles" },
+      { error: m.roles_reorder_failed() },
     );
     busy = false;
   }
@@ -146,7 +147,7 @@
         await rolesStore.load(true);
         await members.load(true);
       },
-      { error: "failed to delete role" },
+      { error: m.roles_delete_failed() },
     );
   }
 
@@ -157,7 +158,7 @@
       : [...member.roleIds, roleId];
     busy = true;
     await attempt(() => members.setRoles(member.id, next), {
-      error: "failed to update roles",
+      error: m.user_update_roles_failed(),
     });
     busy = false;
   }
@@ -171,9 +172,18 @@
   disabled: boolean,
 )}
   <Label>{label}</Label>
-  <Input placeholder="Role name" bind:value={model.name} class="w-full" />
+  <Input
+    placeholder={m.roles_name_placeholder()}
+    bind:value={model.name}
+    class="w-full"
+  />
   <div class="flex flex-wrap items-center gap-2">
-    <Input type="color" bind:value={model.color} aria-label="Role color" class="w-8" />
+    <Input
+      type="color"
+      bind:value={model.color}
+      aria-label={m.roles_color_aria()}
+      class="w-8"
+    />
     <Select
       bind:value={model.permission}
       options={Object.values(permissionSpecs)}
@@ -188,18 +198,16 @@
     <div class="space-y-2">
       {@render roleFields(
         draft,
-        "New role",
+        m.roles_new(),
         create,
-        "Create",
+        m.common_create(),
         busy || !draft.name.trim(),
       )}
     </div>
 
     <ScrollArea class="min-h-0 flex-1">
       {#if ordered.length === 0}
-        <p class="text-muted-foreground py-8 text-center text-sm">
-          No roles yet. Create one.
-        </p>
+        <p class="text-muted-foreground py-8 text-center text-sm">{m.roles_empty()}</p>
       {/if}
       <div
         class="flex flex-col gap-0.5 pr-2"
@@ -222,8 +230,8 @@
           >
             <span
               class="text-muted-foreground/60 hover:text-muted-foreground -ml-1 cursor-grab"
-              title="Drag to reorder"
-              aria-label="Drag to reorder"
+              title={m.roles_drag_reorder()}
+              aria-label={m.roles_drag_reorder()}
             >
               <GripVerticalIcon class="size-4" />
             </span>
@@ -251,7 +259,7 @@
               variant="ghost"
               size="icon"
               class="size-7 opacity-0 group-hover:opacity-100 max-sm:opacity-100"
-              title="Delete role"
+              title={m.roles_delete()}
               onclick={() => remove(role.id)}
             >
               <Trash2Icon class="size-4" />
@@ -272,14 +280,18 @@
       <div class="space-y-2 pb-3">
         {@render roleFields(
           edit,
-          "Edit role",
+          m.roles_edit(),
           saveEdit,
-          "Save",
+          m.common_save(),
           busy || !edit.name.trim() || !dirty,
         )}
       </div>
 
-      <Input placeholder="Search members" bind:value={memberSearch} class="mb-2" />
+      <Input
+        placeholder={m.members_search_placeholder()}
+        bind:value={memberSearch}
+        class="mb-2"
+      />
 
       <ScrollArea class="h-full">
         <div class="space-y-0.5 pr-2">
@@ -298,13 +310,15 @@
               </MemberIdentity>
             </button>
           {:else}
-            <p class="text-muted-foreground py-8 text-center text-sm">No members found</p>
+            <p class="text-muted-foreground py-8 text-center text-sm">
+              {m.members_none_found()}
+            </p>
           {/each}
         </div>
       </ScrollArea>
     {:else}
       <div class="text-muted-foreground flex flex-1 items-center justify-center text-sm">
-        Select a role to manage its members.
+        {m.roles_select_prompt()}
       </div>
     {/if}
   </div>

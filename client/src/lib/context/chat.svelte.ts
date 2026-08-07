@@ -1,3 +1,4 @@
+import { m } from "$lib/paraglide/messages";
 import type { MessageView } from "$lib/api";
 import { jumpToPresent, openMessage } from "$lib/app";
 import { appearance, channels, messages, search, typing } from "$lib/stores";
@@ -67,14 +68,14 @@ export class ChatContext {
     this.stick = false;
     await openMessage(channelId, messageId);
     await tick();
-    if (!this.scrollTo(messageId)) toast.info("That message is no longer available.");
+    if (!this.scrollTo(messageId)) toast.info(m.chat_message_unavailable());
   }
 
   async jumpToHit(channelId: string, messageId: string) {
     this.stick = false;
     await openMessage(channelId, messageId);
     await tick();
-    if (!this.scrollTo(messageId)) toast.info("That message is no longer available.");
+    if (!this.scrollTo(messageId)) toast.info(m.chat_message_unavailable());
     if (!this.isDesktop) search.close();
   }
 
@@ -99,7 +100,7 @@ export class ChatContext {
     const channelId = channels.currentId;
     if (!channelId) return false;
     if (!messages.send(channelId, text, this.replyTo?.id, attachmentIds)) {
-      toast.error("Not connected, your message wasn't sent.");
+      toast.error(m.chat_not_connected());
       return false;
     }
     this.replyTo = null;

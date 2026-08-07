@@ -1,3 +1,4 @@
+import { m } from "$lib/paraglide/messages";
 import { getContext, setContext } from "svelte";
 import { toast } from "svelte-sonner";
 import { api, type Channel } from "$lib/api";
@@ -34,7 +35,7 @@ export class ChannelContext {
       await channels.load();
       this.confirmingDeletion = false;
     } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to delete channel"));
+      toast.error(apiErrorMessage(e, m.channel_delete_failed()));
     }
     this.busy = false;
   }
@@ -44,7 +45,7 @@ export class ChannelContext {
       await api.channels.setMain(this.channel.id);
       await channels.load();
     } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to set main channel"));
+      toast.error(apiErrorMessage(e, m.channel_set_main_failed()));
     }
   }
 }

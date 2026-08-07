@@ -30,6 +30,7 @@ export const api = {
 
 export { communityIconUrl } from "./community";
 export { attachmentUrl } from "./attachments";
+export { embedImageUrl } from "./embeds";
 export { soundUrl } from "./soundboard";
 export { apiBase, ApiError } from "./http";
 export { ModAction, type ModOptions } from "./moderation";
@@ -38,10 +39,12 @@ export { authToken } from "./token.svelte";
 export { avatarUrl, bannerUrl } from "./users";
 
 export type {
+  AttachmentHit,
   Channel,
   Invite,
   Member,
   MessageAttachment,
+  MessageEmbed,
   MessageView,
   ModeratedMember,
   Role,

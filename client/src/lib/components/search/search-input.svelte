@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import {
     completeToken,
     parseQuery,
@@ -83,7 +84,7 @@
     <Input
       bind:ref={input}
       bind:value={search.raw}
-      placeholder="Search messages"
+      placeholder={m.chat_search_messages()}
       class="pl-8"
       autocomplete="off"
       spellcheck={false}
@@ -96,14 +97,14 @@
       <Badge variant="secondary" class="gap-1">
         <TextChannelIcon />
         {parsed.in}
-        <button type="button" title="Clear channel filter" onclick={() => drop("in")}>
+        <button type="button" title={m.search_clear_channel()} onclick={() => drop("in")}>
           <XIcon class="size-3" />
         </button>
       </Badge>
     {:else}
       <Button variant="ghost" size="sm" class="h-6 px-2" onclick={() => insert("in")}>
         <TextChannelIcon data-icon="inline-start" />
-        Channel
+        {m.search_channel()}
       </Button>
     {/if}
 
@@ -111,14 +112,18 @@
       <Badge variant="secondary" class="gap-1">
         <AtSignIcon />
         {parsed.from}
-        <button type="button" title="Clear author filter" onclick={() => drop("from")}>
+        <button
+          type="button"
+          title={m.search_clear_author()}
+          onclick={() => drop("from")}
+        >
           <XIcon class="size-3" />
         </button>
       </Badge>
     {:else}
       <Button variant="ghost" size="sm" class="h-6 px-2" onclick={() => insert("from")}>
         <AtSignIcon data-icon="inline-start" />
-        Author
+        {m.search_author()}
       </Button>
     {/if}
   </div>

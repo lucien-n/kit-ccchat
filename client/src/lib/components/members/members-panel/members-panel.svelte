@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import MemberIdentity from "$lib/components/common/member-identity.svelte";
   import { UserCard } from "$lib/components/common/user-card";
   import { byRank } from "$lib/members";
@@ -59,7 +60,9 @@
     >
       {#if row.kind === "header"}
         <p class="text-muted-foreground px-2 text-xs" transition:fade={{ duration: 200 }}>
-          {row.group}
+          {row.group === PresenceGroup.Online
+            ? m.presence_online()
+            : m.presence_offline()}
         </p>
       {:else}
         <div
@@ -77,6 +80,6 @@
       {/if}
     </div>
   {:else}
-    <p class="text-muted-foreground p-4 text-center text-sm">No members yet</p>
+    <p class="text-muted-foreground p-4 text-center text-sm">{m.members_empty()}</p>
   {/each}
 </div>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import MessageSkeleton from "$lib/components/chat/message-skeleton.svelte";
   import { getChatContext } from "$lib/context/chat.svelte";
   import { parseQuery } from "$lib/search-query";
@@ -54,8 +55,9 @@
     <div class="flex items-center justify-between gap-2">
       <span class="text-muted-foreground text-xs">
         {#if search.ran}
-          {search.total}
-          {search.total === 1 ? "result" : "results"}
+          {search.total === 1
+            ? m.search_result_one({ count: search.total })
+            : m.search_result_many({ count: search.total })}
         {/if}
       </span>
       <ToggleGroup.Root
@@ -68,10 +70,10 @@
         }}
       >
         <ToggleGroup.Item value={SearchSort.Newest} class="text-xs">
-          Newest
+          {m.search_sort_newest()}
         </ToggleGroup.Item>
         <ToggleGroup.Item value={SearchSort.Relevance} class="text-xs">
-          Best match
+          {m.search_sort_relevance()}
         </ToggleGroup.Item>
       </ToggleGroup.Root>
     </div>
@@ -81,11 +83,11 @@
     <div class="flex flex-col gap-1 p-2">
       {#if unknownIn}
         <p class="text-muted-foreground p-2 text-sm">
-          No channel called <span class="text-foreground">#{parsed.in}</span>.
+          {m.search_no_channel({ name: parsed.in ?? "" })}
         </p>
       {:else if unknownFrom}
         <p class="text-muted-foreground p-2 text-sm">
-          Nobody here called <span class="text-foreground">@{parsed.from}</span>.
+          {m.search_no_author({ name: `@${parsed.from ?? ""}` })}
         </p>
       {:else if search.loading && search.hits.length === 0}
         <MessageSkeleton count={5} />
@@ -95,11 +97,8 @@
             <Empty.Media variant="icon">
               <SearchIcon />
             </Empty.Media>
-            <Empty.Title>Search this community</Empty.Title>
-            <Empty.Description>
-              Type to search every channel at once, or pick just a channel or an author to
-              browse everything they hold.
-            </Empty.Description>
+            <Empty.Title>{m.search_empty_title()}</Empty.Title>
+            <Empty.Description>{m.search_empty_description()}</Empty.Description>
           </Empty.Header>
         </Empty.Root>
       {:else if search.hits.length === 0}
@@ -108,8 +107,8 @@
             <Empty.Media variant="icon">
               <SearchXIcon />
             </Empty.Media>
-            <Empty.Title>Nothing found</Empty.Title>
-            <Empty.Description>No message matches that search.</Empty.Description>
+            <Empty.Title>{m.search_none_title()}</Empty.Title>
+            <Empty.Description>{m.search_none_description()}</Empty.Description>
           </Empty.Header>
         </Empty.Root>
       {:else}
@@ -127,7 +126,7 @@
             disabled={search.loading}
             onclick={() => search.more()}
           >
-            {search.loading ? "Loading…" : "Load more"}
+            {search.loading ? m.common_loading() : m.search_load_more()}
           </Button>
         {/if}
       {/if}

@@ -6,6 +6,7 @@ import {
   type ModOptions,
   type Role,
 } from "$lib/api";
+import { m } from "$lib/paraglide/messages";
 import { apiErrorMessage } from "$lib/forms";
 import { canModerate, isMuted } from "$lib/members";
 import { members, roles, session } from "$lib/stores";
@@ -15,12 +16,14 @@ import { SvelteSet } from "svelte/reactivity";
 
 const KEY = Symbol("user");
 
-const PAST_TENSE: Record<ModAction, string> = {
-  [ModAction.Kick]: "kicked",
-  [ModAction.Ban]: "banned",
-  [ModAction.Unban]: "unbanned",
-  [ModAction.Mute]: "muted",
-  [ModAction.Unmute]: "unmuted",
+// Each action gets its own message (rather than concatenating a verb) so the
+// full sentence can be phrased naturally per locale.
+const RESULT_MESSAGE: Record<ModAction, (args: { name: string }) => string> = {
+  [ModAction.Kick]: m.moderation_result_kicked,
+  [ModAction.Ban]: m.moderation_result_banned,
+  [ModAction.Unban]: m.moderation_result_unbanned,
+  [ModAction.Mute]: m.moderation_result_muted,
+  [ModAction.Unmute]: m.moderation_result_unmuted,
 };
 
 export class UserContext {
@@ -45,7 +48,7 @@ export class UserContext {
   }
 
   get name(): string {
-    return this.member?.displayName ?? "this member";
+    return this.member?.displayName ?? m.user_this_member();
   }
 
   get showModeration(): boolean {
@@ -67,7 +70,11 @@ export class UserContext {
   }
 
   get permissionLabel(): string {
-    return this.profile?.isOwner ? "owner" : this.profile?.isAdmin ? "admin" : "member";
+    return this.profile?.isOwner
+      ? m.permission_owner()
+      : this.profile?.isAdmin
+        ? m.permission_admin()
+        : m.permission_member();
   }
 
   async loadProfile() {
@@ -76,7 +83,7 @@ export class UserContext {
       this.profile = res.user;
       this.assigned = res.roles;
     } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to load profile"));
+      toast.error(apiErrorMessage(e, m.user_load_profile_failed()));
     }
   }
 
@@ -91,7 +98,7 @@ export class UserContext {
       await members.setRoles(this.profile.id, next);
       await this.loadProfile();
     } catch (e) {
-      toast.error(apiErrorMessage(e, "failed to update roles"));
+      toast.error(apiErrorMessage(e, m.user_update_roles_failed()));
     } finally {
       this.busyRoleId = null;
     }
@@ -102,9 +109,9 @@ export class UserContext {
     this.busy = true;
     try {
       await members.moderate(this.userId, action, opts);
-      toast.success(`${name} was ${PAST_TENSE[action]}`);
+      toast.success(RESULT_MESSAGE[action]({ name }));
     } catch (e) {
-      toast.error(apiErrorMessage(e, "action failed"));
+      toast.error(apiErrorMessage(e, m.moderation_action_failed()));
     } finally {
       this.busy = false;
       this.confirming = null;
@@ -113,7 +120,7 @@ export class UserContext {
 
   async copyId() {
     await navigator.clipboard.writeText(this.userId);
-    toast.success("user id copied");
+    toast.success(m.user_id_copied());
   }
 
   loadRoles() {
