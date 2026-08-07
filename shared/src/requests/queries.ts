@@ -39,3 +39,12 @@ export const searchQuery = z
     offset: Math.max(Math.trunc(Number(s.offset)) || 0, 0),
   }));
 export type SearchQuery = z.infer<typeof searchQuery>;
+
+export const attachmentSearchQuery = z
+  .object({ q: z.string().optional(), limit: queryValue, offset: queryValue })
+  .transform((s) => ({
+    q: s.q ?? "",
+    limit: Math.min(positive(s.limit) ?? SEARCH_PAGE, 50),
+    offset: Math.max(Math.trunc(Number(s.offset)) || 0, 0),
+  }));
+export type AttachmentSearchQuery = z.infer<typeof attachmentSearchQuery>;

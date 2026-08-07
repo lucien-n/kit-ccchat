@@ -8,6 +8,10 @@ class Channels {
     return this.list.find((c) => c.id === this.currentId) ?? null;
   }
 
+  byId(id: string): Channel | undefined {
+    return this.list.find((c) => c.id === id);
+  }
+
   async load() {
     this.list = (await api.channels.list()).channels;
   }

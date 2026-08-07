@@ -1,17 +1,4 @@
 import {
-  ChannelType,
-  ServerEventType,
-  type Member,
-  type RegisterBody,
-  type ServerEvent,
-  type SetupBody,
-  type VoiceMember,
-} from "@motus/shared";
-import { toast } from "svelte-sonner";
-import { api, type MessageView } from "./api";
-import { pingsMe } from "./mentions";
-import { playPing, unlockAudio } from "./notify";
-import {
   appearance,
   channels,
   community,
@@ -29,6 +16,19 @@ import {
   unread,
   voice,
 } from "$lib/stores";
+import {
+  ChannelType,
+  ServerEventType,
+  type Member,
+  type RegisterBody,
+  type ServerEvent,
+  type SetupBody,
+  type VoiceMember,
+} from "@motus/shared";
+import { toast } from "svelte-sonner";
+import { api, type MessageView } from "./api";
+import { pingsMe } from "./mentions";
+import { playPing, unlockAudio } from "./notify";
 
 export async function init() {
   prefs.init();

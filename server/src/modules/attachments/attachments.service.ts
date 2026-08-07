@@ -82,7 +82,7 @@ function safeFilename(name: string): string {
   return (cleaned || "file").slice(0, MAX_ATTACHMENT_FILENAME);
 }
 
-function toAttachmentView(r: MessageAttachmentRow): MessageAttachment {
+export function toAttachmentView(r: MessageAttachmentRow): MessageAttachment {
   return {
     id: r.id,
     filename: r.filename,

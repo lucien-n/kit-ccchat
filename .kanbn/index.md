@@ -45,6 +45,8 @@ columnSorting:
 
 ## In Progress
 
+- [command-palette](tasks/command-palette.md)
+
 ## Done
 
 - [link-embeds](tasks/link-embeds.md)

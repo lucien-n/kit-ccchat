@@ -2,16 +2,20 @@ import {
   MATCH_CLOSE,
   MATCH_OPEN,
   SearchSort,
+  type AttachmentSearchQuery,
+  type AttachmentSearchResults,
   type SearchQuery,
   type SearchResults,
 } from "@motus/shared";
 import { and, count, desc, eq, isNull, sql, type SQL } from "drizzle-orm";
 import { db } from "../../db/index.js";
-import { messagesTable, type Message } from "../../db/schema";
+import { messageAttachmentsTable, messagesTable, type Message } from "../../db/schema";
+import { toAttachmentView } from "../attachments/attachments.service.js";
 import { excerpt, toMessageView } from "../../views.js";
 
 const MIN_TERM_LENGTH = 2;
 const EMPTY: SearchResults = { hits: [], total: 0, hasMore: false };
+const EMPTY_ATTACHMENTS: AttachmentSearchResults = { hits: [] };
 
 /** FTS5 reserves its own syntax in the query string: AND, OR, NOT, NEAR, quotes,
  *  parentheses, `*` and a leading `-`. People type prose, and a stray quote or a
@@ -37,6 +41,51 @@ export function search(params: SearchQuery): SearchResults {
     return params.channelId || params.authorId ? byFilter(params) : EMPTY;
   }
   return byText(params, match);
+}
+
+/** Turn a user's text into a safe LIKE pattern: the wildcards `%` `_` and the
+ *  escape `\` are neutered so a filename with an underscore matches literally. */
+function likePattern(q: string): string {
+  const escaped = q.replaceAll("\\", "\\\\").replaceAll("%", "\\%").replaceAll("_", "\\_");
+  return `%${escaped}%`;
+}
+
+/** Attachments are searched by filename, not by the FTS content index. Only files
+ *  bound to a live message are returned, so every hit can open where it lives. */
+export function searchAttachments(params: AttachmentSearchQuery): AttachmentSearchResults {
+  const q = params.q.trim();
+  if (q.length < MIN_TERM_LENGTH) return EMPTY_ATTACHMENTS;
+
+  const where = and(
+    eq(messagesTable.deleted, 0),
+    // SQLite's LIKE is case-insensitive for ASCII; ESCAPE makes the neutered
+    // wildcards literal.
+    sql`${messageAttachmentsTable.filename} LIKE ${likePattern(q)} ESCAPE '\\'`,
+  );
+
+  const rows = db
+    .select({
+      a: messageAttachmentsTable,
+      channelId: messagesTable.channelId,
+      messageId: messagesTable.id,
+    })
+    .from(messageAttachmentsTable)
+    .innerJoin(messagesTable, eq(messagesTable.id, messageAttachmentsTable.messageId))
+    .where(where)
+    // id (a uuid) is only a deterministic tiebreaker so pages don't shuffle when
+    // two files share a createdAt.
+    .orderBy(desc(messageAttachmentsTable.createdAt), desc(messageAttachmentsTable.id))
+    .limit(params.limit)
+    .offset(params.offset)
+    .all();
+
+  return {
+    hits: rows.map((r) => ({
+      attachment: toAttachmentView(r.a),
+      channelId: r.channelId,
+      messageId: r.messageId,
+    })),
+  };
 }
 
 function byFilter(params: SearchQuery): SearchResults {

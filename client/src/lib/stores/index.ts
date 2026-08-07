@@ -11,6 +11,7 @@ export * from "./community/presence.svelte";
 export * from "./community/roles.svelte";
 export * from "./community/unread.svelte";
 
+export * from "./chat/attachment-search.svelte";
 export * from "./chat/mention-card.svelte";
 export * from "./chat/messages.svelte";
 export * from "./chat/pins.svelte";

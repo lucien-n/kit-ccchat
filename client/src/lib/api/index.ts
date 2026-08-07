@@ -39,6 +39,7 @@ export { authToken } from "./token.svelte";
 export { avatarUrl, bannerUrl } from "./users";
 
 export type {
+  AttachmentHit,
   Channel,
   Invite,
   Member,

@@ -66,14 +66,12 @@
     void persistOrder();
   }
 
-  function handleSelectChannel(id: string) {
-    app.selectChannel(id);
-    ui.nav = false;
-  }
+  function handleJoinChannel(channel: Channel) {
+    if (channel.type === ChannelType.Voice) {
+      voice.join(channel);
+    }
 
-  function handleJoinVoice(channel: { id: string; name: string }) {
-    voice.join(channel);
-    void app.selectChannel(channel.id);
+    app.selectChannel(channel.id);
     ui.nav = false;
   }
 </script>
@@ -94,7 +92,7 @@
     >
       {#each textChannels as channel (channel.id)}
         <div animate:flip={{ duration: 150 }}>
-          <SingleChannel {channel} onSelect={() => handleSelectChannel(channel.id)} />
+          <SingleChannel {channel} onSelect={() => handleJoinChannel(channel)} />
         </div>
       {/each}
     </div>
@@ -111,7 +109,7 @@
     >
       {#each voiceChannels as channel (channel.id)}
         <div animate:flip={{ duration: 150 }}>
-          <SingleChannel {channel} onSelect={() => handleJoinVoice(channel)} />
+          <SingleChannel {channel} onSelect={() => handleJoinChannel(channel)} />
         </div>
       {/each}
     </div>

@@ -282,6 +282,22 @@ export const searchResults = z.object({
 });
 export type SearchResults = z.infer<typeof searchResults>;
 
+/** One attachment result: the file plus where it lives, so a hit can open the
+ *  message that carries it. Only files bound to a message are searchable. */
+export const attachmentHit = z.object({
+  attachment: messageAttachment,
+  channelId: z.string(),
+  messageId: z.string(),
+});
+export type AttachmentHit = z.infer<typeof attachmentHit>;
+
+/** No total/hasMore: the palette shows a single capped page, so attachment
+ *  search has no pagination to report (unlike message [[searchResults]]). */
+export const attachmentSearchResults = z.object({
+  hits: z.array(attachmentHit),
+});
+export type AttachmentSearchResults = z.infer<typeof attachmentSearchResults>;
+
 /** A window of history centred on one message, for opening a search result in
  *  place. Unlike plain history it can be detached from the newest message, so it
  *  reports what remains in both directions. */
