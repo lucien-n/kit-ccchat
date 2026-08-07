@@ -22,8 +22,4 @@ site. Consider a per-message opt-out.
   column: Backlog
   fromProgress: 0
   toProgress: 0
-- type: completed
-  date: 2026-08-07T13:01:00.000Z
-  column: Done
-  fromProgress: 0
-  toProgress: 1
+
