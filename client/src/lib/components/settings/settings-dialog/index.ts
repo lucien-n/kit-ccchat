@@ -1,4 +1,3 @@
-import { m } from "$lib/paraglide/messages";
 import type { Component } from "svelte";
 import AppearanceTab from "./appearance-tab.svelte";
 import ProfileTab from "./profile-tab.svelte";
@@ -9,18 +8,14 @@ export enum SettingsDialogTab {
   Appearance = "Appearance",
 }
 
+// Titles are resolved in the dialog (via `m`) so they stay reactive to locale;
+// keeping them out of this module-level object avoids freezing them at import.
 export const SETTINGS_DIALOG_TAB_SPECS: Record<
   SettingsDialogTab,
-  { title: () => string; component: Component }
+  { component: Component }
 > = {
-  [SettingsDialogTab.Profile]: {
-    title: m.settings_tab_profile,
-    component: ProfileTab,
-  },
-  [SettingsDialogTab.Appearance]: {
-    title: m.settings_tab_appearance,
-    component: AppearanceTab,
-  },
+  [SettingsDialogTab.Profile]: { component: ProfileTab },
+  [SettingsDialogTab.Appearance]: { component: AppearanceTab },
 };
 
 export { SettingsDialog };

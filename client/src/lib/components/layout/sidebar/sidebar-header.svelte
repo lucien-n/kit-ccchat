@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { community, session, ui } from "$lib/stores";
   import { Button } from "&/button";
   import SettingsIcon from "@lucide/svelte/icons/settings";
@@ -15,7 +16,7 @@
         variant="ghost"
         size="icon"
         class="size-7"
-        title="Community settings"
+        title={m.community_settings_title()}
         onclick={() => ui.openCommunitySettings()}
       >
         <SettingsIcon class="size-4" />

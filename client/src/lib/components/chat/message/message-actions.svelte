@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { type MessageView } from "$lib/api";
   import { getChatContext } from "$lib/context/chat.svelte";
   import { attempt } from "$lib/forms";
@@ -29,7 +30,7 @@
 
   async function remove() {
     await attempt(() => messages.delete(message.id), {
-      error: "failed to delete message",
+      error: m.message_delete_failed(),
     });
   }
 </script>
@@ -39,7 +40,7 @@
     <Button
       variant="ghost"
       size="icon-sm"
-      title="React with {emoji}"
+      title={m.message_react_with({ emoji })}
       onclick={() => toggleReaction(message, emoji)}
       class="text-base"
     >
@@ -61,7 +62,7 @@
     variant="ghost"
     size="icon"
     class="size-7"
-    title="Reply"
+    title={m.message_reply()}
     onclick={() => chat.startReply(message)}
   >
     <ReplyIcon class="size-4" />
@@ -72,7 +73,7 @@
       variant="ghost"
       size="icon"
       class="size-7"
-      title={message.pinned ? "Unpin" : "Pin"}
+      title={message.pinned ? m.pins_unpin() : m.pins_pin()}
       onclick={() => togglePin(message)}
     >
       {#if message.pinned}
@@ -84,13 +85,13 @@
   {/if}
 
   {#if canEdit}
-    <Button variant="ghost" size="icon" class="size-7" title="Edit" onclick={onedit}>
+    <Button variant="ghost" size="icon" class="size-7" title={m.message_edit()} onclick={onedit}>
       <PencilIcon class="size-4" />
     </Button>
   {/if}
 
   {#if canDelete}
-    <Button variant="ghost" size="icon" class="size-7" title="Delete" onclick={remove}>
+    <Button variant="ghost" size="icon" class="size-7" title={m.message_delete()} onclick={remove}>
       <Trash2Icon class="size-4" />
     </Button>
   {/if}

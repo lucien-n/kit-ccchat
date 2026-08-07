@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import {
     emojiLabel,
     loadEmoji,
@@ -54,7 +55,7 @@
         {...props}
         variant="ghost"
         size="icon"
-        title="Emoji"
+        title={m.emoji_picker_title()}
         {disabled}
         class={className}
       >
@@ -64,10 +65,10 @@
   </Popover.Trigger>
 
   <Popover.Content align="end" side="top" class="w-80 gap-2 p-2">
-    <Input bind:value={query} placeholder="Search emoji" autocomplete="off" />
+    <Input bind:value={query} placeholder={m.emoji_search_placeholder()} autocomplete="off" />
 
     {#if !index}
-      <div class="text-muted-foreground py-8 text-center text-sm">Loading emoji...</div>
+      <div class="text-muted-foreground py-8 text-center text-sm">{m.emoji_loading()}</div>
     {:else}
       {#if !query.trim()}
         <div class="flex gap-0.5 border-b pb-2">
@@ -102,7 +103,7 @@
           </div>
         {:else}
           <div class="text-muted-foreground py-8 text-center text-sm">
-            No emoji matches "{query.trim()}"
+            {m.emoji_no_match({ query: query.trim() })}
           </div>
         {/if}
       </ScrollArea>

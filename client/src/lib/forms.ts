@@ -1,3 +1,4 @@
+import { m } from "$lib/paraglide/messages";
 import { toast } from "svelte-sonner";
 import {
   defaults,
@@ -88,7 +89,7 @@ export function spaForm<S extends Schema>(
         else
           setMessage(
             form,
-            fail(apiErrorMessage(err, options.fallback ?? "something went wrong")),
+            fail(apiErrorMessage(err, options.fallback ?? m.common_something_went_wrong())),
           );
       }
     },

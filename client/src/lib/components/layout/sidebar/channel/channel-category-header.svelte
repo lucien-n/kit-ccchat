@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { session } from "$lib/stores";
   import { Button } from "&/button";
   import PlusIcon from "@lucide/svelte/icons/plus";
@@ -21,7 +22,7 @@
     <Button
       variant="ghost"
       size="icon-sm"
-      title="Create {title} channel"
+      title={m.channel_create_category({ category: title })}
       onclick={onCreate}
     >
       <PlusIcon class="size-4" />

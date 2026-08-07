@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { externalLink } from "$lib/stores";
   import { Button } from "&/button";
   import * as Dialog from "&/dialog";
@@ -19,11 +20,8 @@
 <Dialog.Root bind:open={() => url !== null, (open) => !open && externalLink.dismiss()}>
   <Dialog.Content class="max-w-md">
     <Dialog.Header>
-      <Dialog.Title>Open this link?</Dialog.Title>
-      <Dialog.Description>
-        This takes you to a site outside the chat. Have a look at the address before you
-        go, since the text of a link does not have to match where it leads.
-      </Dialog.Description>
+      <Dialog.Title>{m.external_link_title()}</Dialog.Title>
+      <Dialog.Description>{m.external_link_description()}</Dialog.Description>
     </Dialog.Header>
 
     {#if parts}
@@ -35,9 +33,11 @@
     {/if}
 
     <Dialog.Footer>
-      <Button variant="outline" onclick={() => externalLink.dismiss()}>Cancel</Button>
+      <Button variant="outline" onclick={() => externalLink.dismiss()}>
+        {m.common_cancel()}
+      </Button>
       <Button onclick={() => externalLink.visit()}>
-        Visit site <ExternalLinkIcon />
+        {m.external_link_visit()} <ExternalLinkIcon />
       </Button>
     </Dialog.Footer>
   </Dialog.Content>

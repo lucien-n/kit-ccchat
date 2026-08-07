@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import * as Empty from "$lib/components/ui/empty/index.js";
   import { getChatContext } from "$lib/context/chat.svelte";
   import { messages, voice } from "$lib/stores";
@@ -57,11 +58,13 @@
     {:else if messages.list.length === 0}
       <Empty.Root>
         <Empty.Header>
-          <Empty.Title>No Messages Yet</Empty.Title>
-          <Empty.Description>Start chatting below.</Empty.Description>
+          <Empty.Title>{m.messages_empty_title()}</Empty.Title>
+          <Empty.Description>{m.messages_empty_description()}</Empty.Description>
         </Empty.Header>
         <Empty.Content>
-          <Button variant="outline" onclick={() => chat.composer?.focus()}>Start</Button>
+          <Button variant="outline" onclick={() => chat.composer?.focus()}>
+            {m.messages_empty_action()}
+          </Button>
         </Empty.Content>
       </Empty.Root>
     {:else}

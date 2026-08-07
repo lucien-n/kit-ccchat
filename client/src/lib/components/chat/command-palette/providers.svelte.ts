@@ -1,3 +1,4 @@
+import { m } from "$lib/paraglide/messages";
 import { soundUrl } from "$lib/api";
 import { selectChannel } from "$lib/app";
 import { channelTypeSpecs } from "$lib/specs";
@@ -14,7 +15,10 @@ const stripMarkers = (s: string) =>
   s.replaceAll(MATCH_OPEN, "").replaceAll(MATCH_CLOSE, "");
 
 const channelProvider: PaletteProvider = {
-  group: "Channels",
+  // Getter (not a static string) so the heading re-resolves when the locale changes.
+  get group() {
+    return m.palette_group_channels();
+  },
   results(query, { close }) {
     const q = query.trim().toLowerCase();
     return channels.list
@@ -30,7 +34,9 @@ const channelProvider: PaletteProvider = {
 
 let soundsRequested = false;
 const soundProvider: PaletteProvider = {
-  group: "Sounds",
+  get group() {
+    return m.palette_group_sounds();
+  },
   open() {
     if (soundsRequested) return;
     soundsRequested = true;
@@ -50,7 +56,9 @@ const soundProvider: PaletteProvider = {
 };
 
 const messageProvider: PaletteProvider = {
-  group: "Messages",
+  get group() {
+    return m.palette_group_messages();
+  },
   get loading() {
     return search.loading;
   },
@@ -63,7 +71,7 @@ const messageProvider: PaletteProvider = {
   results(_query, { close, jumpToMessage }) {
     return search.hits.map(({ message, snippet }) => ({
       id: `message:${message.id}`,
-      label: message.author?.displayName ?? "Unknown",
+      label: message.author?.displayName ?? m.common_unknown(),
       subtitle: stripMarkers(snippet),
       icon: MessageSquareIcon,
       onSelect: () => {
@@ -75,7 +83,9 @@ const messageProvider: PaletteProvider = {
 };
 
 const attachmentProvider: PaletteProvider = {
-  group: "Attachments",
+  get group() {
+    return m.palette_group_attachments();
+  },
   get loading() {
     return attachmentSearch.loading;
   },

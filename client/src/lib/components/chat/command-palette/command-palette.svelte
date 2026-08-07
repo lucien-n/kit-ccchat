@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { getChatContext } from "$lib/context/chat.svelte";
   import * as Command from "&/command";
   import * as Dialog from "&/dialog";
@@ -58,13 +59,10 @@
 <Dialog.Root bind:open={isOpen}>
   <Dialog.Content class="bg-transparent shadow-none ring-0" showCloseButton={false}>
     <Command.Root shouldFilter={false}>
-      <Command.Input
-        placeholder="Search channels, sounds, messages…"
-        bind:value={query}
-      />
+      <Command.Input placeholder={m.palette_search_placeholder()} bind:value={query} />
       <Command.List>
         {#if !isLoading}
-          <Command.Empty>No results found.</Command.Empty>
+          <Command.Empty>{m.palette_no_results()}</Command.Empty>
         {/if}
         {#each sections as section (section.group)}
           <Command.Group heading={section.group}>
@@ -90,7 +88,7 @@
               class="text-muted-foreground flex items-center justify-center gap-2 py-6 text-sm"
             >
               <LoaderCircleIcon class="size-4 animate-spin" />
-              Searching…
+              {m.palette_searching()}
             </div>
           </Command.Loading>
         {/if}

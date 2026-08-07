@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { getUserContext } from "$lib/context/user.svelte";
   import { roles } from "$lib/stores";
   import { cn } from "$lib/utils";
@@ -9,7 +10,7 @@
 </script>
 
 <div class="border-t p-3">
-  <div class="text-muted-foreground mb-2 text-xs font-medium">Roles</div>
+  <div class="text-muted-foreground mb-2 text-xs font-medium">{m.roles_heading()}</div>
 
   {#if ctx.canManageRoles}
     {#if roles.list.length}
@@ -39,9 +40,7 @@
         </div>
       </ScrollArea>
     {:else}
-      <p class="text-muted-foreground text-xs">
-        No roles exist yet. Create some in Community settings.
-      </p>
+      <p class="text-muted-foreground text-xs">{m.user_no_roles_manage()}</p>
     {/if}
   {:else if ctx.assigned.length}
     <div class="flex flex-wrap gap-1">
@@ -57,6 +56,6 @@
       {/each}
     </div>
   {:else}
-    <p class="text-muted-foreground text-xs">No roles</p>
+    <p class="text-muted-foreground text-xs">{m.user_no_roles()}</p>
   {/if}
 </div>

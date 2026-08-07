@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { emojiLabel } from "$lib/emoji";
   import { appearance } from "$lib/stores";
   import { SuggestionKind, type Suggestion } from "./composer.types";
@@ -15,7 +16,7 @@
 <div
   class="bg-popover text-popover-foreground ring-foreground/10 absolute bottom-full left-2 z-20 mb-1 w-72 overflow-hidden rounded-xl shadow-lg ring-1 sm:left-4"
   role="listbox"
-  aria-label="Suggestions"
+  aria-label={m.composer_suggestions()}
 >
   {#each matches as match, i (match.kind === SuggestionKind.Emoji ? match.entry[1] : match.entry.key)}
     <button

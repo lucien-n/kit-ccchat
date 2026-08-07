@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import type { SearchHit } from "$lib/api";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { formatDate } from "$lib/format";
@@ -13,7 +14,7 @@
   const { hit, onJump }: Props = $props();
 
   const channelName = $derived(
-    channels.list.find((c) => c.id === hit.message.channelId)?.name ?? "unknown",
+    channels.list.find((c) => c.id === hit.message.channelId)?.name ?? m.common_unknown(),
   );
 
   type Segment = { text: string; match: boolean };
@@ -57,7 +58,7 @@
         class="text-sm font-semibold"
         style={appearance.nameStyle(hit.message.author?.color ?? null)}
       >
-        {hit.message.author?.displayName ?? "unknown"}
+        {hit.message.author?.displayName ?? m.common_unknown()}
       </div>
       <p class="text-muted-foreground text-sm wrap-break-word whitespace-pre-wrap">
         {#each segments(hit.snippet) as segment, i (i)}

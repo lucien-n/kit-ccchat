@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { getChatContext, type ChatPanel } from "$lib/context/chat.svelte";
   import { channelTypeSpecs } from "$lib/specs";
   import { channels, prefs, presence, ui, unread } from "$lib/stores";
@@ -22,7 +23,7 @@
       variant="ghost"
       size="icon"
       class="shrink-0 sm:hidden"
-      title="Channels"
+      title={m.chat_channels_menu()}
       onclick={() => (ui.nav = true)}
     >
       <MenuIcon class="size-5" />
@@ -32,7 +33,7 @@
       {/if}
     </Button>
     <Icon class="text-muted-foreground size-5 shrink-0" />
-    <span class="truncate">{channels.current?.name ?? "no channel"}</span>
+    <span class="truncate">{channels.current?.name ?? m.chat_no_channel()}</span>
   </div>
   <div class="flex shrink-0 items-center gap-1 sm:gap-2">
     <PinnedList />
@@ -40,7 +41,7 @@
     <Button
       variant="ghost"
       size="icon"
-      title={prefs.soundEnabled ? "Mute notification sound" : "Unmute notification sound"}
+      title={prefs.soundEnabled ? m.chat_mute_sound() : m.chat_unmute_sound()}
       onclick={() => prefs.toggleSound()}
     >
       {#if prefs.soundEnabled}
@@ -56,13 +57,16 @@
       value={chat.panel}
       onValueChange={(v) => (chat.panel = v as ChatPanel)}
     >
-      <ToggleGroup.Item value="search" title="Search messages">
+      <ToggleGroup.Item value="search" title={m.chat_search_messages()}>
         <SearchIcon class="size-4" />
       </ToggleGroup.Item>
-      <ToggleGroup.Item value="members" title="Members, {presence.online.size} online">
+      <ToggleGroup.Item
+        value="members"
+        title={m.chat_members_online_title({ count: presence.online.size })}
+      >
         <UsersIcon class="size-4" />
         <span class="text-xs">
-          {presence.online.size} online
+          {m.chat_online_count({ count: presence.online.size })}
         </span>
       </ToggleGroup.Item>
     </ToggleGroup.Root>

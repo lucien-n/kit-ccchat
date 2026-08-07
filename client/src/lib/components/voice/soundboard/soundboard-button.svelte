@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { soundUrl } from "$lib/api";
   import { nameFromFile, session, soundboard, voice } from "$lib/stores";
   import { Button } from "&/button";
@@ -70,7 +71,7 @@
         {...props}
         variant="secondary"
         size="icon"
-        title="Soundboard"
+        title={m.soundboard_title()}
         class={className}
       >
         <MegaphoneIcon class="size-4" />
@@ -80,11 +81,11 @@
 
   <Popover.Content align="end" side="top" class="w-80 gap-2 p-2">
     <div class="flex gap-1.5">
-      <Input bind:value={query} placeholder="Search sounds" autocomplete="off" />
+      <Input bind:value={query} placeholder={m.soundboard_search()} autocomplete="off" />
       <Button
         variant="secondary"
         size="icon"
-        title="Upload a sound"
+        title={m.soundboard_upload()}
         onclick={() => fileInput?.click()}
       >
         <UploadIcon class="size-4" />
@@ -105,13 +106,17 @@
     <ScrollArea class="h-56">
       <div class="flex flex-col gap-2 pr-2">
         {#if favorites.length}
-          <div class="text-muted-foreground px-1 text-xs font-medium">Favorites</div>
+          <div class="text-muted-foreground px-1 text-xs font-medium">
+            {m.soundboard_favorites()}
+          </div>
           <div class="grid grid-cols-2 gap-1">
             {#each favorites as sound (sound.id)}
               {@render tile(sound)}
             {/each}
           </div>
-          <div class="text-muted-foreground px-1 text-xs font-medium">All sounds</div>
+          <div class="text-muted-foreground px-1 text-xs font-medium">
+            {m.soundboard_all()}
+          </div>
         {/if}
 
         {#if results.length}
@@ -124,23 +129,23 @@
           <div
             class="text-muted-foreground flex flex-col items-center justify-center gap-3 py-8 text-sm"
           >
-            Loading sounds…
+            {m.soundboard_loading()}
             <LoaderCircleIcon class="animate-spin" />
           </div>
         {:else if query.trim()}
           <div class="text-muted-foreground py-8 text-center text-sm">
-            No sound matches "{query.trim()}"
+            {m.soundboard_no_match({ query: query.trim() })}
           </div>
         {:else}
           <Empty.Root>
             <Empty.Header>
-              <Empty.Title>No sounds yet</Empty.Title>
-              <Empty.Description>Upload one to get started.</Empty.Description>
+              <Empty.Title>{m.soundboard_empty_title()}</Empty.Title>
+              <Empty.Description>{m.soundboard_empty_desc()}</Empty.Description>
             </Empty.Header>
             <Empty.Content>
               <Button variant="outline" onclick={() => fileInput?.click()}>
                 <UploadIcon class="size-4" />
-                Upload
+                {m.soundboard_upload_action()}
               </Button>
             </Empty.Content>
           </Empty.Root>
@@ -163,8 +168,8 @@
         oninput={(e) => soundboard.setVolume(e.currentTarget.valueAsNumber)}
         style="--fill: {soundboard.volume * 100}%"
         class="soundboard-volume w-full cursor-pointer"
-        title="Soundboard volume"
-        aria-label="Soundboard volume"
+        title={m.soundboard_volume()}
+        aria-label={m.soundboard_volume()}
       />
     </div>
   </Popover.Content>
@@ -187,7 +192,9 @@
       <button
         type="button"
         class="hover:text-foreground text-muted-foreground rounded p-1"
-        title={soundboard.isFavorite(sound.id) ? "Unfavorite" : "Favorite"}
+        title={soundboard.isFavorite(sound.id)
+          ? m.soundboard_unfavorite()
+          : m.soundboard_favorite()}
         onclick={() => soundboard.toggleFavorite(sound.id)}
       >
         <StarIcon
@@ -200,7 +207,7 @@
         <button
           type="button"
           class="hover:text-foreground text-muted-foreground rounded p-1 opacity-0 group-hover:opacity-100"
-          title="Edit sound"
+          title={m.sound_edit_title()}
           onclick={() => editSound(sound)}
         >
           <PencilIcon class="size-3.5" />

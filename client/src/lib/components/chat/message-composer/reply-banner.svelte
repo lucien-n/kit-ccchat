@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { Button } from "&/button";
   import ReplyIcon from "@lucide/svelte/icons/reply";
   import XIcon from "@lucide/svelte/icons/x";
@@ -14,13 +15,13 @@
   class="bg-muted/40 text-muted-foreground mb-2 flex items-center gap-2 rounded-xl border px-3 py-1.5 text-xs"
 >
   <ReplyIcon class="size-3.5 shrink-0" />
-  <span class="shrink-0">Replying to</span>
+  <span class="shrink-0">{m.composer_replying_to()}</span>
   <span class="text-foreground min-w-0 truncate font-medium">{name}</span>
   <Button
     variant="ghost"
     size="icon-xs"
     class="ml-auto shrink-0"
-    title="Cancel reply"
+    title={m.composer_cancel_reply()}
     onclick={oncancel}
   >
     <XIcon class="size-3.5" />

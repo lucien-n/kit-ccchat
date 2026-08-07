@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { attachmentUrl } from "$lib/api";
   import { formatBytes } from "$lib/format";
   import { isCompressibleImageType, isImageType } from "$lib/image";
@@ -63,8 +64,8 @@
       size="icon-xs"
       class="absolute -top-1.5 -left-1.5 rounded-full"
       title={item.keepOriginal
-        ? "Sending the original. Click to compress and save space"
-        : "Compressed to save space. Click to send the original quality"}
+        ? m.attachment_sending_original()
+        : m.attachment_compressed()}
       onclick={ontoggle}
     >
       <SparklesIcon class="size-3" />
@@ -75,7 +76,7 @@
     variant="secondary"
     size="icon-xs"
     class="absolute -top-1.5 -right-1.5 rounded-full"
-    title="Remove attachment"
+    title={m.attachment_remove()}
     onclick={onremove}
   >
     <XIcon class="size-3" />

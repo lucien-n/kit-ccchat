@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { attachmentUrl, type MessageAttachment } from "$lib/api";
   import { formatBytes, formatRelative } from "$lib/format";
   import DownloadIcon from "@lucide/svelte/icons/download";
@@ -50,7 +51,7 @@
       <div class="text-muted-foreground text-xs">
         {formatBytes(attachment.sizeBytes)}
         {#if attachment.expiresAt}
-          &middot; expires {formatRelative(attachment.expiresAt)}
+          {m.video_expires({ when: formatRelative(attachment.expiresAt) })}
         {/if}
       </div>
     </div>
@@ -62,8 +63,8 @@
       href={attachmentUrl(attachment.id)}
       download={attachment.filename}
       class="text-muted-foreground hover:text-foreground shrink-0 transition-colors"
-      aria-label="Download"
-      title="Download"
+      aria-label={m.common_download()}
+      title={m.common_download()}
     >
       <DownloadIcon class="size-4" />
     </a>

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { floatingWindow } from "$lib/actions/floating-window";
   import { selectChannel } from "$lib/app";
   import { fade } from "$lib/motion";
@@ -70,7 +71,7 @@
           variant="ghost"
           size="icon-xs"
           class="text-white hover:bg-white/20 hover:text-white"
-          title="Open voice channel"
+          title={m.voice_open_channel()}
           onclick={open}
         >
           <Maximize2Icon class="size-3.5" />
@@ -79,7 +80,7 @@
           variant="ghost"
           size="icon-xs"
           class="text-white hover:bg-white/20 hover:text-white"
-          title="Hide"
+          title={m.common_hide()}
           onclick={() => (dismissed = true)}
         >
           <XIcon class="size-3.5" />
@@ -89,7 +90,7 @@
 
     <div
       data-resize
-      title="Drag to resize"
+      title={m.voice_drag_resize()}
       class="absolute right-0.5 bottom-0.5 size-3 cursor-se-resize rounded-sm border-r-2 border-b-2 border-white/50 opacity-0 transition-opacity group-hover:opacity-100"
     ></div>
   </div>

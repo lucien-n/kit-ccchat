@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import * as app from "$lib/app";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import DeafenButton from "$lib/components/voice/deafen-button.svelte";
@@ -81,7 +82,7 @@
 <ScrollArea class="min-h-0 flex-1" scrollbarYClasses="my-1 mr-0.5">
   <nav class="p-2">
     <ChannelCategoryHeader
-      title="Text"
+      title={m.channel_category_text()}
       onCreate={() => ui.openCreateChannel(ChannelType.Text)}
     />
 
@@ -98,7 +99,7 @@
     </div>
 
     <ChannelCategoryHeader
-      title="Voice"
+      title={m.channel_category_voice()}
       onCreate={() => ui.openCreateChannel(ChannelType.Voice)}
     />
 
@@ -123,7 +124,7 @@
 <div class="flex shrink-0 items-center gap-1 border-t p-2">
   <button
     class="hover:bg-sidebar-accent flex min-w-0 flex-1 items-center gap-2 rounded-2xl p-1 pl-1.5"
-    title="Settings"
+    title={m.settings_title()}
     onclick={() => ui.openSettings()}
   >
     <UserAvatar
@@ -140,7 +141,11 @@
         {session.user?.displayName}
       </div>
       <div class="text-muted-foreground text-xs">
-        {session.isOwner ? "owner" : session.isAdmin ? "admin" : "member"}
+        {session.isOwner
+          ? m.permission_owner()
+          : session.isAdmin
+            ? m.permission_admin()
+            : m.permission_member()}
       </div>
     </div>
   </button>

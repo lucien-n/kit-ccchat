@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { UserCard } from "$lib/components/common/user-card";
   import { voice } from "$lib/stores";
@@ -48,23 +49,23 @@
         "size-3.5 shrink-0",
         mute === "forced" ? "text-amber-400" : "text-muted-foreground/70",
       )}
-      aria-label="{member.displayName} is muted{mute === 'forced'
-        ? ' by a moderator'
-        : ''}"
+      aria-label={mute === "forced"
+        ? m.voice_muted_by_mod({ name: member.displayName })
+        : m.voice_muted({ name: member.displayName })}
     />
   {/if}
 
   {#if member.deafened}
     <HeadphoneOffIcon
       class="text-muted-foreground/70 size-3.5 shrink-0"
-      aria-label="{member.displayName} is deafened"
+      aria-label={m.voice_deafened({ name: member.displayName })}
     />
   {/if}
 
   {#if member.camera}
     <VideoIcon
       class="text-muted-foreground/70 size-3.5 shrink-0"
-      aria-label="{member.displayName} has their camera on"
+      aria-label={m.voice_camera_on({ name: member.displayName })}
     />
   {/if}
 
@@ -73,11 +74,11 @@
       variant="ghost"
       size="icon-xs"
       class="shrink-0 text-red-500 hover:text-red-500"
-      title="{member.displayName} is streaming - click to watch"
+      title={m.voice_streaming_watch({ name: member.displayName })}
       onclick={() => voice.watch(channel, member.id)}
     >
       <MonitorPlayIcon class="size-3.5" />
-      <span class="sr-only">Watch {member.displayName}'s stream</span>
+      <span class="sr-only">{m.voice_watch_stream({ name: member.displayName })}</span>
     </Button>
   {/if}
 </div>

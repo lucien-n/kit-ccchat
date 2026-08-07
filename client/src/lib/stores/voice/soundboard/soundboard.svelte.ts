@@ -1,3 +1,4 @@
+import { m } from "$lib/paraglide/messages";
 import { api } from "$lib/api";
 import { apiErrorMessage } from "$lib/forms";
 import { fileToDataUrl } from "$lib/image";
@@ -80,7 +81,7 @@ class SoundboardStore {
       const { sounds } = await api.soundboard.list();
       this.sounds = sounds;
     } catch (e) {
-      this.error = apiErrorMessage(e, "Couldn't load sounds.");
+      this.error = apiErrorMessage(e, m.soundboard_load_failed());
     } finally {
       this.loading = false;
     }
@@ -121,7 +122,7 @@ class SoundboardStore {
     try {
       const durationMs = await durationOf(file);
       if (!durationMs) {
-        this.error = "Couldn't read that audio file.";
+        this.error = m.soundboard_read_failed();
         return null;
       }
       if (durationMs > MAX_SOUNDBOARD_DURATION_MS) {
@@ -138,7 +139,7 @@ class SoundboardStore {
       this.sounds = [res.sound, ...this.sounds];
       return res.sound;
     } catch (e) {
-      this.error = apiErrorMessage(e, "Couldn't upload that sound.");
+      this.error = apiErrorMessage(e, m.soundboard_upload_failed());
       return null;
     } finally {
       this.busy = false;
@@ -156,7 +157,7 @@ class SoundboardStore {
       this.sounds = this.sounds.map((s) => (s.id === id ? res.sound : s));
       return res.sound;
     } catch (e) {
-      this.error = apiErrorMessage(e, "Couldn't save that sound.");
+      this.error = apiErrorMessage(e, m.soundboard_save_failed());
       return null;
     } finally {
       this.busy = false;
@@ -169,7 +170,7 @@ class SoundboardStore {
       this.sounds = this.sounds.filter((s) => s.id !== id);
       if (this.favorites.has(id)) this.toggleFavorite(id);
     } catch (e) {
-      this.error = apiErrorMessage(e, "Couldn't delete that sound.");
+      this.error = apiErrorMessage(e, m.soundboard_delete_failed());
     }
   }
 }

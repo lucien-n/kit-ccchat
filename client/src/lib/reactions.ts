@@ -1,3 +1,4 @@
+import { m } from "$lib/paraglide/messages";
 import type { MessageView } from "$lib/api";
 import { apiErrorMessage } from "$lib/forms";
 import { messages, session } from "$lib/stores";
@@ -15,6 +16,6 @@ export async function toggleReaction(message: MessageView, emoji: string) {
     if (mine) await messages.unreact(message.id, emoji);
     else await messages.react(message.id, emoji);
   } catch (e) {
-    toast.error(apiErrorMessage(e, "failed to react"));
+    toast.error(apiErrorMessage(e, m.reactions_failed()));
   }
 }

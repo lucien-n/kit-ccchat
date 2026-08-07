@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import EmojiPicker from "$lib/components/chat/emoji-picker.svelte";
   import { soundboard } from "$lib/stores";
   import { Button } from "&/button";
@@ -55,15 +56,15 @@
 >
   <Dialog.Content class="max-w-sm">
     <Dialog.Header>
-      <Dialog.Title>{mode?.kind === "edit" ? "Edit sound" : "Add a sound"}</Dialog.Title>
-      <Dialog.Description>
-        Give it a name and an emoji so it's easy to find.
-      </Dialog.Description>
+      <Dialog.Title>
+        {mode?.kind === "edit" ? m.sound_edit_title() : m.sound_add_title()}
+      </Dialog.Title>
+      <Dialog.Description>{m.sound_dialog_description()}</Dialog.Description>
     </Dialog.Header>
 
     <div class="flex items-end gap-2">
       <div class="flex flex-col gap-1.5">
-        <Label>Emoji</Label>
+        <Label>{m.emoji_picker_title()}</Label>
         <div class="flex items-center">
           <div
             class="bg-muted flex size-9 items-center justify-center rounded-md text-lg leading-none"
@@ -74,12 +75,12 @@
         </div>
       </div>
       <div class="flex flex-1 flex-col gap-1.5">
-        <Label for="sound-name">Name</Label>
+        <Label for="sound-name">{m.common_name()}</Label>
         <Input
           id="sound-name"
           bind:value={formName}
           maxlength={MAX_SOUNDBOARD_NAME}
-          placeholder="airhorn"
+          placeholder={m.sound_name_placeholder()}
           autocomplete="off"
         />
       </div>
@@ -99,11 +100,11 @@
           onclick={deleteSound}
         >
           <Trash2Icon class="size-4" />
-          Delete
+          {m.common_delete()}
         </Button>
       {/if}
       <Button type="button" variant="ghost" onclick={() => (isOpen = false)}>
-        Cancel
+        {m.common_cancel()}
       </Button>
       <Button
         type="button"
@@ -111,9 +112,9 @@
         onclick={confirmDialog}
       >
         {#if mode?.kind === "edit"}
-          {soundboard.busy ? "Saving…" : "Save"}
+          {soundboard.busy ? m.sound_saving() : m.common_save()}
         {:else}
-          {soundboard.busy ? "Uploading…" : "Add sound"}
+          {soundboard.busy ? m.sound_uploading() : m.sound_add_action()}
         {/if}
       </Button>
     </Dialog.Footer>

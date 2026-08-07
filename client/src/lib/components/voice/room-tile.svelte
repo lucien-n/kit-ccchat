@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { voice } from "$lib/stores";
   import { cn } from "$lib/utils";
@@ -62,7 +63,7 @@
           variant="secondary"
           size="icon-sm"
           class="absolute top-2 right-2 opacity-0 transition-opacity group-hover:opacity-100"
-          title="Watch {member.displayName}'s stream"
+          title={m.voice_watch_stream({ name: member.displayName })}
           onclick={() => voice.watch(channel, member.id)}
         >
           <MaximizeIcon class="size-4" />
@@ -82,13 +83,13 @@
       {#if muteState === "forced"}
         <MicOffIcon
           class="size-3 shrink-0 text-amber-400"
-          aria-label="muted by a moderator"
+          aria-label={m.voice_muted_by_mod_short()}
         />
       {:else if muteState === "self"}
-        <MicOffIcon class="size-3 shrink-0" aria-label="muted" />
+        <MicOffIcon class="size-3 shrink-0" aria-label={m.status_muted()} />
       {/if}
       {#if member.deafened}
-        <HeadphoneOffIcon class="size-3 shrink-0" aria-label="deafened" />
+        <HeadphoneOffIcon class="size-3 shrink-0" aria-label={m.voice_deafened_short()} />
       {/if}
       <span class="truncate font-medium">{member.displayName}</span>
     </div>

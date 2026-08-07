@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { channelNameTaken } from "$lib/channels";
   import { getChannelContext } from "$lib/context/channel.svelte";
   import { spaForm } from "$lib/forms";
@@ -16,7 +17,7 @@
     { name: ctx.channel.name },
     {
       toast: false,
-      fallback: "failed to rename channel",
+      fallback: m.channel_rename_failed(),
       onValid: (data) => ctx.rename(data.name),
     },
   );
@@ -35,14 +36,14 @@
 <Dialog.Root bind:open={ctx.renaming}>
   <Dialog.Content class="max-w-sm">
     <Dialog.Header>
-      <Dialog.Title>Rename channel</Dialog.Title>
+      <Dialog.Title>{m.channel_rename_title()}</Dialog.Title>
     </Dialog.Header>
 
     <form method="POST" use:enhance class="space-y-4">
       <Form.Field {form} name="name">
         <Form.Control>
           {#snippet children({ props })}
-            <Form.Label>Name</Form.Label>
+            <Form.Label>{m.common_name()}</Form.Label>
             <Input
               {...props}
               bind:value={$formData.name}
@@ -54,16 +55,16 @@
         <Form.FieldErrors />
         {#if taken}
           <p class="text-destructive text-sm">
-            There's already a {ctx.channel.type} channel with that name.
+            {m.channel_name_taken({ type: ctx.channel.type })}
           </p>
         {/if}
       </Form.Field>
 
       <Dialog.Footer>
         <Button type="button" variant="ghost" onclick={() => (ctx.renaming = false)}>
-          Cancel
+          {m.common_cancel()}
         </Button>
-        <Form.Button disabled={$submitting || taken}>Rename</Form.Button>
+        <Form.Button disabled={$submitting || taken}>{m.channel_rename_action()}</Form.Button>
       </Dialog.Footer>
     </form>
   </Dialog.Content>

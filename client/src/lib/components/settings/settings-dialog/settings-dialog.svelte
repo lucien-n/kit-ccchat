@@ -9,6 +9,11 @@
   }
 
   let { open = $bindable(false) }: Props = $props();
+
+  const tabTitles = $derived({
+    [SettingsDialogTab.Profile]: m.settings_tab_profile(),
+    [SettingsDialogTab.Appearance]: m.settings_tab_appearance(),
+  });
 </script>
 
 <Dialog.Root bind:open>
@@ -20,7 +25,7 @@
     <Tabs.Root value={SettingsDialogTab.Profile} class="w-full">
       <Tabs.List class="w-full">
         {#each Object.entries(SETTINGS_DIALOG_TAB_SPECS) as [tab, spec] (tab)}
-          <Tabs.Trigger value={tab}>{spec.title()}</Tabs.Trigger>
+          <Tabs.Trigger value={tab}>{tabTitles[tab as SettingsDialogTab]}</Tabs.Trigger>
         {/each}
       </Tabs.List>
 

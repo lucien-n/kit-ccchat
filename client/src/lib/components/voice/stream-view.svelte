@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { voice } from "$lib/stores";
   import { Button } from "&/button";
   import MaximizeIcon from "@lucide/svelte/icons/maximize";
@@ -16,7 +17,7 @@
   );
   const name = $derived(
     voice.participants.find((p) => p.identity === voice.share.watching)?.name ??
-      "someone",
+      m.common_someone(),
   );
   // Present only while the watched stream is publishing sound.
   const audio = $derived(
@@ -57,7 +58,8 @@
 <div bind:this={shell} class="bg-background flex min-h-0 flex-1 flex-col">
   <div class="flex shrink-0 items-center justify-between gap-2 border-b px-3 py-1.5">
     <span class="text-muted-foreground min-w-0 truncate text-xs">
-      Watching <span class="text-foreground font-medium">{name}</span>
+      {m.stream_watching_prefix()}
+      <span class="text-foreground font-medium">{name}</span>
     </span>
     <div class="flex shrink-0 items-center gap-0.5">
       {#if audio && voice.share.watching}
@@ -65,7 +67,7 @@
         <Button
           variant="ghost"
           size="icon-xs"
-          title={silent ? "Unmute stream" : "Mute stream"}
+          title={silent ? m.stream_unmute() : m.stream_mute()}
           onclick={() => voice.toggleStreamMute(watching)}
         >
           {#if silent}
@@ -82,14 +84,14 @@
           value={audio.muted ? 0 : audio.volume}
           oninput={(e) => voice.setStreamVolume(watching, e.currentTarget.valueAsNumber)}
           class="stream-volume mr-1 w-20 cursor-pointer"
-          title="Stream volume"
-          aria-label="Stream volume"
+          title={m.stream_volume()}
+          aria-label={m.stream_volume()}
         />
       {/if}
       <Button
         variant="ghost"
         size="icon-xs"
-        title={fullscreen ? "Exit fullscreen" : "Fullscreen"}
+        title={fullscreen ? m.common_exit_fullscreen() : m.common_fullscreen()}
         onclick={toggleFullscreen}
       >
         {#if fullscreen}
@@ -101,7 +103,7 @@
       <Button
         variant="ghost"
         size="icon-xs"
-        title="Back to chat"
+        title={m.stream_back_to_chat()}
         onclick={() => voice.stopWatching()}
       >
         <XIcon class="size-4" />

@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { getChatContext } from "$lib/context/chat.svelte";
   import { formatDate } from "$lib/format";
@@ -29,7 +30,7 @@
 <Popover.Root bind:open>
   <Popover.Trigger>
     {#snippet child({ props })}
-      <Button {...props} variant="ghost" size="icon" title="Pinned messages">
+      <Button {...props} variant="ghost" size="icon" title={m.pins_title()}>
         <PinIcon class="size-4" />
       </Button>
     {/snippet}
@@ -38,15 +39,13 @@
   <Popover.Content align="end" side="bottom" class="w-80 gap-0 p-0">
     <div class="flex items-center gap-1.5 border-b px-3 py-2 text-sm font-semibold">
       <PinIcon class="size-4" />
-      Pinned messages
+      {m.pins_title()}
     </div>
 
     {#if pins.loading && pins.list.length === 0}
-      <div class="text-muted-foreground py-8 text-center text-sm">Loading pins...</div>
+      <div class="text-muted-foreground py-8 text-center text-sm">{m.pins_loading()}</div>
     {:else if pins.list.length === 0}
-      <div class="text-muted-foreground px-4 py-8 text-center text-sm">
-        No pinned messages yet. Pin a message from its actions to keep it here.
-      </div>
+      <div class="text-muted-foreground px-4 py-8 text-center text-sm">{m.pins_empty()}</div>
     {:else}
       <ScrollArea class="max-h-96">
         <div class="flex flex-col gap-0.5 p-1">
@@ -69,7 +68,7 @@
                         class="truncate text-sm font-semibold"
                         style={appearance.nameStyle(message.author?.color ?? null)}
                       >
-                        {message.author?.displayName ?? "unknown"}
+                        {message.author?.displayName ?? m.common_unknown()}
                       </span>
                       <span class="text-muted-foreground shrink-0 text-xs">
                         {formatDate(message.createdAt)}
@@ -78,7 +77,7 @@
                     <p
                       class="text-muted-foreground line-clamp-3 text-sm wrap-break-word whitespace-pre-wrap"
                     >
-                      {message.content || "(no text)"}
+                      {message.content || m.message_no_text()}
                     </p>
                   </div>
                 </div>
@@ -87,7 +86,7 @@
                 <Button
                   variant="ghost"
                   size="icon-sm"
-                  title="Unpin"
+                  title={m.pins_unpin()}
                   class="absolute top-1.5 right-1.5 opacity-0 group-hover/pin:opacity-100 focus-visible:opacity-100"
                   onclick={() => togglePin(message)}
                 >

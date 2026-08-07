@@ -19,22 +19,21 @@
   import SunIcon from "@lucide/svelte/icons/sun";
   import { themeRadius } from "@motus/shared";
 
-  // `label` holds the message function so calling it in the template re-renders
-  // when the locale changes; a plain string would freeze the English label.
-  const modes = [
-    { value: ThemeMode.Light, label: m.appearance_mode_light, icon: SunIcon },
-    { value: ThemeMode.Dark, label: m.appearance_mode_dark, icon: MoonIcon },
-    { value: ThemeMode.System, label: m.appearance_mode_system, icon: MonitorIcon },
-  ] satisfies { value: ThemeMode; label: () => string; icon: typeof SunIcon }[];
+  // $derived so the labels recompute when the locale changes (m.*() reads it).
+  const modes = $derived([
+    { value: ThemeMode.Light, label: m.appearance_mode_light(), icon: SunIcon },
+    { value: ThemeMode.Dark, label: m.appearance_mode_dark(), icon: MoonIcon },
+    { value: ThemeMode.System, label: m.appearance_mode_system(), icon: MonitorIcon },
+  ]);
 
-  const themes = [
-    { value: Theme.Default, label: m.appearance_theme_default },
-    { value: Theme.Tangerine, label: m.appearance_theme_tangerine },
-    { value: Theme.Notebook, label: m.appearance_theme_notebook },
-    { value: Theme.Whatsapp, label: m.appearance_theme_whatsapp },
-    { value: Theme.Neobrutalism, label: m.appearance_theme_neobrutalism },
-    { value: Theme.Custom, label: m.appearance_theme_custom },
-  ] satisfies { value: Theme; label: () => string }[];
+  const themes = $derived([
+    { value: Theme.Default, label: m.appearance_theme_default() },
+    { value: Theme.Tangerine, label: m.appearance_theme_tangerine() },
+    { value: Theme.Notebook, label: m.appearance_theme_notebook() },
+    { value: Theme.Whatsapp, label: m.appearance_theme_whatsapp() },
+    { value: Theme.Neobrutalism, label: m.appearance_theme_neobrutalism() },
+    { value: Theme.Custom, label: m.appearance_theme_custom() },
+  ]);
 
   // Language names in their own language (endonyms); these are not translated.
   const LANGUAGE_NAMES: Record<Locale, string> = {
@@ -61,7 +60,7 @@
           onclick={() => appearance.setMode(mode.value)}
         >
           <Icon class="size-5" />
-          <span class="text-xs">{mode.label()}</span>
+          <span class="text-xs">{mode.label}</span>
         </Button>
       {/each}
     </div>
@@ -77,7 +76,7 @@
           onclick={() => appearance.setTheme(theme.value)}
         >
           <PaletteIcon class="mr-2 size-4" />
-          {theme.label()}
+          {theme.label}
         </Button>
       {/each}
     </div>

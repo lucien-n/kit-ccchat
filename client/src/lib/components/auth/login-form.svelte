@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { login } from "$lib/app";
   import TextField from "$lib/components/common/text-field.svelte";
   import { spaForm } from "$lib/forms";
@@ -20,16 +21,16 @@
     <TextField
       {form}
       name="username"
-      label="Username"
+      label={m.auth_username_label()}
       bind:value={$formData.username}
       autocomplete="username"
-      placeholder="john"
+      placeholder={m.auth_username_example()}
     />
 
     <TextField
       {form}
       name="password"
-      label="Password"
+      label={m.auth_password_label()}
       type="password"
       bind:value={$formData.password}
       autocomplete="current-password"
@@ -39,7 +40,7 @@
 
   <Card.Footer class="mt-6 flex-col gap-3">
     <Form.Button class="w-full" disabled={$submitting}>
-      {$submitting ? "Please wait…" : "Log in"}
+      {$submitting ? m.common_please_wait() : m.auth_log_in()}
     </Form.Button>
   </Card.Footer>
 </form>

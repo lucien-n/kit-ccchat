@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { embedImageUrl, type MessageEmbed } from "$lib/api";
   import { Button } from "&/button";
   import { Card } from "&/card";
@@ -29,7 +30,7 @@
     <Button
       variant="secondary"
       size="icon"
-      title="Remove embed"
+      title={m.embed_remove()}
       onclick={onremove}
       class="absolute top-1.5 right-1.5 z-10 size-6 rounded-full opacity-0 shadow transition group-hover:opacity-100 focus-visible:opacity-100"
     >
@@ -46,7 +47,7 @@
     >
       <img
         src={embedImageUrl(embed.id)}
-        alt={embed.title ?? "link preview"}
+        alt={embed.title ?? m.embed_link_preview_alt()}
         loading="lazy"
         class="max-h-80 w-full object-cover"
         onerror={() => (imageBroken = true)}

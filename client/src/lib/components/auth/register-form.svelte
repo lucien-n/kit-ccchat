@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { register } from "$lib/app";
   import TextField from "$lib/components/common/text-field.svelte";
   import { apiErrorMessage, fail, setError, setMessage, spaForm } from "$lib/forms";
@@ -20,7 +21,7 @@
     {
       onValid: (data) => register(data),
       onError: (err, form) => {
-        const msg = apiErrorMessage(err, "something went wrong");
+        const msg = apiErrorMessage(err, m.common_something_went_wrong());
         if (/invite/i.test(msg)) setError(form, "inviteCode", msg);
         else if (/username/i.test(msg)) setError(form, "username", msg);
         else setMessage(form, fail(msg));
@@ -36,18 +37,18 @@
     <TextField
       {form}
       name="inviteCode"
-      label="Invite code"
+      label={m.auth_invite_code_label()}
       bind:value={$formData.inviteCode}
-      placeholder="paste your invite code"
+      placeholder={m.auth_invite_code_placeholder()}
       autocomplete="off"
     />
 
     <TextField
       {form}
       name="username"
-      label="Username"
+      label={m.auth_username_label()}
       bind:value={$formData.username}
-      placeholder="lowercase, 2–24 chars"
+      placeholder={m.auth_username_rules_placeholder()}
       autocomplete="username"
     />
 
@@ -55,28 +56,28 @@
       {form}
       name="displayName"
       bind:value={$formData.displayName}
-      placeholder="how others see you"
+      placeholder={m.auth_display_name_placeholder()}
     >
       {#snippet label()}
-        Display name
-        <span class="text-muted-foreground font-normal">(optional)</span>
+        {m.auth_display_name_label()}
+        <span class="text-muted-foreground font-normal">{m.common_optional()}</span>
       {/snippet}
     </TextField>
 
     <TextField
       {form}
       name="password"
-      label="Password"
+      label={m.auth_password_label()}
       type="password"
       bind:value={$formData.password}
-      placeholder="at least 8 characters"
+      placeholder={m.auth_password_rules_placeholder()}
       autocomplete="new-password"
     />
   </Card.Content>
 
   <Card.Footer class="mt-6 flex-col gap-3">
     <Form.Button class="w-full" disabled={$submitting}>
-      {$submitting ? "Please wait…" : "Create account"}
+      {$submitting ? m.common_please_wait() : m.auth_create_account()}
     </Form.Button>
   </Card.Footer>
 </form>

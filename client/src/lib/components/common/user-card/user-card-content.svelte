@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { setUserContext } from "$lib/context/user.svelte";
   import UserCardHeader from "./user-card-header.svelte";
   import UserCardRoles from "./user-card-roles.svelte";
@@ -25,5 +26,5 @@
     <UserCardRoles />
   </div>
 {:else}
-  <div class="text-muted-foreground p-4 text-sm">Loading…</div>
+  <div class="text-muted-foreground p-4 text-sm">{m.common_loading()}</div>
 {/if}

@@ -1,3 +1,4 @@
+import { m } from "$lib/paraglide/messages";
 import { api } from "$lib/api";
 import { apiErrorMessage, errorName } from "$lib/forms";
 import {
@@ -212,7 +213,7 @@ class VoiceStore implements VoiceCore {
     if (this.roomRef !== room) return;
     const wasConnected = this.status === VoiceStatus.Connected;
     if (!this.leaving && wasConnected) {
-      this.error = "Voice disconnected - the media connection dropped.";
+      this.error = m.voice_disconnected_error();
     }
     if (wasConnected) {
       playVoiceLeave();

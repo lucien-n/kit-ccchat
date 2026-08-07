@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { api, type Invite } from "$lib/api";
   import { attempt } from "$lib/forms";
   import { inviteLink } from "$lib/invite";
@@ -16,32 +17,32 @@
   let busy = $state(false);
   let copied = $state("");
 
-  const presets = [
+  const presets = $derived([
     {
-      label: "One person",
-      hint: "single use, 7 days",
+      label: m.invite_preset_one_label(),
+      hint: m.invite_preset_one_hint(),
       maxUses: 1,
       expiresInHours: 24 * 7,
     },
     {
-      label: "A few",
-      hint: "10 uses, 48 hours",
+      label: m.invite_preset_few_label(),
+      hint: m.invite_preset_few_hint(),
       maxUses: 10,
       expiresInHours: 48,
     },
     {
-      label: "Open link",
-      hint: "unlimited, never expires",
+      label: m.invite_preset_open_label(),
+      hint: m.invite_preset_open_hint(),
       maxUses: 0,
       expiresInHours: 0,
     },
-  ];
+  ]);
 
   onMount(load);
 
   async function load() {
     const res = await attempt(() => api.invites.list(), {
-      error: "failed to load invites",
+      error: m.invite_load_failed(),
     });
     if (res) invites = res.invites;
   }
@@ -58,8 +59,8 @@
         await copy(invite.code);
       },
       {
-        error: "failed to create invite",
-        success: "Invite link copied to your clipboard.",
+        error: m.invite_create_failed(),
+        success: m.invite_copied_toast(),
       },
     );
     busy = false;
@@ -72,8 +73,8 @@
         invites = invites.map((i) => (i.code === code ? invite : i));
       },
       {
-        error: "failed to revoke",
-        success: "Invite revoked. That link no longer works.",
+        error: m.invite_revoke_failed(),
+        success: m.invite_revoked_toast(),
       },
     );
   }
@@ -85,21 +86,25 @@
   }
 
   function usesLabel(i: Invite) {
-    return i.maxUses === 0 ? `${i.uses} joined` : `${i.uses}/${i.maxUses} used`;
+    return i.maxUses === 0
+      ? m.invite_uses_joined({ count: i.uses })
+      : m.invite_uses_used({ uses: i.uses, max: i.maxUses });
   }
 
   function expiryLabel(i: Invite) {
-    if (i.expiresAt === null) return "never expires";
+    if (i.expiresAt === null) return m.invite_never_expires();
     const ms = i.expiresAt - Date.now();
-    if (ms <= 0) return "expired";
+    if (ms <= 0) return m.invite_expired();
     const hours = Math.round(ms / 3600_000);
-    return hours < 48 ? `${hours}h left` : `${Math.round(hours / 24)}d left`;
+    return hours < 48
+      ? m.invite_hours_left({ hours })
+      : m.invite_days_left({ days: Math.round(hours / 24) });
   }
 </script>
 
 <div class="flex min-h-0 flex-1 flex-col">
   <div class="space-y-2 pb-4">
-    <Label>New invite</Label>
+    <Label>{m.invite_new()}</Label>
     <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
       {#each presets as p (p.label)}
         <Button
@@ -113,9 +118,7 @@
         </Button>
       {/each}
     </div>
-    <p class="text-muted-foreground text-xs">
-      The link is copied to your clipboard automatically.
-    </p>
+    <p class="text-muted-foreground text-xs">{m.invite_auto_copy()}</p>
   </div>
 
   <div class="min-h-0 flex-1 space-y-2 overflow-y-auto">
@@ -130,7 +133,7 @@
             variant="ghost"
             size="icon"
             class="size-7 shrink-0"
-            title="Copy link"
+            title={m.invite_copy_link()}
             onclick={() => copy(i.code)}
           >
             {#if copied === i.code}
@@ -144,7 +147,7 @@
               variant="ghost"
               size="icon"
               class="text-destructive size-7 shrink-0"
-              title="Revoke"
+              title={m.invite_revoke()}
               onclick={() => revoke(i.code)}
             >
               <Trash2Icon class="size-4" />
@@ -158,13 +161,11 @@
           <span>{usesLabel(i)}</span>
           <span>·</span>
           <span>{expiryLabel(i)}</span>
-          <span class="ml-auto">by {i.createdBy}</span>
+          <span class="ml-auto">{m.invite_created_by({ name: i.createdBy })}</span>
         </div>
       </div>
     {:else}
-      <p class="text-muted-foreground py-8 text-center text-sm">
-        No invites yet. Create one above.
-      </p>
+      <p class="text-muted-foreground py-8 text-center text-sm">{m.invite_empty()}</p>
     {/each}
   </div>
 </div>

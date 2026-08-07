@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { fly } from "$lib/motion";
   import { voice, VoiceStatus } from "$lib/stores";
   import { Card } from "&/card";
@@ -19,7 +20,7 @@
           <span class="truncate">{voice.channel?.name}</span>
         </div>
         <div class="text-xs text-green-500">
-          {voice.status === VoiceStatus.Connected ? "Connected" : "Connecting…"}
+          {voice.status === VoiceStatus.Connected ? m.voice_connected() : m.voice_connecting()}
         </div>
       </div>
       <HangupButton variant="ghost" />

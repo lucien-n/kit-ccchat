@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { m } from "$lib/paraglide/messages";
   import { type MessageView } from "$lib/api";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { UserCard } from "$lib/components/common/user-card";
@@ -30,7 +31,7 @@
 
   const mentionsMe = $derived(!message.systemEvent && pingsMe(message));
 
-  const subject = $derived(message.author?.displayName ?? "someone");
+  const subject = $derived(message.author?.displayName ?? m.common_someone());
 
   let editing = $state(false);
   let draft = $state("");
@@ -58,7 +59,7 @@
         await messages.edit(message.id, text);
         editing = false;
       },
-      { error: "failed to edit message" },
+      { error: m.message_edit_failed() },
     );
   }
 
@@ -86,7 +87,10 @@
   <div id="msg-{message.id}" class="text-muted-foreground flex gap-1.5 py-1 text-xs">
     {#if message.systemEvent === SystemEvent.Member_Join}
       <UserRoundPlusIcon class="size-3.5 shrink-0" />
-      <span><span class="text-foreground font-medium">{subject}</span> joined</span>
+      <span>
+        <span class="text-foreground font-medium">{subject}</span>
+        {m.system_member_joined()}
+      </span>
     {/if}
     <span class="opacity-70">{fmtTime(message.createdAt)}</span>
   </div>
@@ -119,7 +123,7 @@
         {#if message.pinned}
           <div class="text-muted-foreground flex items-center gap-1.5 text-xs">
             <PinIcon class="size-3 shrink-0" />
-            <span class="font-medium">Pinned</span>
+            <span class="font-medium">{m.message_pinned_label()}</span>
           </div>
         {/if}
         {#if message.replyTo}
@@ -127,7 +131,7 @@
           {#if reply.deleted}
             <div class="text-muted-foreground flex items-center gap-1.5 text-xs italic">
               <ReplyIcon class="size-3 shrink-0" />
-              Original message was deleted
+              {m.message_reply_deleted()}
             </div>
           {:else}
             <button
@@ -142,7 +146,7 @@
                 fallbackClass="text-[0.5rem]"
               />
               <span class="shrink-0 font-medium">
-                {reply.author?.displayName ?? "unknown"}
+                {reply.author?.displayName ?? m.common_unknown()}
               </span>
               <span class="text-foreground truncate">{reply.content}</span>
             </button>
@@ -159,11 +163,11 @@
               </span>
             </UserCard>
           {:else}
-            <span class="font-semibold">unknown</span>
+            <span class="font-semibold">{m.common_unknown()}</span>
           {/if}
           <span class="text-muted-foreground text-xs">{fmtTime(message.createdAt)}</span>
           {#if message.editedAt}
-            <span class="text-muted-foreground text-[10px]">(edited)</span>
+            <span class="text-muted-foreground text-[10px]">{m.message_edited()}</span>
           {/if}
         </div>
         {#if editing}
@@ -178,16 +182,16 @@
             />
             <div class="text-muted-foreground mt-1 flex items-center gap-2 text-xs">
               <button type="button" class="hover:text-foreground" onclick={saveEdit}>
-                save
+                {m.message_edit_save()}
               </button>
               <button
                 type="button"
                 class="hover:text-foreground"
                 onclick={() => (editing = false)}
               >
-                cancel
+                {m.message_edit_cancel()}
               </button>
-              <span class="opacity-70">escape to cancel &middot; enter to save</span>
+              <span class="opacity-70">{m.message_edit_hint()}</span>
             </div>
           </div>
         {:else}

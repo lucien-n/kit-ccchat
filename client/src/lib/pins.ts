@@ -1,3 +1,4 @@
+import { m } from "$lib/paraglide/messages";
 import type { MessageView } from "$lib/api";
 import { apiErrorMessage } from "$lib/forms";
 import { messages, session } from "$lib/stores";
@@ -11,6 +12,6 @@ export async function togglePin(message: MessageView) {
     if (message.pinned) await messages.unpin(message.id);
     else await messages.pin(message.id);
   } catch (e) {
-    toast.error(apiErrorMessage(e, "failed to pin message"));
+    toast.error(apiErrorMessage(e, m.pins_pin_failed()));
   }
 }
