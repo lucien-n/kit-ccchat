@@ -18,10 +18,6 @@ columnSorting:
 
 ## Backlog
 
-- [breakdown-roles-panel](tasks/breakdown-roles-panel.md)
-- [breakdown-user-card-header](tasks/breakdown-user-card-header.md)
-- [breakdown-image-gallery](tasks/breakdown-image-gallery.md)
-- [breakdown-system-panel](tasks/breakdown-system-panel.md)
 - [mobile-app](tasks/mobile-app.md)
 - [backend-validation-cleaning](tasks/backend-validation-cleaning.md)
 - [push-notifications-for-messages](tasks/push-notifications-for-messages.md)
@@ -40,18 +36,21 @@ columnSorting:
 - [soundboard-cooldown](tasks/soundboard-cooldown.md)
 - [send-audio-messages](tasks/send-audio-messages.md)
 - [fix-message-actions-emoji-reaction-close-on-actions-mouse-hover-leave](tasks/fix-message-actions-emoji-reaction-close-on-actions-mouse-hover-leave.md)
+- [breakdown-roles-panel](tasks/breakdown-roles-panel.md)
+- [breakdown-user-card-header](tasks/breakdown-user-card-header.md)
+- [breakdown-image-gallery](tasks/breakdown-image-gallery.md)
 - [data-export](tasks/data-export.md)
 - [push-to-talk](tasks/push-to-talk.md)
 - [admin-audit-log](tasks/admin-audit-log.md)
+- [breakdown-system-panel](tasks/breakdown-system-panel.md)
 
 ## Todo
-
-- [allow-playing-video-attachments](tasks/allow-playing-video-attachments.md)
 
 ## In Progress
 
 ## Done
 
+- [allow-playing-video-attachments](tasks/allow-playing-video-attachments.md)
 - [allow-playing-audio-attachments](tasks/allow-playing-audio-attachments.md)
 - [arbitrary-file-attachments](tasks/arbitrary-file-attachments.md)
 - [profile-bio](tasks/profile-bio.md)

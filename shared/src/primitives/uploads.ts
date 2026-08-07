@@ -44,11 +44,20 @@ export const SOUNDBOARD_MIME_TYPES: readonly string[] = [
   "audio/webm",
 ];
 
-/** A message audio attachment: rendered inline with a player, and served inline
- *  by the API under its own mime (safe - audio subtypes are non-executable).
- *  Deliberately broad: any `audio/*` qualifies, unlike the strict soundboard
- *  allowlist above. Shared so the client's partition and the server's inline
- *  decision can't drift. */
 export function isAudioType(mime: string): boolean {
   return mime.startsWith("audio/");
+}
+
+export function isVideoType(mime: string) {
+  return mime.startsWith("video/");
+}
+
+export const attachmentKind = z.enum(["image", "audio", "video", "file"]);
+export type AttachmentKind = z.infer<typeof attachmentKind>;
+
+export function kindOfAttachment(a: { image: boolean; mime: string }): AttachmentKind {
+  if (a.image) return "image";
+  if (isAudioType(a.mime)) return "audio";
+  if (isVideoType(a.mime)) return "video";
+  return "file";
 }

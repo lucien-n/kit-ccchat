@@ -11,8 +11,6 @@
 
   interface Props {
     attachment: MessageAttachment;
-    /** Drops the download control - used in the composer preview, where the file
-     *  hasn't been sent yet so downloading it back is pointless. */
     compact?: boolean;
   }
   const { attachment, compact = false }: Props = $props();
