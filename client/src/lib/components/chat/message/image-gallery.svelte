@@ -1,7 +1,7 @@
 <script lang="ts">
-  import { m } from "$lib/paraglide/messages";
   import { attachmentUrl, type MessageAttachment } from "$lib/api";
   import { fly, scale } from "$lib/motion";
+  import { m } from "$lib/paraglide/messages";
   import { cn } from "$lib/utils";
   import { Button } from "&/button";
   import * as Dialog from "&/dialog";
@@ -13,6 +13,7 @@
   import XIcon from "@lucide/svelte/icons/x";
   import ZoomInIcon from "@lucide/svelte/icons/zoom-in";
   import ZoomOutIcon from "@lucide/svelte/icons/zoom-out";
+  import { MAX_ATTACHMENTS_PER_MESSAGE } from "@motus/shared";
   import { elasticInOut } from "svelte/easing";
 
   interface Props {
@@ -128,7 +129,18 @@
   };
 </script>
 
-<div class="mt-1 flex flex-wrap gap-2">
+<div
+  class={cn(
+    "mt-1 flex flex-wrap gap-2",
+    images.length === MAX_ATTACHMENTS_PER_MESSAGE
+      ? "grid grid-cols-6"
+      : images.length >= 8
+        ? "grid grid-cols-4"
+        : images.length >= 5
+          ? "grid grid-cols-3"
+          : images.length >= 3 && "grid grid-cols-2",
+  )}
+>
   {#each images as image (image.id)}
     {@const dim = thumbSize(image.width, image.height)}
     <button
