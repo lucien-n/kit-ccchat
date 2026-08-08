@@ -2,6 +2,7 @@
   import { m } from "$lib/paraglide/messages";
   import { attachmentUrl, type MessageAttachment } from "$lib/api";
   import { fly, scale } from "$lib/motion";
+  import { m } from "$lib/paraglide/messages";
   import { cn } from "$lib/utils";
   import { Button } from "&/button";
   import * as Dialog from "&/dialog";
@@ -126,15 +127,56 @@
     ArrowRight: () => stepZoom(1),
     ArrowLeft: () => stepZoom(-1),
   };
+
+  function getSingleImageClass(index: number, total: number): string {
+    switch (total) {
+      // a
+      case 1:
+        return "col-span-6 row-span-6";
+      // a b
+      case 2:
+        return "col-span-3 row-span-6";
+      /**
+       * aa b
+       * aa c
+       */
+      case 3: {
+        if (index === 0) return "col-span-4 row-span-6";
+        return "col-span-2 row-span-3";
+      }
+      /**
+       * a b
+       * c d
+       */
+      case 4: {
+        return "col-span-3 row-span-3";
+      }
+      /**
+       * aa bb
+       * aa bb
+       * c d e
+       */
+      default: {
+        if (index < 2) {
+          return "col-span-3 row-span-4";
+        }
+
+        return "col-span-2 row-span-2";
+      }
+    }
+  }
 </script>
 
-<div class="mt-1 flex flex-wrap gap-2">
-  {#each images as image (image.id)}
+<div class="mt-1 grid w-fit max-w-130 grid-cols-6 grid-rows-6 flex-wrap gap-2">
+  {#each images.slice(0, 5) as image, index (image.id)}
     {@const dim = thumbSize(image.width, image.height)}
+
     <button
       type="button"
-      class="bg-muted/40 max-w-full cursor-zoom-in overflow-hidden rounded-xl border"
-      style={dim ? `width:${dim.w}px;height:${dim.h}px` : undefined}
+      class={cn(
+        "bg-muted/40 w-full max-w-full cursor-zoom-in overflow-hidden rounded-xl border",
+        getSingleImageClass(index, images.length),
+      )}
       onclick={() => show(image)}
     >
       <img
