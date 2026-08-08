@@ -25,7 +25,7 @@
 
     <Tabs.Root value={SettingsDialogTab.Profile} class="w-full">
       <Tabs.List class="w-full">
-        {#each Object.values(SettingsDialogTab) as [tab] (tab)}
+        {#each Object.values(SettingsDialogTab) as tab (tab)}
           <Tabs.Trigger value={tab}>{tabTitles[tab as SettingsDialogTab]}</Tabs.Trigger>
         {/each}
       </Tabs.List>

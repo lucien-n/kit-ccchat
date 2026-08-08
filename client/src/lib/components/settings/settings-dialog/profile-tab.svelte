@@ -1,17 +1,17 @@
 <script lang="ts">
-  import { m } from "$lib/paraglide/messages";
   import { api } from "$lib/api";
   import { logout } from "$lib/app";
   import TextField from "$lib/components/common/text-field.svelte";
   import UserCardContent from "$lib/components/common/user-card/user-card-content.svelte";
   import { apiErrorMessage, ok, setError, setMessage, spaForm } from "$lib/forms";
+  import { m } from "$lib/paraglide/messages";
   import { session } from "$lib/stores";
   import { Button } from "&/button";
   import { Card } from "&/card";
   import * as Form from "&/form";
   import { Label } from "&/label";
-  import { changePasswordBody } from "@motus/shared";
   import LogOutIcon from "@lucide/svelte/icons/log-out";
+  import { changePasswordBody } from "@motus/shared";
 
   const passwordForm = spaForm(
     changePasswordBody,
