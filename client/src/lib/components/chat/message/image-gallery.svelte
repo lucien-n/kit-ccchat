@@ -13,7 +13,6 @@
   import XIcon from "@lucide/svelte/icons/x";
   import ZoomInIcon from "@lucide/svelte/icons/zoom-in";
   import ZoomOutIcon from "@lucide/svelte/icons/zoom-out";
-  import { MAX_ATTACHMENTS_PER_MESSAGE } from "@motus/shared";
   import { elasticInOut } from "svelte/easing";
 
   interface Props {
@@ -127,26 +126,56 @@
     ArrowRight: () => stepZoom(1),
     ArrowLeft: () => stepZoom(-1),
   };
+
+  function getSingleImageClass(index: number, total: number): string {
+    switch (total) {
+      // a
+      case 1:
+        return "col-span-6 row-span-6";
+      // a b
+      case 2:
+        return "col-span-3 row-span-6";
+      /**
+       * aa b
+       * aa c
+       */
+      case 3: {
+        if (index === 0) return "col-span-4 row-span-6";
+        return "col-span-2 row-span-3";
+      }
+      /**
+       * a b
+       * c d
+       */
+      case 4: {
+        return "col-span-3 row-span-3";
+      }
+      /**
+       * aa bb
+       * aa bb
+       * c d e
+       */
+      default: {
+        if (index < 2) {
+          return "col-span-3 row-span-4";
+        }
+
+        return "col-span-2 row-span-2";
+      }
+    }
+  }
 </script>
 
-<div
-  class={cn(
-    "mt-1 flex flex-wrap gap-2",
-    images.length === MAX_ATTACHMENTS_PER_MESSAGE
-      ? "grid grid-cols-6"
-      : images.length >= 8
-        ? "grid grid-cols-4"
-        : images.length >= 5
-          ? "grid grid-cols-3"
-          : images.length >= 3 && "grid grid-cols-2",
-  )}
->
-  {#each images as image (image.id)}
+<div class="mt-1 grid w-fit max-w-130 grid-cols-6 grid-rows-6 flex-wrap gap-2">
+  {#each images.slice(0, 5) as image, index (image.id)}
     {@const dim = thumbSize(image.width, image.height)}
+
     <button
       type="button"
-      class="bg-muted/40 max-w-full cursor-zoom-in overflow-hidden rounded-xl border"
-      style={dim ? `width:${dim.w}px;height:${dim.h}px` : undefined}
+      class={cn(
+        "bg-muted/40 w-full max-w-full cursor-zoom-in overflow-hidden rounded-xl border",
+        getSingleImageClass(index, images.length),
+      )}
       onclick={() => show(image)}
     >
       <img
