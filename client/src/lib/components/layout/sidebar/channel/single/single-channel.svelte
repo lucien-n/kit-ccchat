@@ -1,5 +1,6 @@
 <script lang="ts">
   import { setChannelContext } from "$lib/context/channel.svelte";
+  import { fly } from "$lib/motion";
   import { channelTypeSpecs } from "$lib/specs";
   import {
     channels,
@@ -12,9 +13,8 @@
   import { cn } from "$lib/utils";
   import { Badge } from "&/badge";
   import { buttonVariants } from "&/button";
-  import { ChannelType, type Channel } from "@motus/shared";
   import HomeIcon from "@lucide/svelte/icons/home";
-  import { fly } from "$lib/motion";
+  import { ChannelType, type Channel } from "@motus/shared";
   import ChannelContextMenu from "./channel-context-menu.svelte";
   import SingleVoiceParticipant from "./single-voice-participant.svelte";
 
@@ -97,7 +97,7 @@
       {/if}
     </div>
 
-    {#if isVoiceChannel}
+    {#if isVoiceChannel && members && members.length}
       <div class="mt-0.5 mb-1 ml-4 flex flex-col gap-0.5">
         {#each members as member (member.id)}
           <div transition:fly={{ x: -10, duration: 100 }}>
