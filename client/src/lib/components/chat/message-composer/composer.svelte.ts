@@ -1,9 +1,9 @@
-import { m } from "$lib/paraglide/messages";
 import { api } from "$lib/api";
 import { loadEmoji, searchEmoji, shortcodeQuery, type EmojiIndex } from "$lib/emoji";
 import { apiErrorMessage } from "$lib/forms";
 import { isRejectedAtLimit, shakeAtLimit } from "$lib/length";
 import { mentionQuery, searchMentions } from "$lib/mentions";
+import { m } from "$lib/paraglide/messages";
 import { appearance } from "$lib/stores";
 import { MAX_ATTACHMENTS_PER_MESSAGE, MESSAGE_MAX_LENGTH } from "@motus/shared";
 import { tick } from "svelte";
@@ -205,8 +205,8 @@ export class Composer {
     this.#addFiles(files);
   };
 
-  onpick = (e: Event) => {
-    const input = e.currentTarget as HTMLInputElement;
+  onpick = (ev: Event) => {
+    const input = ev.currentTarget as HTMLInputElement;
     this.#addFiles(input.files ?? []);
     input.value = "";
   };

@@ -1,13 +1,12 @@
 <script lang="ts">
-  import { m } from "$lib/paraglide/messages";
   import { soundUrl } from "$lib/api";
+  import { m } from "$lib/paraglide/messages";
   import { nameFromFile, session, soundboard, voice } from "$lib/stores";
   import { Button } from "&/button";
   import * as Empty from "&/empty";
   import { Input } from "&/input";
   import * as Popover from "&/popover";
   import { ScrollArea } from "&/scroll-area";
-  import type { Sound } from "@motus/shared";
   import LoaderCircleIcon from "@lucide/svelte/icons/loader-circle";
   import MegaphoneIcon from "@lucide/svelte/icons/megaphone";
   import PencilIcon from "@lucide/svelte/icons/pencil";
@@ -15,6 +14,7 @@
   import UploadIcon from "@lucide/svelte/icons/upload";
   import Volume2Icon from "@lucide/svelte/icons/volume-2";
   import VolumeXIcon from "@lucide/svelte/icons/volume-x";
+  import type { Sound } from "@motus/shared";
   import { untrack } from "svelte";
   import SetSoundDialog, { type DialogMode } from "./set-sound-dialog.svelte";
 
@@ -49,8 +49,8 @@
     isDialogOpen = true;
   }
 
-  function onFile(e: Event) {
-    const input = e.target as HTMLInputElement;
+  function handleFile(ev: Event) {
+    const input = ev.target as HTMLInputElement;
     const file = input.files?.[0];
     input.value = "";
     if (!file) return;
@@ -95,7 +95,7 @@
         type="file"
         accept="audio/*"
         class="hidden"
-        onchange={onFile}
+        onchange={handleFile}
       />
     </div>
 

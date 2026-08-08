@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { m } from "$lib/paraglide/messages";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import { UserCard } from "$lib/components/common/user-card";
-  import { voice } from "$lib/stores";
+  import { m } from "$lib/paraglide/messages";
+  import { voice, VOICE_DRAG_MIME } from "$lib/stores";
   import { cn } from "$lib/utils";
   import { muteState } from "$lib/voice-mute";
   import { Button } from "&/button";
@@ -15,8 +15,10 @@
   interface Props {
     member: VoiceMember;
     channel: Channel;
+    onVoiceDragStart?: () => void;
+    onVoiceDragEnd?: () => void;
   }
-  const { member, channel }: Props = $props();
+  const { member, channel, onVoiceDragStart, onVoiceDragEnd }: Props = $props();
 
   const participant = $derived(
     channel.id === voice.channel?.id
@@ -24,9 +26,32 @@
       : undefined,
   );
   const mute = $derived(muteState(member, participant?.muted));
+
+  function handleDragStart(ev: DragEvent) {
+    ev.stopPropagation();
+
+    if (!ev.dataTransfer) return;
+
+    ev.dataTransfer.setData(VOICE_DRAG_MIME, member.id);
+    ev.dataTransfer.effectAllowed = "move";
+
+    onVoiceDragStart?.();
+  }
+
+  function handleDragEnd(ev: DragEvent) {
+    ev.stopPropagation();
+
+    onVoiceDragEnd?.();
+  }
 </script>
 
-<div class="group flex min-w-0 items-center gap-0.5" role="listitem">
+<div
+  class="group flex min-w-0 items-center gap-0.5"
+  role="listitem"
+  ondragstart={handleDragStart}
+  ondragend={handleDragEnd}
+  draggable="true"
+>
   <UserCard
     userId={member.id}
     class="hover:bg-sidebar-accent min-w-0 flex-1 rounded-2xl px-1.5 py-1"

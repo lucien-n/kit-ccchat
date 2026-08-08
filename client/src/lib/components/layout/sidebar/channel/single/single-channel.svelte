@@ -21,35 +21,73 @@
   interface Props {
     channel: Channel;
     onSelect: () => void;
+    onMouseEnterParticipant?: () => void;
+    onMouseLeaveParticipant?: () => void;
+    onVoiceDragStart?: () => void;
+    onVoiceDragEnd?: () => void;
   }
-  const { channel, onSelect }: Props = $props();
+
+  const {
+    channel,
+    onSelect,
+    onMouseEnterParticipant,
+    onMouseLeaveParticipant,
+    onVoiceDragStart,
+    onVoiceDragEnd,
+  }: Props = $props();
 
   setChannelContext(() => channel);
 
   const isVoiceChannel = $derived(channel.type === ChannelType.Voice);
   const Icon = $derived(channel.isMain ? HomeIcon : channelTypeSpecs[channel.type].icon);
-  const members = $derived(presence.voice[channel.id]);
+  const members = $derived(presence.voice[channel.id] ?? []);
 
   let dragOver = $state(false);
-  const acceptsDrag = (e: DragEvent) =>
-    isVoiceChannel && !!e.dataTransfer?.types.includes(VOICE_DRAG_MIME);
 
-  function onDragOver(e: DragEvent) {
-    if (!acceptsDrag(e)) return;
-    e.preventDefault();
-    e.dataTransfer!.dropEffect = "move";
+  function acceptsDrag(e: DragEvent) {
+    return isVoiceChannel && !!e.dataTransfer?.types.includes(VOICE_DRAG_MIME);
+  }
+
+  function handleDragOver(ev: DragEvent) {
+    if (!acceptsDrag(ev)) return;
+
+    ev.preventDefault();
+    ev.stopPropagation();
+
+    ev.dataTransfer!.dropEffect = "move";
     dragOver = true;
   }
 
-  function onDrop(e: DragEvent) {
+  function handleDragLeave(ev: DragEvent) {
+    if (!acceptsDrag(ev)) return;
+
+    const current = ev.currentTarget as HTMLElement;
+    const related = ev.relatedTarget as Node | null;
+
+    if (related && current.contains(related)) return;
+
     dragOver = false;
-    if (!acceptsDrag(e)) return;
-    e.preventDefault();
-    const userId = e.dataTransfer!.getData(VOICE_DRAG_MIME);
+  }
+
+  function handleDrop(ev: DragEvent) {
+    if (!acceptsDrag(ev)) return;
+
+    ev.preventDefault();
+    ev.stopPropagation();
+
+    dragOver = false;
+
+    const userId = ev.dataTransfer!.getData(VOICE_DRAG_MIME);
     if (!userId) return;
-    if (userId === session.user?.id)
-      void voice.join({ id: channel.id, name: channel.name });
-    else voice.moveMember(userId, channel.id);
+
+    if (userId === session.user?.id) {
+      void voice.join({
+        id: channel.id,
+        name: channel.name,
+      });
+    } else {
+      voice.moveMember(userId, channel.id);
+    }
   }
 </script>
 
@@ -60,9 +98,9 @@
       dragOver && "ring-primary bg-primary/10 ring-2",
     )}
     role={isVoiceChannel ? "group" : undefined}
-    ondragover={onDragOver}
-    ondragleave={() => (dragOver = false)}
-    ondrop={onDrop}
+    ondragover={handleDragOver}
+    ondragleave={handleDragLeave}
+    ondrop={handleDrop}
   >
     <div
       role="button"
@@ -87,6 +125,7 @@
 
       {#if (unread.counts[channel.id] ?? 0) > 0}
         {@const mentioned = (unread.mentions[channel.id] ?? 0) > 0}
+
         <Badge
           variant={mentioned ? "destructive" : "secondary"}
           class="ml-auto h-5 min-w-5 justify-center px-1.5"
@@ -97,11 +136,21 @@
       {/if}
     </div>
 
-    {#if isVoiceChannel && members && members.length}
+    {#if isVoiceChannel && members.length}
       <div class="mt-0.5 mb-1 ml-4 flex flex-col gap-0.5">
-        {#each members as member (member.id)}
-          <div transition:fly={{ x: -10, duration: 100 }}>
-            <SingleVoiceParticipant {member} {channel} />
+        {#each members.toSorted((a, b) => a.id.localeCompare(b.id)) as member (member.id)}
+          <!-- svelte-ignore a11y_no_static_element_interactions -->
+          <div
+            transition:fly={{ x: -10, duration: 100 }}
+            onmouseenter={onMouseEnterParticipant}
+            onmouseleave={onMouseLeaveParticipant}
+          >
+            <SingleVoiceParticipant
+              {member}
+              {channel}
+              {onVoiceDragStart}
+              {onVoiceDragEnd}
+            />
           </div>
         {/each}
       </div>

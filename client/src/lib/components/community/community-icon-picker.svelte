@@ -11,8 +11,8 @@
   let fileInput: HTMLInputElement | null = $state(null);
   let busy = $state(false);
 
-  async function onFile(e: Event) {
-    const file = (e.currentTarget as HTMLInputElement).files?.[0];
+  async function handleFile(ev: Event) {
+    const file = (ev.currentTarget as HTMLInputElement).files?.[0];
     if (!file) return;
     busy = true;
     await attempt(
@@ -77,6 +77,6 @@
     type="file"
     accept="image/*"
     class="hidden"
-    onchange={onFile}
+    onchange={handleFile}
   />
 </div>

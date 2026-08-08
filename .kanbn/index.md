@@ -44,6 +44,8 @@ columnSorting:
 
 ## Todo
 
+- [channel-creation-event-isn-t-emitted](tasks/channel-creation-event-isn-t-emitted.md)
+
 ## In Progress
 
 ## Done

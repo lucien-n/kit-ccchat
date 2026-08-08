@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { m } from "$lib/paraglide/messages";
   import { api, bannerUrl } from "$lib/api";
   import { refreshMemberColors } from "$lib/app";
   import { getUserContext } from "$lib/context/user.svelte";
   import { apiErrorMessage, attempt } from "$lib/forms";
-  import { isRejectedAtLimit, shakeAtLimit } from "$lib/length";
   import { resizeBanner, resizeImage } from "$lib/image";
+  import { isRejectedAtLimit, shakeAtLimit } from "$lib/length";
+  import { m } from "$lib/paraglide/messages";
   import { appearance, session, ui } from "$lib/stores";
   import { Button } from "&/button";
   import { Input } from "&/input";
@@ -115,8 +115,8 @@
     ui.openSettings();
   }
 
-  async function onAvatarFile(e: Event) {
-    const input = e.currentTarget as HTMLInputElement;
+  async function handleAvatarFile(ev: Event) {
+    const input = ev.currentTarget as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
     await attempt(
@@ -137,8 +137,8 @@
     await ctx.loadProfile();
   }
 
-  async function onBannerFile(e: Event) {
-    const input = e.currentTarget as HTMLInputElement;
+  async function handleBannerFile(ev: Event) {
+    const input = ev.currentTarget as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) return;
     await attempt(
@@ -341,14 +341,14 @@
       type="file"
       accept="image/*"
       class="hidden"
-      onchange={onBannerFile}
+      onchange={handleBannerFile}
     />
     <input
       bind:this={avatarInput}
       type="file"
       accept="image/*"
       class="hidden"
-      onchange={onAvatarFile}
+      onchange={handleAvatarFile}
     />
   {/if}
 {/if}

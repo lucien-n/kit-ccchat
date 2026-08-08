@@ -9,8 +9,8 @@
   const jumbo = $derived(isEmojiOnly(content));
 
   // {@html} output cannot carry Svelte handlers, so reveal is delegated.
-  function reveal(e: Event) {
-    (e.target as HTMLElement).closest(".spoiler")?.classList.add("revealed");
+  function reveal(ev: Event) {
+    (ev.target as HTMLElement).closest(".spoiler")?.classList.add("revealed");
   }
 
   function openMentionCard(e: MouseEvent) {

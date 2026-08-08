@@ -15,10 +15,10 @@ import { db } from "./db/index.js";
 import { findById } from "./db/query.js";
 import { channelsTable, messagesTable, usersTable } from "./db/schema";
 import { hub, type Client } from "./hub.js";
-import { authLevel } from "./permissions.js";
 import { attachMessage } from "./modules/attachments/attachments.service.js";
 import { unfurlMessage } from "./modules/link-embeds/link-embeds.service.js";
 import { resolveMentions, saveMentions } from "./modules/messages/mentions.js";
+import { authLevel } from "./permissions.js";
 import { toMessageView } from "./views.js";
 
 const wss = new WebSocketServer({ noServer: true });
@@ -187,8 +187,6 @@ function handleVoiceMove(client: Client, targetUserId: string, channelId: string
   if (!channel || channel.type !== ChannelType.Voice) return;
 
   const target = findById(usersTable, targetUserId);
-  // Only move someone who's actually in a call, and never someone who outranks
-  // you, matching how role edits are gated.
   if (!target || !hub.isInVoice(targetUserId)) return;
   if (authLevel(target) > authLevel(mover)) return;
 

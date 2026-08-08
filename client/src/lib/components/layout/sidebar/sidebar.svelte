@@ -1,11 +1,11 @@
 <script lang="ts">
-  import { m } from "$lib/paraglide/messages";
   import * as app from "$lib/app";
   import UserAvatar from "$lib/components/common/user-avatar.svelte";
   import DeafenButton from "$lib/components/voice/deafen-button.svelte";
   import MicButton from "$lib/components/voice/mic-button.svelte";
   import VoiceBar from "$lib/components/voice/voice-bar.svelte";
   import { flip } from "$lib/motion";
+  import { m } from "$lib/paraglide/messages";
   import { appearance, channels, session, ui, voice } from "$lib/stores";
   import { ScrollArea } from "&/scroll-area";
   import { ChannelType, type Channel } from "@motus/shared";
@@ -29,9 +29,11 @@
   // can't yank rows mid-drag.
   let textChannels = $state<Channel[]>([]);
   let voiceChannels = $state<Channel[]>([]);
-  let dragging = $state(false);
+  let isDragging = $state(false);
+  let isHoveringParticipant = $state(false);
+  let isDraggingParticipant = $state(false);
   $effect(() => {
-    if (dragging) return;
+    if (isDragging) return;
     textChannels = channels.list.filter((c) => c.type === ChannelType.Text);
     voiceChannels = channels.list.filter((c) => c.type === ChannelType.Voice);
   });
@@ -39,19 +41,19 @@
   const dndOptions = $derived({
     flipDurationMs: 150,
     dropTargetStyle: {},
-    dragDisabled: !session.isAdmin,
+    dragDisabled: !session.isAdmin || isHoveringParticipant || isDraggingParticipant,
   });
 
   async function persistOrder() {
     try {
       await channels.reorder([...textChannels, ...voiceChannels].map((c) => c.id));
     } finally {
-      dragging = false;
+      isDragging = false;
     }
   }
 
   function considerText(e: CustomEvent<DndEvent<Channel>>) {
-    dragging = true;
+    isDragging = true;
     textChannels = e.detail.items;
   }
   function finalizeText(e: CustomEvent<DndEvent<Channel>>) {
@@ -59,7 +61,7 @@
     void persistOrder();
   }
   function considerVoice(e: CustomEvent<DndEvent<Channel>>) {
-    dragging = true;
+    isDragging = true;
     voiceChannels = e.detail.items;
   }
   function finalizeVoice(e: CustomEvent<DndEvent<Channel>>) {
@@ -110,7 +112,12 @@
     >
       {#each voiceChannels as channel (channel.id)}
         <div animate:flip={{ duration: 150 }}>
-          <SingleChannel {channel} onSelect={() => handleJoinChannel(channel)} />
+          <SingleChannel
+            {channel}
+            onSelect={() => handleJoinChannel(channel)}
+            onMouseEnterParticipant={() => (isHoveringParticipant = true)}
+            onMouseLeaveParticipant={() => (isHoveringParticipant = false)}
+          />
         </div>
       {/each}
     </div>
