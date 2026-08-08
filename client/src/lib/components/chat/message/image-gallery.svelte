@@ -1,5 +1,4 @@
 <script lang="ts">
-  import { m } from "$lib/paraglide/messages";
   import { attachmentUrl, type MessageAttachment } from "$lib/api";
   import { fly, scale } from "$lib/motion";
   import { m } from "$lib/paraglide/messages";
